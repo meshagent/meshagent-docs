@@ -1,0 +1,71 @@
+from meshagent.agents.pydantic import PydanicAgentHost
+from meshagent.agents import RequiredToolkit, connect_development_agent
+from meshagent.openai import OpenAIToolResponseAdapter
+from meshagent.tools import BlobStorage
+from pydantic import BaseModel
+from pydantic_ai import Agent, Tool, RunContext
+
+import asyncio
+
+# define the structure of the input of our agent
+class Input(BaseModel):
+    model_config = dict(extra="forbid")
+
+# define the structure of the output of our agent
+class Output(BaseModel):
+    model_config = dict(extra="forbid")
+    result: float
+
+
+
+class CustomPydanticAgentHost(PydanicAgentHost):
+
+    def create_agent(self, *, tools):
+
+        agent = Agent(
+                    tools=[
+                        *tools,
+                    ],
+                    model="openai:gpt-4o",
+                    system_prompt="ask the user to provide an equation and then return the result of the equation"
+                )
+
+        @agent.tool
+        def multiply(context: RunContext, x: float, y: float) -> float:
+            return x * y
+
+        return agent
+
+async def main():    
+    
+    
+    host = CustomPydanticAgentHost(
+        response_adapter=OpenAIToolResponseAdapter(blob_storage=BlobStorage()),
+        model="openai:gpt-4o",
+        system_prompt="ask the user to provide an equation and then return the result of the equation",
+        name="pydantic.sample",
+        title="Pydantic Sample",
+        description="Exposes a pydantic agent to MeshAgent",
+        input_model=Input,
+        output_model=Output,
+        requires=[
+            RequiredToolkit(
+                name="meshagent.ui",
+                tools=["ask_user"]
+            )
+        ]
+    )
+
+
+    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI    
+    await connect_development_agent(room_name="examples", agent=host)
+            
+
+    
+if __name__ == '__main__':
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.get_event_loop().run_until_complete(main())
+    
+

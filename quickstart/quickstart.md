@@ -1,0 +1,29 @@
+# Quickstart
+
+## Installing the client
+
+Rooms are where agents and people collaborate. They provide document persistence, synchronization, presence, security, and communication channels.
+
+To get started, install the MeshAgent API:
+
+```bash
+pip3 install meshagent-api
+
+```
+
+## Connecting to a room
+To connect to a room, you need a room URL and an authorized token for that room. You can generate tokens through the MeshAgent Admin Console or programmatically. Let’s connect to a room and create a document:
+
++++ Python
+:::code source="/examples/python/quickstart-document.py" :::
++++
+
+Because Mesh documents automatically synchronize with all participants, if you also connect to the room in the MeshAgent Admin Console and open the document, you’ll see the content update in real time when you run this sample.
+
+## Asking an agent
+
+What if we want an agent to fill out the document for us? MeshAgent makes it easy to ask for agent assistance. As before, if you open this document in the MeshAgent Admin Console, you will see the changes occur in real time:
+
++++ Python
+:::code source="/examples/python/quickstart-agent.py" :::
++++

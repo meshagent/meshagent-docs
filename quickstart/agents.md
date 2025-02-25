@@ -1,0 +1,48 @@
+---
+order: -2
+---
+# Agents
+
+Meshagent Agents are just processes that accept input and produce output. In many cases, your agent will be powered by a LLM, but in other cases your agent might be doing things that are easier to write code for.
+
+## Our First Agent
+
+Let's create a simple agent that can add two numbers and connect it to our room:
+
++++ Python
+:::code source="/examples/python/agents-adder.py":::
++++
+
+From the admin console, if we select "Run" we can now select this agent to test it. We haven't built any UI, but we don't need to!
+By default, the admin console will launch it's own agent that will gather input from the user, send it to our sample agent, and show the results back to the user.
+
+## Writing to documents
+
+Often we want our agents to be able to interact with live documents. MeshAgent makes it very easy to build agents that can connect to an manipulate documents.
+Let's create a simple agent that will write content to the document that the user requests.
+
++++ Python
+:::code source="/examples/python/agents-writer.py":::
++++
+
+After starting our agent, we can run it directly from the Admin console.
+
+1. Open our room in the admin console
+2. Create a document, let's call it "sample.document".
+3. Click the "Run" button, select "sample_writer" and then "continue"
+4. A built-in assistant agent will be launched which will gather information and forward it to our sample writer.
+
+After the agent is invoked, we will see its output automatically show up in our document.
+
+## Taking it Futher
+
+Check out these built in agents in the [meshkit-agents]() for some ideas. Depending on your usecase, you may be able to use these agents out of the box without any customization. You may
+also use them as a base for your own agents to get up and running faster:
+
+- **SingleShotWriter** A basic writer that uses an LLM to generate document content.
+- **PlanningWriter:** A more advanced writer that implements a simple planning strategy and allows the agent to edit and create documents using tool calls.
+- **Transcriber** A transcription agent that can join a video conference and transcribe the audio of participants
+- **ProofReader** An agent that listens for changes on a document and automatically improves the text
+- **VoiceProofReader** An agent that listens for changes on a document and gives feedback via voice about suggestions in realtime
+
+

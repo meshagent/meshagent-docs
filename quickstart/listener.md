@@ -1,0 +1,34 @@
+---
+order: -2
+---
+
+# Listening
+
+In many cases, agents need to be able to listen for changes to a document. Imagine a scenario where an agent is proofreading a document
+in order to check it for accuracy. In order to check the document in realtime, the agent first needs to know what changed in realtime.
+MeshDocuments make listening for changes in realtime a snap. The easiest way to get started is with the built in Listener base class.
+
+##
+
++++ Python
+:::code source="/examples/python/agents-listener.py":::
++++
+
+
+## Running the Sample
+
+- Launch the sample and then connect to the room "examples" with MeshAgent Studio.
+- Add a document in the room
+- Press "Run" to select the sample listener agent
+- Select the agent "proxy.sample-listener".
+- You will be asked the path of the document that the agent should listen to, enter the name (including extension) of the document you created.
+- After connecting to the agent, the agent will print a message letting you know it has started listening.
+- Under the source tab, you can edit the document. Right click the root node to add a new element and the listener will print out that the element has changed.
+- Modify an attribute and the listener will print that the attribute changed
+
+
+## Taking it further
+
+Now that you are listening to the document, your agent can take action based on changes that have been made to the content. For example, an agent
+might verify that changes made to the document do not introduce factual inaccuracies and then send a message or even talk to the user to let them
+know if they have made an error that should be corrected. 

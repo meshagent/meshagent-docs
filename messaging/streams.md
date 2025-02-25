@@ -1,0 +1,132 @@
+# Streams
+
+Streams provide a mechanism for sending large or continuous data among participants without blocking the rest of your application. Unlike simple “send once” attachments, streams are chunked and can remain open for as long as needed—making them ideal for scenarios such as file uploads, real-time sensor data, or incremental AI model outputs.
+
+---
+
+## When to Use Streams
+
+1. **Large File Transfers**  
+   If your application needs to share large files (audio, video, logs, etc.), streaming breaks them into manageable chunks. This approach allows for partial transfers, progressive updates to your UI, and graceful error handling if a transfer fails mid-stream.
+
+2. **Real-time or Ongoing Data**  
+   Streams can stay open as long as your session lasts, allowing you to send data in near real time. For instance, you can pipe live sensor or telemetry data from an AI agent to a human operator, or vice versa.
+
+3. **Flexible Flow Control**  
+   Streams help prevent memory overflows and unwanted buffering. Each chunk can be processed and then removed from the pipeline before the next chunk arrives.
+
+4. **Async Collaboration**  
+   Streams allow your application to handle multiple open streams concurrently—each feeding or consuming data from different tasks.
+
+---
+
+## Example: Bidirectional File Transfer
+
+Let’s assume you want to transfer a file from “Alice” to “Bob” using streams. Below is a streamlined example. We’ll skip the standard messaging “enable” steps and focus on the streaming portion.
+
+### 1. Alice Opens a Stream to Bob
+
+```python
+from meshagent.api.messaging import MessageStreamChunk
+
+async def alice_send_file(room, bob):
+    # 1. Create a stream
+    writer = await room.messaging.create_stream(
+        to=bob,
+        header={"filename": "big_report.pdf"}  # Arbitrary metadata
+    )
+
+    # 2. Open the file in chunks
+    with open("big_report.pdf", "rb") as f:
+        while True:
+            chunk_data = f.read(4096)  # 4 KB chunk
+            if not chunk_data:
+                break
+            
+            # 3. Send a chunk
+            await writer.write(MessageStreamChunk(
+                header={"sequence": "some_id"},  # Additional metadata
+                data=chunk_data
+            ))
+    
+    # 4. Close when done
+    await writer.close()
+```
+
+### 2. Bob Accepts and Reads the Stream
+
+```python
+def on_stream_accept(reader):
+    # This callback is invoked automatically when Bob receives "stream.open" from Alice 
+    # and decides to accept it. We store the `MessageStreamReader` and process asynchronously.
+
+    async def handle_incoming_stream():
+        print(f"Stream accepted with header: {reader.header}")
+        file_name = reader.header.get("filename", "unknown.bin")
+
+        # Open a local file for writing
+        with open(file_name, "wb") as out_file:
+            async for chunk in reader.read_chunks():
+                # chunk.header might contain extra metadata (e.g., sequence ID)
+                out_file.write(chunk.data)
+        
+        print(f"Finished receiving file: {file_name}")
+
+    # Schedule the task
+    asyncio.create_task(handle_incoming_stream())
+
+# In Bob's code, we enable messaging with a callback:
+await bob_room.messaging.enable(on_stream_accept=on_stream_accept)
+```
+
+With this setup:
+
+1. Alice creates the stream
+2. Bob’s stream acceptance callback is automatically invoked with.  
+3. Bob processes chunks as they arrive.  
+4. When Alice closes the stream, Bob’s reader closes.
+
+---
+
+## Handling Errors and Edge Cases
+
+1. **Rejections**  
+   - If Bob rejects the stream, Alice’s call to create the stream will raise an exception. For instance, Bob might reject streams that exceed certain file-size constraints.
+
+2. **Network Failures**  
+   - Because streams send data chunk-by-chunk, partial transfers can occur. Make sure to handle incomplete file states or re-transmission if the connection drops mid-transfer.
+
+3. **Concurrency**  
+   - You can have multiple open streams concurrently. Each stream has its own reader/writer pair.
+
+4. **Clean Up**  
+   - Always close the stream on the writer side, the reader side will be closed automatically.
+
+---
+
+## Best Practices
+
+1. **Use Clear Metadata**  
+   - Each chunk supports a small JSON `header`. Use it to include relevant metadata like chunk order, timestamps, or partial checksums. This aids debugging and error handling.
+
+2. **Leverage Async**  
+   - Both reading and writing are non-blocking, allowing you to maintain a fluid user experience or handle multiple streams.
+
+3. **Size Your Chunks Wisely**  
+   - Chunks that are too large can cause memory spikes; too small can cause overhead. Tune to your specific use case (e.g., 4 KB to 256 KB).
+
+4. **Security & Validation**  
+   - If you’re exposing streams to outside participants or user uploads, validate each chunk’s contents as needed. Reject the stream immediately if you detect malicious or unwanted data.
+
+5. **Monitoring**  
+   - Watch for errors or rejections. If you’re streaming high-value data, consider adding checksums or a retry mechanism to ensure integrity.
+
+---
+
+## Next Steps
+
+- **Experiment with Custom Metadata**: Try sending additional JSON fields in each chunk to drive your application logic (e.g., partial transformations, multi-part encryption).  
+- **Build Real-time Applications**: Use streams for live data feeds or incremental AI model responses.  
+- **Combine Streams with Messages**: Communicate control messages (pause, resume) alongside data in the same session.  
+
+By tapping into the full potential of Streams, you gain a powerful channel for transferring data of any size—reliably, asynchronously, and in real time. It’s a perfect complement to the standard “message + attachment” model, especially for use cases where you want continuous interaction or large payloads. Happy streaming!
