@@ -31,7 +31,7 @@ class Adder(PydanticAgent):
 
 
 async def main():    
-    server = RemoteTaskRunnerServer(create_agent=lambda room_name: Adder())
+    server = RemoteTaskRunnerServer(cls=Adder)
     await server.run()
 
 if __name__ == '__main__':
