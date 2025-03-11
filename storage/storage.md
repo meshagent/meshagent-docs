@@ -20,14 +20,14 @@ Key concepts include:
 
 The storage system emits two types of events:
 
-1. **`file_updated`**  
+1. **`file.updated`**  
    Triggered when a file is created or updated. Handlers receive a `path` argument identifying the file's location in storage.
    
    ```python
    def on_file_updated(path: str):
        print(f"File updated: {path}")
 
-   room.storage.on("file_updated", on_file_updated)
+   room.storage.on("file.updated", on_file_updated)
    ```
 
 2. **`file_deleted`**  
@@ -37,13 +37,13 @@ The storage system emits two types of events:
    def on_file_deleted(path: str):
        print(f"File deleted: {path}")
 
-   room.storage.on("file_deleted", on_file_deleted)
+   room.storage.on("file.deleted", on_file_deleted)
    ```
 
 You can remove an event handler with:
 ```python
-room.storage.off("file_updated", on_file_updated)
-room.storage.off("file_deleted", on_file_deleted)
+room.storage.off("file.updated", on_file_updated)
+room.storage.off("file.deleted", on_file_deleted)
 ```
 
 ---
@@ -192,7 +192,7 @@ for e in entries:
 ### 8. `delete(path)`
 
 **Description**  
-Deletes a file at the given path. A `file_deleted` event is typically emitted afterward.
+Deletes a file at the given path. A `file.deleted` event is typically emitted afterward.
 
 **Parameters**  
 - `path` *(str)*: The file path to delete.
@@ -215,7 +215,7 @@ A common use case:
 1. Check if a file exists.  
 2. Create and write data if it doesn’t exist.  
 3. Later, download the file to verify or use the data.  
-4. Delete the file when it’s no longer needed, reacting to the `file_deleted` event.
+4. Delete the file when it’s no longer needed, reacting to the `file.deleted` event.
 
 ```python
 # Check existence
