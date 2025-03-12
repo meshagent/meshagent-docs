@@ -4,9 +4,24 @@
 
 Before sending or receiving messages, you must enable messaging on your local participant’s side:
 
++++ Python
 ```python
 await room.messaging.enable()
 ```
++++ JavaScript
+```javascript
+await room.messaging.enable();
+```
++++ TypeScript
+```typescript
+await room.messaging.enable();
+```
++++ Dart
+```dart
+await room.messaging.enable();
+```
++++
+
 
 Optionally, you can provide a callback `on_stream_accept` if you also plan to use “streaming” messages. For basic text/binary messages, you can ignore streams.
 
@@ -14,6 +29,7 @@ Optionally, you can provide a callback `on_stream_accept` if you also plan to us
 
 To send a message, use:
 
++++ Python
 ```python
 await room.messaging.send_message(
     to = some_remote_participant,
@@ -22,6 +38,34 @@ await room.messaging.send_message(
     attachment = b"some data"      # (optional) Byte payload
 )
 ```
++++ JavaScript
+```javascript
+await room.messaging.sendMessage({
+    to: someRemoteParticipant,
+    type: "my_message_type",      // Arbitrary label for your message
+    message: { key: "value" },    // Arbitrary object to represent your payload
+    attachment: new Uint8Array()  // (optional) Byte payload
+});
+```
++++ TypeScript
+```typescript
+await room.messaging.sendMessage({
+    to: someRemoteParticipant,
+    type: "my_message_type",      // Arbitrary label for your message
+    message: { key: "value" },    // Arbitrary object to represent your payload
+    attachment: new Uint8Array()  // (optional) Byte payload
+});
+```
++++ Dart
+```dart
+await room.messaging.sendMessage(
+    to: someRemoteParticipant,
+    type: "my_message_type",      // Arbitrary label for your message
+    message: { "key": "value" },  // Arbitrary map to represent your payload
+    attachment: Uint8List(0)      // (optional) Byte payload
+);
+```
++++
 
 Where:
 
@@ -34,6 +78,7 @@ Where:
 
 When you enable messaging, you can register an event handler for the `"message"` event to receive custom messages:
 
++++ Python
 ```python
 def on_message(message: RoomMessage):
     print(f"Received message from {message.from_participant_id}")
@@ -44,6 +89,56 @@ def on_message(message: RoomMessage):
 
 room.messaging.on("message", on_message)
 ```
++++ JavaScript
+```javascript
+function onMessage(event) {
+    const message = event.message;
+
+    console.log(`Received message from ${message.fromParticipantId}`);
+    console.log(`Message type: ${message.type}`);
+    console.log(`Message content (JSON): ${message.message}`);
+    if (message.attachment) {
+        console.log(`Binary payload: ${message.attachment}`);
+    }
+}
+
+room.messaging.on("message", onMessage);
+```
++++ TypeScript
+```typescript
+function onMessage(event: RoomMessageEvent) {
+    const message: RoomMessage = event.message;
+
+    console.log(`Received message from ${message.fromParticipantId}`);
+    console.log(`Message type: ${message.type}`);
+    console.log(`Message content (JSON): ${message.message}`);
+    if (message.attachment) {
+        console.log(`Binary payload: ${message.attachment}`);
+    }
+}
+
+room.messaging.on("message", onMessage);
+```
++++ Dart
+```dart
+void onMessage(RoomMessageEvent event) {
+    final RoomMessage message = event.message;
+
+    print("Received message from ${message.fromParticipantId}");
+    print("Message type: ${message.type}");
+    print("Message content (JSON): ${message.message}");
+    if (message.attachment != null) {
+        print("Binary payload: ${message.attachment}");
+    }
+}
+
+room.listen((RoomEvent event) {
+    if (event is RoomMessageEvent) {
+        onMessage(event);
+    }
+});
+```
++++
 
 The `RoomMessage` object includes:
 
@@ -56,6 +151,7 @@ The `RoomMessage` object includes:
 
 To send a message to **all** participants, call:
 
++++ Python
 ```python
 await room.messaging.broadcast_message(
     type="my_broadcast_type",
@@ -63,6 +159,28 @@ await room.messaging.broadcast_message(
     attachment=None
 )
 ```
++++ JavaScript
+```javascript
+await room.messaging.broadcastMessage({
+    type: "my_broadcast_type",
+    message: { hello: "everyone" },
+});
+```
++++ TypeScript
+```typescript
+await room.messaging.broadcastMessage({
+    type: "my_broadcast_type",
+    message: { hello: "everyone" },
+});
+```
++++ Dart
+```dart
+await room.messaging.broadcastMessage(
+    type: "my_broadcast_type",
+    message: { "hello": "everyone" }
+);
+```
++++
 
 All participants with messaging enabled will receive this broadcast.
 

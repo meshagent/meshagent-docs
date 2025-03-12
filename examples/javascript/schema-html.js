@@ -1,0 +1,46 @@
+import {
+  MeshSchema,
+  ElementType,
+  ChildProperty,
+  ValueProperty,
+} from 'meshagent';
+
+// Create the schema
+const schema = new MeshSchema({
+  rootTagName: 'html',
+  elements: [
+    new ElementType({
+      tagName: 'html',
+      properties: [
+        // A ChildProperty describes the type of children that an element allows.
+        // There can be at most one child property for each element type, but
+        // the child property can allow multiple types of child elements.
+        new ChildProperty({
+          name: 'children',
+          childTagNames: ['body'],
+        }),
+      ],
+    }),
+    new ElementType({
+      tagName: 'body',
+      properties: [
+        // Our body can only contain paragraph elements.
+        new ChildProperty({
+          name: 'children',
+          childTagNames: ['p'],
+        }),
+      ],
+    }),
+    new ElementType({
+      tagName: 'p',
+      properties: [
+        // A ValueProperty describes an attribute that contains a single value.
+        new ValueProperty({
+          name: 'class',
+          type: 'string',
+        }),
+      ],
+    }),
+  ],
+});
+

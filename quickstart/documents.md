@@ -1,5 +1,5 @@
 ---
-order: -1
+order: -2
 ---
 
 # Documents
@@ -35,6 +35,12 @@ Suppose you have a basic web page structure and want to define a schema for it. 
 
 +++ Python
 :::code source="/examples/python/schemas-html.py" :::
++++ JavaScript
+:::code source="/examples/javascript/schemas-html.js" :::
++++ TypeScript
+:::code source="/examples/typescript/schemas-html.ts" :::
++++ Dart
+:::code source="/examples/dart/schemas-html.dart" :::
 +++
 
 # Creating a MeshDocument
@@ -42,13 +48,33 @@ Suppose you have a basic web page structure and want to define a schema for it. 
 Many LLMs (such as OpenAI) and agent frameworks (such as MeshAgent) support JSON Schemas for defining inputs and outputs. Generating an OpenAI-compatible JSON schema from your MeshSchema requires only one line of code:
 
 +++ Python
-:::code source="/examples/python/schemas-json.py" :::
+``` python
+json_schema = schema.to_json()
+```
++++ JavaScript
+``` javascript
+const jsonSchema = schema.toJson();
+```
++++ TypeScript
+``` typescript
+const jsonSchema: Record<string, any> = schema.toJson();
+```
++++ Dart
+``` dart
+final jsonSchema = schema.toJson();
+```
 +++
 
 To create a MeshDocument based on your schema and enable synchronization across different clients, use the MeshAgent runtime:
 
 +++ Python
 :::code source="/examples/python/documents-writing.py" :::
++++ JavaScript
+:::code source="/examples/javascript/documents-writing.js" :::
++++ TypeScript
+:::code source="/examples/typescript/documents-writing.ts" :::
++++ Dart
+:::code source="/examples/dart/documents-writing.dart" :::
 +++
 
 Once you have a MeshDocument, you can [build an agent](/quickstart/agents/) that knows how to write to it.

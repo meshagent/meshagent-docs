@@ -47,6 +47,12 @@ Here is a minimal example demonstrating how to define and run a custom schema re
 
 +++ Python
 :::code source="/examples/python/schema-registry.py":::
++++ JavaScript
+:::code source="/examples/javascript/schema-registry.js":::
++++ TypeScript
+:::code source="/examples/typescript/schema-registry.ts":::
++++ Dart
+:::code source="/examples/dart/schema-registry.dart":::
 +++
 
 ---

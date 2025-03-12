@@ -23,28 +23,115 @@ The storage system emits two types of events:
 1. **`file_updated`**  
    Triggered when a file is created or updated. Handlers receive a `path` argument identifying the file's location in storage.
    
-   ```python
-   def on_file_updated(path: str):
-       print(f"File updated: {path}")
++++ Python
+```python
+def on_file_updated(path: str):
+   print(f"File updated: {path}")
 
-   room.storage.on("file_updated", on_file_updated)
-   ```
+room.storage.on("file_updated", on_file_updated)
+```
++++ JavaScript
+```javascript
+function onFileUpdated(path) {
+    console.log("File updated:", path);
+}
+
+room.storage.on("file_updated", onFileUpdated);
+```
++++ TypeScript
+```typescript
+function onFileUpdated(path: string) {
+    console.log("File updated:", path);
+}
+
+room.storage.on("file_updated", onFileUpdated);
+```
++++ Dart
+```dart
+void onFileUpdated(String path) {
+    print("File updated: $path");
+}
+
+room.listen((RoomEvent event) {
+    if (event is FileUpdatedEvent) {
+        onFileUpdated(event.path);
+    }
+});
+```
++++
+
 
 2. **`file_deleted`**  
    Triggered when a file is deleted. Handlers receive a `path` argument identifying the file's location in storage.
    
-   ```python
-   def on_file_deleted(path: str):
-       print(f"File deleted: {path}")
++++ Python
+```python
+def on_file_deleted(path: str):
+   print(f"File deleted: {path}")
 
-   room.storage.on("file_deleted", on_file_deleted)
-   ```
+room.storage.on("file_deleted", on_file_deleted)
+```
++++ JavaScript
+```javascript
+function onFileDeleted(path) {
+    console.log("File deleted:", path);
+}
+
+room.storage.on("file_deleted", on_file_deleted);
+```
++++ TypeScript
+```typescript
+function onFileDeleted(path: string) {
+    console.log("File deleted:", path);
+}
+
+room.storage.on("file_deleted", on_file_deleted);
+```
++++ Dart
+```dart
+void onFileDeleted(String path) {
+    print("File deleted: $path");
+}
+
+room.listen((RoomEvent event) {
+    if (event is FileDeletedEvent) {
+        onFileDeleted(event.path);
+    }
+});
+```
++++
 
 You can remove an event handler with:
+
++++ Python
 ```python
 room.storage.off("file_updated", on_file_updated)
 room.storage.off("file_deleted", on_file_deleted)
 ```
++++ JavaScript
+```javascript
+room.storage.off("file_updated", onFileUpdated);
+room.storage.off("file_deleted", onFileDeleted);
+```
++++ TypeScript
+```typescript
+room.storage.off("file_updated", onFileUpdated);
+room.storage.off("file_deleted", onFileDeleted);
+```
++++ Dart
+```dart
+room.listen((RoomEvent event) {
+    // Remove event handlers as needed
+    if (event is FileUpdatedEvent) {
+        // Remove handler logic
+    }
+    if (event is FileDeletedEvent) {
+        // Remove handler logic
+    }
+});
+```
++++
+
 
 ---
 
@@ -64,12 +151,38 @@ Checks if a file or folder exists at the given path.
 - *(bool)*: `True` if the file or folder exists; `False` otherwise.
 
 **Example**:
++++ Python
 ```python
 if await room.storage.exists(path="folder/data.json"):
     print("Data file exists!")
 else:
     print("Data file does not exist.")
 ```
++++ JavaScript
+```javascript
+if (await room.storage.exists("folder/data.json")) {
+    console.log("Data file exists!");
+} else {
+    console.log("Data file does not exist.");
+}
+```
++++ TypeScript
+```typescript
+if (await room.storage.exists("folder/data.json")) {
+    console.log("Data file exists!");
+} else {
+    console.log("Data file does not exist.");
+}
+```
++++ Dart
+```dart
+if (await room.storage.exists("folder/data.json")) {
+    print("Data file exists!");
+} else {
+    print("Data file does not exist.");
+}
+```
++++
 
 ---
 
@@ -87,9 +200,23 @@ If `overwrite` is `True`, an existing file at this path will be truncated.
 - *Handle Object*: An object representing an open file, usable with `write` and `close`.
 
 **Example**:
++++ Python
 ```python
 handle = await room.storage.open(path="files/new.txt", overwrite=True)
 ```
++++ JavaScript
+```javascript
+let handle = await room.storage.open("files/new.txt", { overwrite: true });
+```
++++ TypeScript
+```typescript
+let handle = await room.storage.open("files/new.txt", { overwrite: true });
+```
++++ Dart
+```dart
+var handle = await room.storage.open("files/new.txt", overwrite=true);
+```
++++
 
 ---
 
@@ -106,10 +233,33 @@ Writes binary data to an open file handle.
 - `None`
 
 **Example**:
++++ Python
 ```python
 data_to_write = b"Sample data"
+
 await room.storage.write(handle=my_handle, data=data_to_write)
 ```
++++ JavaScript
+```javascript
+const encoder = new TextEncoder();
+const dataToWrite = encoder.encode("Sample data");
+
+await room.storage.write(myHandle, data=dataToWrite);
+```
++++ TypeScript
+```typescript
+const encoder = new TextEncoder();
+const dataToWrite = encoder.encode("Sample data");
+
+await room.storage.write(myHandle, data=dataToWrite);
+```
++++ Dart
+```dart
+final dataToWrite = utf8.encode("Sample data");
+
+await room.storage.write(myHandle, dataToWrite);
+```
++++
 
 ---
 
@@ -125,9 +275,23 @@ Closes an open file handle, ensuring all data has been written.
 - `None`
 
 **Example**:
++++ Python
 ```python
 await room.storage.close(handle=my_handle)
 ```
++++ JavaScript
+```javascript
+await room.storage.close(myHandle);
+```
++++ TypeScript
+```typescript
+await room.storage.close(myHandle);
+```
++++ Dart
+```dart
+await room.storage.close(myHandle);
+```
++++
 
 ---
 
@@ -143,10 +307,27 @@ Retrieves the content of a file from the remote storage.
 - *File-like Response*: Contains the file's raw data, typically accessible through a `.data` property.
 
 **Example**:
++++ Python
 ```python
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
 ```
++++ JavaScript
+```javascript
+const fileResponse = await room.storage.download("files/data.bin");
+console.log(fileResponse.data);  // raw bytes
+```
++++ TypeScript
+```typescript
+const fileResponse = await room.storage.download("files/data.bin");
+console.log(fileResponse.data);  // raw bytes
+```
++++ Dart
+```dart
+final fileResponse = await room.storage.download("files/data.bin");
+print(fileResponse.data);  // raw bytes
+```
++++
 
 ---
 
@@ -162,10 +343,27 @@ Requests a downloadable URL for the specified file path, which can be used to fe
 - *(str)*: A URL string you can fetch with your own HTTP or other suitable client.
 
 **Example**:
++++ Python
 ```python
 url = await room.storage.download_url(path="files/report.pdf")
 print("Download the file from:", url)
 ```
++++ JavaScript
+```javascript
+const url = await room.storage.downloadUrl("files/report.pdf");
+console.log("Download the file from:", url);
+```
++++ TypeScript
+```typescript
+const url = await room.storage.downloadUrl("files/report.pdf");
+console.log("Download the file from:", url);
+```
++++ Dart
+```dart
+final url = await room.storage.downloadUrl("files/report.pdf");
+print("Download the file from: $url");
+```
++++
 
 ---
 
@@ -181,11 +379,35 @@ Lists the contents of a folder, returning file and subfolder names along with a 
 - *(list)*: A list of entries, each containing a `name` and `is_folder` property.
 
 **Example**:
++++ Python
 ```python
 entries = await room.storage.list(path="some_folder")
 for e in entries:
     print(e.name, "is folder?" if e.is_folder else "is file?")
 ```
++++ JavaScript
+```javascript
+const entries = await room.storage.list("some_folder");
+entries.forEach(e => {
+    console.log(e.name, e.isFolder ? "is folder" : "is file");
+});
+```
++++ TypeScript
+```typescript
+const entries = await room.storage.list("some_folder");
+entries.forEach(e => {
+    console.log(e.name, e.isFolder ? "is folder" : "is file");
+});
+```
++++ Dart
+```dart
+final entries = await room.storage.list("some_folder");
+for (var e in entries) {
+    print("${e.name} ${e.isFolder ? "is folder" : "is file"}");
+}
+```
++++
+
 
 ---
 
@@ -201,10 +423,27 @@ Deletes a file at the given path. A `file_deleted` event is typically emitted af
 - `None`
 
 **Example**:
++++ Python
 ```python
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")
 ```
++++ JavaScript
+```javascript
+await room.storage.delete("folder/old_file.txt");
+console.log("File deleted.");
+```
++++ TypeScript
+```typescript
+await room.storage.delete("folder/old_file.txt");
+console.log("File deleted.");
+```
++++ Dart
+```dart
+await room.storage.delete("folder/old_file.txt");
+print("File deleted.");
+```
++++
 
 ---
 
@@ -217,6 +456,7 @@ A common use case:
 3. Later, download the file to verify or use the data.  
 4. Delete the file when it’s no longer needed, reacting to the `file_deleted` event.
 
++++ Python
 ```python
 # Check existence
 exists = await room.storage.exists(path="example.txt")
@@ -233,6 +473,61 @@ print("Downloaded content:", response.data)
 # Delete it
 await room.storage.delete("example.txt")
 ```
++++ JavaScript
+```javascript
+// Check existence
+const exists = await room.storage.exists("example.txt");
+if (!exists) {
+    // Create it
+    const handle = await room.storage.open("example.txt");
+    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
+    await room.storage.close(handle);
+}
+
+// Download content
+const response = await room.storage.download("example.txt");
+console.log("Downloaded content:", response.data);
+
+// Delete it
+await room.storage.delete("example.txt");
+```
++++ TypeScript
+```typescript
+// Check existence
+const exists = await room.storage.exists("example.txt");
+if (!exists) {
+    // Create it
+    const handle = await room.storage.open("example.txt");
+    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
+    await room.storage.close(handle);
+}
+
+// Download content
+const response = await room.storage.download("example.txt");
+console.log("Downloaded content:", response.data);
+
+// Delete it
+await room.storage.delete("example.txt");
+```
++++ Dart
+```dart
+// Check existence
+final exists = await room.storage.exists("example.txt");
+if (!exists) {
+    // Create it
+    final handle = await room.storage.open("example.txt");
+    await room.storage.write(handle, utf8.encode("Hello, Storage!"));
+    await room.storage.close(handle);
+}
+
+// Download content
+final response = await room.storage.download("example.txt");
+print("Downloaded content: ${response.data}");
+
+// Delete it
+await room.storage.delete("example.txt");
+```
++++
 
 This sequence demonstrates basic creation, reading, and deletion flows within a single session.  
 
