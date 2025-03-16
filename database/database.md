@@ -85,7 +85,7 @@ await room.database.create_table_with_schema({
 ```
 +++ JavaScript
 ```ts
-await room.database..createTableWithSchema({
+await room.database.createTableWithSchema({
   name: "users",
   schema: {
     id: new IntDataType(),
@@ -252,7 +252,7 @@ await room.database.add_columns({
 ```
 +++ JavaScript
 ```js
-await room.database..addColumns({
+await room.database.addColumns({
   table: "users",
   newColumns: {
     isActive: "true",
