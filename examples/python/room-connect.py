@@ -1,15 +1,20 @@
-# Define a unique room name
-room_name = 'my-room'
-participant_name = 'my-participant'
+import asyncio
+from meshagent.api import RoomClient, websocket_protocol
 
-# Create the WebSocket channel 
-channel = websocket_protocol(participant_name=participant_name, room_name=room_name)
+async def main():    
+    # Define a unique room name
+    room_name = 'my-room'
+    participant_name = 'my-participant'
 
-# Initialize the communication protocol
-protocol = Protocol(channel)
+    async with RoomClient(
+        protocol= websocket_protocol(
+            participant_name=participant_name,
+            room_name=room_name
+        )) as room:   
+            print("connected to room")
 
-# Instantiate a new RoomClient for interacting with the room
-room = RoomClient(protocol)
-
-# Connect to the room
-await room.start()
+if __name__ == '__main__':
+    
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.get_event_loop().run_until_complete(main())
