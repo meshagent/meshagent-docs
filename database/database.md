@@ -69,19 +69,19 @@ print(tables); // ["users", "orders", "products", ...]
 **Example**:
 +++ Python
 ```python
-await room.database.create_table_with_schema({
-  "name": "users",
-  "schema": {
+await room.database.create_table_with_schema(
+  name="users",
+  schema={
     "id": IntDataType(),
     "username": TextDataType(),
     "email": TextDataType(),
   },
-  "data": [
+  data=[
     {"id": 1, "username": "alice", "email": "alice@example.com" },
     {"id": 2, "username": "bob", "email": "bob@example.com" }
   ],
-  "mode": "create"
-})
+  mode="create"
+)
 ```
 +++ JavaScript
 ```ts
@@ -146,14 +146,14 @@ await room.database.createTableWithSchema({
 **Example**:
 +++ Python
 ```python
-await room.database.create_table_from_data({
-  "name": "orders",
-  "data": [
+await room.database.create_table_from_data(
+  name="orders",
+  data=[
     {"id": 1, "product": "Laptop", "quantity": 2},
     {"id": 2, "product": "Phone", "quantity": 5},
   ],
-  "mode": "overwrite"
-})
+  mode="overwrite"
+)
 ```
 +++ JavaScript
 ```js
@@ -202,10 +202,10 @@ await room.database.createTableFromData({
 **Example**:
 +++ Python
 ```python
-await room.database.drop_table({
-  "name": "temp_table",
-  "ignoreMissing": True
-})
+await room.database.drop_table(
+  name="temp_table",
+  ignore_missing=True
+)
 ```
 +++ JavaScript
 ```js
@@ -242,13 +242,13 @@ await room.database.dropTable({
 **Example**:
 +++ Python
 ```python
-await room.database.add_columns({
-  "table": "users",
-  "newColumns": {
+await room.database.add_columns(
+  table="users",
+  new_columns={
     "isActive": "true",
     "createdAt": "CURRENT_TIMESTAMP",
   }
-})
+)
 ```
 +++ JavaScript
 ```js
@@ -294,10 +294,10 @@ await room.database.addColumns({
 **Example**:
 +++ Python
 ```python
-await room.database.drop_columns({
-  "table": "users",
-  "columns": ["deprecatedColumn1", "deprecatedColumn2"]
-})
+await room.database.drop_columns(
+  table="users",
+  columns=["deprecatedColumn1", "deprecatedColumn2"]
+)
 ```
 +++ JavaScript
 ```js
@@ -334,13 +334,13 @@ await room.database.dropColumns({
 **Example**:
 +++ Python
 ```python
-await room.database.insert({
-  "table": "users",
-  "records": [
+await room.database.insert(
+  table="users",
+  records=[
     { "id": 3, "username": "charlie", "email": "charlie@example.com" },
     { "id": 4, "username": "dana", "email": "data@example.com" },
   ],
-})
+)
 ```
 +++ JavaScript
 ```js
@@ -388,12 +388,12 @@ await room.database.insert({
 **Example**:
 +++ Python
 ```python
-await room.database.update({
-  "table": "users",
-  "where": "id = 3",
-  "values": { "email": "newcharlie@example.com" },
-  "valuesSql": { "loginCount": "loginCount + 1" },
-})
+await room.database.update(
+  table="users",
+  where="id = 3",
+  values={ "email": "newcharlie@example.com" },
+  values_sql={ "loginCount": "loginCount + 1" },
+)
 ```
 +++ JavaScript
 ```js
@@ -436,10 +436,10 @@ await room.database.update({
 **Example**:
 +++ Python
 ```python
-await room.database.delete({
-  "table": "users",
-  "where": "id = 4"
-})
+await room.database.delete(
+  table="users",
+  where="id = 4"
+)
 ```
 +++ JavaScript
 ```js
@@ -477,14 +477,14 @@ await room.database.delete({
 **Example**:
 +++ Python
 ```python
-await room.database.merge({
-  "table": "users",
-  "on": "id",
-  "records": [
+await room.database.merge(
+  table="users",
+  on="id",
+  records=[
     { "id": 1, "username": "alice", "email": "alice_new@example.com" },
     { "id": 5, "username": "eric", "email": "eric@example.com" },
   ],
-})
+)
 ```
 +++ JavaScript
 ```js
@@ -537,11 +537,11 @@ await room.database.merge({
 **Example**:
 +++ Python
 ```python
-results = await room.database.search({
-  "table": "users",
-  "where": { "username": "alice" },
-  "limit": 1
-})
+results = await room.database.search(
+  table="users",
+  where={ "username": "alice" },
+  limit=1
+)
 
 print(results)  # [{"id": 1, "username": "alice", "email": "alice@example.com"}]
 ```
@@ -588,7 +588,7 @@ print(results); // [{"id": 1, "username": "alice", "email": "alice@example.com"}
 **Example**:
 +++ Python
 ```python
-await room.database.optimize("users")
+await room.database.optimize(table="users")
 ```
 +++ JavaScript
 ```js
@@ -616,10 +616,10 @@ await room.database.optimize("users");
 **Example**:
 +++ Python
 ```python
-await room.database.create_vector_index({
-  "table": "documents",
-  "column": "embedding",
-})
+await room.database.create_vector_index(
+  table="documents",
+  column="embedding",
+)
 ```
 +++ JavaScript
 ```js
@@ -656,10 +656,10 @@ await room.database.createVectorIndex({
 **Example**:
 +++ Python
 ```python
-await room.database.create_scalar_index({
-  "table": "users",
-  "column": "email",
-})
+await room.database.create_scalar_index(
+  table="users",
+  column="email",
+)
 ```
 +++ JavaScript
 ```js
@@ -696,10 +696,10 @@ await room.database.createScalarIndex({
 **Example**:
 +++ Python
 ```python
-await room.database.create_full_text_search_index({
-  "table": "articles",
-  "column": "content",
-})
+await room.database.create_full_text_search_index(
+  table="articles",
+  column="content",
+)
 ```
 +++ JavaScript
 ```js
@@ -735,7 +735,7 @@ await room.database.createFullTextSearchIndex({
 **Example**:
 +++ Python
 ```python
-indexes = await room.database.list_indexes({"table": "users"})
+indexes = await room.database.list_indexes(table="users")
 
 print(indexes)
 # Example output:
