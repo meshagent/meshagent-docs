@@ -28,7 +28,7 @@ class Sample(TaskRunner):
     async def ask(self, *, context, arguments):
     
         result = await generate_json(
-            participant_id=context.caller.id,
+            on_behalf_of=context.caller,
             requires=[
                 RequiredToolkit(name="meshagent.ui", tools=[ "ask_user" ])
             ],
