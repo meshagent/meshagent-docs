@@ -25,14 +25,14 @@ The storage system emits two types of events:
 
 +++ Python
 ```python
-def on_file_updated(path: str):
+def on_file_updated(path: str, participant_id: str):
    print(f"File updated: {path}")
 
 room.storage.on("file.updated", on_file_updated)
 ```
 +++ JavaScript
 ```javascript
-function onFileUpdated(path) {
+function onFileUpdated(path, participantId) {
     console.log("File updated:", path);
 }
 
@@ -40,7 +40,7 @@ room.storage.on("file.updated", onFileUpdated);
 ```
 +++ TypeScript
 ```typescript
-function onFileUpdated(path: string) {
+function onFileUpdated(path: string, participantId: string) {
     console.log("File updated:", path);
 }
 
