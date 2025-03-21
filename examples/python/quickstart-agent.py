@@ -33,7 +33,7 @@ async def main():
             # The document will automatically be created if it does not already exist.
 
             await room.agents.ask(
-                agent="meshagent.document_writer",
+                agent="meshagent.document-writer",
                 arguments={
                     "path": path,
                     "prompt":"write a paragraph about ai and how agents are shaping the future"
