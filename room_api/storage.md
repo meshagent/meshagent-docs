@@ -457,76 +457,13 @@ A common use case:
 4. Delete the file when it’s no longer needed, reacting to the `file.deleted` event.
 
 +++ Python
-```python
-# Check existence
-exists = await room.storage.exists(path="example.txt")
-if not exists:
-    # Create it
-    handle = await room.storage.open(path="example.txt")
-    await room.storage.write(handle=handle, data=b"Hello, Storage!")
-    await room.storage.close(handle=handle)
-
-# Download content
-response = await room.storage.download(path="example.txt")
-print("Downloaded content:", response.data)
-
-# Delete it
-await room.storage.delete("example.txt")
-```
+:::code source="/examples/python/storage-download.py":::
 +++ JavaScript
-```javascript
-// Check existence
-const exists = await room.storage.exists("example.txt");
-if (!exists) {
-    // Create it
-    const handle = await room.storage.open("example.txt");
-    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
-    await room.storage.close(handle);
-}
-
-// Download content
-const response = await room.storage.download("example.txt");
-console.log("Downloaded content:", response.data);
-
-// Delete it
-await room.storage.delete("example.txt");
-```
+:::code source="/examples/javascript/storage-download.js":::
 +++ TypeScript
-```typescript
-// Check existence
-const exists = await room.storage.exists("example.txt");
-if (!exists) {
-    // Create it
-    const handle = await room.storage.open("example.txt");
-    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
-    await room.storage.close(handle);
-}
-
-// Download content
-const response = await room.storage.download("example.txt");
-console.log("Downloaded content:", response.data);
-
-// Delete it
-await room.storage.delete("example.txt");
-```
+:::code source="/examples/typescript/storage-download.ts":::
 +++ Dart
-```dart
-// Check existence
-final exists = await room.storage.exists("example.txt");
-if (!exists) {
-    // Create it
-    final handle = await room.storage.open("example.txt");
-    await room.storage.write(handle, utf8.encode("Hello, Storage!"));
-    await room.storage.close(handle);
-}
-
-// Download content
-final response = await room.storage.download("example.txt");
-print("Downloaded content: ${response.data}");
-
-// Delete it
-await room.storage.delete("example.txt");
-```
+:::code source="/examples/dart/storage-download.dart":::
 +++
 
 This sequence demonstrates basic creation, reading, and deletion flows within a single session.  

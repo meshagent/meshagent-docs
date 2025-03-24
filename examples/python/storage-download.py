@@ -1,0 +1,15 @@
+# Check existence
+exists = await room.storage.exists(path="example.txt")
+if not exists:
+    # Create it
+    handle = await room.storage.open(path="example.txt")
+    await room.storage.write(handle=handle, data=b"Hello, Storage!")
+    await room.storage.close(handle=handle)
+
+# Download content
+response = await room.storage.download(path="example.txt")
+print("Downloaded content:", response.data)
+
+# Delete it
+await room.storage.delete("example.txt")
+

@@ -1,4 +1,4 @@
-# Rooms
+# Rooms API
 
 Meshagent Rooms provide a shared workspace for agents and participants to collaborate in real time. Each room includes a participant list, presence tracking, and a mechanism for sharing information. Because Meshagent is designed for seamless integration, rooms are provisioned on demand as participants connect. This eliminates the complexity of syncing rules and allows agents and people to quickly spin up a shared environment to collaborate in.
 
