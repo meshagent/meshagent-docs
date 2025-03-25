@@ -1,0 +1,76 @@
+```dart Dart
+import 'dart:convert';
+import 'dart:io';
+
+/// Represents the input structure, analogous to the Python `Input` model.
+class Input {
+  final int a;
+  final int b;
+
+  Input({required this.a, required this.b});
+
+  /// Factory constructor to parse a JSON Map into an [Input] instance.
+  factory Input.fromJson(Map<String, dynamic> json) {
+    // You might want more robust validation here (e.g., check if the keys
+    // exist and if the values are integers).
+    return Input(a: json['a'], b: json['b']);
+  }
+}
+
+/// Represents the output structure, analogous to the Python `Output` model.
+class Output {
+  final int result;
+
+  Output({required this.result});
+
+  /// Converts this [Output] object to a JSON Map.
+  Map<String, dynamic> toJson() => {'result': result};
+}
+
+/// A simple function that takes an [Input] and returns an [Output].
+/// This is analogous to the `ask_model` method in Python, which
+/// computes `arguments.a + arguments.b`.
+Output computeSum(Input input) {
+  return Output(result: input.a + input.b);
+}
+
+Future<void> main() async {
+  // Start listening on localhost:8080
+  final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 8080);
+  print('Listening on http://${server.address.host}:${server.port}/');
+
+  // Handle requests in an async loop
+  await for (HttpRequest request in server) {
+    // Only allow POST for this example
+    if (request.method == 'POST') {
+      try {
+        // Read and decode the request body as JSON
+        final body = await utf8.decoder.bind(request).join();
+        final data = json.decode(body) as Map<String, dynamic>;
+
+        // Parse input
+        final input = Input.fromJson(data);
+
+        // Compute the sum
+        final output = computeSum(input);
+
+        // Encode the result as JSON and send back
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write(json.encode(output.toJson()));
+      } catch (e) {
+        // If something went wrong (parsing, etc.), return a 400
+        request.response
+          ..statusCode = HttpStatus.badRequest
+          ..write('Invalid request: $e');
+      }
+    } else {
+      // If not a POST, return 405 (method not allowed)
+      request.response.statusCode = HttpStatus.methodNotAllowed;
+    }
+    await request.response.close();
+  }
+}
+
+```

@@ -15,11 +15,10 @@ If you know your room names up front, you can simply add the schema to each room
 from meshagent.api import deploy_schema, RoomClient, websocket_protocol
 
 # When you want to deploy a schema manually, you can connect to the room and use the deploy_schema function.
+async with RoomClient(protocol = websocket_protocol(participant_name="schema_registrar", room_name="my_room", role="agent")) as room:
 
-    async with RoomClient(protocol = websocket_protocol(participant_name="schema_registrar", room_name="my_room", role="agent")) as room:
-
-        # This will place the schema in the room under .schemas/sample.json and make it available for use in documents with the .sample extension
-        await deploy_schema(room=room, schema=mesh_schema, name="sample")
+    # This will place the schema in the room under .schemas/sample.json and make it available for use in documents with the .sample extension
+    await deploy_schema(room=room, schema=mesh_schema, name="sample")
 
 ```
 

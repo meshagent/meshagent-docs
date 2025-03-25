@@ -1,0 +1,19 @@
+```dart Dart
+// Check existence
+final exists = await room.storage.exists("example.txt");
+if (!exists) {
+    // Create it
+    final handle = await room.storage.open("example.txt");
+    await room.storage.write(handle, utf8.encode("Hello, Storage!"));
+    await room.storage.close(handle);
+}
+
+// Download content
+final response = await room.storage.download("example.txt");
+print("Downloaded content: ${response.data}");
+
+// Delete it
+await room.storage.delete("example.txt");
+
+
+```

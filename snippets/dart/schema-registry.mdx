@@ -1,0 +1,45 @@
+```dart Dart
+import 'package:meshagent/meshagent.dart';
+
+Future<void> main() async {
+  // Define the schema
+  final sample = MeshSchema(
+    rootTagName: 'sample',
+    elements: [
+      ElementType(
+        tagName: 'sample',
+        description: 'test',
+        properties: [
+          ChildProperty(
+            name: 'children',
+            description: 'desc',
+            childTagNames: ['child'],
+          ),
+        ],
+      ),
+      ElementType(
+        tagName: 'child',
+        description: 'child',
+        properties: [
+          ValueProperty(
+            name: 'prop',
+            description: 'desc',
+            type: 'number',
+          ),
+        ],
+      ),
+    ],
+  );
+
+  // Create a registry and add the schema
+  final server = SchemaRegistry(
+    schemas: [
+      SchemaRegistration(name: 'sample', schema: sample),
+    ],
+  );
+
+  // Run the server
+  await server.run();
+}
+
+```

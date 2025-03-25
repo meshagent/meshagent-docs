@@ -1,0 +1,18 @@
+```typescript Typescript
+// Check existence
+const exists = await room.storage.exists("example.txt");
+if (!exists) {
+    // Create it
+    const handle = await room.storage.open("example.txt");
+    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
+    await room.storage.close(handle);
+}
+
+// Download content
+const response = await room.storage.download("example.txt");
+console.log("Downloaded content:", response.data);
+
+// Delete it
+await room.storage.delete("example.txt");
+
+```
