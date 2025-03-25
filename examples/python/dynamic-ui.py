@@ -30,7 +30,7 @@ class Sample(TaskRunner):
         result = await generate_json(
             on_behalf_of=context.caller,
             requires=[
-                RequiredToolkit(name="meshagent.ui", tools=[ "ask_user" ])
+                RequiredToolkit(name="ui", tools=[ "ask_user" ])
             ],
             room=self.room,
             output_schema=self.output_schema
