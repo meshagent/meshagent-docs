@@ -50,7 +50,7 @@ async def main():
         output_model=Output,
         requires=[
             RequiredToolkit(
-                name="meshagent.ui",
+                name="ui",
                 tools=["ask_user"]
             )
         ]
