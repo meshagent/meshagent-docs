@@ -1,5 +1,3 @@
-# Sync
-
 `SyncClient` module provides a client for interacting with server-managed documents (such as `MeshDocument`) and synchronizing local changes with a remote server through a `RoomClient`. It contains two primary exports:
 
 ---
@@ -13,8 +11,8 @@
 
 Below is an example of how you might use the `SyncClient` in your code:
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 # Create a SyncClient instance
 sync_client = SyncClient(room=my_room_client)
 
@@ -40,8 +38,7 @@ await sync_client.close("my/path")
 # Dispose of the SyncClient to clean up resources
 sync_client.dispose()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 // Create a SyncClient instance
 const syncClient = new SyncClient({ room: myRoomClient });
 
@@ -63,8 +60,7 @@ await syncClient.close("my/path");
 // Dispose of the SyncClient to clean up resources
 syncClient.dispose();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 // Create a SyncClient instance
 const syncClient = new SyncClient({ room: myRoomClient });
 
@@ -86,8 +82,7 @@ await syncClient.close("my/path");
 // Dispose of the SyncClient to clean up resources
 syncClient.dispose();
 ```
-+++ Dart
-```dart
+```dart Dart
 // Create a SyncClient instance
 final syncClient = SyncClient(room: myRoomClient);
 
@@ -113,7 +108,8 @@ await syncClient.close("my/path");
 // Dispose of the SyncClient to clean up resources
 syncClient.dispose();
 ```
-+++
+</CodeGroup>
+
 
 ---
 
@@ -121,23 +117,21 @@ syncClient.dispose();
 
 A simple helper class representing a single queued message of changes for a specific document path.
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 queued_sync = QueuedSync(path="my/path", base64="encoded-changes")
 ```
-+++ JavaScript
-```js
+```js JavaScript
 const queuedSync = new QueuedSync({ path: "my/path", base64: "encoded-changes" });
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 const queuedSync = new QueuedSync({ path: "my/path", base64: "encoded-changes" });
 ```
-+++ Dart
-```dart
+```dart Dart
 final queuedSync = QueuedSync(path: "my/path", base64: "encoded-changes");
 ```
-+++
+</CodeGroup>
+
 
 - **`path: string`**  
   The unique path identifying the document on the server.
@@ -156,23 +150,21 @@ The `SyncClient` class is responsible for coordinating document synchronization 
 
 #### `start()`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 sync_client.start()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 syncClient.start();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 syncClient.start();
 ```
-+++ Dart
-```dart
+```dart Dart
 syncClient.start();
 ```
-+++
+</CodeGroup>
+
 
 - **Description**  
   Begins listening for local changes to any opened documents and queues them for synchronization.  
@@ -180,46 +172,42 @@ syncClient.start();
 
 #### `dispose()`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 sync_client.dispose()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 syncClient.dispose();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 syncClient.dispose();
 ```
-+++ Dart
-```dart
+```dart Dart
 syncClient.dispose();
 ```
-+++
+</CodeGroup>
+
 
 - **Description**  
   Cleans up internal resources used by the client, stops listening for changes, and closes any internal streams.
 
 #### `createMeshDocumentWithMeshSchema(path, schema, json?)`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await sync_client.createMeshDocumentWithMeshSchema("my/path", my_schema, json={"key": "value"})
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
 ```
-+++ Dart
-```dart
+```dart Dart
 await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"key": "value"});
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `path` – The path where the document will be created on the server.
@@ -230,23 +218,21 @@ await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"k
 
 #### `createMeshDocumentWithFormat(path, format, json?)`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await sync_client.createMeshDocumentWithFormat("my/path", "json", json={"key": "value"})
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await syncClient.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await syncClient.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
 ```
-+++ Dart
-```dart
+```dart Dart
 await syncClient.createMeshDocumentWithFormat("my/path", "json", json: {"key": "value"});
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `path` – The path where the document will be created on the server.
@@ -257,23 +243,21 @@ await syncClient.createMeshDocumentWithFormat("my/path", "json", json: {"key": "
 
 #### `open(path, { create = true })`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 doc = await sync_client.open("my/path", create=True)
 ```
-+++ JavaScript
-```js
+```js JavaScript
 const doc = await syncClient.open("my/path", { create: true });
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 const doc = await syncClient.open("my/path", { create: true });
 ```
-+++ Dart
-```dart
+```dart Dart
 final doc = await syncClient.open("my/path", create: true);
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `path` – The path identifying the document to open.
@@ -285,23 +269,21 @@ final doc = await syncClient.open("my/path", create: true);
 
 #### `close(path)`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await sync_client.close("my/path")
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await syncClient.close("my/path");
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await syncClient.close("my/path");
 ```
-+++ Dart
-```dart
+```dart Dart
 await syncClient.close("my/path");
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `path` – The path of the document to close.
@@ -310,24 +292,22 @@ await syncClient.close("my/path");
 
 #### `sync(path, data)`
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await sync_client.sync("my/path", b"some bytes")
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await syncClient.sync("my/path", new Uint8Array([/*...bytes...*/]));
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await syncClient.sync("my/path", new Uint8Array([/*...bytes...*/]));
 ```
-+++ Dart
-```dart
+```dart Dart
 // In Dart, you might have a ByteData or Uint8List
 await syncClient.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `path` – The path of the document to synchronize.
@@ -354,3 +334,5 @@ await syncClient.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
 
 - **Extensibility**  
   You can extend the `SyncClient` for specialized document operations—such as partial updates, conflict resolution logic, or customized schema handling—by adding new methods or composing it with other classes that also use `RoomClient`.
+
+

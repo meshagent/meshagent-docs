@@ -1,26 +1,24 @@
-# Basics
+import MessagingSent from "/snippets/examples/python/messaging-send.py"
+
 
 ### Enabling Messaging
 
 Before sending or receiving messages, you must enable messaging on your local participant’s side:
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await room.messaging.enable()
 ```
-+++ JavaScript
-```javascript
+```javascript JavaScript
 await room.messaging.enable();
 ```
-+++ TypeScript
-```typescript
+```typescript TypeScript
 await room.messaging.enable();
 ```
-+++ Dart
-```dart
+```dart Dart
 await room.messaging.enable();
 ```
-+++
+</CodeGroup>
 
 
 Optionally, you can provide a callback `on_stream_accept` if you also plan to use “streaming” messages. For basic text/binary messages, you can ignore streams.
@@ -29,8 +27,9 @@ Optionally, you can provide a callback `on_stream_accept` if you also plan to us
 
 To send a message, use:
 
-+++ Python
-```python
+
+<CodeGroup>
+```python Python
 await room.messaging.send_message(
     to = some_remote_participant,
     type = "my_message_type",      # Arbitrary label for your message
@@ -38,8 +37,7 @@ await room.messaging.send_message(
     attachment = b"some data"      # (optional) Byte payload
 )
 ```
-+++ JavaScript
-```javascript
+```javascript JavaScript
 await room.messaging.sendMessage({
     to: someRemoteParticipant,
     type: "my_message_type",      // Arbitrary label for your message
@@ -47,8 +45,7 @@ await room.messaging.sendMessage({
     attachment: new Uint8Array()  // (optional) Byte payload
 });
 ```
-+++ TypeScript
-```typescript
+```typescript TypeScript
 await room.messaging.sendMessage({
     to: someRemoteParticipant,
     type: "my_message_type",      // Arbitrary label for your message
@@ -56,8 +53,7 @@ await room.messaging.sendMessage({
     attachment: new Uint8Array()  // (optional) Byte payload
 });
 ```
-+++ Dart
-```dart
+```dart Dart
 await room.messaging.sendMessage(
     to: someRemoteParticipant,
     type: "my_message_type",      // Arbitrary label for your message
@@ -65,7 +61,8 @@ await room.messaging.sendMessage(
     attachment: Uint8List(0)      // (optional) Byte payload
 );
 ```
-+++
+</CodeGroup>
+
 
 Where:
 
@@ -78,8 +75,8 @@ Where:
 
 When you enable messaging, you can register an event handler for the `"message"` event to receive custom messages:
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 def on_message(message: RoomMessage):
     print(f"Received message from {message.from_participant_id}")
     print(f"Message type: {message.type}")
@@ -89,8 +86,7 @@ def on_message(message: RoomMessage):
 
 room.messaging.on("message", on_message)
 ```
-+++ JavaScript
-```javascript
+```javascript JavaScript
 function onMessage(event) {
     const message = event.message;
 
@@ -104,8 +100,7 @@ function onMessage(event) {
 
 room.messaging.on("message", onMessage);
 ```
-+++ TypeScript
-```typescript
+```typescript TypeScript
 function onMessage(event: RoomMessageEvent) {
     const message: RoomMessage = event.message;
 
@@ -119,8 +114,7 @@ function onMessage(event: RoomMessageEvent) {
 
 room.messaging.on("message", onMessage);
 ```
-+++ Dart
-```dart
+```dart Dart
 void onMessage(RoomMessageEvent event) {
     final RoomMessage message = event.message;
 
@@ -138,7 +132,8 @@ room.listen((RoomEvent event) {
     }
 });
 ```
-+++
+</CodeGroup>
+
 
 The `RoomMessage` object includes:
 
@@ -151,36 +146,34 @@ The `RoomMessage` object includes:
 
 To send a message to **all** participants, call:
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await room.messaging.broadcast_message(
     type="my_broadcast_type",
     message={"hello": "everyone"},
     attachment=None
 )
 ```
-+++ JavaScript
-```javascript
+```javascript JavaScript
 await room.messaging.broadcastMessage({
     type: "my_broadcast_type",
     message: { hello: "everyone" },
 });
 ```
-+++ TypeScript
-```typescript
+```typescript TypeScript
 await room.messaging.broadcastMessage({
     type: "my_broadcast_type",
     message: { hello: "everyone" },
 });
 ```
-+++ Dart
-```dart
+```dart Dart
 await room.messaging.broadcastMessage(
     type: "my_broadcast_type",
     message: { "hello": "everyone" }
 );
 ```
-+++
+</CodeGroup>
+
 
 All participants with messaging enabled will receive this broadcast.
 
@@ -192,9 +185,11 @@ Below is a complete example showing **two separate participants** (we’ll call 
 
 > **Note**: This example starts both participants in the same Python script for demo purposes. In practice, each participant (or agent) can be in a separate process or even on a different machine, as long as they connect to the same room.
 
-+++ Python
-:::code source="/examples/python/messaging-send.py" :::
-+++
+
+<CodeGroup>
+    <MessagingSent />
+</CodeGroup>
+
 
 ### How This Example Works
 
@@ -203,10 +198,12 @@ Below is a complete example showing **two separate participants** (we’ll call 
 3. **Send message**: From “Alice”’s room, we look up “Bob” in `room.messaging.remote_participants`, then call `send_message(...)`.
 4. **Receive message**: “Bob” receives the message in the event callback:
 
-   ```python
-   def on_message(message):
-       print(f"[Bob] Received a message from {message.from_participant_id}: {message.message}")
-   ```
+<CodeGroup>
+```python Python
+def on_message(message):
+   print(f"[Bob] Received a message from {message.from_participant_id}: {message.message}")
+```
+</CodeGroup>
    
 5. **Reply**: “Bob” then sends a message back to “Alice” by looking up her participant object in his local list.
 
@@ -218,14 +215,17 @@ Below is a complete example showing **two separate participants** (we’ll call 
 
 - If you want to **broadcast** a message to all participants in the room, use:
   
-  ```python
-  await room.messaging.broadcast_message(
-      type="global_announcement",
-      message={"text":"Hello everyone!"}
-  )
-  ```
+<CodeGroup>
+```python Python
+await room.messaging.broadcast_message(
+  type="global_announcement",
+  message={"text":"Hello everyone!"}
+)
+```
+</CodeGroup>
 
 - You can also send **binary data** in the `attachment` argument if you need to transfer files or other binary payloads.
 - For advanced use-cases such as streaming large data chunk-by-chunk, refer to the `MessageStreamReader` / `MessageStreamWriter` APIs (`create_stream`, etc.).
 
 With this, you have all the essential building blocks to exchange messages (text or binary) among participants or agents using the MeshAgent client API.
+

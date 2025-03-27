@@ -4,9 +4,11 @@ import { fileURLToPath } from 'url';
 import vfs from 'vinyl-fs';
 import through from 'through2';
 import glob from 'fast-glob';
+import { rimraf } from 'rimraf';
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const exampleDir = path.join(currentDir, 'examples');
+const snippetsDir = path.join(currentDir, 'snippets', 'examples');
 const extMap = {
     '.dart': 'dart',
     '.js': 'javascript',
@@ -16,7 +18,9 @@ const extMap = {
     '.ts': 'typescript',
     '.yml': 'yaml',
 };
-const ignore = [`${exampleDir}/javascript/node_modules`];
+const ignore = [
+    `${exampleDir}/**/node_modules`
+];
 
 const map = through.obj((file, enc, cb) => {
     const parsed = path.parse(file.path);
@@ -28,7 +32,7 @@ const map = through.obj((file, enc, cb) => {
 
     const tabname = type.charAt(0).toUpperCase() + type.slice(1);
 
-    parsed.base = parsed.name + '.mdx';
+    parsed.base = `${parsed.name}.mdx`;
     parsed.ext = '.mdx';
 
     file.path = path.format(parsed);
@@ -39,12 +43,20 @@ const map = through.obj((file, enc, cb) => {
     cb(null, file);
 });
 
-try {
-    glob(`${exampleDir}/**/*`, { ignore }).then(entries => vfs
-        .src(entries, { base: exampleDir })
-        .pipe(map)
-        .pipe(vfs.dest(path.join(currentDir, 'snippets'))));
+async function main() {
+    try {
+        await rimraf(snippetsDir);
 
-} catch (error) {
-    console.error('Error processing examples:', error);
+        const entries = await glob(`${exampleDir}/**/*`, { ignore });
+
+        vfs
+            .src(entries, { base: exampleDir })
+            .pipe(map)
+            .pipe(vfs.dest(snippetsDir));
+
+    } catch (error) {
+        console.error('Error processing examples:', error);
+    }
 }
+
+main();

@@ -1,0 +1,52 @@
+import {
+    RoomClient,
+    Protocol,
+    WebSocketProtocolChannel,
+    websocketProtocol,
+} from 'meshagent-ts';
+
+async function main() {
+  try {
+    const roomName: string = 'quickstart';
+    const participantName: string = 'my user';
+
+    const channel: WebSocketProtocolChannel = await websocketProtocol({
+        roomName,
+        participantName
+    });
+
+    const room = new RoomClient({
+        protocol: new Protocol({channel})});
+
+    // Connect to the room
+    await room.start();
+
+    // Document path in the MeshAgent environment
+    const path = 'sample.document';
+
+    // the document will be automatically created if it does not already exist
+    // open the document and start synchronizing it
+    const document = await room.sync.open(path, { create: true });
+
+    // the document will be automatically created if it does not already exist
+    // open the document and start synchronizing it
+    document.root.createChildElement(
+      'body',
+      { text: 'hello world!' }
+    );
+
+    // Always disconnect when done
+    console.log('Disconnecting from room...');
+
+    // Close the document and stop synchronizing it
+    await room.sync.close(path);
+
+    // Dispose of the room to clean up resources
+    room.dispose();
+
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+main();

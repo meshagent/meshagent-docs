@@ -1,5 +1,3 @@
-# Messaging
-
 `MessagingClient` enables sending messages between participants and agents in a room, as well as handling streaming messages (`MessageStreamWriter` and `MessageStreamReader`).
 
 ---
@@ -21,8 +19,9 @@ Below are some examples demonstrating how to use `MessagingClient` for basic mes
 
 ### Basic Example: Sending and Receiving Messages
 
-+++ Python
-```python
+
+<CodeGroup>
+```python Python
 # Suppose you already have a RoomClient instance named `room_client`
 messaging_client = MessagingClient(room=room_client)
 
@@ -48,8 +47,7 @@ await messaging_client.broadcastMessage({
 # Disable messaging
 await messaging_client.disable()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 // Suppose you already have a RoomClient instance named `roomClient`
 const messagingClient = new MessagingClient({ room: roomClient });
 
@@ -75,8 +73,7 @@ await messagingClient.broadcastMessage({
 // Disable messaging
 await messagingClient.disable();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 // Suppose you already have a RoomClient instance named `roomClient`
 const messagingClient = new MessagingClient({ room: roomClient });
 
@@ -102,8 +99,7 @@ await messagingClient.broadcastMessage({
 // Disable messaging
 await messagingClient.disable();
 ```
-+++ Dart
-```dart
+```dart Dart
 // Suppose you already have a RoomClient instance named `roomClient`
 final messagingClient = MessagingClient(room: roomClient);
 
@@ -129,12 +125,12 @@ await messagingClient.broadcastMessage(
 // Disable messaging
 await messagingClient.disable();
 ```
-+++
+</CodeGroup>
 
 ### Example: Creating and Handling Streams
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 # Create a new stream
 stream_writer = await messaging_client.createStream(
     to=my_participant,
@@ -150,8 +146,7 @@ await stream_writer.write(MessageStreamChunk(
 # Close the stream
 await stream_writer.close()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 // Create a new stream
 const streamWriter = await messagingClient.createStream({
   to: myParticipant,
@@ -169,8 +164,7 @@ await streamWriter.write(
 // Close the stream
 await streamWriter.close();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 // Create a new stream
 const streamWriter = await messagingClient.createStream({
   to: myParticipant,
@@ -188,8 +182,7 @@ await streamWriter.write(
 // Close the stream
 await streamWriter.close();
 ```
-+++ Dart
-```dart
+```dart Dart
 // Create a new stream
 final streamWriter = await messagingClient.createStream(
   to: myParticipant,
@@ -205,7 +198,8 @@ await streamWriter.write(MessageStreamChunk(
 // Close the stream
 await streamWriter.close();
 ```
-+++
+</CodeGroup>
+
 
 ---
 
@@ -215,9 +209,12 @@ await streamWriter.close();
 
 A high-level client class for sending and receiving messages, enabling/disabling the messaging subsystem, handling participants, and managing streaming operations.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 constructor({ room }: { room: RoomClient })
 ```
+</CodeGroup>
+
 **Parameters**:
 - `room` – A `RoomClient` instance through which requests and events are sent or received.
 
@@ -227,13 +224,13 @@ constructor({ room }: { room: RoomClient })
 
 Enables the messaging subsystem on the server. Optionally provides a callback that is triggered whenever an incoming stream is opened by a remote participant.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 await messagingClient.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
 });
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -241,11 +238,11 @@ await messagingClient.enable((reader) => {
 
 Disables the messaging subsystem on the server.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 await messagingClient.disable();
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -259,8 +256,9 @@ Sends a message to a specific participant, optionally including a binary `attach
 - `message` – A JSON-serializable object containing message data.
 - `attachment` – (Optional) A `Uint8Array` of binary data to attach.
 
-+++ TypeScript
-```ts
+
+<CodeGroup>
+```ts TypeScript
 await messagingClient.sendMessage({
   to: myParticipant,
   type: "chat",
@@ -268,7 +266,7 @@ await messagingClient.sendMessage({
   attachment: new Uint8Array([1,2,3]),
 });
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -303,14 +301,14 @@ Creates a new stream directed at a single participant. Returns a `MessageStreamW
 **Returns**  
 A `Promise<MessageStreamWriter>` that resolves once the remote participant accepts the stream.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 const writer = await messagingClient.createStream({
   to: myParticipant,
   header: { purpose: "video-stream" },
 });
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -318,13 +316,13 @@ const writer = await messagingClient.createStream({
 
 Provides an iterable collection of all known remote participants. 
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 for (const participant of messagingClient.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
 }
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -332,9 +330,11 @@ for (const participant of messagingClient.remoteParticipants) {
 
 Removes the `"messaging.send"` handler from the internal `Protocol` and disposes the event emitter.
 
-```ts
+<CodeGroup>
+```ts Typescript
 messagingClient.dispose();
 ```
+</CodeGroup>
 
 ---
 
@@ -342,21 +342,23 @@ messagingClient.dispose();
 
 Represents a chunk of data in a stream, consisting of a header and optional binary data.
 
-```ts
+<CodeGroup>
+```ts TypeScript
 constructor({ header, data }: { header: Record<string, any>; data?: Uint8Array })
 ```
+</CodeGroup>
 
 - **`header: Record<string, any>`** – A JSON-serializable object holding metadata about the chunk (e.g., a chunk index or content type).
 - **`data?: Uint8Array`** – An optional binary payload.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 const chunk = new MessageStreamChunk({
   header: { chunkIndex: 1 },
   data: new Uint8Array([0x48, 0x65, 0x6C, 0x6C, 0x6F]),
 });
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -370,15 +372,15 @@ A writer for sending streaming data to a remote participant, created via `Messag
 - **`close(): Promise<void>`**  
   Closes the stream, signaling to the remote participant that no more chunks will be sent.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 // Example usage after acquiring a MessageStreamWriter
 await streamWriter.write(
   new MessageStreamChunk({ header: { part: 1 }, data: new Uint8Array([1, 2, 3]) })
 );
 await streamWriter.close();
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -389,8 +391,8 @@ A reader for consuming streaming data from a remote participant. Typically const
 - **`_controller: StreamController<MessageStreamChunk>`**  
   An internal controller for managing incoming `MessageStreamChunk` objects. In many implementations, you can iterate over `_controller.stream` (if you have such a concept) to read chunked data.
 
-+++ TypeScript
-```ts
+<CodeGroup>
+```ts TypeScript
 messagingClient.enable((reader) => {
   console.log("New stream from:", reader._to.id);
   
@@ -402,7 +404,7 @@ messagingClient.enable((reader) => {
   })();
 });
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -411,17 +413,17 @@ messagingClient.enable((reader) => {
 1. **Event Emission**  
    `MessagingClient` extends `EventEmitter<RoomMessageEvent>`. It emits events whenever messages are received or streams are opened/closed. You can listen for the `"message"` event or for custom events like `"participant_added"`, `"participant_removed"`, etc.:
 
-   +++ TypeScript
-   ```ts
-   messagingClient.on("message", ({ message }) => {
-     console.log("Received a message of type:", message.type);
-   });
+<CodeGroup>
+```ts TypeScript
+messagingClient.on("message", ({ message }) => {
+   console.log("Received a message of type:", message.type);
+});
 
-   messagingClient.on("participant_added", (evt) => {
-     console.log("A new participant joined:", evt.message.message);
-   });
-   ```
-   +++
+messagingClient.on("participant_added", (evt) => {
+   console.log("A new participant joined:", evt.message.message);
+});
+```
+</CodeGroup>
 
 2. **Remote Participants**  
    `MessagingClient` automatically keeps track of participants joining or leaving when the messaging subsystem is enabled. You can access them via `remoteParticipants`.

@@ -1,92 +1,54 @@
-/**
- * index.ts
- * 
- * 1. Set environment variables:
- *    - MESHAGENT_SECRET
- *    - MESHAGENT_PROJECT_ID
- *    - MESHAGENT_KEY_ID
- * 2. Compile: tsc index.ts
- * 3. Run: node index.js
- */
+import { RoomClient, Protocol, websocketProtocol } from 'meshagent-ts';
 
-import {
-  RoomClient,
-  ParticipantToken,
-  WebSocketClientProtocol,
-  websocketRoomUrl,
-} from 'meshagent/api'; // <-- Adjust to the actual import path
+async function main() {
+    try {
+        const roomName = 'quickstart';
+        const participantName = 'my user';
 
-// (Optional) If you need to define or augment the types, you could do so here:
-// e.g., declare module 'meshagent/api' { /* your type declarations */ }
+        // Document path in the MeshAgent environment
+        const path = 'sample-agent.document';
 
-async function main(): Promise<void> {
-  const roomName = 'quickstart';
+        const channel = await websocketProtocol({
+            roomName,
+            participantName,
+        });
 
-  // Read environment variables
-  const projectId = process.env.MESHAGENT_PROJECT_ID;
-  const apiKeyId = process.env.MESHAGENT_KEY_ID;
-  const secret = process.env.MESHAGENT_SECRET;
+        const room = new RoomClient({
+            protocol: new Protocol({ channel }),
+        });
 
-  if (!projectId || !apiKeyId || !secret) {
-    throw new Error(
-      'Missing required environment variables: MESHAGENT_PROJECT_ID, MESHAGENT_KEY_ID, or MESHAGENT_SECRET.'
-    );
-  }
+        // Connect to the room (automatically creating it if it doesn't exist)
+        await room.start();
 
-  // Create a participant token
-  const token = new ParticipantToken({
-    name: 'my user',
-    project_id: projectId,
-    api_key_id: apiKeyId,
-  });
+        // Add Agents to the room
+        await room.agents.call({
+            name: 'meshagent.document-writer',
+            url: 'https://api.meshagent.life/agents/meshagent.document-writer',
+            arguments: { },
+        });
 
-  // Grant access to the desired room
-  // (Check your actual library’s method signatures for correctness)
-  token.addRoomGrant({ roomName });
+        // Ask an agent to do some work in the document.
+        // The "meshagent.document-writer" agent writes content to the document.
+        await room.agents.ask({
+            agentName: 'meshagent.document-writer',
+            arguments: {
+                path,
+                prompt: 'write a paragraph about AI and how agents are shaping the future',
+            },
+        });
 
-  // Generate the WebSocket URL for the room
-  const url: string = websocketRoomUrl({ roomName });
+        console.log(
+            'Take a look at it at',
+            `https://studio.meshagent.com/projects/${projectId}/rooms/${roomName}?p=${path}`
+        );
 
-  // Prepare the WebSocket protocol with a signed token
-  const protocol = new WebSocketClientProtocol({
-    url,
-    token: token.toJWT({ token: secret }),
-  });
+        // Always disconnect when done
+        await room.disconnect();
 
-  // Create the room client
-  const room = new RoomClient({ protocol });
-
-  try {
-    // Connect to the room (it will be auto-created if it doesn't exist)
-    await room.connect();
-
-    // Define the document path
-    const path = 'sample-agent.document';
-
-    // Call an agent to write content to the document
-    await room.agents.ask({
-      agent: 'meshagent.document-writer',
-      arguments: {
-        path,
-        prompt: 'write a paragraph about AI and how agents are shaping the future',
-      },
-    });
-
-    console.log(
-      `Take a look at it at https://studio.meshagent.com/projects/${projectId}/rooms/${roomName}?p=${path}`
-    );
-  } catch (error) {
-    console.error('Error:', error);
-  } finally {
-    // Disconnect from the room to close the WebSocket properly
-    await room.disconnect();
-  }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
-// Equivalent to `if __name__ == "__main__":` in Python
-if (require.main === module) {
-  main().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
-}
+main();
+

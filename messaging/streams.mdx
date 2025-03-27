@@ -1,5 +1,3 @@
-# Streams
-
 Streams provide a mechanism for sending large or continuous data among participants without blocking the rest of your application. Unlike simple “send once” attachments, streams are chunked and can remain open for as long as needed—making them ideal for scenarios such as file uploads, real-time sensor data, or incremental AI model outputs.
 
 ---
@@ -26,7 +24,8 @@ Let’s assume you want to transfer a file from “Alice” to “Bob” using s
 
 ### 1. Alice Opens a Stream to Bob
 
-```python
+<CodeGroup>
+```python Python
 from meshagent.api.messaging import MessageStreamChunk
 
 async def alice_send_file(room, bob):
@@ -52,10 +51,12 @@ async def alice_send_file(room, bob):
     # 4. Close when done
     await writer.close()
 ```
+</CodeGroup>
 
 ### 2. Bob Accepts and Reads the Stream
 
-```python
+<CodeGroup>
+```python Python
 def on_stream_accept(reader):
     # This callback is invoked automatically when Bob receives "stream.open" from Alice 
     # and decides to accept it. We store the `MessageStreamReader` and process asynchronously.
@@ -78,6 +79,7 @@ def on_stream_accept(reader):
 # In Bob's code, we enable messaging with a callback:
 await bob_room.messaging.enable(on_stream_accept=on_stream_accept)
 ```
+</CodeGroup>
 
 With this setup:
 
@@ -130,3 +132,4 @@ With this setup:
 - **Combine Streams with Messages**: Communicate control messages (pause, resume) alongside data in the same session.  
 
 By tapping into the full potential of Streams, you gain a powerful channel for transferring data of any size—reliably, asynchronously, and in real time. It’s a perfect complement to the standard “message + attachment” model, especially for use cases where you want continuous interaction or large payloads. Happy streaming!
+

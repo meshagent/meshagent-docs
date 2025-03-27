@@ -1,5 +1,3 @@
-# Developer
-
 `DeveloperClient` enables inspection and debugging `RoomClient` through message logs. It listens for `developer.log` messages from the server and emits them locally as `RoomLogEvent` objects.
 
 ---
@@ -12,8 +10,8 @@
 
 Below is an example of how you might use the `DeveloperClient` in your code:
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 # Instantiate a RoomClient (not shown here).
 # Suppose you already have a RoomClient instance named `room_client`.
 
@@ -29,8 +27,7 @@ await dev_client.log("info", {"message": "Hello from Python!"})
 # Disable developer logs
 await dev_client.disable()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 // Instantiate a RoomClient (not shown here).
 // Suppose you already have a RoomClient instance named `roomClient`.
 
@@ -46,8 +43,7 @@ await devClient.log("info", { message: "Hello from JavaScript!" });
 // Disable developer logs
 await devClient.disable();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 // Instantiate a RoomClient (not shown here).
 // Suppose you already have a RoomClient instance named `roomClient`.
 
@@ -63,8 +59,7 @@ await devClient.log("info", { message: "Hello from TypeScript!" });
 // Disable developer logs
 await devClient.disable();
 ```
-+++ Dart
-```dart
+```dart Dart
 // Instantiate a RoomClient (not shown here).
 // Suppose you already have a RoomClient instance named `roomClient`.
 
@@ -80,7 +75,7 @@ await devClient.log("info", {"message": "Hello from Dart!"});
 // Disable developer logs
 await devClient.disable();
 ```
-+++
+</CodeGroup>
 
 ---
 
@@ -95,23 +90,20 @@ A client that listens for `developer.log` events and provides methods to enable,
 
 **`new DeveloperClient({ room })`**
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 dev_client = DeveloperClient(room=room_client)
 ```
-+++ JavaScript
-```js
+```js JavaScript
 const devClient = new DeveloperClient({ room: roomClient });
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 const devClient = new DeveloperClient({ room: roomClient });
 ```
-+++ Dart
-```dart
+```dart Dart
 final devClient = DeveloperClient(room: roomClient);
 ```
-+++
+</CodeGroup>
 
 - **Parameters**:
   - `room` – A `RoomClient` instance to route requests and handle incoming events.
@@ -125,23 +117,21 @@ final devClient = DeveloperClient(room: roomClient);
 
 Sends a `developer.log` message to the server with the specified type and data. This can be used to track custom logs, diagnostics, or other developer-related messages in your application.
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await dev_client.log("warn", {"status": "Something might be wrong"})
 ```
-+++ JavaScript
-```js
-await devClient.log("warn", { status: "Something might be wrong" });
+```js JavaScript
+await devClient.log("warn", { "status": "Something might be wrong" });
 ```
-+++ TypeScript
-```ts
-await devClient.log("warn", { status: "Something might be wrong" });
+```ts TypeScript
+await devClient.log("warn", { "status": "Something might be wrong" });
 ```
-+++ Dart
-```dart
+```dart Dart
 await devClient.log("warn", {"status": "Something might be wrong"});
 ```
-+++
+</CodeGroup>
+
 
 - **Parameters**:
   - `type` – A string identifying the log level or category, such as `"info"`, `"warn"`, or `"debug"`.
@@ -156,23 +146,20 @@ await devClient.log("warn", {"status": "Something might be wrong"});
 
 Watches developer messages on the server, effectively enabling the reception of `developer.log` events.
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await dev_client.enable()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await devClient.enable();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await devClient.enable();
 ```
-+++ Dart
-```dart
+```dart Dart
 await devClient.enable();
 ```
-+++
+</CodeGroup>
 
 - **Description**  
   Sends a `developer.watch` message to the server to start receiving `developer.log` events. If the server is configured to honor these watch requests, it will begin sending any future developer logs to this client.
@@ -183,23 +170,20 @@ await devClient.enable();
 
 Unwatches developer messages on the server, stopping the reception of `developer.log` events.
 
-+++ Python
-```python
+<CodeGroup>
+```python Python
 await dev_client.disable()
 ```
-+++ JavaScript
-```js
+```js JavaScript
 await devClient.disable();
 ```
-+++ TypeScript
-```ts
+```ts TypeScript
 await devClient.disable();
 ```
-+++ Dart
-```dart
+```dart Dart
 await devClient.disable();
 ```
-+++
+</CodeGroup>
 
 - **Description**  
   Sends a `developer.unwatch` message to the server to stop receiving `developer.log` events. Further developer logs from the server will be ignored until `enable()` is called again.
@@ -211,13 +195,14 @@ await devClient.disable();
 - **Event Emission**  
   The `DeveloperClient` extends an `EventEmitter<RoomLogEvent>`. It emits a `"log"` event whenever a `developer.log` message is received from the server. You can listen to these events as follows:
   
-  +++ JavaScript
-  ```js
+<CodeGroup>
+```js JavaScript
   devClient.on("log", (event) => {
     console.log("Developer log event:", event);
   });
-  ```
-  +++
+```
+</CodeGroup>
+
 
 - **Integration with `RoomClient`**  
   Internally, `DeveloperClient` uses the same `Protocol` instance attached to `RoomClient` to send and receive developer-related messages. If `RoomClient` is disconnected, messages will not be delivered.
@@ -225,15 +210,15 @@ await devClient.disable();
 - **Error Handling**  
   If a request fails or the server returns an error, the underlying `RoomClient` may throw an exception (e.g., `RoomServerException`). Handle it accordingly in your code:
 
-  +++ TypeScript
-  ```ts
-  try {
-    await devClient.enable();
-  } catch (err) {
-    console.error("Failed to enable developer logs:", err);
-  }
-  ```
-  +++
+<CodeGroup>
+```ts TypeScript
+try {
+  await devClient.enable();
+} catch (err) {
+  console.error("Failed to enable developer logs:", err);
+}
+```
+</CodeGroup>
 
 - **Extensibility**  
   You can extend or wrap `DeveloperClient` to include additional developer-oriented features, such as profiling, advanced filtering, or forwarding logs to other services.
