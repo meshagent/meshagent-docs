@@ -1,18 +1,7 @@
-import express, { Request, Response } from 'express';
-
-// The structure of the input
-interface Input {
-  a: number;
-  b: number;
-}
-
-// The structure of the output
-interface Output {
-  result: number;
-}
+import express from 'express';
 
 // This mimics the "ask_model" logic in Python.
-function computeSum(input: Input): Output {
+function computeSum(input) {
   return {
     result: input.a + input.b,
   };
@@ -25,11 +14,11 @@ async function main() {
   app.use(express.json());
 
   // POST endpoint to handle requests
-  app.post('/sum', (req: Request, res: Response) => {
+  app.post('/sum', (req, res) => {
     try {
       // We expect an object with { a: number, b: number }
-      const input: Input = req.body;
-      const output: Output = computeSum(input);
+      const input = req.body;
+      const output = computeSum(input);
       return res.status(200).json(output);
     } catch (err) {
       return res.status(400).json({ error: 'Invalid request', details: err });
