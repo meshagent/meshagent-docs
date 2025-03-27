@@ -19,7 +19,13 @@ const extMap = {
     '.yml': 'yaml',
 };
 const ignore = [
-    `${exampleDir}/**/node_modules`
+    `${exampleDir}/**/node_modules`,
+    `${exampleDir}/**/package.json`,
+    `${exampleDir}/**/package-lock.json`,
+    `${exampleDir}/**/yarn.lock`,
+    `${exampleDir}/**/*.test.*`,
+    `${exampleDir}/**/*.spec.*`,
+    `${exampleDir}/**/*.mdx`, // Ignore existing MDX files
 ];
 
 const map = through.obj((file, enc, cb) => {
