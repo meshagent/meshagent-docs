@@ -1,3 +1,9 @@
+import SchemaRegistryPy from "/snippets/examples/python/schema-registry.mdx"
+import SchemaRegistryJs from "/snippets/examples/javascript/schema-registry.mdx"
+import SchemaRegistryTs from "/snippets/examples/typescript/schema-registry.mdx"
+import SchemaRegistryDart from "/snippets/examples/dart/schema-registry.mdx"
+
+
 # Deploying a MeshAgent Schema
 
 MeshAgent uses _schemas_ to define how data can be structured and synchronized across rooms using MeshDocuments. By deploying a schema, you make it available to any room that needs it for data exchange. Below is a guide on how you can:
@@ -11,7 +17,8 @@ MeshAgent uses _schemas_ to define how data can be structured and synchronized a
 
 If you know your room names up front, you can simply add the schema to each room directly. This is the simplest approach when the room names are predetermined:
 
-```python
+<CodeGroup>
+```python Python
 from meshagent.api import deploy_schema, RoomClient, websocket_protocol
 
 # When you want to deploy a schema manually, you can connect to the room and use the deploy_schema function.
@@ -21,6 +28,8 @@ async with RoomClient(protocol = websocket_protocol(participant_name="schema_reg
     await deploy_schema(room=room, schema=mesh_schema, name="sample")
 
 ```
+</CodeGroup>
+
 
 Replace `my_room` with your actual room name(s). By doing this for each known room, your custom schema is immediately available for use by any MeshDocuments within those rooms.
 
@@ -44,15 +53,13 @@ When room names are dynamic, it’s easier to automatically register or update y
 
 Here is a minimal example demonstrating how to define and run a custom schema registry with MeshAgent. 
 
-+++ Python
-:::code source="/examples/python/schema-registry.py":::
-+++ JavaScript
-:::code source="/examples/javascript/schema-registry.js":::
-+++ TypeScript
-:::code source="/examples/typescript/schema-registry.ts":::
-+++ Dart
-:::code source="/examples/dart/schema-registry.dart":::
-+++
+
+<CodeGroup>
+  <SchemaRegistryPy />
+  <SchemaRegistryJs />
+  <SchemaRegistryTs />
+  <SchemaRegistryDart />
+</CodeGroup>
 
 ---
 
