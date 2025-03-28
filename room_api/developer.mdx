@@ -12,106 +12,74 @@ Below is an example of how you might use the `DeveloperClient` in your code:
 
 <CodeGroup>
 ```python Python
-# Instantiate a RoomClient (not shown here).
-# Suppose you already have a RoomClient instance named `room_client`.
-
-# Create the DeveloperClient
-dev_client = DeveloperClient(room=room_client)
+# Suppose you already have a RoomClient instance named `room`.
 
 # Enable developer logs
-await dev_client.enable()
+await room.developer.enable()
 
 # Send a developer log
-await dev_client.log("info", {"message": "Hello from Python!"})
+await room.developer.log("info", {
+    "message": "Hello from Python!"
+})
 
 # Disable developer logs
-await dev_client.disable()
+await room.developer.disable()
 ```
 ```js JavaScript
-// Instantiate a RoomClient (not shown here).
-// Suppose you already have a RoomClient instance named `roomClient`.
-
-// Create the DeveloperClient
-const devClient = new DeveloperClient({ room: roomClient });
+// Suppose you already have a RoomClient instance named `room`.
 
 // Enable developer logs
-await devClient.enable();
+await room.developer.enable();
 
 // Send a developer log
-await devClient.log("info", { message: "Hello from JavaScript!" });
+await room.developer.log("info", {
+    "message": "Hello from JavaScript!"
+});
 
 // Disable developer logs
-await devClient.disable();
+await room.developer.disable();
 ```
 ```ts TypeScript
-// Instantiate a RoomClient (not shown here).
-// Suppose you already have a RoomClient instance named `roomClient`.
-
-// Create the DeveloperClient
-const devClient = new DeveloperClient({ room: roomClient });
+// Suppose you already have a RoomClient instance named `room`.
 
 // Enable developer logs
-await devClient.enable();
+await room.developer.enable();
 
 // Send a developer log
-await devClient.log("info", { message: "Hello from TypeScript!" });
+await room.developer.log("info", {
+    "message": "Hello from TypeScript!"
+});
 
 // Disable developer logs
-await devClient.disable();
+await room.developer.disable();
 ```
 ```dart Dart
-// Instantiate a RoomClient (not shown here).
-// Suppose you already have a RoomClient instance named `roomClient`.
-
-// Create the DeveloperClient
-final devClient = DeveloperClient(room: roomClient);
+// Suppose you already have a RoomClient instance named `room`.
 
 // Enable developer logs
-await devClient.enable();
+await room.developer.enable();
 
 // Send a developer log
-await devClient.log("info", {"message": "Hello from Dart!"});
+await room.developer.log("info", {
+    "message": "Hello from Dart!"
+});
 
 // Disable developer logs
-await devClient.disable();
+await room.developer.disable();
 ```
 </CodeGroup>
 
 ---
+
 
 ### `DeveloperClient`
 
 A client that listens for `developer.log` events and provides methods to enable, disable, and log custom developer messages.
 
 - **`room: RoomClient`**  
-  An instance of `RoomClient`, which handles the underlying communication with the server.
+An instance of `RoomClient`, which handles the underlying communication with the server.
 
-#### Constructor
 
-**`new DeveloperClient({ room })`**
-
-<CodeGroup>
-```python Python
-dev_client = DeveloperClient(room=room_client)
-```
-```js JavaScript
-const devClient = new DeveloperClient({ room: roomClient });
-```
-```ts TypeScript
-const devClient = new DeveloperClient({ room: roomClient });
-```
-```dart Dart
-final devClient = DeveloperClient(room: roomClient);
-```
-</CodeGroup>
-
-- **Parameters**:
-  - `room` – A `RoomClient` instance to route requests and handle incoming events.
-
-- **Description**  
-  Creates a new `DeveloperClient`. Internally, it sets up a protocol handler for `"developer.log"` messages, parsing incoming messages and emitting them locally as `RoomLogEvent` objects.  
-
----
 
 #### `log(type: string, data: Record<string, any>)`
 
@@ -119,16 +87,24 @@ Sends a `developer.log` message to the server with the specified type and data. 
 
 <CodeGroup>
 ```python Python
-await dev_client.log("warn", {"status": "Something might be wrong"})
+await room.developer.log("warn", {
+    "status": "Something might be wrong"
+})
 ```
 ```js JavaScript
-await devClient.log("warn", { "status": "Something might be wrong" });
+await room.developer.log("warn", {
+    "status": "Something might be wrong"
+});
 ```
 ```ts TypeScript
-await devClient.log("warn", { "status": "Something might be wrong" });
+await room.developer.log("warn", {
+    "status": "Something might be wrong"
+});
 ```
 ```dart Dart
-await devClient.log("warn", {"status": "Something might be wrong"});
+await room.developer.log("warn", {
+    "status": "Something might be wrong"
+});
 ```
 </CodeGroup>
 
@@ -142,22 +118,23 @@ await devClient.log("warn", {"status": "Something might be wrong"});
 
 ---
 
+
 #### `enable()`
 
 Watches developer messages on the server, effectively enabling the reception of `developer.log` events.
 
 <CodeGroup>
 ```python Python
-await dev_client.enable()
+await room.developer.enable()
 ```
 ```js JavaScript
-await devClient.enable();
+await room.developer.enable();
 ```
 ```ts TypeScript
-await devClient.enable();
+await room.developer.enable();
 ```
 ```dart Dart
-await devClient.enable();
+await room.developer.enable();
 ```
 </CodeGroup>
 
@@ -166,29 +143,32 @@ await devClient.enable();
 
 ---
 
+
 #### `disable()`
 
 Unwatches developer messages on the server, stopping the reception of `developer.log` events.
 
 <CodeGroup>
 ```python Python
-await dev_client.disable()
+await room.developer.disable()
 ```
 ```js JavaScript
-await devClient.disable();
+await room.developer.disable();
 ```
 ```ts TypeScript
-await devClient.disable();
+await room.developer.disable();
 ```
 ```dart Dart
-await devClient.disable();
+await room.developer.disable();
 ```
 </CodeGroup>
+
 
 - **Description**  
   Sends a `developer.unwatch` message to the server to stop receiving `developer.log` events. Further developer logs from the server will be ignored until `enable()` is called again.
 
 ---
+
 
 ## Additional Notes
 
@@ -196,10 +176,17 @@ await devClient.disable();
   The `DeveloperClient` extends an `EventEmitter<RoomLogEvent>`. It emits a `"log"` event whenever a `developer.log` message is received from the server. You can listen to these events as follows:
   
 <CodeGroup>
+```python Python
+room.developer.on("log", lambda event: print("Developer log event:", event))
+```
 ```js JavaScript
-  devClient.on("log", (event) => {
-    console.log("Developer log event:", event);
-  });
+room.developer.on("log", (event) => console.log("Developer log event:", event));
+```
+```ts TypeScript
+room.developer.on("log", (event) => console.log("Developer log event:", event));
+```
+```dart Dart
+room.developer.on("log", (event) => print("Developer log event: $event"));
 ```
 </CodeGroup>
 
@@ -210,15 +197,37 @@ await devClient.disable();
 - **Error Handling**  
   If a request fails or the server returns an error, the underlying `RoomClient` may throw an exception (e.g., `RoomServerException`). Handle it accordingly in your code:
 
+
 <CodeGroup>
+```python Python
+try:
+  await room.developer.enable()
+except Exception as err:
+  print("Failed to enable developer logs:", err)
+```
+```js JavaScript
+try {
+  await room.developer.enable();
+} catch (err) {
+  console.error("Failed to enable developer logs:", err);
+}
 ```ts TypeScript
 try {
-  await devClient.enable();
+  await room.developer.enable();
 } catch (err) {
   console.error("Failed to enable developer logs:", err);
 }
 ```
+```dart Dart
+try {
+  await room.developer.enable();
+} catch (err) {
+  print("Failed to enable developer logs: $err");
+}
+```
 </CodeGroup>
+
 
 - **Extensibility**  
   You can extend or wrap `DeveloperClient` to include additional developer-oriented features, such as profiling, advanced filtering, or forwarding logs to other services.
+

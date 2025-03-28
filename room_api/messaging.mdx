@@ -4,6 +4,49 @@
 
 ## Overview
 
+Messaging is a cornerstone of any application that involves dynamic collaboration—whether that collaboration happens between two people, two software agents, or a mix of both. By layering real-time messaging capabilities on top of your existing MeshAgent-powered infrastructure, you gain the flexibility to handle an extensive variety of use cases—from a simple text-based chat between human users to a sophisticated communication pipeline where AI-driven agents and humans collaborate to accomplish tasks. 
+
+---
+
+### Why Messaging?
+
+1. **Real-time collaboration**  
+   Effective collaboration happens in real time. The Messaging API allows participants—be they humans or agents—to exchange messages instantly. This immediacy is essential for systems that demand quick feedback loops, like interactive help desk solutions, live analytics dashboards, or agent-based problem solving.
+
+2. **Uniform interface for agents and humans**  
+   The Messaging API treats all participants the same, regardless of whether they’re powered by artificial intelligence or controlled by a human. A single, consistent abstraction lowers the complexity of real-time, multi-user applications. You focus on creating features; the API handles participant states, message routing, and attachment handling.
+
+3. **Structured data exchange**  
+   Our Messaging API supports sending JSON-based messages and optional binary attachments. This makes it easy to share structured data, multimedia files, or AI model outputs. Instead of rolling your own data-transmission system, you can rely on standardized endpoints and message formats.
+
+4. **Broadcast and point-to-point**  
+   Send targeted messages to a single participant or simultaneously reach everyone in a room. This flexibility simplifies building features like announcements, shared notifications, team-based workflows, or private agent-human DM channels.
+
+5. **Extendable via Streams**  
+   For more advanced scenarios—like sending large files or streaming partial updates—the Messaging API provides a streaming protocol. Your agents can pass chunks of data incrementally, maintaining a continuous exchange without blocking the rest of your system.
+
+---
+
+## Core Features
+
+### Participant Model
+Any entity in a room—human or agent—gets represented by a `Participant`. Each `Participant` has a unique identifier and can be addressed individually for one-on-one interactions, or collectively for broadcasts. This single abstraction unifies how you approach messaging, so your app doesn’t need separate code paths for humans vs. agents.
+
+### JSON-Powered Messages
+Your messages can include arbitrary JSON data, which makes them easy to parse and manipulate. Whether you’re sending a text prompt to an AI agent, user profile updates, or a command to start a workflow, JSON-serialization keeps your messages compatible across the entire system.
+
+### Optional Attachments
+In addition to JSON, you can attach binary data directly to a message. This is especially useful for file uploads, voice notes, images, or model outputs that need to be transferred as raw bytes.
+
+### Stream Communication
+When your application requires transferring large or continuous data—like audio/video streams, logs, or sensor outputs—Streams help you break the data into manageable chunks, while preserving the real-time nature of the exchange.
+
+### Event-Driven Architecture
+Register event handlers for specific message types so your application logic reacts immediately. For example, you can trigger a follow-up task whenever an agent returns a particular response, or display a system notification any time a participant updates their attributes.
+
+
+
+
 - **`MessagingClient`** – A high-level client that:
   - Sends and receives messages between room participants
   - Manages stream-based messages via `createStream()`
@@ -22,117 +65,114 @@ Below are some examples demonstrating how to use `MessagingClient` for basic mes
 
 <CodeGroup>
 ```python Python
-# Suppose you already have a RoomClient instance named `room_client`
-messaging_client = MessagingClient(room=room_client)
+# Suppose you already have a RoomClient instance named `room`
 
 # Enable messaging (allows receiving participant and stream events)
-await messaging_client.enable()
+await room.messaging.enable()
 
 # Acquire a participant instance from somewhere; you might discover it via events
 my_participant = ... # type: RemoteParticipant
 
 # Send a simple message
-await messaging_client.sendMessage({
-    "to": my_participant,
-    "type": "chat",
-    "message": {"text": "Hello from Python!"}
+await room.messaging.send_message({
+  "to": my_participant,
+  "type": "chat",
+  "message": {"text": "Hello from Python!"}
 })
 
 # Broadcast a message to all participants
-await messaging_client.broadcastMessage({
-    "type": "announcement",
-    "message": {"content": "Hello everyone!"}
+await room.messaging.broadcast_message({
+  "type": "announcement",
+  "message": {"content": "Hello everyone!"}
 })
 
 # Disable messaging
-await messaging_client.disable()
+await room.messaging.disable()
 ```
 ```js JavaScript
-// Suppose you already have a RoomClient instance named `roomClient`
-const messagingClient = new MessagingClient({ room: roomClient });
+// Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
-await messagingClient.enable();
+await room.messaging.enable();
 
 // Acquire a participant instance from somewhere
 const myParticipant = /* ...some RemoteParticipant... */;
 
 // Send a simple message
-await messagingClient.sendMessage({
+await room.messaging.sendMessage({
   to: myParticipant,
   type: "chat",
   message: { text: "Hello from JavaScript!" },
 });
 
 // Broadcast a message
-await messagingClient.broadcastMessage({
+await room.messaging.broadcastMessage({
   type: "announcement",
   message: { content: "Hello everyone!" },
 });
 
 // Disable messaging
-await messagingClient.disable();
+await room.messaging.disable();
 ```
 ```ts TypeScript
-// Suppose you already have a RoomClient instance named `roomClient`
-const messagingClient = new MessagingClient({ room: roomClient });
+// Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
-await messagingClient.enable();
+await room.messaging.enable();
 
 // Acquire a participant instance from somewhere
 const myParticipant: RemoteParticipant = /* ...some RemoteParticipant... */;
 
 // Send a simple message
-await messagingClient.sendMessage({
+await room.messaging.sendMessage({
   to: myParticipant,
   type: "chat",
   message: { text: "Hello from TypeScript!" },
 });
 
 // Broadcast a message
-await messagingClient.broadcastMessage({
+await room.messaging.broadcastMessage({
   type: "announcement",
   message: { content: "Hello everyone!" },
 });
 
 // Disable messaging
-await messagingClient.disable();
+await room.messaging.disable();
 ```
 ```dart Dart
-// Suppose you already have a RoomClient instance named `roomClient`
-final messagingClient = MessagingClient(room: roomClient);
+// Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
-await messagingClient.enable();
+await room.messaging.enable();
 
 // Acquire a participant instance from somewhere
 final myParticipant = /* ...some RemoteParticipant... */;
 
 // Send a simple message
-await messagingClient.sendMessage(
+await room.messaging.sendMessage(
   to: myParticipant,
   type: "chat",
   message: {"text": "Hello from Dart!"},
 );
 
 // Broadcast a message
-await messagingClient.broadcastMessage(
+await room.messaging.broadcastMessage(
   type: "announcement",
   message: {"content": "Hello everyone!"},
 );
 
 // Disable messaging
-await messagingClient.disable();
+await room.messaging.disable();
 ```
 </CodeGroup>
+
 
 ### Example: Creating and Handling Streams
 
 <CodeGroup>
 ```python Python
 # Create a new stream
-stream_writer = await messaging_client.createStream(
+stream_writer = await room.messaging.create_stream(
     to=my_participant,
     header={"streamPurpose": "file-transfer"}
 )
@@ -148,7 +188,7 @@ await stream_writer.close()
 ```
 ```js JavaScript
 // Create a new stream
-const streamWriter = await messagingClient.createStream({
+const streamWriter = await room.messaging.createStream({
   to: myParticipant,
   header: { streamPurpose: "file-transfer" },
 });
@@ -166,7 +206,7 @@ await streamWriter.close();
 ```
 ```ts TypeScript
 // Create a new stream
-const streamWriter = await messagingClient.createStream({
+const streamWriter = await room.messaging.createStream({
   to: myParticipant,
   header: { streamPurpose: "file-transfer" },
 });
@@ -184,7 +224,7 @@ await streamWriter.close();
 ```
 ```dart Dart
 // Create a new stream
-final streamWriter = await messagingClient.createStream(
+final streamWriter = await room.messaging.createStream(
   to: myParticipant,
   header: {"streamPurpose": "file-transfer"},
 );
@@ -200,53 +240,60 @@ await streamWriter.close();
 ```
 </CodeGroup>
 
-
 ---
 
-## Classes and Methods
-
-### `MessagingClient`
-
-A high-level client class for sending and receiving messages, enabling/disabling the messaging subsystem, handling participants, and managing streaming operations.
-
-<CodeGroup>
-```ts TypeScript
-constructor({ room }: { room: RoomClient })
-```
-</CodeGroup>
-
-**Parameters**:
-- `room` – A `RoomClient` instance through which requests and events are sent or received.
-
----
-
-#### `enable(onStreamAccept?: (reader: MessageStreamReader) => void): Promise<void>`
+#### enable(onStreamAccept?)
 
 Enables the messaging subsystem on the server. Optionally provides a callback that is triggered whenever an incoming stream is opened by a remote participant.
 
+
 <CodeGroup>
-```ts TypeScript
-await messagingClient.enable((reader) => {
+```python Python
+await room.messaging.enable(
+    lambda reader: print(f"New stream opened: {reader._streamId}"))
+```
+```js JavaScript
+await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
+});
+```ts TypeScript
+await room.messaging.enable((reader) => {
+  console.log("New stream opened:", reader._streamId);
+});
+```
+```dart Dart
+await room.messaging.enable((reader) {
+  print("New stream opened: ${reader._streamId}");
 });
 ```
 </CodeGroup>
 
+
 ---
 
-#### `disable(): Promise<void>`
+#### disable()
 
 Disables the messaging subsystem on the server.
 
 <CodeGroup>
+```python Python
+await room.messaging.disable()
+```
+```js JavaScript
+await room.messaging.disable();
+```
 ```ts TypeScript
-await messagingClient.disable();
+await room.messaging.disable();
+```
+```dart Dart
+await room.messaging.disable();
 ```
 </CodeGroup>
 
 ---
 
-#### `sendMessage({ to, type, message, attachment? }): Promise<void>`
+
+#### sendMessage(to, type, message, attachment?)
 
 Sends a message to a specific participant, optionally including a binary `attachment`.
 
@@ -258,19 +305,44 @@ Sends a message to a specific participant, optionally including a binary `attach
 
 
 <CodeGroup>
+```python Python
+await room.messaging.send_message({
+  "to": my_participant,
+  "type": "chat",
+  "message": {"text": "Hey!"},
+  "attachment": b"\x01\x02\x03"
+})
+```
+```js JavaScript
+await room.messaging.sendMessage({
+  "to": myParticipant,
+  "type": "chat",
+  "message": { text: "Hey!" },
+  "attachment": new Uint8Array([1, 2, 3]),
+});
+```
 ```ts TypeScript
-await messagingClient.sendMessage({
-  to: myParticipant,
-  type: "chat",
-  message: { text: "Hey!" },
-  attachment: new Uint8Array([1,2,3]),
+await room.messaging.sendMessage({
+  "to": myParticipant,
+  "type": "chat",
+  "message": { text: "Hey!" },
+  "attachment": new Uint8Array([1, 2, 3]),
+});
+```
+```dart Dart
+await room.messaging.sendMessage({
+  "to": myParticipant,
+  "type": "chat",
+  "message": {"text": "Hey!"},
+  "attachment": Uint8List.fromList([1, 2, 3]),
 });
 ```
 </CodeGroup>
 
 ---
 
-#### `broadcastMessage({ type, message, attachment? }): Promise<void>`
+
+#### broadcastMessage(type, message, attachment?)
 
 Broadcasts a message to **all** participants in the room.
 
@@ -280,17 +352,48 @@ Broadcasts a message to **all** participants in the room.
 - `attachment` – (Optional) A `Uint8Array` of binary data to attach.
 
 <CodeGroup>
+```python Python
+await room.messaging.broadcast_message({
+  "type": "announcement",
+  "message": {
+    "title": "Server Maintenance",
+    "content": "We will be down tonight.",
+  }
+})
+```
+```js JavaScript
+await room.messaging.broadcastMessage({
+  "type": "announcement",
+  "message": {
+    "title": "Server Maintenance",
+    "content": "We will be down tonight.",
+  }
+});
+```
 ```ts TypeScript
 await messagingClient.broadcastMessage({
-  type: "announcement",
-  message: { title: "Server Maintenance", content: "We will be down tonight." },
+  "type": "announcement",
+  "message": {
+    "title": "Server Maintenance",
+    "content": "We will be down tonight.",
+  }
+});
+```
+```dart Dart
+await room.messaging.broadcastMessage({
+  "type": "announcement",
+  "message": {
+    "title": "Server Maintenance",
+    "content": "We will be down tonight.",
+  }
 });
 ```
 </CodeGroup>
 
 ---
 
-#### `createStream({ to, header }): Promise<MessageStreamWriter>`
+
+#### createStream(to, header)
 
 Creates a new stream directed at a single participant. Returns a `MessageStreamWriter` once the remote participant accepts the stream.
 
@@ -301,121 +404,147 @@ Creates a new stream directed at a single participant. Returns a `MessageStreamW
 **Returns**  
 A `Promise<MessageStreamWriter>` that resolves once the remote participant accepts the stream.
 
+
 <CodeGroup>
+```python Python
+writer = await room.messaging.create_stream(
+  to=my_participant,
+  header={"purpose": "video-stream"}
+)
+```
+```js JavaScript
+const writer = await room.messaging.createStream({
+  to: myParticipant,
+  header: {"purpose": "video-stream" },
+});
+```
 ```ts TypeScript
 const writer = await messagingClient.createStream({
   to: myParticipant,
-  header: { purpose: "video-stream" },
+  header: {"purpose": "video-stream" },
 });
+```
+```dart Dart
+final writer = await room.messaging.createStream(
+  to: myParticipant,
+  header: {"purpose": "video-stream"},
+);
 ```
 </CodeGroup>
 
+
 ---
 
-#### `remoteParticipants: Iterable<RemoteParticipant>`
+#### remoteParticipants
 
 Provides an iterable collection of all known remote participants. 
 
 <CodeGroup>
-```ts TypeScript
-for (const participant of messagingClient.remoteParticipants) {
+```python Python
+for participant in room.messaging.remote_participants:
+    print(f"Participant: {participant.id}, role: {participant.role}")
+```
+```js JavaScript
+for (const participant of room.messaging.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
+}
+```
+```ts TypeScript
+for (const participant of room.messaging.remoteParticipants) {
+  console.log(`Participant: ${participant.id}, role: ${participant.role}`);
+}
+```
+```dart Dart
+for (final participant in room.messaging.remoteParticipants) {
+  print("Participant: ${participant.id}, role: ${participant.role}");
 }
 ```
 </CodeGroup>
 
 ---
 
-#### `dispose(): void`
 
-Removes the `"messaging.send"` handler from the internal `Protocol` and disposes the event emitter.
-
-<CodeGroup>
-```ts Typescript
-messagingClient.dispose();
-```
-</CodeGroup>
-
----
-
-### `MessageStreamChunk`
+### MessageStreamChunk
 
 Represents a chunk of data in a stream, consisting of a header and optional binary data.
 
-<CodeGroup>
-```ts TypeScript
-constructor({ header, data }: { header: Record<string, any>; data?: Uint8Array })
-```
-</CodeGroup>
-
-- **`header: Record<string, any>`** – A JSON-serializable object holding metadata about the chunk (e.g., a chunk index or content type).
-- **`data?: Uint8Array`** – An optional binary payload.
-
-<CodeGroup>
-```ts TypeScript
-const chunk = new MessageStreamChunk({
-  header: { chunkIndex: 1 },
-  data: new Uint8Array([0x48, 0x65, 0x6C, 0x6C, 0x6F]),
-});
-```
-</CodeGroup>
-
 ---
 
-### `MessageStreamWriter`
+
+### MessageStreamWriter
 
 A writer for sending streaming data to a remote participant, created via `MessagingClient.createStream()`.
 
-- **`write(chunk: MessageStreamChunk): Promise<void>`**  
+- **`write(MessageStreamChunk)`**  
   Sends a chunk of data in the ongoing stream.
   
 - **`close(): Promise<void>`**  
   Closes the stream, signaling to the remote participant that no more chunks will be sent.
 
 <CodeGroup>
+```python Python
+# Example usage after acquiring a MessageStreamWriter
+await stream_writer.write(MessageStreamChunk(
+  header={"part": 1},
+  data=b"some binary data"
+))
+await stream_writer.close()
+```
+```js JavaScript
+// Example usage after acquiring a MessageStreamWriter
+await streamWriter.write(new MessageStreamChunk({
+  header: { part: 1 },
+  data: new Uint8Array([1, 2, 3])
+}));
+await streamWriter.close();
+```
 ```ts TypeScript
 // Example usage after acquiring a MessageStreamWriter
-await streamWriter.write(
-  new MessageStreamChunk({ header: { part: 1 }, data: new Uint8Array([1, 2, 3]) })
-);
+await streamWriter.write(new MessageStreamChunk({
+  header: { part: 1 },
+  data: new Uint8Array([1, 2, 3])
+}));
+await streamWriter.close();
+```
+```dart Dart
+// Example usage after acquiring a MessageStreamWriter
+await streamWriter.write(MessageStreamChunk(
+  header: {"part": 1},
+  data: Uint8List.fromList([1, 2, 3])
+));
 await streamWriter.close();
 ```
 </CodeGroup>
 
----
-
-### `MessageStreamReader`
-
-A reader for consuming streaming data from a remote participant. Typically constructed internally when the remote participant invokes `createStream()` on their side and the local client `accept`s it.
-
-- **`_controller: StreamController<MessageStreamChunk>`**  
-  An internal controller for managing incoming `MessageStreamChunk` objects. In many implementations, you can iterate over `_controller.stream` (if you have such a concept) to read chunked data.
-
-<CodeGroup>
-```ts TypeScript
-messagingClient.enable((reader) => {
-  console.log("New stream from:", reader._to.id);
-  
-  (async () => {
-    for await (const chunk of reader._controller.stream) {
-      console.log("Received chunk:", chunk.header, chunk.data);
-    }
-    console.log("Stream closed.");
-  })();
-});
-```
-</CodeGroup>
 
 ---
 
-## Additional Notes
+
 
 1. **Event Emission**  
    `MessagingClient` extends `EventEmitter<RoomMessageEvent>`. It emits events whenever messages are received or streams are opened/closed. You can listen for the `"message"` event or for custom events like `"participant_added"`, `"participant_removed"`, etc.:
 
 <CodeGroup>
+```python Python
+room.messaging.on(
+    "message",
+    lambda evt: print("Received a message of type:", evt.message.type))
+
+room.messaging.on(
+    "participant_added",
+    lambda evt: print("A new participant joined:", evt.message.message))
+```
+```js JavaScript
+room.messaging.on("message", ({ message }) => {
+   console.log("Received a message of type:", message.type);
+});
+
+room.messaging.on("participant_added", (evt) => {
+   console.log("A new participant joined:", evt.message.message);
+});
+```
 ```ts TypeScript
-messagingClient.on("message", ({ message }) => {
+room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
 
@@ -423,7 +552,17 @@ messagingClient.on("participant_added", (evt) => {
    console.log("A new participant joined:", evt.message.message);
 });
 ```
+```dart Dart
+room.messaging.on("message", (evt) {
+   print("Received a message of type: ${evt.message.type}");
+});
+
+room.messaging.on("participant_added", (evt) {
+   print("A new participant joined: ${evt.message.message}");
+});
+```
 </CodeGroup>
+
 
 2. **Remote Participants**  
    `MessagingClient` automatically keeps track of participants joining or leaving when the messaging subsystem is enabled. You can access them via `remoteParticipants`.
@@ -437,3 +576,4 @@ messagingClient.on("participant_added", (evt) => {
 
 5. **Performance**  
    For large or frequent streams, consider buffering or batching chunk writes in your client logic. The streaming mechanism in `MessagingClient` is designed to handle incremental data transfer, but network considerations remain important for efficient performance.
+

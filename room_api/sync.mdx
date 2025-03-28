@@ -13,84 +13,43 @@ Below is an example of how you might use the `SyncClient` in your code:
 
 <CodeGroup>
 ```python Python
-# Create a SyncClient instance
-sync_client = SyncClient(room=my_room_client)
-
-# Start listening for local changes to sync
-sync_client.start()
 
 # Create a MeshDocument on the server
-await sync_client.createMeshDocumentWithMeshSchema(
+await room.sync.create(
     "my/path",
     schema=my_schema,
     json={"initial": "data"}
 )
 
 # Open a document (creates if not found)
-doc = await sync_client.open("my/path", create=True)
-
-# Perform some changes on `doc` here.
-# The local changes will automatically be queued for syncing.
+doc = await room.sync.open("my/path", create=True)
 
 # Close the document
-await sync_client.close("my/path")
-
-# Dispose of the SyncClient to clean up resources
-sync_client.dispose()
+await room.sync.close("my/path")
 ```
 ```js JavaScript
-// Create a SyncClient instance
-const syncClient = new SyncClient({ room: myRoomClient });
-
-// Start listening for local changes to sync
-syncClient.start();
-
 // Create a MeshDocument on the server
-await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
+await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
 
 // Open a document (creates if not found)
-const doc = await syncClient.open("my/path", { create: true });
-
-// Perform some changes on `doc` here.
-// The local changes will automatically be queued for syncing.
+const doc = await room.sync.open("my/path", { create: true });
 
 // Close the document
-await syncClient.close("my/path");
-
-// Dispose of the SyncClient to clean up resources
-syncClient.dispose();
+await room.sync.close("my/path");
 ```
 ```ts TypeScript
-// Create a SyncClient instance
-const syncClient = new SyncClient({ room: myRoomClient });
-
-// Start listening for local changes to sync
-syncClient.start();
-
 // Create a MeshDocument on the server
-await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
+await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
 
 // Open a document (creates if not found)
-const doc = await syncClient.open("my/path", { create: true });
-
-// Perform some changes on `doc` here.
-// The local changes will automatically be queued for syncing.
+const doc = await room.sync.open("my/path", { create: true });
 
 // Close the document
-await syncClient.close("my/path");
-
-// Dispose of the SyncClient to clean up resources
-syncClient.dispose();
+await room.sync.close("my/path");
 ```
 ```dart Dart
-// Create a SyncClient instance
-final syncClient = SyncClient(room: myRoomClient);
-
-// Start listening for local changes to sync
-syncClient.start();
-
 // Create a MeshDocument on the server
-await syncClient.createMeshDocumentWithMeshSchema(
+await room.sync.createMeshDocumentWithMeshSchema(
   "my/path",
   mySchema,
   json: {"initial": "data"}
@@ -99,47 +58,14 @@ await syncClient.createMeshDocumentWithMeshSchema(
 // Open a document (creates if not found)
 final doc = await syncClient.open("my/path", create: true);
 
-// Perform some changes on `doc` here.
-// The local changes will automatically be queued for syncing.
-
 // Close the document
-await syncClient.close("my/path");
-
-// Dispose of the SyncClient to clean up resources
-syncClient.dispose();
+await room.sync.close("my/path");
 ```
 </CodeGroup>
 
 
 ---
 
-### `QueuedSync`
-
-A simple helper class representing a single queued message of changes for a specific document path.
-
-<CodeGroup>
-```python Python
-queued_sync = QueuedSync(path="my/path", base64="encoded-changes")
-```
-```js JavaScript
-const queuedSync = new QueuedSync({ path: "my/path", base64: "encoded-changes" });
-```
-```ts TypeScript
-const queuedSync = new QueuedSync({ path: "my/path", base64: "encoded-changes" });
-```
-```dart Dart
-final queuedSync = QueuedSync(path: "my/path", base64: "encoded-changes");
-```
-</CodeGroup>
-
-
-- **`path: string`**  
-  The unique path identifying the document on the server.
-
-- **`base64: string`**  
-  A base64-encoded string that represents a serialized set of changes to be synced to the backend.
-
----
 
 ### `SyncClient`
 
@@ -152,16 +78,16 @@ The `SyncClient` class is responsible for coordinating document synchronization 
 
 <CodeGroup>
 ```python Python
-sync_client.start()
+room.sync.start()
 ```
 ```js JavaScript
-syncClient.start();
+room.sync.start();
 ```
 ```ts TypeScript
-syncClient.start();
+room.sync.start();
 ```
 ```dart Dart
-syncClient.start();
+room.sync.start();
 ```
 </CodeGroup>
 
@@ -174,16 +100,16 @@ syncClient.start();
 
 <CodeGroup>
 ```python Python
-sync_client.dispose()
+room.sync.dispose()
 ```
 ```js JavaScript
-syncClient.dispose();
+room.sync.dispose();
 ```
 ```ts TypeScript
-syncClient.dispose();
+room.sync.dispose();
 ```
 ```dart Dart
-syncClient.dispose();
+room.sync.dispose();
 ```
 </CodeGroup>
 
@@ -195,16 +121,16 @@ syncClient.dispose();
 
 <CodeGroup>
 ```python Python
-await sync_client.createMeshDocumentWithMeshSchema("my/path", my_schema, json={"key": "value"})
+await room.sync.create("my/path", my_schema, json={"key": "value"})
 ```
 ```js JavaScript
-await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
+await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
 ```
 ```ts TypeScript
-await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
+await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
 ```
 ```dart Dart
-await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"key": "value"});
+await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"key": "value"});
 ```
 </CodeGroup>
 
@@ -220,16 +146,16 @@ await syncClient.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"k
 
 <CodeGroup>
 ```python Python
-await sync_client.createMeshDocumentWithFormat("my/path", "json", json={"key": "value"})
+await room.sync.create("my/path", "json", json={"key": "value"})
 ```
 ```js JavaScript
-await syncClient.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
+await room.sync.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
 ```
 ```ts TypeScript
-await syncClient.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
+await room.sync.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
 ```
 ```dart Dart
-await syncClient.createMeshDocumentWithFormat("my/path", "json", json: {"key": "value"});
+await room.sync.createMeshDocumentWithFormat("my/path", "json", json: {"key": "value"});
 ```
 </CodeGroup>
 
@@ -271,16 +197,16 @@ final doc = await syncClient.open("my/path", create: true);
 
 <CodeGroup>
 ```python Python
-await sync_client.close("my/path")
+await room.sync.close("my/path")
 ```
 ```js JavaScript
-await syncClient.close("my/path");
+await room.sync.close("my/path");
 ```
 ```ts TypeScript
-await syncClient.close("my/path");
+await room.sync.close("my/path");
 ```
 ```dart Dart
-await syncClient.close("my/path");
+await room.sync.close("my/path");
 ```
 </CodeGroup>
 
@@ -290,21 +216,21 @@ await syncClient.close("my/path");
 - **Description**  
   Decrements the internal reference count for the document. If it reaches zero, the document is unregistered locally, and a request is sent to the server to disconnect. No further changes will be synced once closed.
 
+
 #### `sync(path, data)`
 
 <CodeGroup>
 ```python Python
-await sync_client.sync("my/path", b"some bytes")
+await room.sync.sync("my/path", b"some bytes")
 ```
 ```js JavaScript
-await syncClient.sync("my/path", new Uint8Array([/*...bytes...*/]));
+await room.sync.sync("my/path", new Uint8Array([/*...bytes...*/]));
 ```
 ```ts TypeScript
-await syncClient.sync("my/path", new Uint8Array([/*...bytes...*/]));
+await room.sync.sync("my/path", new Uint8Array([/*...bytes...*/]));
 ```
 ```dart Dart
-// In Dart, you might have a ByteData or Uint8List
-await syncClient.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
+await room.sync.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
 ```
 </CodeGroup>
 
