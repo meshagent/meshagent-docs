@@ -1,43 +1,43 @@
 ```javascript Javascript
-import { RoomClient, websocketProtocol } from "meshangent-ts";
+import { RoomClient, websocketProtocol } from "meshagent-ts";
 
 async function main() {
-    // Define a unique room name and chose your participant name
-    const roomName = "my-room";
-    const participantName = "participant-name";
+    try {
+        // Define a unique room name and chose your participant name
+        const roomName = "my-room";
+        const participantName = "participant-name";
 
-    // Document name (the extension identifies the schema)
-    const path = "hello-world.document";
+        // Document name (the extension identifies the schema)
+        const path = "hello-world.document";
 
-    // Establish communication channel using participant token
-    const protocol = await websocketProtocol({
-        roomName,
-        participantName,
-    });
+        // Establish communication channel using participant token
+        const protocol = await websocketProtocol({
+            roomName,
+            participantName,
+        });
 
-    // Instantiate a new RoomClient for interacting with the room
-    const room = new RoomClient({protocol});
+        // Instantiate a new RoomClient for interacting with the room
+        const room = new RoomClient({protocol});
 
-    // Connect to the room
-    await room.start();
+        // Connect to the room
+        await room.start();
 
-    // Open our document
-    const meshDocument = await room.sync.open({path});
+        // Open our document
+        const meshDocument = await room.sync.open(path);
 
-    // Wait for the document to sync from the server
-    await meshDocument.synchronize;
+        // Wait for the document to sync from the server
+        await meshDocument.synchronized;
 
-    meshDocument.root.createChildElement({
-        tagName: "body",
-        attributes: {
+        // Append body with text
+        meshDocument.root.createChildElement("body", {
             text: "hello world!"
-        }
-    });
+        });
+    } catch (error) {
+        console.error("Error:", error);
+    }
 }
 
-main().catch((error) => {
-    console.error("Error starting the room client:", error);
-});
+main();
 
 
 ```
