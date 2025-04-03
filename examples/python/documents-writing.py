@@ -1,16 +1,16 @@
-import os
 import asyncio
-from meshagent.api import  RoomClient, participant_token, websocket_protocol
+from meshagent.api import RoomClient, websocket_protocol
 
 async def main():
-
-    example_room_name = "examples"
+    room_name = "examples"
+    participant_name = "example-participant"
 
     # connect to our room
     async with RoomClient(
-        protocol=websocket_protocol(participant_name="sample", room_name=example_room_name, role="agent")) as room:             
-           
-             
+        websocket_protocol(
+            participant_name=participant_name,
+            room_name=room_name, role="agent")) as room:
+
             # open our document
             document = await room.sync.open(path="hello-world.document")
 
@@ -23,12 +23,9 @@ async def main():
          
             # wait before closing so the sync can finish
             await asyncio.sleep(3) 
-         
-            
 
 
 if __name__ == '__main__':
-    
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     asyncio.get_event_loop().run_until_complete(main())

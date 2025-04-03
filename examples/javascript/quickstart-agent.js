@@ -1,4 +1,4 @@
-import { RoomClient, Protocol, websocketProtocol } from 'meshagent-ts';
+import { RoomClient, websocketProtocol } from 'meshagent-ts';
 
 async function main() {
     try {
@@ -8,14 +8,9 @@ async function main() {
         // Document path in the MeshAgent environment
         const path = 'sample-agent.document';
 
-        const channel = await websocketProtocol({
-            roomName,
-            participantName,
-        });
+        const protocol = await websocketProtocol({roomName, participantName});
 
-        const room = new RoomClient({
-            protocol: new Protocol({ channel }),
-        });
+        const room = new RoomClient({protocol});
 
         // Connect to the room (automatically creating it if it doesn't exist)
         await room.start();

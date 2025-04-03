@@ -1,11 +1,84 @@
-`SyncClient` module provides a client for interacting with server-managed documents (such as `MeshDocument`) and synchronizing local changes with a remote server through a `RoomClient`. It contains two primary exports:
+import SchemasHtmlPy from "/snippets/examples/python/schemas-html.mdx"
+import SchemasHtmlJs from "/snippets/examples/javascript/schemas-html.mdx"
+import SchemasHtmlTs from "/snippets/examples/typescript/schemas-html.mdx"
+import SchemasHtmlDart from "/snippets/examples/dart/schemas-html.mdx"
+
+import DocumentsWritingPy from "/snippets/examples/python/documents-writing.mdx"
+import DocumentsWritingJs from "/snippets/examples/javascript/documents-writing.mdx"
+import DocumentsWritingTs from "/snippets/examples/typescript/documents-writing.mdx"
+import DocumentsWritingDart from "/snippets/examples/dart/documents-writing.mdx"
+
+
+`SyncClient` enables interacting with managed documents - `MeshDocument` and synchronizing local changes with all remote clients.
 
 ---
 
 ## Overview
 
-- **`QueuedSync`** – A simple class that represents a queued message of changes for a given document path.
-- **`SyncClient`** – A high-level client that sends requests through a provided `RoomClient` to open, create, synchronize, and close documents.
+MeshDocuments enable your agents to share and synchronize information in real time across platforms. They resemble a web page's structure but offer much greater flexibility. For example, if you want to generate website content with your agents, you can start with a simple HTML-compatible document format:
+
+```html
+<html>
+    <body>
+        <p class="content"></p>
+    </body>
+</html>
+```
+
+A MeshDocument, like an HTML document, is composed of elements that can have child elements and attributes. However, MeshDocuments introduce additional features and capabilities that go beyond standard HTML or XML.
+
+## Defining Your Document Structure
+
+To define the structure of a MeshDocument, you start by creating a schema using the MeshSchema class. A schema:
+
+- Documents the structure of your MeshDocument for anyone in your organization.
+- Ensures agents and users don’t write invalid data to the document.
+- Allows agents to automatically generate, manipulate, and validate structured documents.
+- Automatically generates LLM-compatible schemas for structured outputs.
+- Synchronizes documents across all platforms that MeshAgent supports.
+
+Similar to how a web page is structured, a MeshSchema begins with a root element that includes an allowed tag name and optional attributes. Afterward, you can define additional tags, their attributes, and the types of child nodes they can contain.
+
+### Example Schema
+
+Suppose you have a basic web page structure and want to define a schema for it.
+
+<CodeGroup>
+    <SchemasHtmlPy />
+    <SchemasHtmlJs />
+    <SchemasHtmlTs />
+    <SchemasHtmlDart />
+</CodeGroup>
+
+Many LLMs (such as OpenAI) and agent frameworks (such as MeshAgent) support JSON Schemas for defining inputs and outputs. Generating an OpenAI-compatible JSON schema from your MeshSchema requires only one line of code:
+
+<CodeGroup>
+``` python Python
+json_schema = schema.to_json()
+```
+``` javascript JavaScript
+const jsonSchema = schema.toJson();
+```
+``` typescript TypeScript
+const jsonSchema: Record<string, any> = schema.toJson();
+```
+``` dart Dart
+final jsonSchema = schema.toJson();
+```
+</CodeGroup>
+
+
+## Creating a MeshDocument
+
+To create a MeshDocument based on your schema and enable synchronization across different clients, use the MeshAgent runtime:
+
+<CodeGroup>
+    <DocumentsWritingPy />
+    <DocumentsWritingJs />
+    <DocumentsWritingTs />
+    <DocumentsWritingDart />
+</CodeGroup>
+
 
 ## API Methods
 
@@ -15,11 +88,7 @@ Below is an example of how you might use the `SyncClient` in your code:
 ```python Python
 
 # Create a MeshDocument on the server
-await room.sync.create(
-    "my/path",
-    schema=my_schema,
-    json={"initial": "data"}
-)
+await room.sync.create("my/path", json={"initial": "data"})
 
 # Open a document (creates if not found)
 doc = await room.sync.open("my/path", create=True)
@@ -29,7 +98,7 @@ await room.sync.close("my/path")
 ```
 ```js JavaScript
 // Create a MeshDocument on the server
-await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
+await room.sync.create("my/path", {"initial": "data" });
 
 // Open a document (creates if not found)
 const doc = await room.sync.open("my/path", { create: true });
@@ -39,7 +108,7 @@ await room.sync.close("my/path");
 ```
 ```ts TypeScript
 // Create a MeshDocument on the server
-await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { initial: "data" });
+await room.sync.create("my/path", {"initial": "data" });
 
 // Open a document (creates if not found)
 const doc = await room.sync.open("my/path", { create: true });
@@ -49,11 +118,7 @@ await room.sync.close("my/path");
 ```
 ```dart Dart
 // Create a MeshDocument on the server
-await room.sync.createMeshDocumentWithMeshSchema(
-  "my/path",
-  mySchema,
-  json: {"initial": "data"}
-);
+await room.sync.create("my/path", {"initial": "data"});
 
 // Open a document (creates if not found)
 final doc = await syncClient.open("my/path", create: true);
@@ -74,63 +139,21 @@ The `SyncClient` class is responsible for coordinating document synchronization 
 - **`room: RoomClient`**  
   An instance of `RoomClient`, which handles the underlying communication with the server.
 
-#### `start()`
+
+#### `create(path, json?)`
 
 <CodeGroup>
 ```python Python
-room.sync.start()
+await room.sync.create(path="my/path", json={"key": "value"})
 ```
 ```js JavaScript
-room.sync.start();
+await room.sync.create("my/path", { key: "value" });
 ```
 ```ts TypeScript
-room.sync.start();
+await room.sync.create("my/path", { key: "value" });
 ```
 ```dart Dart
-room.sync.start();
-```
-</CodeGroup>
-
-
-- **Description**  
-  Begins listening for local changes to any opened documents and queues them for synchronization.  
-  You typically call this method once, shortly after instantiating the `SyncClient`.
-
-#### `dispose()`
-
-<CodeGroup>
-```python Python
-room.sync.dispose()
-```
-```js JavaScript
-room.sync.dispose();
-```
-```ts TypeScript
-room.sync.dispose();
-```
-```dart Dart
-room.sync.dispose();
-```
-</CodeGroup>
-
-
-- **Description**  
-  Cleans up internal resources used by the client, stops listening for changes, and closes any internal streams.
-
-#### `createMeshDocumentWithMeshSchema(path, schema, json?)`
-
-<CodeGroup>
-```python Python
-await room.sync.create("my/path", my_schema, json={"key": "value"})
-```
-```js JavaScript
-await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
-```
-```ts TypeScript
-await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, { key: "value" });
-```
-```dart Dart
-await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"key": "value"});
+await room.sync.create("my/path", {"key": "value"});
 ```
 </CodeGroup>
 
@@ -142,32 +165,7 @@ await room.sync.createMeshDocumentWithMeshSchema("my/path", mySchema, json: {"ke
 - **Description**  
   Sends a request to create a new `MeshDocument` at the given path with a specified schema.
 
-#### `createMeshDocumentWithFormat(path, format, json?)`
-
-<CodeGroup>
-```python Python
-await room.sync.create("my/path", "json", json={"key": "value"})
-```
-```js JavaScript
-await room.sync.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
-```
-```ts TypeScript
-await room.sync.createMeshDocumentWithFormat("my/path", "json", { key: "value" });
-```
-```dart Dart
-await room.sync.createMeshDocumentWithFormat("my/path", "json", json: {"key": "value"});
-```
-</CodeGroup>
-
-
-- **Parameters**:
-  - `path` – The path where the document will be created on the server.
-  - `format` – A string representing a schema format (e.g., `"json"`, `"yaml"`, etc.).
-  - `json` – (Optional) Initial data or metadata to send along with the creation request.
-- **Description**  
-  Similar to the method above, but you specify a textual format rather than providing a `MeshSchema` object.
-
-#### `open(path, { create = true })`
+#### `open(path, create = true)`
 
 <CodeGroup>
 ```python Python
