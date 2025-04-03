@@ -31,6 +31,13 @@ async function main() {
         meshDocument.root.createChildElement("body", {
             text: "hello world!"
         });
+
+        // sleep 2 seconds
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Close the document 
+        await room.sync.close(path);
+
     } catch (error) {
         console.error("Error:", error);
     }
