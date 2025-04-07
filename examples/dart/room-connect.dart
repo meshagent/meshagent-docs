@@ -2,17 +2,16 @@ import 'package:meshagent_api/meshagent_api.dart';
 
 void main() async {
     // Define a unique room name
-    const String roomName = 'my-room';
-    const String participantName = 'my-participant';
 
-    // Establish communication channel using participant token
-    final protocol = websocketProtocol(
-      roomName: roomName,
-      participantName: participantName,
-    );
+    Meshagent.initServer();
+    
+    Meshagent.initClient(authorizationUrl: "");
 
     // Instantiate a new RoomClient for interacting with the room
-    final room = RoomClient(protocol: protocol);
+    final room = RoomClient(roomName: "my-room");
+    
+    RoomClient.withProtocol
+
 
     // Connect to the room
     await room.start();
