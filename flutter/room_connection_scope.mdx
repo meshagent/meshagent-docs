@@ -5,33 +5,55 @@ description: Learn how to set up a room connection for your MeshAgent.
 
 ## Description
 
-`RoomConnectionScope` is a widget that manages the connection lifecycle for a Meshagent `RoomClient`. Users provide an authorization callback that returns a `RoomConnectionInfo`, containing the connection’s URL and a JWT. Once authorization succeeds, a `RoomClient` is created and started. During authorization, you can optionally display a loading or progress indicator using the `authorizingBuilder`. After the connection is established, the main UI is built using the provided `builder` callback, which receives the active `RoomClient`. If the connection ends or encounters an error, the optional `doneBuilder` handles rendering the appropriate UI. The `RoomConnectionScope` ensures proper resource cleanup by automatically disposing of the `RoomClient` when the widget is removed from the widget tree.
+`RoomConnectionScope` is a widget that manages the connection lifecycle for a Meshagent `RoomClient`. 
 
+- **Parameters**:
+  - `authorize` (function): A callback that returns a `Future<RoomConnectionInfo>` for authorization.
+  - `builder` (function): A callback that takes the current context and the new instance of `RoomClient`.
+  - `authorizingBuilder` (optional function): A callback for rendering while authorizing.
+  - `doneBuilder` (optional function): A callback for rendering when the connection is done or encounters an error.
+- **Returns**: `Widget`: A widget that builds based on the state of the room connection.
 
 ## Example
 
 ```dart
-import 'package:meshagent_flutter/meshagent_flutter.dart';
+import 'package:flutter/widgets.dart';
+import 'package:meshagent/room_server_client.dart';
+import 'package:meshagent_flutter/document_connection_scope.dart';
 
-RoomConnectionScope(
-  authorization: (context) async {
-    // Perform your authorization logic here
-    // For example, you might want to fetch a JWT token from your server
-    final response = await fetchJwtToken();
+class SampleWidget extends StatelessWidget {
+  const SampleWidget({
+    super.key,
+    required this.room,
+    required this.path,
+  });
 
-    return RoomConnectionInfo(
-      url: response['url'],
-      jwt: response['jwt'],
-    );
-  },
-  authorizingBuilder: (context) {
-    return Center(child: CircularProgressIndicator());
-  },
-  builder: (context, client) {
-    return Text('Connected to room: ${client.roomId}');
-  },
-  doneBuilder: (context, error) {
-    return Text('Connection ended with error: $error');
-  },
-)
+  final RoomClient room;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return RoomConnectionScope(
+      authorization: (context) async {
+        // Perform your authorization logic here
+        // For example, you might want to fetch a JWT token from your server
+        final response = await fetchJwtToken();
+
+        return RoomConnectionInfo(
+          url: response['url'],
+          jwt: response['jwt'],
+        );
+      },
+      authorizingBuilder: (context) {
+        return Center(child: CircularProgressIndicator());
+      },
+      builder: (context, client) {
+        return Text('Connection established');
+      },
+      doneBuilder: (context, error) {
+        return Text('Connection ended with error: $error');
+      });
+  }
+}
+
 ```

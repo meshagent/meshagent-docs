@@ -5,32 +5,52 @@ description: Learn how to set up a document connection for your MeshAgent.
 
 ## Description
 
-`DocumentConnectionScope` is a builder widget that manages the connection to a Mesh document. When initialized, it attempts to open the specified document at the provided `path` and then returns either an instance of `MeshDocument` or any resulting error through the builder callback. When the widget is disposed, it automatically closes the connection to the document.
+`DocumentConnectionScope` is a builder widget that manages the lifecycle of a document connection in a MeshAgent application.
+
+
+- **Parameters**:
+  - `path` (string): Path to the document.
+  - `room` (RoomClient): Instance of `RoomClient` to manage the connection.
+  - `builder` (function): A callback function that takes the current context, the loaded `MeshDocument`, and any error that occurred during loading.
+- **Returns**: `Widget`: A widget that builds based on the state of the document connection.
 
 
 ## Example
 
 ```dart
-import 'package:meshagent_flutter/meshagent_flutter.dart';
+import 'package:flutter/widgets.dart';
+import 'package:meshagent/room_server_client.dart';
+import 'package:meshagent_flutter/document_connection_scope.dart';
 
-DocumentConnectionScope(
-  path: '/some/path/to/document',
-  room: room, // instance of MeshRoom
-  builder: (context, document, error) {
-    if (error != null) {
-      // Handle the error
-      return Text('Error: $error');
-    }
+class SampleWidget extends StatelessWidget {
+  const SampleWidget({
+    super.key,
+    required this.room,
+    required this.path,
+  });
 
-    if (document == null) {
-      // Document is still loading
-      return Text('Loading...');
-    }
+  final RoomClient room;
+  final String path;
 
-    return Text('Document loaded: ${document.path}');
-  })
+  @override
+  Widget build(BuildContext context) {
+    return DocumentConnectionScope(
+      path: path,
+      room: room, // instance of MeshRoom
+      builder: (context, document, error) {
+        if (error != null) {
+          // Handle the error
+          return Text('Error: $error');
+        }
+
+        if (document == null) {
+          // Document is still loading
+          return Text('Loading...');
+        }
+
+        return Text('Document loaded: ${document.id}');
+      });
+  }
+}
 
 ```
-
-
-
