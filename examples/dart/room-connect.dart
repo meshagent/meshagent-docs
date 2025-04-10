@@ -1,4 +1,4 @@
-import 'package:meshagent_api/meshagent_api.dart';
+import 'package:meshagent/meshagent.dart';
 
 void main() async {
     // Define a unique room name
