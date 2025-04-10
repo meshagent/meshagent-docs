@@ -5,9 +5,6 @@ const { websocketRoomUrl, participantToken } = require('meshagent');
 
 const app = express();
 
-const JWT_SECRET = 'your_jwt_secret';
-const URL = 'https://api.meshagent.com';
-
 app.use(bodyParser.json());
 
 // Example of user "database"
@@ -33,10 +30,12 @@ const users = [
  * it returns a JWT token for the user.
  */
 app.post('/authorize-user', (req, res) => {
-  const { username, password } = req.body;
-
-  const url = websocketRoomUrl({roomName});
-  const token = participantToken({participantName, roomName, role});
+  const {
+      username,
+      password,
+      roomName,
+      participantName,
+  } = req.body;
 
   // Find a matching user in our "database"
   const user = users.find((u) => u.username === username && u.password === password);
@@ -45,21 +44,10 @@ app.post('/authorize-user', (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  // Generate a JWT token with the user's info
-  // In a real-world scenario, you might add roles, permissions, etc.
-  const token = jwt.sign(
-    {
-      userId: user.id,
-      username: user.username
-    },
-    JWT_SECRET,
-    { expiresIn: '1h' } // token expires in 1 hour
-  );
+  const url = websocketRoomUrl({roomName});
+  const jwt = participantToken({participantName, roomName});
 
-  return res.json({ 
-    url: URL,
-    jwt: jwt,
-  });
+  return res.json({url, jwt});
 });
 
 // Start the Express server
