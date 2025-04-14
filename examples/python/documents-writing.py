@@ -7,7 +7,7 @@ async def main():
 
     # connect to our room
     async with RoomClient(
-        websocket_protocol(
+        protocol=websocket_protocol(
             participant_name=participant_name,
             room_name=room_name, role="agent")) as room:
 
