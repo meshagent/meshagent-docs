@@ -1,4 +1,4 @@
-import { RoomClient, WebSocketClientProtocol, websocketProtocol } from 'meshagent-ts';
+import { RoomClient, WebSocketClientProtocol, websocketProtocol } from '@meshagent/meshagent';
 
 async function main() {
     try {

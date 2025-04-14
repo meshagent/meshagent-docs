@@ -4,8 +4,7 @@ import {
   RoomClient,
   ParticipantToken,
   WebSocketProtocolChannel
-  websocketRoomUrl,
-} from "meshagent"; // <-- your TypeScript port or wrapper
+} from "@meshagent/meshagent"; // <-- your TypeScript port or wrapper
 
 /**
  * Connects to a MeshAgent room under the given participant name,

@@ -1,4 +1,4 @@
-import { RoomClient, Protocol, websocketProtocol } from 'meshagent-ts';
+import { RoomClient, Protocol, websocketProtocol } from '@meshagent/meshagent';
 
 async function main() {
     try {
@@ -37,10 +37,7 @@ async function main() {
             },
         });
 
-        console.log(
-            'Take a look at it at',
-            `https://studio.meshagent.com/projects/${projectId}/rooms/${roomName}?p=${path}`
-        );
+        console.log('Take a look at it at https://studio.meshagent.com');
 
         // Always disconnect when done
         await room.disconnect();

@@ -1,15 +1,40 @@
-// Check existence
-const exists = await room.storage.exists("example.txt");
-if (!exists) {
-    // Create it
-    const handle = await room.storage.open("example.txt");
-    await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
-    await room.storage.close(handle);
+import { RoomClient, websocketProtocol } from "@meshagent/meshagent";
+
+async function main() {
+    try {
+        // Define a unique room name and chose your participant name
+        const roomName = "my-room";
+        const participantName = "participant-name";
+
+        // Initialize the communication protocol
+        const protocol = await websocketProtocol({roomName, participantName});
+
+        // Instantiate a new RoomClient for interacting with the room
+        const room = new RoomClient({protocol});
+
+        // Connect to the room
+        await room.start();
+
+        // Check existence
+        const exists = await room.storage.exists("example.txt");
+        if (!exists) {
+            // Create it
+            const handle = await room.storage.open("example.txt");
+            await room.storage.write(handle, new TextEncoder().encode("Hello, Storage!"));
+            await room.storage.close(handle);
+        }
+
+        // Download content
+        const response = await room.storage.download("example.txt");
+        console.log("Downloaded content:", response.data);
+
+        // Delete it
+        await room.storage.delete("example.txt");
+
+        room.dispose();
+
+    } catch (error) {
+        console.error("Error starting the room client:", error);
+    }
 }
-
-// Download content
-const response = await room.storage.download("example.txt");
-console.log("Downloaded content:", response.data);
-
-// Delete it
-await room.storage.delete("example.txt");
+main();
