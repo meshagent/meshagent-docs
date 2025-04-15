@@ -5,7 +5,7 @@ import {
   ElementType,
   ChildProperty,
   ValueProperty,
-} from 'meshagent';
+} from '@meshagent/meshagent';
 
 // Define the schema
 const sample = new MeshSchema({

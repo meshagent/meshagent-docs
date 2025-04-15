@@ -3,7 +3,7 @@ import {
   ElementType,
   ChildProperty,
   ValueProperty,
-} from 'meshagent-ts';
+} from '@meshagent/meshagent';
 
 // Create the schema
 const schema = new MeshSchema({
