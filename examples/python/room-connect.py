@@ -7,7 +7,7 @@ async def main():
     participant_name = 'my-participant'
 
     async with RoomClient(
-        websocket_protocol(
+        protocol=websocket_protocol(
             participant_name=participant_name,
             room_name=room_name
         )) as room:   
