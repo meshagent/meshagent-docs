@@ -8,8 +8,6 @@ from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
-
-
 import asyncio
 import os
 
