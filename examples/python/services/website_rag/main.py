@@ -12,8 +12,8 @@ import os
 class RagChatBot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="meshagent.chatbot.rag",
-            title="RAG chatbot",
+            name="meshagent.chatbot.website_rag",
+            title="Website RAG chatbot",
             description="an simple chatbot that does rag, pair with an indexer",
             llm_adapter = OpenAIResponsesAdapter(
                 model="gpt-4o-mini",
