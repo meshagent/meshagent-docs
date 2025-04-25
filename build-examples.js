@@ -33,7 +33,7 @@ const map = through.obj((file, enc, cb) => {
     const type = extMap[parsed.ext];
 
     if (!type) {
-        throw new Error(`Unsupported file type: ${parsed.ext}`);
+        return;
     }
 
     const tabname = type.charAt(0).toUpperCase() + type.slice(1);
