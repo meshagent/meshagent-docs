@@ -14,6 +14,4 @@ RUN pip3 install meshagent-api==${MESHAGENT_VERSION}   \
                  meshagent-agents==${MESHAGENT_VERSION} \
                  meshagent-tools==${MESHAGENT_VERSION}
 
-RUN pip3 install .
-
 ENTRYPOINT [ "python3", "main.py" ]
