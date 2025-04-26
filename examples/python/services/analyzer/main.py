@@ -4,13 +4,17 @@ from meshagent.agents.schemas.document import document_schema
 from meshagent.agents.schemas.presentation import presentation_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
 import asyncio
 import os
 
+from meshagent.api.services import ServiceHost
+
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class DocumentAnalyzer(ChatBot):
     def __init__(self):
         super().__init__(
@@ -58,19 +62,4 @@ class DocumentAnalyzer(ChatBot):
             labels=[ "chatbot", "documents", "presentations" ]   
         )
 
-
-async def server():
-
-    remote_agent_server = RemoteAgentServer(
-        cls=DocumentAnalyzer,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT"))
-    )
-    await remote_agent_server.run()
-
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())

@@ -1,8 +1,12 @@
-from meshagent.agents.hosting import RemoteAgentServer
+from meshagent.livekit.agents.voice import Voice
+from meshagent.api.services import ServiceHost
+
 import asyncio
 import os
-from meshagent.livekit.agents.voice import Voice
 
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class SampleVoiceAgent(Voice):
     def __init__(self):
         super().__init__(
@@ -16,17 +20,4 @@ class SampleVoiceAgent(Voice):
             ]
         )
 
-async def server():
-
-    remote_agent_server = RemoteAgentServer(
-        cls=SampleVoiceAgent,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT"))
-    )
-    await remote_agent_server.run()
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())

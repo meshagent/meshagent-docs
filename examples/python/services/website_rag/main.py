@@ -1,14 +1,17 @@
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.agents.indexer import RagToolkit, SiteIndexer
+from meshagent.api.services import ServiceHost
 
 import asyncio
 import os
 
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class RagChatBot(ChatBot):
     def __init__(self):
         super().__init__(
@@ -52,6 +55,7 @@ class RagChatBot(ChatBot):
             labels=[ "chatbot", "rag" ]
         )
 
+@service.port(path="/websocket", port=int(os.getenv("MESHAGENT_PORT"))+1)
 class SampleSiteIndexer(SiteIndexer):
     def __init__(self):
         super().__init__(
@@ -60,31 +64,4 @@ class SampleSiteIndexer(SiteIndexer):
             description="indexes a site using firecrawl, pair with a RAG chatbot",
             labels=["tasks", "rag" ])
 
-async def chatbot_server():
-
-    remote_agent_server = RemoteAgentServer(
-        cls=RagChatBot,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT"))
-    )
-    await remote_agent_server.run()
-
-async def indexer_server():
-
-    remote_agent_server = RemoteAgentServer(
-        cls=SampleSiteIndexer,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT")) + 1
-    )
-    await remote_agent_server.run()
-
-async def server():
-
-    await asyncio.gather(chatbot_server(), indexer_server())
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())

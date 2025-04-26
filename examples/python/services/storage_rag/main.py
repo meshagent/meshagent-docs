@@ -5,10 +5,14 @@ from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.agents.indexer import RagToolkit, StorageIndexer
+from meshagent.api.services import ServiceHost
 
 import asyncio
 import os
 
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class RagChatBot(ChatBot):
     def __init__(self):
         super().__init__(
@@ -52,6 +56,7 @@ class RagChatBot(ChatBot):
             labels=[ "chatbot", "rag" ]
         )
 
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")) + 1)
 class MarkitDownFileIndexer(StorageIndexer):
 
     def __init__(self, *,
@@ -95,11 +100,4 @@ async def indexer_server():
     )
     await remote_agent_server.run()
 
-async def server():
-
-    await asyncio.gather(chatbot_server(), indexer_server())
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())

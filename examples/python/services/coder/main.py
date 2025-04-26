@@ -1,10 +1,14 @@
 from meshagent.api import RequiredToolkit
-from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 import asyncio
 import os
 
+from meshagent.api.services import ServiceHost
+
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class CoderChatbot(ChatBot):
     def __init__(self):
         super().__init__(
@@ -37,19 +41,4 @@ class CoderChatbot(ChatBot):
             ]
         )
         
-
-async def server():
-
-    remote_agent_server = RemoteAgentServer(
-        cls=CoderChatbot,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT"))
-    )
-    await remote_agent_server.run()
-
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())

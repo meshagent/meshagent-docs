@@ -1,11 +1,14 @@
 from meshagent.api import RequiredToolkit
-from meshagent.agents.hosting import RemoteAgentServer
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.computers import ComputerAgent, BrowserbaseBrowser, Operator
+from meshagent.api.services import ServiceHost
 
 import asyncio
 import os
 
+service = ServiceHost()
+
+@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
 class BrowserbaseAgent(ComputerAgent):
     def __init__(self): 
         super().__init__(
@@ -37,18 +40,5 @@ class BrowserbaseAgent(ComputerAgent):
             operator_cls=Operator
         )
 
-async def server():
 
-    remote_agent_server = RemoteAgentServer(
-        cls=BrowserbaseAgent,
-        path="/webhook",
-        validate_webhook_secret=False,
-        port=int(os.getenv("MESHAGENT_PORT"))
-    )
-    await remote_agent_server.run()
-
-
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(server())
+asyncio.run(service.run())
