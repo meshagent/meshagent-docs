@@ -43,11 +43,32 @@ class Sample(TaskRunner):
         return { "answer" : "hello world" }
 ```
 
+
 The Meshagent SDK contains a few prebuilt task runners agents in ```meshagent.agents.planning```` that can use tools, be configured with custom tools, and integrate with a LLM to perform operations:
 
 *PlanningResponder* - a task runner that takes in a prompt an optional set of custom tools, and returns a text response.
 
 *DynamicPlanningResponder* - a task runner that takes in a prompt an optional set of custom tools, and returns a structured response.
+
+You can customize the PlanningResponder with the following constructor parameters:
+
+*requires:* a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+
+*input_prompt:* Whether the planner should accept a prompt as input, if true, the input should be in the format ```{ "prompt" : "text" }```.
+
+*output_schema*: a JSON schema that responses must conform to.
+
+*llm_adapter:* a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+
+*toolkits:* used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+
+*rules:* a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+
+*max_iterations:* the maximum number of iterations of the planning loop (optional).
+
+*tool_adapter:* a custom tool adapter to use to transform tool responses into context messages (optional).
+
+*supports_tools* Whether the agent should support passing a custom set of tools at runtime (optional)
 
 Two preconfigured task runners are available by default in Meshagent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
 You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
