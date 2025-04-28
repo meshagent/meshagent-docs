@@ -2,3 +2,21 @@
 title: "Worker"
 ---
 A worker is an agent that connects to a Meshagent room queue to process messages sent to the queue.
+
+You can customize the worker with the following properties:
+
+**queue:** the name of a room queue to listen for messages on
+
+**prompt:** a prompt to run for each message in the queue
+
+**requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+
+**llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+
+**toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+
+**rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+
+**max_iterations:** the maximum number of iterations of the planning loop (optional).
+
+**tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
