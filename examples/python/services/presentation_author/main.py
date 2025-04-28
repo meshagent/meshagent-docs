@@ -12,7 +12,7 @@ import os
 
 service = ServiceHost()
 
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
+@service.path("/agent")
 class PresentationAuthor(PlanningResponder):
     def __init__(self):
         super().__init__(

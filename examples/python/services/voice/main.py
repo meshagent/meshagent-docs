@@ -1,4 +1,4 @@
-from meshagent.livekit.agents.voice import Voice
+from meshagent.livekit.agents.voice import Voicebot
 from meshagent.api.services import ServiceHost
 
 import asyncio
@@ -6,8 +6,8 @@ import os
 
 service = ServiceHost()
 
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
-class SampleVoiceAgent(Voice):
+@service.path("/agent")
+class SampleVoiceAgent(Voicebot):
     def __init__(self):
         super().__init__(
             name="meshagent.livekit.agent",

@@ -8,7 +8,7 @@ import os
 
 service = ServiceHost()
 
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
+@service.path("/agent")
 class BrowserbaseAgent(ComputerAgent):
     def __init__(self): 
         super().__init__(

@@ -11,7 +11,8 @@ import os
 
 service = ServiceHost()
 
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
+
+@service.path("/agent")
 class RagChatBot(ChatBot):
     def __init__(self):
         super().__init__(
@@ -55,7 +56,7 @@ class RagChatBot(ChatBot):
             labels=[ "chatbot", "rag" ]
         )
 
-@service.port(path="/websocket", port=int(os.getenv("MESHAGENT_PORT"))+1)
+@service.path("/indexer")
 class SampleSiteIndexer(SiteIndexer):
     def __init__(self):
         super().__init__(

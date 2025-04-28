@@ -12,7 +12,7 @@ import os
 from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
+@service.path("/agent")
 class Designer(ChatBot):
     def __init__(self):
         super().__init__(

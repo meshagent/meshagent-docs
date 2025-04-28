@@ -1,0 +1,46 @@
+### Meshagent Agents – Overview
+
+Meshagent expands on traditional agent frameworks by focusing on **inter-framework interoperability, rich human-in-the-loop workflows, and seamless multi-device reach**. You can continue to build agent logic with familiar frameworks—OpenAI Agents SDK, Semantic Kernel, CrewAI, or anything else—while letting Meshagent handle the parts they typically leave to you:
+
+* **Room-based connectivity.** Agents, tools, and user interfaces join the same room over a lightweight WebSocket mesh. This lets Python, Dart, JavaScript, or .NET components talk to one another as peers instead of forcing every call through a single back-end service.  
+* **Tool abstraction across client and server.** Any capability—opening a local file, showing a toast on a mobile device, invoking an internal REST API—becomes a Meshagent tool. Tools can live in the user’s device, on your cloud server, or both, yet they’re invoked through the same call pattern from the agent’s perspective.  
+* **First-class observability and cost tracking.** Every tool call automatically records who invoked it, latency, result size, and cost metadata, feeding dashboards and billing pipelines without extra code.  
+* **Plug-and-play UI components.** Meshagent Studio and the React / Flutter UI kits render agent interactions, streaming responses, and tool call progress out of the box, letting you drop high-quality UX into your own app.  
+
+---
+
+#### Cross-Framework, Cross-Device Example
+
+Suppose your agent is written in Python and hosted on a server, while your customer-facing app is a Flutter mobile client. By connecting both to the same Meshagent room:
+
+* The Flutter app registers UI-centric tools—`ask_user`, `ask_user_file`, `show_toast`.  
+* The Python agent calls those tools exactly like any other function, even though they execute on the user’s phone.  
+* Observability events stream back automatically, so you can audit how often dialogs appeared, how long file picks took, and what it cost.
+
+No additional RPC plumbing, versioning, or security tunnel is required; the room’s mesh protocol handles transport, authentication, and fallback across networks.
+
+---
+
+#### Built-in Agent Templates
+
+Meshagent ships template agents you can use as-is, customize, or wrap around agents you already have:
+
+* **Chatbot** – Streams tool calls and responses, persists every exchange as a MeshDocument, and renders natively in Studio.  
+* **Voice** – Adds real-time speech I/O while retaining full tool access inside the room.  
+* **TaskRunner** – Executes a single, explicit task when invoked via SDK or as a callable room tool.  
+* **Indexer** – Watches incoming content, embeds it into the room’s vector store, and integrates with RagToolkit for retrieval-augmented generation.  
+* **Worker** – Listens to the room’s queue and processes each message in turn—ideal for background jobs or long-running tasks.  
+
+Start with these templates in the meshagent-agents project on pypi or wrap your own agent class; either way you immediately gain Studio testing, UI integration, and observability without rewriting business logic.
+
+---
+
+#### Why Use Meshagent When You Already Have Another Framework?
+
+Other frameworks excel at defining an agent’s reasoning loop, memory, or planner. Meshagent focuses on everything around that core:
+
+* **Bridging languages and runtimes.** A TypeScript UI, a Python agent, and a Go microservice can collaborate in a single room without bespoke adapters.  
+* **Interactive UX out of the box.** Human approval steps, progress bars, and device-side actions are first-class citizens, not after-thought hooks.  
+* **Operational insights baked in.** Tool metrics, latency histograms, and per-user cost attribution require no extra middleware.  
+
+Use Meshagent alone, or pair it with your preferred planner or memory framework.

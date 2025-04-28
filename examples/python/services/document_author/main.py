@@ -10,7 +10,7 @@ import os
 from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
-@service.port(path="/webhook", port=int(os.getenv("MESHAGENT_PORT")))
+@service.path("/agent")
 class DocumentAuthor(PlanningResponder):
     def __init__(self):
 
