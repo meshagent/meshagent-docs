@@ -19,4 +19,3 @@ async def main():
                 print(f"  {tool.name}: {tool.title} - {tool.description}")
 
 asyncio.run(main())
-    

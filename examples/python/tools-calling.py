@@ -14,4 +14,3 @@ async def main():
         print(f"The result was {result}")       
 
 asyncio.run(main())
-    

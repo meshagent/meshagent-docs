@@ -61,5 +61,3 @@ async def main():
     await connect_development_agent(room_name="examples", agent=host)
     
 asyncio.run(main())
-    
-
