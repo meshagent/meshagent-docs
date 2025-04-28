@@ -43,7 +43,7 @@ const map = through.obj((file, enc, cb) => {
 
     file.path = path.format(parsed);
     file.contents = Buffer.from(
-        `\`\`\`${type} ${tabname}\n${file.contents.toString('utf-8')}\n\`\`\``
+        `\`\`\`${type} ${tabname}\n${file.contents.toString('utf-8')}\n\`\`\`\n\n`
     );
 
     cb(null, file);
