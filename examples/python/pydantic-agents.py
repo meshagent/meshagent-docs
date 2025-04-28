@@ -59,13 +59,7 @@ async def main():
 
     # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI    
     await connect_development_agent(room_name="examples", agent=host)
-            
-
     
-if __name__ == '__main__':
-    
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    asyncio.get_event_loop().run_until_complete(main())
+asyncio.run(main())
     
 

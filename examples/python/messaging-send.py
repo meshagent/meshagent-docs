@@ -113,5 +113,4 @@ async def main():
     await bob_room.__aexit__(None, None, None)
     print("Exiting.")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
