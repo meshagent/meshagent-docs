@@ -5,14 +5,57 @@ title: "TaskRunner"
 A TaskRunner is an agent that produces inputs and outputs that match an input and output json schema. It joins a Meshagent Room and can be discovered and 
 invoked from the Studio using the "Run Task..." menu option or using the ```room.agents.ask``` method on the API.
 
-Every Meshagent room also contains two Task Runner agents that can be used for basic tasks by providing them a custom set of tools:
+To build a custom TaskRunner, extend the base TaskRunner, provide a JSON schema for input and output, and define an ask method.
 
-GenericTaskRunner - a task runner that takes in a prompt an optional set of custom tools, and returns a text response.
-PlanningResponder - a task runner that takes in a prompt an optional set of custom tools, and returns a structured response.
+```python Python
 
-These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the Meshagent Studio, the PlanningResponder is used 
-to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base Task Runner and providing
-a custom set of rules and tools is a great way to get a simple agent up and running quickly.
+import asyncio
+from meshagent.agents import TaskRunner
+
+class Sample(TaskRunner):
+
+    def __init__(self):
+        super().__init__(
+            name="sample.taskrunner",
+            input_schema={
+                "type" : "object",
+                "additionalProperties" : False,
+                "required" : [ "prompt" ],
+                "properties" : {
+                    "prompt" : {
+                        "type" : "string"
+                    }
+                }
+            }
+            output_schema={
+                "type" : "object",
+                "additionalProperties" : False,
+                "required" : [ "answer" ],
+                "properties" : {
+                    "text" : {
+                        "type" : "string"
+                    }
+                }
+            }
+        )
+
+    async def ask(self, *, context, arguments):
+        return { "answer" : "hello world" }
+```
+
+The Meshagent SDK contains a few prebuilt task runners agents in ```meshagent.agents.planning```` that can use tools, be configured with custom tools, and integrate with a LLM to perform operations:
+
+*PlanningResponder* - a task runner that takes in a prompt an optional set of custom tools, and returns a text response.
+
+*DynamicPlanningResponder* - a task runner that takes in a prompt an optional set of custom tools, and returns a structured response.
+
+Two preconfigured task runners are available by default in Meshagent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
+You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
+Meshagent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
+and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
 
 TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then
-giving those tools to a ChatBot is a great way to get started building multi agent systems.
+giving those tools to a ChatBot is a great way to get started building multi agent systems. 
+
+The base TaskRunner requires JSON schemas to be provided to describe the input and output format. If you'd prefer a level interface, you can use a Pydantic
+BaseModel with the PydanticAgent class in meshagent.agents.pydantic.
