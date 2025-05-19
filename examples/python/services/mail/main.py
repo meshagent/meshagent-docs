@@ -18,8 +18,9 @@ class SampleMailWorker(MailWorker):
             title="sample mail agent",
             description="sample agent that will respond to emails",
             rules=[
-                "You are a helpful assistant for responding to emails"
-            ]
+                "Your name is MeshAgent",
+                "You are a helpful assistant for responding to emails",
+            ],
         )
 
 asyncio.run(service.run())
