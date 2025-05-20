@@ -6,7 +6,7 @@ import asyncio
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.storage import StorageToolkit, SaveFileFromUrlTool
-
+from meshagent.tools import ToolContext
 import livekit.agents.utils.http_context
 import livekit.agents.cli.log
 
@@ -191,7 +191,7 @@ class SampleVoiceAgentWithTools(Voicebot):
     
 
 
-    def create_session(self):
+    def create_session(self, *, context: ToolContext):
         session = super().create_session()
 
         def watch_done(task: asyncio.Task):
