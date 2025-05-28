@@ -1,4 +1,4 @@
-from meshagent.livekit.agents.voice import Voicebot
+from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.tools import Toolkit
@@ -21,7 +21,7 @@ context = livekit.agents.utils.http_context._new_session_ctx()
 livekit.agents.cli.log.setup_logging("ERROR", True, True)
 
 @service.path("/agent")
-class SampleVoiceAgentWithTools(Voicebot):
+class SampleVoiceAgentWithTools(VoiceBot):
     def __init__(self):
         
         super().__init__(
