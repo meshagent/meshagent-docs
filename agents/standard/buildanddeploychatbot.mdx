@@ -1,0 +1,348 @@
+---
+title: "Build and Deploy a Chat Agent"
+---
+
+## Overview
+The MeshAgent **Chatbot** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code!
+
+In this quickstart we'll build the agent in three phases: 
+1. **Basic Chatbot**: A simple agent with a system prompt (rules)
+2. **Chatbot with Out-of-the-Box MeshAgent Tools**: Extend our chat agent by adding MeshAgent's prebuilt tools to interact with the user and write documents to the room.
+3. **ChatBot with Out-of-the-Box MeshAgent Tools and Custom Tools**: Add our own tools to the agent for use-case specific tasks. 
+
+You'll learn how to:  
+- Build a chat based agent with MeshAgent
+- Connect the agent to a MeshAgent Room for live testing.
+- Deploy the agent as a MeshAgent Service.
+- Generate a shareable link so others can start chatting right away.
+
+
+## Getting Started
+### Install MeshAgent
+
+```sh
+uv add 'meshagent[all]'
+```
+
+### Connect to MeshAgent Project
+
+```sh
+meshagent auth login
+meshagent project list
+meshagent project activate YOUR_PROJECT_ID
+meshagent api-key list
+meshagent api-key activate YOUR_MESHAGENT_API_KEY_ID
+```
+
+*Note: You can create a MeshAgent API Key through the MeshAgent Studio UI or by running meshagent api-key create and passing in the key name and description*
+
+## Building a Simple Chatbot
+Next in our main.py file let's create the basic ChatBot. We'll give it one rule / system instruction for now letting it know to reply to the user with a fun fact after it addresses their request. 
+
+```bash Python
+from meshagent.api import RequiredToolkit
+from meshagent.agents.chat import ChatBot
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.api.services import ServiceHost
+
+import asyncio
+import os
+
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
+
+@service.path("/agent")
+class SimpleChatbot(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            title="chatbot",
+            description="a simple chatbot",
+            rules=[
+                "Always respond to the user first then include a fun fact at the end of your response."
+            ],
+            llm_adapter = OpenAIResponsesAdapter(),
+        )
+
+print(f"running on port {service.port}")
+asyncio.run(service.run())
+```
+
+## Running the Simple Chatbot in Test Mode: 
+Now that we have the code for basic Chatbot let's try it out!
+
+To run the agent you will need two tabs open in your terminal. Be sure you have saved / exported your environment variables to your environment, installed the MeshAgent libraries, and authenticated to MeshAgent (see above steps).
+
+In the first tab run: 
+```sh
+python main.py
+```
+
+In the second tab run the call agent command to bring our agent into the room: 
+
+```sh
+meshagent call agent --url=http://localhost:MESHAGENT_PORT/AGENT_NAME --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+```
+
+As an example: 
+```sh
+meshagent call agent --url=http://localhost:7777/agent --room=myroom --agent-name=mychatagent --name=mychatagent
+```
+
+Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, "mychatagent" show up under the messaging tab! We can chat back and forth with the agent, asking it questions and making sure that it responds with a fun fact like we told it to.
+
+## Adding MeshAgent Tools to our Chatbot
+Next, let's give our agent the ability to interact with the user, convert documents to markdown, and write documents to the room. We can do this by adding two required toolkits to our agent. Toolkits represent a group of tools that are used for a particular purpose. 
+
+We'll also add a few imports and update the chat agent's rules so it knows how to interact with the available tools more efficiently. 
+
+```bash Python
+from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.agents.chat import ChatBot
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.api.services import ServiceHost
+from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.agents.schemas.document import document_schema
+
+import asyncio
+import os
+
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
+
+@service.path("/agent")
+class SimpleChatbot(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            title="chatbot",
+            description="a simple chatbot",
+            rules=[
+                "Always respond to the user and include a fun fact at the end of your response.",
+                "use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
+                "the document names MUST have the extension .document, automatically add the extension if it is not provided",
+                "you MUST always write content to a document",
+                "first open a document, then use tools to write the document content before closing the document",
+                "before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
+                "blob URLs MUST not be added to documents, they must be saved as files first",
+            ],
+            llm_adapter = OpenAIResponsesAdapter(),
+            requires=[
+                RequiredToolkit(
+                    name="ui"
+                ),
+                RequiredSchema(
+                    name="document"
+                ),
+                RequiredToolkit(
+                    name="meshagent.markitdown", 
+                    tools=[ "markitdown_from_user", "markitdown_from_file"]
+                ),
+            ],
+            toolkits=[
+                DocumentAuthoringToolkit(),
+                DocumentTypeAuthoringToolkit(
+                    schema=document_schema,
+                    document_type="document"
+                )
+            ],
+        )
+
+print(f"running on port {service.port}")
+asyncio.run(service.run())
+```
+
+We can test the agent using the same commands as we did with the simple chat agent!
+```sh
+python main.py
+```
+
+```sh
+meshagent call agent --url=http://localhost:MESHAGENT_PORT/AGENT_NAME --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+```
+
+## Adding Custom Tools to our Chatbot
+Now let's add a custom tool to our Chatbot! We'll create a TaskTracker toolkit that allows the agent to write and read tasks to the Room database. 
+
+To do this we will update the chat agent initialization to create a table for the tasks when the room starts up. We will create a tasks toolkits with two custom tools to **WriteTask** and **GetTasks** from the database. 
+
+This is a simple example of adding tasks, to create a more useful task writer we'd want to add date information and other metadata to better track and filter tasks. This example is mainly to demonstrate writing to room storage and adding custom tools to our chat agent.
+
+```bash Python
+from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.agents.chat import ChatBot
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.api.services import ServiceHost
+from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.agents.schemas.document import document_schema
+from meshagent.api.room_server_client import TextDataType, TimestampDataType
+from meshagent.api.messaging import TextResponse, JsonResponse
+from meshagent.tools import Tool, Toolkit
+from datetime import datetime, timezone, timedelta
+
+import asyncio
+import os
+import uuid
+
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
+
+class WriteTask(Tool):
+    def __init__(self):
+        super().__init__(
+            name="WriteTask",
+            title="Add a task",
+            description="A tool to add tasks to the database",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required": [
+                    "taskdescription"
+                    ],
+                "properties": {
+                    "taskdescription": {"type": "string"}
+                    }
+            }
+        )
+
+    async def execute(self, context, taskdescription: str):
+        await context.room.database.insert(
+            table="tasks",
+            records=[{
+                "task_id": str(uuid.uuid4()),
+                "taskdescription": taskdescription
+            }]
+        )
+        return TextResponse(text="Task added!")
+    
+class GetTasks(Tool):
+    def __init__(self):
+        super().__init__(
+            name="GetTasks",
+            title="List tasks",
+            description="List tasks recorded today or this week",
+            input_schema={
+                "type": "object",
+                "additionalProperties":False,
+                "required": [],
+                "properties": {}
+            }
+        )
+
+    async def execute(self, context):
+        return JsonResponse(json={"values": await context.room.database.search(table="tasks")})
+
+@service.path("/agent")
+class SimpleChatbot(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            title="chatbot",
+            description="a simple chatbot",
+            rules=[
+                "Always respond to the user and include a fun fact at the end of your response.",
+                "use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
+                "the document names MUST have the extension .document, automatically add the extension if it is not provided",
+                "you MUST always write content to a document",
+                "first open a document, then use tools to write the document content before closing the document",
+                "before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
+                "blob URLs MUST not be added to documents, they must be saved as files first",
+            ],
+            llm_adapter = OpenAIResponsesAdapter(),
+            requires=[
+                RequiredToolkit(
+                    name="ui"
+                ),
+                RequiredSchema(
+                    name="document"
+                ),
+                RequiredToolkit(
+                    name="meshagent.markitdown", 
+                    tools=["markitdown_from_user", "markitdown_from_file"]
+                ),
+            ],
+            toolkits=[
+                DocumentAuthoringToolkit(),
+                DocumentTypeAuthoringToolkit(
+                    schema=document_schema,
+                    document_type="document"
+                ),
+                Toolkit(name="tasktracker", tools=[WriteTask(), GetTasks()]) # Add our Custom Tools Here!
+            ],
+        )
+
+    async def start(self, *, room):
+        await super().start(room=room)
+        # One tiny table:
+        await room.database.create_table_with_schema(
+            name="tasks",
+            schema={
+                "task_id": TextDataType(),
+                "taskdescription": TextDataType()
+            },
+            mode="overwrite",
+            data=None
+        )
+
+print(f"running on port {service.port}")
+asyncio.run(service.run())
+
+```
+
+We can test the agent using the same commands as we did with the simple chat agent! And now when we go to the room we can ask the agent to add a task to our task database. 
+
+```sh
+python main.py
+```
+
+```sh
+meshagent call agent --url=http://localhost:MESHAGENT_PORT/AGENT_NAME --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+```
+
+Once we're satisfied with how the agent is performing we can move on to deploy and share the agent. 
+
+*Note: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent.*
+
+## Deploying and Running the Agent as a MeshAgent Service
+### Prerequisites: 
+To deploy the agent you will need to have docker setup and a container registry with your cloud provider (e.g. GCP, Azure, AWS). 
+
+For this example we are using Azure Container Registry. These steps assume you have created a container registry in Azure, have a service principal setup, and have the appropriate permissions to access and push images to the container registry. 
+- For more information on setting up an Azure Container Registry see the documentation here: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal?tabs=azure-cli 
+- For more information on creating a service principal in azure see the documentation here: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes. 
+
+You will need to create a new image pull secret so that MeshAgent can pull and run your container, the image pull secret requires the service principal ID and password. To save the image pull secret navigate to the MeshAgent Studio, click the Secrets tab, then click New Image Pull Secret, give a name to your secret and fill in the required information.
+
+Once you have the registry setup proceed with the following steps. 
+
+### Step 1: Build and Push Your Container
+1. Create and activate a dedicated Buildx builder
+We recommend using zstd images to speed up image pulls. To enable building zstd images, run the following commands:
+
+```sh
+docker buildx create --name zstd-builder --driver docker-container
+docker buildx use zstd-builder
+```
+
+2. Log in to Azure, connect to your ACR instance, then build and push the docker container. To build this container, use docker buildx to make a linux/amd64 image and push it to your registry.
+
+```sh
+az login
+az acr login --name myregistry
+docker buildx build . --platform linux/amd64 --output=type=image,name=myregistry.azurecr.io/mychatagent:v1,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true,push=true
+```
+
+### Step 2: Create a Service in MeshAgent for each of your Agents
+1. Navigate to the Services tab and click the button to create a New Service and fill in the required information about the agent. 
+2. Add the MESHAGENT_PORT as an environment variable, this needs to match the port that you register the service with. 
+
+### Step 3: Try your agent!
+Navigate to the Sessions tab in the MeshAgent Studio and either join an existing room or create a new room by starting a session. You will then see the Chatbot Agent available in the room for you to interact with!
+
+## Generate a Link and Share Your Agent
+1. Navigate to your Room, click the hamburger menu icon in the top left corner, next click "Share"
+2. Select the Room and Agent you'd like to share and click "Generate Link"
+3. Proudly share your Agent!
