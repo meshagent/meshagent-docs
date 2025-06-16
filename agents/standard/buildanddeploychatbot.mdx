@@ -56,13 +56,13 @@ Now that we've seen the default chatbot in action, let's create one from scratch
 Create a main.py file and paste the starter code for the basic ChatBot. To start, we can give the agent one rule / system instruction. We'll build up this code over the course of this example. 
 
 ```python Python
+import os
+import asyncio
+
 from meshagent.api import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
-
-import asyncio
-import os
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
@@ -114,15 +114,15 @@ Next, let's give our agent the ability to interact with the user, convert docume
 We'll also add a few imports and update the chat agent's rules so it knows how to interact with the available tools more efficiently. 
 
 ```python Python
+import os
+import asyncio
+
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
-
-import asyncio
-import os
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
@@ -187,6 +187,11 @@ To do this we will update the chat agent initialization to create a table for th
 This is a simple example of adding tasks, to create a more useful task writer we'd want to add date information and other metadata to better track and filter tasks. This example is mainly to demonstrate writing to room storage and adding custom tools to our chat agent.
 
 ```python Python
+import os
+import asyncio
+import uuid
+from datetime import datetime, timezone, timedelta
+
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
@@ -196,11 +201,6 @@ from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType, TimestampDataType
 from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit
-from datetime import datetime, timezone, timedelta
-
-import asyncio
-import os
-import uuid
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
