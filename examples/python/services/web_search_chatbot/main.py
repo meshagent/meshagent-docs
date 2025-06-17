@@ -18,29 +18,17 @@ from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
 
-@service.path("/thread")
-class ThreadSchema(SchemaRegistry):
-    def __init__(self):
-        super().__init__(
-            name="thread",
-            schemas=[
-                SchemaRegistration(
-                    name="thread",
-                    schema=thread_schema
-                )
-            ]
-        )
 
 @service.path("/agent")
 class WebSearchChatbot(ChatBot):
     def __init__(self):
         super().__init__(
             name="meshagent.web-search-chatbot",
-            title="image designer",
-            description="an agent that generates images and videos",
-            empty_state_title="What images can I make for you?",
+            title="web search",
+            description="an agent can search the web",
+            empty_state_title="What can I do for you",
             rules=[
-                "you are an assistant for generating images"
+                "you are an assistant for searching the web"
             ],
             llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True),
             requires = [
@@ -51,8 +39,8 @@ class WebSearchChatbot(ChatBot):
                     SaveFileFromUrlTool()
                 ]),
             ],
-            auto_greet_message="What images can I help you design?",
-            labels=[ "tasks", "images" ]
+            auto_greet_message="What can I do for you?",
+            labels=[ "tasks", "websearch" ]
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):

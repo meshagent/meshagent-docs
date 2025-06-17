@@ -1,8 +1,4 @@
-from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.tools import Toolkit
-from meshagent.agents.schemas.gallery import gallery_schema
-from meshagent.tools.storage import SaveFileFromUrlTool
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import LocalShellTool
@@ -12,24 +8,10 @@ from meshagent.agents.thread_schema import thread_schema
 import asyncio
 import os
 
-from meshagent.api import SchemaRegistry, SchemaRegistration
-
 from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
 
-@service.path("/thread")
-class ThreadSchema(SchemaRegistry):
-    def __init__(self):
-        super().__init__(
-            name="thread",
-            schemas=[
-                SchemaRegistration(
-                    name="thread",
-                    schema=thread_schema
-                )
-            ]
-        )
 
 @service.path("/agent")
 class CodexChatbot(ChatBot):
@@ -38,22 +20,14 @@ class CodexChatbot(ChatBot):
             
             name="meshagent.codex-chatbot",
             title="image designer",
-            description="an agent that generates images and videos",
-            empty_state_title="What images can I make for you?",
+            description="an agent that can use codex to execute commands against the local environment",
+            empty_state_title="what can I do for you",
             rules=[
-                "you are an assistant for generating images"
+                "you are an assistant for running codex commands in the terminal"
             ],
             llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True, model="codex-mini-latest"),
-            requires = [
-            ],
-            toolkits=[
-                
-                Toolkit(name="local", tools=[
-                    SaveFileFromUrlTool()
-                ]),
-            ],
-            auto_greet_message="What images can I help you design?",
-            labels=[ "tasks", "images" ]
+            auto_greet_message="What can I help you with?",
+            labels=[ "tasks", "codex" ]
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
