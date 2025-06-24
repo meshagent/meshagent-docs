@@ -2,7 +2,7 @@
 
 Welcome to the **MeshAgent Getting‑Started** sample repository!
 
-This folder accompanies the three‑part *Getting Started with MeshAgent* video series and contains everything you need to reproduce the demos, experiment locally, and ship your first agent.
+This folder accompanies the three‑part [*Getting Started with MeshAgent* video series](https://www.youtube.com/playlist?list=PLxn6VUA-LspRZv5pHDzXJUrIt8ksdDujf) and contains everything you need to reproduce the demos, experiment locally, and ship your first agent.
 
 ---
 
@@ -10,11 +10,9 @@ This folder accompanies the three‑part *Getting Started with MeshAgent* vide
 
 | Part                        | Topic & What you’ll learn                                                                                                                     | Video Link                                                  |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **1. Setting Up MeshAgent** | Create a free account, install the CLI, and summon your very first agent from the command line—**no coding required**.                        | [▶ Watch Part 1](https://example.com/getting-started‑part1) |
-| **2. Building Agents**      | Evolve from a simple chat agent and voice‑enabled agent by layering on built‑in MeshAgent tools *and* a custom tool. | [▶ Watch Part 2](https://example.com/getting-started‑part2) |
-| **3. Deploying an Agent**   | Package the Part 2 agent with Docker, push it to **your** container registry, and deploy the agent as a service in MeshAgent.                                   | [▶ Watch Part 3](https://example.com/getting-started‑part3) |
-
-> *The links above are placeholders—swap them for the final YouTube/Vimeo URLs once published.*
+| **1. Setting Up MeshAgent** | Create a free account, install the CLI, and summon your very first agent from the command line.                        | [▶ Watch Part 1](https://youtu.be/-qjQfXkg8lw) |
+| **2. Building Agents**      | Evolve from a simple chat agent and voice‑enabled agent by layering on built‑in MeshAgent tools *and* a custom tool. | [▶ Watch Part 2](https://youtu.be/P1x93jRwN7s) |
+| **3. Deploying an Agent**   | Package the Part 2 agent with Docker, push it to **your** container registry, and deploy the agent as a service in MeshAgent.                                   | [▶ Watch Part 3](https://youtu.be/ojnSfO_g0KQ) |
 
 ---
 
@@ -45,7 +43,7 @@ getting-started/
 
 ## ⏩ Quick Start (Part 1)
 
-Follow the [MeshAgent Setup instructions](https://docs.meshagent.com/room_api/get_started) and [watch the video](PLACEHOLDER) to create your account, install MeshAgent, generate your API keys, and interact with your first agent!
+Follow the [MeshAgent Setup instructions](https://docs.meshagent.com/room_api/get_started) and [watch the video](https://youtu.be/-qjQfXkg8lw) to create your account, install MeshAgent, generate your API keys, and interact with your first agent!
 
 Call our first chat and voice agents into a room!
 
@@ -65,7 +63,7 @@ You’re now ready to dive into the full tutorials below.
 
 ## 🏗️ Part 2 — Building Agents
 
-Copy the code here and follow along with the [Building an Agent in MeshAgent video](PLACEHOLDER)!
+Copy the code here and follow along with the [Building an Agent in MeshAgent video](https://youtu.be/P1x93jRwN7s)!
 
 Each folder under `getting-started/` represents a checkpoint in the tutorial series:
 
@@ -93,7 +91,7 @@ meshagent call agent --url=http://localhost:7777/chat --room=myagentroom --agent
 ---
 
 ## 📦 Part 3 — Deploying an Agent
-[Watch the video](PLACEHOLDER) and follow these steps!
+[Watch the video](https://youtu.be/ojnSfO_g0KQ) and follow these steps!
 
 MeshAgent accepts any Linux/amd64 OCI image. We’ll use Docker Buildx for consistent multi‑platform builds and Zstandard compression.
 
