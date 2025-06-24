@@ -27,36 +27,15 @@ integrates AI Agents and human teams in real time by bundling LLM orchestration,
 1. Create an account, project, and MeshAgent API Keys in MeshAgent Studio
 2. Install MeshAgent for Python, JavaScript, TypeScript, or Dart
 3. Understand the core building blocks of MeshAgent: Projects, Rooms, and Agents
-4. Connect to your first MeshAgent Room
+4. Connect to your first MeshAgent Room and call a chat and voice agent into your room
 
 
 ## Creating an Account, Project, and MeshAgent API Keys
 
-1. Go to [www.meshagent.com](https://www.meshagent.com/) and sign in or sign up for an account.
-2. Create a project and give it a name (e.g., MyProject)
+1. Go to [studio.meshagent.com](https://www.studio.meshagent.com/) and sign in or sign up for an account.
+2. Create a project and give it a name (e.g., MyFirstAgentProject)
 3. On the project tab bar, click API Keys, then click +New API Key. Give your key a name and description then click "ok". 
 4. Click on the key to copy the MESHAGENT_KEY_ID, MESHAGENT_PROJECT_ID, and MESHAGENT_SECRET. You will need to export these as environment variables to connect to your Project.
-
-## Installing MeshAgent
-
-This guide will help you configure **MeshAgent** across various environments: Browser, Node.js, Python, and Dart/Flutter.
-
-To get started, install the MeshAgent API:
-
-<CodeGroup>
-```bash Python
-pip3 install meshagent[all]
-```
-```bash JavaScript
-npm install @meshagent/meshagent
-```
-```bash TypeScript
-npm install @meshagent/meshagent
-```
-```bash Dart
-dart pub add meshagent
-```
-</CodeGroup>
 
 
 ## Set Environment Variables
@@ -80,11 +59,46 @@ export MESHAGENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 </CodeGroup>
 
 
+## Installing MeshAgent
+
+This guide will help you configure **MeshAgent** across various environments: Browser, Node.js, Python, and Dart/Flutter.
+
+To get started, install the MeshAgent API:
+
+<CodeGroup>
+```bash Python
+pip3 install meshagent[all]
+```
+```bash JavaScript
+npm install @meshagent/meshagent
+```
+```bash TypeScript
+npm install @meshagent/meshagent
+```
+```bash Dart
+dart pub add meshagent
+```
+</CodeGroup>
+
+
 ## Understanding MeshAgent Projects, Rooms, and Agents
 - **Projects**: Groups related Rooms and the Agents that serve them. It is best to create a different Project for each use case you are working on.
 - **Rooms**: A dedicated space for humans and Agents to collaborate. 
 - **Agents**: ChatBots, VoiceBots, TaskRunners, and Workers that you build and deploy with custom tools or out of the box MeshAgent tools. Agents live inside a Project and once deployed are automatically available in every room under that project. 
 
+
+## Let's call an agent into a room using the MeshAgent CLI
+
+To call a chat agent into the room run: 
+
+```sh
+meshagent chatbot join --room YOUR_ROOM_NAME --agent-name YOUR_CHATBOT_NAME --name YOUR_CHATBOT_NAME
+```
+
+To call a voice agent into the room run: 
+```sh
+meshagent voicebot join --room YOUR_ROOM_NAME --agent-name YOUR_VOICEBOT_NAME --name YOUR_VOICEBOT_NAME
+```
 
 ## Let's connect to a room
 
@@ -100,7 +114,7 @@ MeshAgent Rooms provide a shared workspace for agents and participants to collab
 ## How Rooms Work
 
 - **Temporary by design**  
-  A room is provisioend when the first participant joins and deprovisioned when the last participant leaves. It only exists to facilitate communication during the session.
+  A room is provisioned when the first participant joins and deprovisioned when the last participant leaves. It only exists to facilitate communication during the session.
 
 - **No state persistence**  
  The MeshAgent admin console logs session activity for debugging, such as which agents participated and what questions were asked. However, the state of the room will be discarded at the end of the session, so any data that should persist after the session ends needs to be written to an external storage provider.
