@@ -120,7 +120,7 @@ docker buildx build . \
 > - Zstd compression makes images \~30‑40 % smaller and uploads faster
 
 ### 4. Deploy the Agent as a Service
-After the push completes, head to the [**MeshAgent Studio**](www.studio.meshagent.com), create a **New Service**, and point it at `<registry>/<namespace>/<youragentname>:<tag>`. 
+After the push completes, head to the [**MeshAgent Studio**](https://studio.meshagent.com), create a **New Service**, and point it at `<registry>/<namespace>/<youragentname>:<tag>`. 
 
 You will need to save the required secrets to interact with your container registry before creating the service. 
 
@@ -151,6 +151,6 @@ Once the service is created it will be available in any of the rooms inside your
 ---
 
 ## 🙋‍♀️ Need Help?
-* **Docs:** [docs.meshagent.com]https://docs.meshagent.com/()
+* **Docs:** [docs.meshagent.com](https://docs.meshagent.com/)
 
 Happy agent‑building! ✨
