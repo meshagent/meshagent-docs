@@ -2,7 +2,7 @@
 
 Welcome to the **MeshAgent Getting‑Started** sample repository!
 
-This folder accompanies the three‑part [*Getting Started with MeshAgent* video series](https://www.youtube.com/playlist?list=PLxn6VUA-LspRZv5pHDzXJUrIt8ksdDujf) and contains everything you need to reproduce the demos, experiment locally, and ship your first agent.
+This folder accompanies the three‑part [Getting Started with MeshAgent video series](https://www.youtube.com/playlist?list=PLxn6VUA-LspRZv5pHDzXJUrIt8ksdDujf) and contains everything you need to reproduce the demos, experiment locally, and ship your first agent.
 
 ---
 
@@ -12,7 +12,7 @@ This folder accompanies the three‑part [*Getting Started with MeshAgent* vid
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | **1. Setting Up MeshAgent** | Create a free account, install the CLI, and summon your very first agent from the command line.                        | [▶ Watch Part 1](https://youtu.be/-qjQfXkg8lw) |
 | **2. Building Agents**      | Evolve from a simple chat agent and voice‑enabled agent by layering on built‑in MeshAgent tools *and* a custom tool. | [▶ Watch Part 2](https://youtu.be/P1x93jRwN7s) |
-| **3. Deploying an Agent**   | Package the Part 2 agent with Docker, push it to **your** container registry, and deploy the agent as a service in MeshAgent.                                   | [▶ Watch Part 3](https://youtu.be/ojnSfO_g0KQ) |
+| **3. Deploying an Agent**   | Package the Part 2 agents with Docker, push it to **your** container registry, and deploy the agents as a service in MeshAgent.                                   | [▶ Watch Part 3](https://youtu.be/ojnSfO_g0KQ) |
 
 ---
 
@@ -125,11 +125,15 @@ After the push completes, head to the [**MeshAgent Studio**](www.studio.meshagen
 You will need to save the required secrets to interact with your container registry before creating the service. 
 
 In the Services section you will need to fill in: 
-- The agent name --> `chat-agent`
-- The role --> agent
-- The image tag --> `<registry>/<namespace>/<youragentname>:<tag>`
-- The image pull secret --> the secret you saved to connect to your container registry
-- Port information --> this includes the port number, service path (this is the same path used in the code e.g. /chat or /voice), the participant name (e.g. chat-agent), and the liveness check (this should be just "/"). *The liveness check will validate the agent is ready before deploying it into the room.*
+- The agent name &rarr; `chat-agent`
+- The role &rarr; `agent`
+- The image tag &rarr; `<registry>/<namespace>/<youragentname>:<tag>`
+- The image pull secret &rarr; the secret you saved to connect to your container registry
+- Port information:
+    - Port number &rarr; the port you want to run the agent on
+    - Service path &rarr; (this is the same path used in the code e.g. `/chat` or `/voice`)
+    - Participant name &rarr; (e.g. `chat-agent`) 
+    - Liveness check &rarr; (this should be `/`). *The liveness check will validate the agent is ready before deploying it into the room.*
 
 Once the service is created it will be available in any of the rooms inside your project. To test the agent service simply enter a room and your agent will appear in the participants tab!
 
