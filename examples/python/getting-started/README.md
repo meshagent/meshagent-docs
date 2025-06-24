@@ -45,7 +45,7 @@ getting-started/
 
 ## ⏩ Quick Start (Part 1)
 
-Follow the [MeshAgent Setup instructions](https://docs.meshagent.com/room_api/get_started) and watch the video!
+Follow the [MeshAgent Setup instructions](https://docs.meshagent.com/room_api/get_started) and [watch the video](PLACEHOLDER) to create your account, install MeshAgent, generate your API keys, and interact with your first agent!
 
 Call our first chat and voice agents into a room!
 
@@ -64,6 +64,8 @@ You’re now ready to dive into the full tutorials below.
 
 
 ## 🏗️ Part 2 — Building Agents
+
+Copy the code here and follow along with the [Building an Agent in MeshAgent video](PLACEHOLDER)!
 
 Each folder under `getting-started/` represents a checkpoint in the tutorial series:
 
@@ -91,6 +93,8 @@ meshagent call agent --url=http://localhost:7777/chat --room=myagentroom --agent
 ---
 
 ## 📦 Part 3 — Deploying an Agent
+[Watch the video](PLACEHOLDER) and follow these steps!
+
 MeshAgent accepts any Linux/amd64 OCI image. We’ll use Docker Buildx for consistent multi‑platform builds and Zstandard compression.
 
 > **Prerequisites:** Docker installed • Access to a container registry (Docker Hub, ACR, AWS ECR, GCP GAR, …) with **push** permissions.
@@ -113,16 +117,21 @@ docker buildx build . \
 ```
 
 > **Why Buildx?**
-> • Reproducible, deterministic builds on any host OS
-> • Easy multi‑arch output (ARM64, x86)
-> • Zstd compression makes images \~30‑40 % smaller and uploads faster
+> - Reproducible, deterministic builds on any host OS
+> - Easy multi‑arch output (ARM64, x86)
+> - Zstd compression makes images \~30‑40 % smaller and uploads faster
 
 ### 4. Deploy the Agent as a Service
 After the push completes, head to the [**MeshAgent Studio**](www.studio.meshagent.com), create a **New Service**, and point it at `<registry>/<namespace>/<youragentname>:<tag>`. 
 
 You will need to save the required secrets to interact with your container registry before creating the service. 
 
-In the Services section you will need to fill in the agent name, the role (agent), the image tag and image pull secret, as well as the port information this includes the port number, service path (this is the same path used in the code e.g. /chat or /voice), the participant name (e.g. chat-agent), and the liveness check (this should be just "/"). The liveness check will validate the agent is ready before deploying it into the room. 
+In the Services section you will need to fill in: 
+- The agent name --> `chat-agent`
+- The role --> agent
+- The image tag --> `<registry>/<namespace>/<youragentname>:<tag>`
+- The image pull secret --> the secret you saved to connect to your container registry
+- Port information --> this includes the port number, service path (this is the same path used in the code e.g. /chat or /voice), the participant name (e.g. chat-agent), and the liveness check (this should be just "/"). *The liveness check will validate the agent is ready before deploying it into the room.*
 
 Once the service is created it will be available in any of the rooms inside your project. To test the agent service simply enter a room and your agent will appear in the participants tab!
 
@@ -133,7 +142,7 @@ Once the service is created it will be available in any of the rooms inside your
 | Tool                   | Version | Purpose                          |
 | ---------------------- | ------- | -------------------------------- |
 | **Python**             | ≥ 3.10  | Run the sample agents            |
-| **MeshAgent CLI**      | latest  | Interact with MeshAgent platform |
+| **MeshAgent CLI**      | latest  | Interact with MeshAgent Studio and platform with ease |
 | **Docker**             | ≥ 24    | Containerise & deploy (Part 3)   |
 | **Container Registry** | n/a     | Where you’ll push your image     |
 
