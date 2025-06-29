@@ -1,0 +1,134 @@
+---
+title: Vizro
+---
+
+
+Get up and running with the MCP Vizro server in a Meshagent Room, and interact with its tools via an agent in minutes:
+
+1. **Install the Meshagent Python SDK:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**
+   - Follow the steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and set up authentication.
+
+3. **Start the Vizro MCP service in a room:**
+
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-vizro:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-vizro-service
+   ```
+   - This command launches a Meshagent Room named `test`, hosting the Vizro MCP server toolkit as a callable service.
+   - **Note:** Rooms close automatically if they go inactive.
+
+4. **Join the room with a chatbot agent using the Vizro toolkit:**
+
+   ```bash
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-vizro
+   ```
+   - This starts a chatbot in the Meshagent Room, with access to the full `mcp-vizro` toolkit.
+   - Multiple toolkits can be added to the same room/agent, enabling complex workflows.
+   - The output of this command will provide a link to the active Meshagent Room, where you can interact with your agent and the Vizro tools via chat.
+
+---
+
+## Tools Available
+
+Below are the tools exposed by the Vizro MCP Server for use within Meshagent Rooms.
+
+### Tools Summary
+
+| Tool Name                  | Short Description                                              |
+|----------------------------|---------------------------------------------------------------|
+| `get_model_json_schema`    | Get the JSON schema for the specified Vizro model.            |
+| `get_sample_data_info`     | Retrieve information about available sample datasets.         |
+| `get_vizro_chart_or_dashboard_plan` | Get instructions for creating a Vizro chart or dashboard. |
+| `load_and_analyze_data`    | Load and analyze data from various file formats.              |
+| `validate_chart_code`      | Validate and (optionally) preview Vizro chart code.           |
+| `validate_model_config`    | Validate a Vizro dashboard model configuration.               |
+
+---
+
+### Tool Details
+
+#### **`get_model_json_schema`**
+Get the JSON schema for the specified Vizro model.
+
+| Parameter    | Type    | Description                                                         |
+|--------------|---------|---------------------------------------------------------------------|
+| `model_name` | string  | Name of the Vizro model to get schema for (e.g., 'Card', 'Dashboard', 'Page') |
+
+---
+
+#### **`get_sample_data_info`**
+Retrieve information about sample datasets for prototyping and exploration.
+
+Use the following data for the below purposes:
+- **iris:** Mostly numerical with one categorical column — good for scatter, histogram, boxplot, etc.
+- **tips:** Mixed numerical and categorical columns — good for bar, pie, etc.
+- **stocks:** Stock prices — good for line, scatter, or time-series charts.
+- **gapminder:** Demographic data — good for line, scatter, maps, or multi-category plots.
+
+| Parameter   | Type    | Description                                                 |
+|-------------|---------|-------------------------------------------------------------|
+| `data_name` | string  | Name of the dataset to retrieve information about           |
+
+---
+
+#### **`get_vizro_chart_or_dashboard_plan`**
+Get step-by-step instructions for constructing a Vizro chart or dashboard.
+
+| Parameter   | Type    | Description                                   |
+|-------------|---------|-----------------------------------------------|
+| `user_plan` | string  | User-provided plan or goal specification      |
+
+---
+
+#### **`load_and_analyze_data`**
+Load data from local files or URLs into a pandas DataFrame and obtain metadata about its structure.
+
+Supported formats:
+- CSV (.csv)
+- JSON (.json)
+- HTML (.html, .htm)
+- Excel (.xls, .xlsx)
+- OpenDocument Spreadsheet (.ods)
+- Parquet (.parquet)
+
+| Parameter      | Type    | Description                       |
+|----------------|---------|-----------------------------------|
+| `path_or_url`  | string  | Path or URL to the data file      |
+
+---
+
+#### **`validate_chart_code`**
+Validate generated chart code and optionally open a PyCafe visualization link in a browser.
+
+| Parameter     | Type     | Description                                                                     |
+|---------------|----------|---------------------------------------------------------------------------------|
+| `chart_config`| string   | Object describing the chart configuration (ChartPlan)                            |
+| `data_info`   | string   | Metadata about the dataset to use in the chart                                  |
+| `auto_open`   | boolean* | (Optional) Whether to automatically preview the chart in a browser              |
+
+---
+
+#### **`validate_model_config`**
+Validate Vizro dashboard configuration and get Python code or a shareable link.
+
+If successful, returns the valid Python code for your dashboard, and if applicable, a PyCafe link which may be automatically opened in your browser.
+
+| Parameter        | Type         | Description                                                    |
+|------------------|--------------|----------------------------------------------------------------|
+| `dashboard_config`| object      | (JSON string or dict) Vizro dashboard model configuration      |
+| `data_infos`      | array       | List of DFMetaData objects with data file info                 |
+| `auto_open`       | boolean*    | (Optional) Whether to auto-open the PyCafe link in a browser   |
+
+---
+
+## Further Information & Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Vizro Docker Image:** [https://hub.docker.com/r/meshagent/mcp-vizro](https://hub.docker.com/r/meshagent/mcp-vizro)
+- **What is an MCP Server?** [Anthropic Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)

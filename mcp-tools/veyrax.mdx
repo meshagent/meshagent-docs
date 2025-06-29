@@ -1,0 +1,121 @@
+---
+title: Veyrax
+---
+
+
+Follow these steps to quickly deploy the VeyraX MCP server and interact with it in a live Meshagent room:
+
+### 1. Required Environment Variables
+
+- **VEYRAX_API_KEY**: Your VeyraX API key  
+  _Example_: `VEYRAX_API_KEY=your-veyrax-api-key-here`
+
+### 2. Install and Setup
+
+- **Install Meshagent:**  
+  ```bash
+  pip install "meshagent[all]"
+  ```
+
+- **Sign Up & Authenticate:**  
+  Create an account and authenticate via the Meshagent CLI following the instructions at:  
+  https://docs.meshagent.com/cli/getting_started
+
+### 3. Run the MCP Agent in a Meshagent Room
+
+- **Start the agent as a service:**
+  ```bash
+  meshagent service test \
+    --room=test \
+    --role=agent \
+    --image=meshagent/mcp-veyrax:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env VEYRAX_API_KEY=your-veyrax-api-key-here \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-veyrax-service
+  ```
+  - This command launches the VeyraX MCP server inside the `test` Meshagent room.
+  - The service will stay live as long as the room is active.  
+  - Replace `your-veyrax-api-key-here` with your actual VeyraX API key.
+
+### 4. Join the Room with a Chatbot Using the Tool
+
+- **Connect a chatbot with the toolkit to the room:**
+  ```bash
+  meshagent chatbot join \
+    --room=test \
+    --agent-name=sample \
+    --name=sample \
+    --toolkit=mcp-veyrax
+  ```
+  - This command starts a chatbot named `sample` in the same Meshagent room using the VeyraX toolkit.
+  - You can run multiple toolkits with the same agent in one room.
+  - After running this command, a room link will be provided—click it to interact live with the tools.
+
+---
+
+## Tools Available
+
+### Summary
+
+Tools provided by this Server | Short Description
+-|-
+`get_flow` | "Use this tool to retrieve a specific workflow by its ID.
+`get_tools` | "Use this tool to retrieve a list of available tools from the Veyrax API.
+`tool_call` | "Use this tool to execute a specific method of another tool with the provided parameters based on get-tools tool response.
+
+---
+
+### Tools Details
+
+#### Tool: **`get_flow`**
+Use this tool to retrieve a specific workflow by its ID.  
+Workflow is a sequence of steps that are executed in order to deliver a result. Each flow contains a description, steps, and an input schema of all methods to call.
+
+_You can call this tool once you have a flowId, which can be obtained from the user or by using the get-tools method._
+
+**Parameters:**
+
+| Parameter | Type   | Description                                      |
+|-----------|--------|--------------------------------------------------|
+| flowId    | string | The ID of the workflow to retrieve.              |
+
+---
+
+#### Tool: **`get_tools`**
+Use this tool to retrieve a list of available tools from the Veyrax API.  
+Returns dynamic tools accessible to the user, including tool names and methods that can be invoked with tool_call. Also returns available flows with their names and IDs.
+
+**Parameters:**
+
+| Parameter | Type   | Description                                      |
+|-----------|--------|--------------------------------------------------|
+| question  | string | Query/question used to find or filter tools.     |
+| tool      | string | Tool name guess for vector search and filtering. |
+
+---
+
+#### Tool: **`tool_call`**
+Use this tool to execute a specific method of another tool with specified parameters (per the get-tools tool response).
+
+**Parameters:**
+
+| Parameter   | Type    | Description                                                                                        |
+|-------------|---------|----------------------------------------------------------------------------------------------------|
+| method      | string  | Method of the tool to call (e.g., 'get_messages', 'send_message', 'list_events').                  |
+| tool        | string  | Name of the tool to call (e.g., 'gmail', 'google-calendar', 'slack').                              |
+| parameters  | object  | (Optional) Parameters required by the tool method. This is required and must not be empty.         |
+| question    | string  | (Optional) User question or reasoning, to inform or clarify the tool call.                         |
+
+---
+
+## Useful Links
+
+- **Meshagent:** https://www.meshagent.com/
+- **Room API Getting Started:** https://docs.meshagent.com/room_api/get_started
+- **Room API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Tool Docker Image:** https://hub.docker.com/r/meshagent/mcp-veyrax
+
+---
+
+You are now ready to integrate the VeyraX MCP server and its tools with Meshagent Room APIs for collaborative multi-tool, multi-agent automation!

@@ -1,0 +1,73 @@
+---
+title: Husqvarna Automower
+---
+
+
+### Requirements
+
+- Docker
+- Python 3.8+
+- [Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+- Husqvarna Automower API credentials
+
+### Required Environment Variables
+
+- `HUSQVARNA_CLIENT_ID` - Your Husqvarna API client ID
+- `HUSQVARNA_CLIENT_SECRET` - Your Husqvarna API client secret
+
+### Steps
+
+1. **Install Meshagent and dependencies**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate**
+   - [Create your Meshagent account and authenticate via CLI instructions](https://docs.meshagent.com/cli/getting_started)
+3. **Run the MCP server as an agent within a Meshagent room**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-husqvarna-automower:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env HUSQVARNA_CLIENT_ID=YOUR_CLIENT_ID_HERE \
+     --env HUSQVARNA_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-husqvarna-automower-service
+   ```
+   - This command starts the Husqvarna Automower MCP server in the cloud, wrapped in a Meshagent room.
+   - Note: The room will close if there is no activity.
+4. **Join the room with a chatbot that can use the Automower toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-husqvarna-automower
+   ```
+   - This starts a chatbot inside the room with access to the Husqvarna Automower tool(s).
+   - You can use multiple toolkits in the same room with the same agent.
+   - After running this command, you’ll receive a web link to interact with your meshagent room, agent, and tools.
+
+---
+
+## Tools Available
+
+### Tools Provided
+
+| Tool                                 | Short Description                           |
+|---------------------------------------|---------------------------------------------|
+| `Husqvarna Automowers Status`         | Get status of my husqvarna automowers       |
+
+#### Tool: **Husqvarna Automowers Status**
+
+Get status of my husqvarna automowers
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Getting Started (Room API)](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Husqvarna Automower Docker Image](https://hub.docker.com/r/meshagent/mcp-husqvarna-automower)

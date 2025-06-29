@@ -1,0 +1,80 @@
+---
+title: ReSend
+---
+
+
+Run an agent plus this tool in the cloud using Meshagent Rooms:
+
+1. **Set environment variables:**
+   - `REPLY_TO_EMAIL_ADDRESSES`: Comma-separated list of email addresses your replies come from.
+   - `SENDER_EMAIL_ADDRESS`: Default sender email address.
+   - `RESEND_API_KEY`: Your [Resend](https://resend.com/) API key.
+
+2. **Install the Meshagent CLI and all dependencies:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign up and authenticate your Meshagent CLI:**  
+   See [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+4. **Start the MCP Email server in a Meshagent Room:**
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-resend:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env REPLY_TO_EMAIL_ADDRESSES=YOUR_REPLY_TO_EMAIL_ADDRESSES \
+     --env SENDER_EMAIL_ADDRESS=YOUR_SENDER_EMAIL_ADDRESS \
+     --env RESEND_API_KEY=YOUR_RESEND_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-resend-service
+   ```
+   - This command launches a Meshagent Room and runs the MCP server inside the room.
+   - **Note:** Rooms automatically close after inactivity.
+
+5. **Start a chatbot agent in the Room with the resend toolkit:**
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-resend
+   ```
+   - This connects a chatbot to your Meshagent Room with the ability to use the MCP resend tool.
+   - You can use multiple toolkits in one room and connect additional agents as desired.
+   - The output of this command provides a link to the Meshagent Room UI for direct interaction.
+
+## Tools Available
+
+### Tools Provided
+
+| Tool         | Short Description                         |
+|--------------|------------------------------------------|
+| `send-email` | Send an email using Resend               |
+
+---
+
+#### Tool: **`send-email`**
+
+Send an email using [Resend](https://resend.com/).
+
+| Parameter    | Type        | Description                                                                                                                                                                     |
+|--------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `subject`    | string      | Email subject line.                                                                                                                                                            |
+| `text`       | string      | Plain text email content.                                                                                                                                                      |
+| `to`         | string      | Recipient email address.                                                                                                                                                       |
+| `bcc`        | array *optional* | Optional array of BCC email addresses. You MUST ask the user for this parameter. Under no circumstance provide it yourself.                                               |
+| `cc`         | array *optional* | Optional array of CC email addresses. You MUST ask the user for this parameter. Under no circumstance provide it yourself.                                                |
+| `html`       | string *optional* | HTML email content. When provided, the plain text argument MUST be provided as well.                                                                                |
+| `scheduledAt`| string *optional* | Optional parameter to schedule the email. This uses natural language (e.g., "tomorrow at 10am", "in 2 hours", "Friday at 3pm ET").                                        |
+
+---
+
+## Further Information and Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-resend)

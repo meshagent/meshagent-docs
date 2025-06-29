@@ -1,0 +1,134 @@
+---
+title: Line
+---
+
+
+Follow these steps to run the Meshagent MCP Line agent and toolkit in the cloud.
+
+### ️🔒 Required Environment Variables
+
+Set the following environment variables (replace values as needed):
+
+- `DESTINATION_USER_ID`: (string) The LINE user ID to receive messages.
+- `CHANNEL_ACCESS_TOKEN`: (string) Channel access token for your LINE Official Account.
+
+### 🚀 Run in the Cloud
+
+1. **Install Meshagent:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up & Authenticate:**
+   - Follow instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started) to log in and configure CLI credentials.
+
+3. **Deploy MCP Server as a Meshagent Room Callable:**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-line:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env DESTINATION_USER_ID=FILL_HERE \
+     --env CHANNEL_ACCESS_TOKEN=FILL_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-line-service
+   ```
+   - **Note:** This command starts the Meshagent room and deploys the MCP Line server as a callable agent tool. Rooms close if inactive.
+
+4. **Join with a Meshagent Chatbot Using the Toolkit:**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-line
+   ```
+   - This starts a chatbot in your Meshagent room that can use the LINE toolkit.
+   - Multiple toolkits can be attached to the same agent in the same room.
+   - The output of this command will include a link to your Meshagent room for interactive testing.
+
+---
+
+## Tools Available
+
+This Meshagent MCP server provides the following capabilities for use in Meshagent Rooms:
+
+### Tool Summary
+
+| Tool Name               | Short Description                                                                                 |
+|-------------------------|--------------------------------------------------------------------------------------------------|
+| `broadcast_flex_message`| Broadcast a customizable flex message via LINE to all users who have added your Official Account.|
+| `broadcast_text_message`| Broadcast a simple text message via LINE to all users who follow your Official Account.          |
+| `get_message_quota`     | Get the message quota and consumption of your LINE Official Account.                              |
+| `get_profile`           | Get profile info (name, photo, status, language) for a LINE user.                                |
+| `push_flex_message`     | Push a flex message to an individual user via LINE.                                              |
+| `push_text_message`     | Push a simple text message to a specific user via LINE.                                          |
+
+### Tools Details
+
+#### Tool: **`broadcast_flex_message`**
+Broadcast a highly customizable flex message via LINE to all users who have added your LINE Official Account. Supports both bubble (single container) and carousel (multiple swipeable bubbles) layouts. Please be aware that this message will be sent to all users.
+
+**Parameters**
+| Name    | Type    | Description       |
+|---------|---------|-------------------|
+| message | object  |                   |
+
+---
+
+#### Tool: **`broadcast_text_message`**
+Broadcast a simple text message via LINE to all users who have followed your LINE Official Account. Use this for sending plain text messages without formatting. Please be aware that this message will be sent to all users.
+
+**Parameters**
+| Name    | Type    | Description       |
+|---------|---------|-------------------|
+| message | object  |                   |
+
+---
+
+#### Tool: **`get_message_quota`**
+Get the message quota and consumption of the LINE Official Account. This shows the monthly message limit and current usage.
+
+---
+
+#### Tool: **`get_profile`**
+Get detailed profile information of a LINE user including display name, profile picture URL, status message and language.
+
+**Parameters**
+| Name   | Type    | Description                        |
+|--------|---------|------------------------------------|
+| userId | string* | LINE user ID (*optional*). Defaults to DESTINATION_USER_ID. |
+
+---
+
+#### Tool: **`push_flex_message`**
+Push a highly customizable flex message to a user via LINE. Supports both bubble (single container) and carousel (multiple swipeable bubbles) layouts.
+
+**Parameters**
+| Name    | Type    | Description                        |
+|---------|---------|------------------------------------|
+| message | object  |                                    |
+| userId  | string* | LINE user ID (*optional*). Defaults to DESTINATION_USER_ID. |
+
+---
+
+#### Tool: **`push_text_message`**
+Push a simple text message to a user via LINE. Use this for sending plain text messages without formatting.
+
+**Parameters**
+| Name    | Type    | Description                        |
+|---------|---------|------------------------------------|
+| message | object  |                                    |
+| userId  | string* | LINE user ID (*optional*). Defaults to DESTINATION_USER_ID. |
+
+---
+
+## Meshagent & MCP Server Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Room API Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP LINE Docker Image](https://hub.docker.com/r/meshagent/mcp-line)
+
+For issues or contributions, please refer to each tool's linked repository or documentation.

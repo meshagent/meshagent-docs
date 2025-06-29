@@ -1,0 +1,132 @@
+---
+title: Glif
+---
+
+
+Easily launch the Glif MCP server and toolkits in a Meshagent Room in the cloud:
+
+## Environment Variables
+
+Set the following environment variables as needed:
+
+- **GLIF_IDS**: Comma-separated list of Glif IDs (leave blank for all).
+- **IGNORE_SAVED_GLIFS**: Set to `false` to include saved Glifs (default: "false").
+- **GLIF_API_TOKEN**: Your Glif API token (replace `your-token-here`).
+
+## Steps
+
+1. **Install the Meshagent package:**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate:**
+    - Read the [Meshagent CLI getting started](https://docs.meshagent.com/cli/getting_started) docs and obtain an auth token.
+
+3. **Start the MCP Glif server as an agent inside a Meshagent Room:**
+    ```sh
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-glif:latest \
+        --env MESHAGENT_PORT=8001 \
+        --env GLIF_IDS=<your-glif-ids> \
+        --env GLIF_API_TOKEN=<your-api-token> \
+        --env IGNORE_SAVED_GLIFS=false \
+        --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+        --name=mcp-glif-service
+    ```
+    - This command launches the MCP server in a Meshagent room named `test`. The room is ephemeral and will close if it goes inactive.
+
+4. **Join the Room with a Meshagent-powered chatbot and toolkits:**
+    ```sh
+    meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-glif
+    ```
+    - This command starts a chatbot agent in your Meshagent room using the Glif toolkit (`mcp-glif`).
+    - Multiple toolkits and agents can co-exist in the same room.
+    - The output of this command provides a direct link to your room for live interactions with agents and tools.
+
+# Tools Available
+
+Easily run glif.app AI workflows inside your LLM: image generators, memes, selfies, and more. Glif supports all major multimedia AI models inside one app.
+
+> [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+## Tools Provided by this Server
+
+| Tool                   | Short Description                                              |
+|------------------------|---------------------------------------------------------------|
+| `glif_info`            | Get detailed information about a glif including input fields   |
+| `list_featured_glifs`  | Get a curated list of featured glifs                          |
+| `list_saved_glif_tools`| List all saved glif tools                                     |
+| `my_glif_user_info`    | Get info about your user account, recent glifs, and runs      |
+| `my_glifs`             | Get a list of your glifs                                      |
+| `remove_all_glif_tools`| Remove all saved glif tools                                   |
+| `remove_glif_tool`     | Remove a saved glif tool                                      |
+| `run_glif`             | Run a glif with the specified ID and inputs                   |
+| `save_glif_as_tool`    | Save a glif as a custom tool                                  |
+| `search_glifs`         | Search for glifs by query string                              |
+
+---
+
+## Tool Details
+
+### `glif_info`
+Get detailed information about a glif including input fields  
+**Parameters:**
+- `id` (`string`): The ID of the glif to show details for
+
+---
+
+### `list_featured_glifs`
+Get a curated list of featured glifs
+
+### `list_saved_glif_tools`
+List all saved glif tools
+
+### `my_glif_user_info`
+Get detailed information about your user account, recent glifs, and recent runs
+
+### `my_glifs`
+Get a list of your glifs
+
+### `remove_all_glif_tools`
+Remove all saved glif tools and return to a pristine state
+
+### `remove_glif_tool`
+Remove a saved glif tool  
+**Parameters:**
+- `toolName` (`string`): The tool name of the saved glif to remove
+
+---
+
+### `run_glif`
+Run a glif with the specified ID and inputs  
+**Parameters:**
+- `id` (`string`): The ID of the glif to run
+- `inputs` (`array`): Array of input values for the glif
+
+---
+
+### `save_glif_as_tool`
+Save a glif as a custom tool  
+**Parameters:**
+- `id` (`string`): The ID of the glif to save
+- `toolName` (`string`): A unique tool name
+- `description` (`string`, optional): Custom description (default: glif description)
+- `name` (`string`, optional): Custom name for the tool (default: glif name)
+
+---
+
+### `search_glifs`
+Search for glifs by query string  
+**Parameters:**
+- `query` (`string`): Search query string
+
+---
+
+# Meshagent & Glif Links
+
+- **Meshagent:** https://www.meshagent.com/
+- **Meshagent Getting Started Docs:** https://docs.meshagent.com/room_api/get_started
+- **Meshagent API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP-GLIF Docker Image:** https://hub.docker.com/r/meshagent/mcp-glif
+
+For more on running AI apps with the Model Context Protocol: [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

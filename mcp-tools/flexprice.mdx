@@ -1,0 +1,279 @@
+---
+title: FlexPrice
+---
+
+
+#### 1. Install Meshagent
+
+```sh
+pip install "meshagent[all]"
+```
+
+#### 2. Sign up and authenticate
+
+Follow the guide here: https://docs.meshagent.com/cli/getting_started
+
+#### 3. Start the flexprice MCP server in a Meshagent room
+
+**Environment variables required:**
+
+- `BASE_URL` — URL for the FlexPrice API (default: `https://api.cloud.flexprice.io`)
+- `API_KEY` — Your FlexPrice API key
+
+**Example command:**
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-flexprice:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env BASE_URL=https://api.cloud.flexprice.io \
+  --env API_KEY=your_api_key_here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-flexprice-service
+```
+
+- This command starts a Meshagent room with the MCP server available as a service. 
+- Rooms will automatically close if they go inactive.
+
+#### 4. Start a chatbot in the room
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-flexprice
+```
+- This starts a chatbot agent in the Meshagent room, equipped with the flexprice toolkit.
+- Multiple toolkits can be used in the same room by the same agent.
+- A direct link to the room for interaction will be printed in the command output.
+
+---
+
+## Tools Available
+
+### MCP Server Tools (25)
+
+| Tool                     | Short Description                                   |
+|--------------------------|----------------------------------------------------|
+| `getCustomerById`        | Get a customer by ID                               |
+| `getCustomerByLookupKey` | Get a customer by lookup key (external ID)         |
+| `getCustomerEntitlements`| Get a customer's entitlements                      |
+| `getCustomerSubscriptions`| Get a customer's subscriptions                    |
+| `getCustomerUsageSummary`| Get a customer's usage summary                     |
+| `getCustomers`           | Get all customers                                  |
+| `getEventsByCustomer`    | Get events for a customer                          |
+| `getInvoiceById`         | Get an invoice by its ID                           |
+| `getInvoiceByNumber`     | Get an invoice by its number                       |
+| `getInvoices`            | Get invoices with optional filtering               |
+| `getInvoicesByCustomerId`| Get all invoices for a specific customer           |
+| `getPaymentById`         | Get a payment by ID                                |
+| `getPayments`            | Get payments with optional filtering               |
+| `getPlanById`            | Get a plan by ID                                   |
+| `getPlans`               | Get all plans                                      |
+| `getPriceById`           | Get a price by ID                                  |
+| `getPrices`              | Get all prices                                     |
+| `getSubscriptionById`    | Get a subscription by ID                           |
+| `getSubscriptionPauses`  | Get all pauses for a subscription                  |
+| `getSubscriptionUsage`   | Get usage for a subscription                       |
+| `getSubscriptions`       | Get all subscriptions                              |
+| `getWalletBalance`       | Get the real-time balance of a wallet              |
+| `getWalletById`          | Get a wallet by ID                                 |
+| `getWalletTransactions`  | Get transactions for a wallet                      |
+| `getWalletsByCustomerId` | Get all wallets for a customer                     |
+
+---
+
+### Tools Details
+
+#### **`getCustomerById`**
+Get a customer by ID  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+#### **`getCustomerByLookupKey`**
+Get a customer by lookup key (external ID)  
+**Parameters:**  
+- `lookupKey` (`string`)
+
+---
+
+#### **`getCustomerEntitlements`**
+Get a customer's entitlements  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+#### **`getCustomerSubscriptions`**
+Get a customer's subscriptions  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+#### **`getCustomerUsageSummary`**
+Get a customer's usage summary  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+#### **`getCustomers`**
+Get all customers
+
+---
+
+#### **`getEventsByCustomer`**
+Get events for a customer  
+**Parameters:**  
+- `externalCustomerId` (`string`)
+- `endTime` (`string`, optional)
+- `iterFirstKey` (`string`, optional)
+- `iterLastKey` (`string`, optional)
+- `startTime` (`string`, optional)
+
+---
+
+#### **`getInvoiceById`**
+Get an invoice by its ID  
+**Parameters:**  
+- `invoiceId` (`string`)
+
+---
+
+#### **`getInvoiceByNumber`**
+Get an invoice by its number  
+**Parameters:**  
+- `invoiceNumber` (`string`)
+
+---
+
+#### **`getInvoices`**
+Get invoices with optional filtering by date range and status  
+**Parameters:**  
+- `endDate` (`string`, optional)
+- `limit` (`number`, optional)
+- `offset` (`number`, optional)
+- `startDate` (`string`, optional)
+- `status` (`string`, optional)
+
+---
+
+#### **`getInvoicesByCustomerId`**
+Get all invoices for a specific customer  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+#### **`getPaymentById`**
+Get a payment by ID  
+**Parameters:**  
+- `paymentId` (`string`)
+
+---
+
+#### **`getPayments`**
+Get payments with optional filtering  
+**Parameters:**  
+- `customerId` (`string`, optional)
+- `limit` (`number`, optional)
+- `offset` (`number`, optional)
+- `status` (`string`, optional)
+
+---
+
+#### **`getPlanById`**
+Get a plan by ID  
+**Parameters:**  
+- `planId` (`string`)
+
+---
+
+#### **`getPlans`**
+Get all plans
+
+---
+
+#### **`getPriceById`**
+Get a price by ID  
+**Parameters:**  
+- `priceId` (`string`)
+
+---
+
+#### **`getPrices`**
+Get all prices
+
+---
+
+#### **`getSubscriptionById`**
+Get a subscription by ID  
+**Parameters:**  
+- `subscriptionId` (`string`)
+
+---
+
+#### **`getSubscriptionPauses`**
+Get all pauses for a subscription  
+**Parameters:**  
+- `subscriptionId` (`string`)
+
+---
+
+#### **`getSubscriptionUsage`**
+Get usage for a subscription  
+**Parameters:**  
+- `subscriptionId` (`string`)
+
+---
+
+#### **`getSubscriptions`**
+Get all subscriptions
+
+---
+
+#### **`getWalletBalance`**
+Get the real-time balance of a wallet  
+**Parameters:**  
+- `walletId` (`string`)
+
+---
+
+#### **`getWalletById`**
+Get a wallet by ID  
+**Parameters:**  
+- `walletId` (`string`)
+
+---
+
+#### **`getWalletTransactions`**
+Get transactions for a wallet with pagination  
+**Parameters:**  
+- `walletId` (`string`)
+- `limit` (`number`, optional)
+- `offset` (`number`, optional)
+
+---
+
+#### **`getWalletsByCustomerId`**
+Get all wallets for a customer  
+**Parameters:**  
+- `customerId` (`string`)
+
+---
+
+## Meshagent & FlexPrice Resources
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Meshagent Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-flexprice)
+- [Learn about MCP Servers](https://www.anthropic.com/news/model-context-protocol)
+
+---

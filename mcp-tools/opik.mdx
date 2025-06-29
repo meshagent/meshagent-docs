@@ -1,0 +1,260 @@
+---
+title: OPIK
+---
+
+
+### 1. Set Environment Variables
+
+The MCP server requires the following environment variables to connect to your Opik Comet account:
+
+- `OPIK_API_BASE_URL`: Base URL for Opik API (`https://www.comet.com/opik/api`)
+- `OPIK_WORKSPACE_NAME`: Workspace name (`default` or your chosen workspace)
+- `OPIK_API_KEY`: Your personal Opik API key (`your_api_key`)
+
+### 2. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 3. Sign Up and Authenticate
+
+Sign up and authenticate by following instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+### 4. Start an MCP Tool Service in a Meshagent Room
+
+Run the following command to create an agent service in a Meshagent room (replace tokens as needed):
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-opik:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env OPIK_API_BASE_URL=https://www.comet.com/opik/api \
+  --env OPIK_WORKSPACE_NAME=default \
+  --env OPIK_API_KEY=your_api_key \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-opik-service
+```
+
+- This command starts a Meshagent room with the MCP server available and callable in the room.
+- **Note:** Rooms automatically close if they go inactive.
+
+### 5. Join the Room as a Chatbot with the Opik Toolkit
+
+Run the following command to launch a conversational chatbot agent with access to the Opik tools:
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-opik
+```
+
+- The output will include a room link you can use in your browser to interact with the agent and tools.
+- Multiple agents and toolkits can be used in any room for collaborative workflows.
+
+---
+
+## Tools Available
+
+The Opik MCP server (as provided in this image) exposes the following tools for use in Meshagent Rooms and other MCP environments:
+
+| Tool | Short Description |
+|---|---|
+| `create-project` | Create a new project/workspace |
+| `create-prompt` | Create a new prompt |
+| `create-prompt-version` | Create a new version of a prompt |
+| `delete-project` | Delete a project |
+| `delete-prompt` | Delete a prompt |
+| `get-metrics` | Get metrics data |
+| `get-opik-examples` | Get examples of how to use Opik Comet's API for specific tasks |
+| `get-opik-help` | Get contextual help about Opik Comet's capabilities |
+| `get-opik-tracing-info` | Get information about Opik's tracing capabilities and how to use them |
+| `get-project-by-id` | Get a single project by ID |
+| `get-prompt-by-id` | Get a single prompt by ID |
+| `get-server-info` | Get information about the Opik server configuration |
+| `get-trace-by-id` | Get a single trace by ID |
+| `get-trace-stats` | Get statistics for traces |
+| `list-projects` | Get a list of projects/workspaces |
+| `list-prompts` | Get a list of Opik prompts |
+| `list-traces` | Get a list of traces |
+| `update-project` | Update a project |
+| `update-prompt` | Update a prompt |
+
+### Tool Details
+
+#### `create-project`
+Create a new project/workspace  
+**Parameters**:
+- `name` (`string`): Name of the project
+- `description` (`string`, optional): Description of the project
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `create-prompt`
+Create a new prompt  
+**Parameters**:
+- `name` (`string`): Name of the prompt
+
+---
+
+#### `create-prompt-version`
+Create a new version of a prompt  
+**Parameters**:
+- `commit_message` (`string`): Commit message for the prompt version
+- `name` (`string`): Name of the original prompt
+- `template` (`string`): Template content for the prompt version
+
+---
+
+#### `delete-project`
+Delete a project  
+**Parameters**:
+- `projectId` (`string`): ID of the project to delete
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `delete-prompt`
+Delete a prompt  
+**Parameters**:
+- `promptId` (`string`): ID of the prompt to delete
+
+---
+
+#### `get-metrics`
+Get metrics data  
+**Parameters**:
+- `endDate` (`string`, optional): End date in ISO format (YYYY-MM-DD)
+- `metricName` (`string`, optional): Metric name to filter
+- `projectId` (`string`, optional): Project ID to filter metrics
+- `projectName` (`string`, optional): Project name to filter metrics
+- `startDate` (`string`, optional): Start date in ISO format (YYYY-MM-DD)
+
+---
+
+#### `get-opik-examples`
+Get examples of how to use Opik Comet's API for specific tasks  
+**Parameters**:
+- `task` (`string`): Task to get examples for (e.g., 'create prompt', 'analyze traces', 'monitor costs')
+
+---
+
+#### `get-opik-help`
+Get contextual help about Opik Comet's capabilities  
+**Parameters**:
+- `topic` (`string`): The topic to get help about (prompts, projects, traces, metrics, or general)
+- `subtopic` (`string`, optional): Optional subtopic for more specific help
+
+---
+
+#### `get-opik-tracing-info`
+Get information about Opik's tracing capabilities and how to use them  
+**Parameters**:
+- `topic` (`string`, optional): Specific tracing topic (e.g., 'spans', 'distributed', 'multimodal', 'annotations')
+
+---
+
+#### `get-project-by-id`
+Get a single project by ID  
+**Parameters**:
+- `projectId` (`string`): ID of the project to fetch
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `get-prompt-by-id`
+Get a single prompt by ID  
+**Parameters**:
+- `promptId` (`string`): ID of the prompt to fetch
+
+---
+
+#### `get-server-info`
+Get information about the Opik server configuration  
+**Parameters**:
+- `random_string` (`string`, optional): Dummy parameter
+
+---
+
+#### `get-trace-by-id`
+Get a single trace by ID  
+**Parameters**:
+- `traceId` (`string`): ID of the trace to fetch
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `get-trace-stats`
+Get statistics for traces  
+**Parameters**:
+- `endDate` (`string`, optional): End date in ISO format (YYYY-MM-DD)
+- `projectId` (`string`, optional): Project ID to filter traces
+- `projectName` (`string`, optional): Project name to filter traces
+- `startDate` (`string`, optional): Start date in ISO format (YYYY-MM-DD)
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `list-projects`
+Get a list of projects/workspaces  
+**Parameters**:
+- `page` (`number`): Page number for pagination
+- `size` (`number`): Number of items per page
+- `sortBy` (`string`, optional): Sort projects by this field
+- `sortOrder` (`string`, optional): Sort order (`asc` or `desc`)
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `list-prompts`
+Get a list of Opik prompts  
+**Parameters**:
+- `page` (`number`): Page number for pagination
+- `size` (`number`): Number of items per page
+
+---
+
+#### `list-traces`
+Get a list of traces  
+**Parameters**:
+- `page` (`number`): Page number for pagination
+- `size` (`number`): Number of items per page
+- `projectId` (`string`, optional): Project ID to filter traces
+- `projectName` (`string`, optional): Project name to filter traces
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `update-project`
+Update a project  
+**Parameters**:
+- `projectId` (`string`): ID of the project to update
+- `description` (`string`, optional): New project description
+- `name` (`string`, optional): New project name
+- `workspaceName` (`string`, optional): Workspace name to use instead of the default
+
+---
+
+#### `update-prompt`
+Update a prompt  
+**Parameters**:
+- `name` (`string`): New name for the prompt
+- `promptId` (`string`): ID of the prompt to update
+
+---
+
+## Meshagent and Resources
+
+- **Meshagent Website**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started Guide**: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview**: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image**: [https://hub.docker.com/r/meshagent/mcp-opik](https://hub.docker.com/r/meshagent/mcp-opik)
+
+---
+
+For additional information on MCP and Docker-based server launches, see the [Anthropic Model Context Protocol article](https://www.anthropic.com/news/model-context-protocol) and [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/).

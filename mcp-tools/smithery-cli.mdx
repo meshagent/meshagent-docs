@@ -1,0 +1,94 @@
+---
+title: Smithery CLI
+---
+
+
+### Running the Agent and Tool in the Cloud
+
+1. **Set Required Environment Variables**
+   - `SMITHERY_API_KEY`: Your Smithery API key (replace `your_api_key_here`)
+
+2. **Install Meshagent**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign up and Authenticate**
+   - Follow the instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started).
+
+4. **Start the MCP Smithery CLI Service in a Meshagent Room**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-smithery-cli:latest \
+     --env MESHAGENT_PORT=8001 --env SMITHERY_API_KEY=your_api_key_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-smithery-cli-service
+   ```
+   - _This will launch a Meshagent Room running the MCP server. The room will automatically close if inactive._
+
+5. **Start a Chatbot Agent with the Smithery CLI Toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-smithery-cli
+   ```
+   - _This starts a chatbot agent that can use the Smithery tools within the Meshagent Room._
+   - _Multiple toolkits can be used in the same room by the same agent._
+   - _A link to the room will be shown in the command output—follow it to interact with the agent and tools._
+
+---
+
+## Tools Available
+
+### Summary
+
+Tools provided by this Server | Short Description
+-|-
+`collect_config` | Collect the config to be used for connection to mcp server
+`find_mcp`      | Find the MCP servers by given name
+`install_mcp`   | Install the MCP server on your local machine.
+
+### Tools Details
+
+#### Tool: `collect_config`
+
+Collect the config to be used for connection to mcp server
+
+Parameters | Type    | Description
+-|-|-
+`qualifiedName` | `string` | The qualified name of the config to collect
+
+---
+
+#### Tool: `find_mcp`
+
+Find the MCP servers by given name
+
+Parameters | Type    | Description
+-|-|-
+`mcpServerName` | `string` | The name of the MCP server to find
+
+---
+
+#### Tool: `install_mcp`
+
+Install the MCP server on your local machine. You can install the MCP server with configuration.
+
+Parameters | Type    | Description
+-|-|-
+`client`       | `string` | The client to install
+`qualifiedName`| `string` | The qualified name of the MCP server to install. ex) @bbangjooo/mcp-finder-mcp-server
+`config`       | `object` (*optional*) | Configuration schema
+
+---
+
+## Useful Links
+
+- [Meshagent website](https://www.meshagent.com/)
+- [Getting Started with Meshagent Rooms](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Smithery CLI Docker Image](https://hub.docker.com/r/meshagent/mcp-smithery-cli)

@@ -1,0 +1,141 @@
+---
+title: File System
+---
+
+
+Run a Filesystem MCP agent and toolkit in a Meshagent Room in the cloud:
+
+### 1. Install Meshagent
+```sh
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+Create an account and configure your Meshagent CLI credentials:  
+Follow the instructions at [Meshagent CLI: Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+### 3. Launch the MCP Filesystem Server as a Meshagent Service
+```sh
+meshagent service test --room=test --role=agent --image=meshagent/mcp-filesystem:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-filesystem-service
+```
+> This command will start a Meshagent room named `test` (creating it if necessary) and deploy the MCP Filesystem server within it. Rooms will automatically close if left inactive.
+
+### 4. Start a Chatbot in the Room With Access to Filesystem Tools
+```sh
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-filesystem
+```
+> This will start a chatbot named `sample` in the same room, giving it permission to use the full MCP Filesystem toolkit. You can add multiple toolkits and tools within the same room.
+
+**When the chatbot joins, a link to the room will be provided in the output so you can interact directly with the agent and the toolset from your browser or other clients.**
+
+---
+
+## Tools Available
+
+### Summary of MCP Filesystem Tools:
+
+Tools provided by this Server | Short Description
+-|-
+`create_directory` | Create a new directory or ensure a directory exists.
+`directory_tree` | Get a recursive tree view of files and directories as a JSON structure.
+`edit_file` | Make line-based edits to a text file.
+`get_file_info` | Retrieve detailed metadata about a file or directory.
+`list_allowed_directories` | Returns the list of directories that this server is allowed to access.
+`list_directory` | Get a detailed listing of all files and directories in a specified path.
+`move_file` | Move or rename files and directories.
+`read_file` | Read the complete contents of a file from the file system.
+`read_multiple_files` | Read the contents of multiple files simultaneously.
+`search_files` | Recursively search for files and directories matching a pattern.
+`write_file` | Create a new file or completely overwrite an existing file with new content.
+
+---
+
+### Tool Details
+
+#### **`create_directory`**
+Create a new directory or ensure a directory exists (including nested directories). Succeeds silently if the directory exists. Only works within allowed directories.
+- Parameters:
+  - `path` (`string`): Directory path to create
+
+---
+
+#### **`directory_tree`**
+Get a recursive JSON tree view of files and directories, with details about each entry. Only works within allowed directories.
+- Parameters:
+  - `path` (`string`): Root directory for the tree
+
+---
+
+#### **`edit_file`**
+Make line-based edits to a text file with a git-style diff showing changes. Only works within allowed directories.
+- Parameters:
+  - `edits` (`array`): List of edits
+  - `path` (`string`): File to edit
+  - `dryRun` (`boolean`, optional): Preview changes only
+
+---
+
+#### **`get_file_info`**
+Retrieve metadata about a file or directory (size, times, permissions, type) without reading its content. Only works within allowed directories.
+- Parameters:
+  - `path` (`string`): File or directory path
+
+---
+
+#### **`list_allowed_directories`**
+Returns the list of directories accessible by the server.
+
+---
+
+#### **`list_directory`**
+Detailed listing of all files and directories at a path, with clear distinctions. Only works within allowed directories.
+- Parameters:
+  - `path` (`string`): Directory to list
+
+---
+
+#### **`move_file`**
+Move/rename files and directories. Fails if destination exists or is outside allowed directories.
+- Parameters:
+  - `destination` (`string`): Destination path
+  - `source` (`string`): Source path
+
+---
+
+#### **`read_file`**
+Read the full contents of a file, supporting various encodings and detailed errors. Only works within allowed directories.
+- Parameters:
+  - `path` (`string`): File to read
+
+---
+
+#### **`read_multiple_files`**
+Efficiently read multiple files at once. Each file's result is returned with its path.
+- Parameters:
+  - `paths` (`array`): List of file paths
+
+---
+
+#### **`search_files`**
+Recursively search for files/directories matching a pattern. Case-insensitive, supports exclusions.
+- Parameters:
+  - `path` (`string`): Start directory
+  - `pattern` (`string`): Search pattern
+  - `excludePatterns` (`array`, optional): Patterns to exclude
+
+---
+
+#### **`write_file`**
+Create or overwrite a file with new content. Use with care (overwrites without warning).
+- Parameters:
+  - `content` (`string`): New file content
+  - `path` (`string`): File path
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Filesystem Tool Image (Docker Hub)](https://hub.docker.com/r/meshagent/mcp-filesystem)

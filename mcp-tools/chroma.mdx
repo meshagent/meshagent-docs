@@ -1,0 +1,221 @@
+---
+title: Chroma
+---
+
+
+Use the following steps to run the agent and toolkit in the cloud with Meshagent Rooms:
+
+### Prerequisites
+
+- Docker installed and access to pull images from Docker Hub
+- [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) with Meshagent
+
+### Required Environment Variables
+
+- `CHROMA_API_KEY`: Your Chroma API key
+
+### Steps
+
+1. **Install the Meshagent CLI and tool dependencies:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   [Sign up & authenticate instructions](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Chroma server as a Meshagent Room service:**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-chroma:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env CHROMA_API_KEY=your-api-key \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-chroma-service
+   ```
+   - This command will start a Meshagent Room with the MCP Chroma server running inside. The room will automatically close if it goes inactive.
+
+4. **Start a chatbot agent in the room with the Chroma toolkit:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-chroma
+   ```
+   - This starts a chatbot in the Meshagent Room that can use the Chroma toolkit. Multiple toolkits and agents can be used in the same room.
+   - A link to the interactive room will be provided in the output of this command.
+
+---
+
+## Tools Available
+
+Tools provided by this Server | Short Description
+-|-
+`chroma_add_documents` | Add documents to a Chroma collection.
+`chroma_create_collection` | Create a new Chroma collection with configurable HNSW parameters.
+`chroma_delete_collection` | Delete a Chroma collection.
+`chroma_delete_documents` | Delete documents from a Chroma collection.
+`chroma_get_collection_count` | Get the number of documents in a Chroma collection.
+`chroma_get_collection_info` | Get information about a Chroma collection.
+`chroma_get_documents` | Get documents from a Chroma collection with optional filtering.
+`chroma_list_collections` | List all collection names in the Chroma database with pagination support.
+`chroma_modify_collection` | Modify a Chroma collection's name or metadata.
+`chroma_peek_collection` | Peek at documents in a Chroma collection.
+`chroma_query_documents` | Query documents from a Chroma collection with advanced filtering.
+`chroma_update_documents` | Update documents in a Chroma collection.
+
+---
+
+### Tool Details
+
+#### **`chroma_add_documents`**
+Add documents to a Chroma collection.
+
+| Parameter        | Type      | Description                                             |
+|------------------|-----------|---------------------------------------------------------|
+| collection_name  | `string`  | Name of the collection to add documents to              |
+| documents        | `array`   | List of text documents to add                           |
+| ids              | `string` *optional* | Optional list of IDs for the documents   |
+| metadatas        | `string` *optional* | Optional list of metadata dictionaries for each document |
+
+---
+
+#### **`chroma_create_collection`**
+Create a new Chroma collection with configurable HNSW parameters.
+
+| Parameter               | Type      | Description                                                |
+|-------------------------|-----------|------------------------------------------------------------|
+| collection_name         | `string`  | Name of the collection to create                           |
+| batch_size              | `string` *optional* | Number of elements to batch together during index construction |
+| ef_construction         | `string` *optional* | Size of the candidate list for HNSW graph construction    |
+| ef_search               | `string` *optional* | Size of the candidate list for HNSW graph search          |
+| embedding_function_name | `string` *optional* | Embedding function to use. Options: 'default', 'cohere', 'openai', 'jina', 'voyageai', 'ollama', 'roboflow' |
+| max_neighbors           | `string` *optional* | Maximum neighbors during HNSW construction                 |
+| metadata                | `string` *optional* | Optional metadata dict for the collection                  |
+| num_threads             | `string` *optional* | Number of threads for HNSW construction                    |
+| resize_factor           | `string` *optional* | Factor to resize the index                                 |
+| space                   | `string` *optional* | Distance function: 'l2', 'ip', 'cosine'                    |
+| sync_threshold          | `string` *optional* | Elements to process before syncing to disk                 |
+
+---
+
+#### **`chroma_delete_collection`**
+Delete a Chroma collection.
+
+| Parameter       | Type     | Description                      |
+|-----------------|----------|----------------------------------|
+| collection_name | `string` | Name of the collection to delete |
+
+---
+
+#### **`chroma_delete_documents`**
+Delete documents from a Chroma collection.
+
+| Parameter       | Type     | Description                                 |
+|-----------------|----------|---------------------------------------------|
+| collection_name | `string` | Name of the collection to delete documents from |
+| ids             | `array`  | List of document IDs to delete              |
+
+---
+
+#### **`chroma_get_collection_count`**
+Get the number of documents in a Chroma collection.
+
+| Parameter       | Type     | Description                      |
+|-----------------|----------|----------------------------------|
+| collection_name | `string` | Name of the collection to count  |
+
+---
+
+#### **`chroma_get_collection_info`**
+Get information about a Chroma collection.
+
+| Parameter       | Type     | Description                               |
+|-----------------|----------|-------------------------------------------|
+| collection_name | `string` | Name of the collection to get info about  |
+
+---
+
+#### **`chroma_get_documents`**
+Get documents from a Chroma collection with optional filtering.
+
+| Parameter       | Type     | Description                                          |
+|-----------------|----------|------------------------------------------------------|
+| collection_name | `string` | Name of the collection to get documents from         |
+| ids             | `string` *optional* | Optional list of document IDs to retrieve |
+| include         | `array` *optional* | What to include in the response. By default, includes documents and metadatas |
+| limit           | `string` *optional* | Optional max number of documents to return |
+| offset          | `string` *optional* | Number of documents to skip                |
+| where           | `string` *optional* | Metadata filters                            |
+| where_document  | `string` *optional* | Document content filters                    |
+
+---
+
+#### **`chroma_list_collections`**
+List all collection names in the Chroma database with pagination.
+
+| Parameter | Type     | Description                         |
+|-----------|----------|-------------------------------------|
+| limit     | `string` *optional* | Max number of collections to return    |
+| offset    | `string` *optional* | Number of collections to skip          |
+
+---
+
+#### **`chroma_modify_collection`**
+Modify a Chroma collection's name or metadata.
+
+| Parameter       | Type     | Description                              |
+|-----------------|----------|------------------------------------------|
+| collection_name | `string` | Name of the collection to modify         |
+| batch_size      | `string` *optional* | Batch size during index construction       |
+| ef_search       | `string` *optional* | Candidate list size for HNSW search        |
+| new_metadata    | `string` *optional* | New metadata for the collection            |
+| new_name        | `string` *optional* | New name for the collection                |
+| num_threads     | `string` *optional* | Number of threads for HNSW                 |
+| resize_factor   | `string` *optional* | Resize factor for index                    |
+| sync_threshold  | `string` *optional* | Elements processed before syncing to disk  |
+
+---
+
+#### **`chroma_peek_collection`**
+Peek at documents in a Chroma collection.
+
+| Parameter       | Type      | Description                      |
+|-----------------|-----------|----------------------------------|
+| collection_name | `string`  | Name of the collection to peek   |
+| limit           | `integer` *optional* | Number of documents to peek at         |
+
+---
+
+#### **`chroma_query_documents`**
+Query documents from a Chroma collection with advanced filtering.
+
+| Parameter       | Type      | Description                                   |
+|-----------------|-----------|-----------------------------------------------|
+| collection_name | `string`  | Name of the collection to query               |
+| query_texts     | `array`   | Query texts to search for                     |
+| include         | `array` *optional* | What to include in the response (by default: documents, metadatas, distances) |
+| n_results       | `integer` *optional* | Number of results to return per query       |
+| where           | `string` *optional* | Metadata filters                            |
+| where_document  | `string` *optional* | Document content filters                    |
+
+---
+
+#### **`chroma_update_documents`**
+Update documents in a Chroma collection.
+
+| Parameter       | Type     | Description                            |
+|-----------------|----------|----------------------------------------|
+| collection_name | `string` | Name of the collection to update       |
+| ids             | `array`  | List of document IDs                   |
+| documents       | `string` *optional* | New text documents                  |
+| embeddings      | `string` *optional* | New embeddings for the documents    |
+| metadatas       | `string` *optional* | New metadata dictionaries           |
+
+---
+
+## Meshagent Links
+
+- **Meshagent Home**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Room API - Getting Started**: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview**: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image**: [https://hub.docker.com/r/meshagent/mcp-chroma](https://hub.docker.com/r/meshagent/mcp-chroma)

@@ -1,0 +1,60 @@
+---
+title: DataButton
+---
+
+
+### 1. Install Meshagent with Extras
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+- Follow the [Meshagent CLI Get Started Guide](https://docs.meshagent.com/cli/getting_started) to sign up and log in.
+
+### 3. Start the MCP Server as a Meshagent Service
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-databutton:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-databutton-service
+```
+- This command starts a Meshagent Room named `test` running the Databutton MCP server.
+- Rooms will automatically close if inactive.
+
+### 4. Run a Chatbot in the Room with the Databutton Toolkit
+
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-databutton
+```
+- This starts a chatbot in the specified Meshagent room using the `mcp-databutton` toolkit.
+- Multiple toolkits can be used by the same agent in the same room.
+- The command’s output will include a link for interacting with the agent and tools.
+
+---
+
+## Tools Available
+
+### Tools Provided
+
+| Tool Name                  | Short Description      |
+|----------------------------|-----------------------|
+| `submit_app_requirements`  | Submit app requirements |
+
+#### Tool Details
+
+##### **Tool: `submit_app_requirements`**
+_Submit app requirements_
+
+- **Parameters**
+    - `name` (`string`): The name of the app
+    - `pitch` (`string`): The pitch for the app
+    - `spec` (`object`): Additional specifications
+
+---
+
+## Meshagent Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started with Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image (Docker Hub)](https://hub.docker.com/r/meshagent/mcp-databutton)

@@ -1,0 +1,165 @@
+---
+title: FireCrawl
+---
+
+
+Run a Firecrawl agent and toolkit in the cloud using Meshagent:
+
+### 1. Set Required Environment Variables
+
+Configure the following environment variables for Firecrawl:
+
+- `FIRECRAWL_API_URL`: URL for Firecrawl API (e.g., `https://api.firecrawl.dev/v1`)
+- `FIRECRAWL_RETRY_MAX_ATTEMPTS`: Max retry attempts for API calls (e.g., `5`)
+- `FIRECRAWL_RETRY_INITIAL_DELAY`: Initial delay before retry in ms (e.g., `2000`)
+- `FIRECRAWL_RETRY_MAX_DELAY`: Maximum delay before retry in ms (e.g., `30000`)
+- `FIRECRAWL_RETRY_BACKOFF_FACTOR`: Exponential backoff factor for retries (e.g., `3`)
+- `FIRECRAWL_CREDIT_WARNING_THRESHOLD`: Credits remaining to begin warning (e.g., `2000`)
+- `FIRECRAWL_CREDIT_CRITICAL_THRESHOLD`: Credits at critical usage (e.g., `500`)
+- `FIRECRAWL_API_KEY`: _Your Firecrawl API key_
+
+### 2. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 3. Sign up and Authenticate
+
+Follow the guide at [Meshagent CLI: Get Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate.
+
+### 4. Run the Firecrawl MCP Server in a Meshagent Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-firecrawl:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env FIRECRAWL_API_URL=https://api.firecrawl.dev/v1 \
+  --env FIRECRAWL_RETRY_MAX_ATTEMPTS=5 \
+  --env FIRECRAWL_RETRY_INITIAL_DELAY=2000 \
+  --env FIRECRAWL_RETRY_MAX_DELAY=30000 \
+  --env FIRECRAWL_RETRY_BACKOFF_FACTOR=3 \
+  --env FIRECRAWL_CREDIT_WARNING_THRESHOLD=2000 \
+  --env FIRECRAWL_CREDIT_CRITICAL_THRESHOLD=500 \
+  --env FIRECRAWL_API_KEY=YOUR-API-KEY \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-firecrawl-service
+```
+- This starts a Firecrawl MCP server as a service accessible in the `test` Meshagent Room. (Rooms will close if they go inactive.)
+
+### 5. Join the Room with a Chatbot Agent (Using the Firecrawl Toolkit)
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-firecrawl
+```
+- This launches a chatbot in the Meshagent room that can utilize the Firecrawl tools.
+- You can use multiple toolkits per agent, and the command output will include a link to interact in the Meshagent room.
+
+---
+
+## Tools Available
+
+Below are the Firecrawl tools provided when using this MCP server in Meshagent Rooms.
+
+### Tool Summary
+
+| Tool                                 | Short Description                                                                                 |
+|---------------------------------------|--------------------------------------------------------------------------------------------------|
+| `firecrawl_check_crawl_status`        | Check the status of a crawl job.                                                                 |
+| `firecrawl_crawl`                     | Starts an asynchronous crawl job on a website and extracts content from all pages.               |
+| `firecrawl_deep_research`             | Conduct deep web research on a query using intelligent crawling, search, and LLM analysis.       |
+| `firecrawl_extract`                   | Extract structured information from web pages using LLM capabilities.                            |
+| `firecrawl_generate_llmstxt`          | Generate a standardized llms.txt (and optionally llms-full.txt) file for a given domain.         |
+| `firecrawl_map`                       | Map a website to discover all indexed URLs on the site.                                          |
+| `firecrawl_scrape`                    | Scrape content from a single URL with advanced options.                                          |
+| `firecrawl_search`                    | Search the web and optionally extract content from search results.                               |
+
+---
+
+### Tools Details
+
+#### `firecrawl_check_crawl_status`
+_Check the status of a crawl job._
+
+Parameters:
+- `id` (`string`): Crawl job ID to check.
+
+Returns: Status and progress of the crawl job, including results if available.
+
+#### `firecrawl_crawl`
+_Starts an asynchronous crawl job on a website and extracts content from all pages._
+
+Parameters:
+- `url` (`string`): Starting URL for the crawl
+- (Optional) Other controls: `allowBackwardLinks`, `allowExternalLinks`, `deduplicateSimilarURLs`, `excludePaths`, `ignoreQueryParameters`, `ignoreSitemap`, `includePaths`, `limit`, `maxDepth`, `scrapeOptions`, `webhook`
+
+Returns: Operation ID for status checking; use `firecrawl_check_crawl_status` to check progress.
+
+#### `firecrawl_deep_research`
+_Conduct deep web research on a query using intelligent crawling, search, and LLM analysis._
+
+Parameters:
+- `query` (`string`): The query to research
+- (Optional) `maxDepth`, `maxUrls`, `timeLimit`
+
+Returns: LLM-generated analysis from deep research, including sources.
+
+#### `firecrawl_extract`
+_Extract structured information from web pages using LLM capabilities._
+
+Parameters:
+- `urls` (`array`): List of URLs to extract info from
+- (Optional) `allowExternalLinks`, `enableWebSearch`, `includeSubdomains`, `prompt`, `schema`, `systemPrompt`
+
+Returns: Extracted structured data as defined by your schema.
+
+#### `firecrawl_generate_llmstxt`
+_Generate a standardized llms.txt (and optionally llms-full.txt) file for a given domain._
+
+Parameters:
+- `url` (`string`): The URL to generate LLMs.txt from
+- (Optional) `maxUrls`, `showFullText`
+
+Returns: LLMs.txt and optionally llms-full.txt file contents.
+
+#### `firecrawl_map`
+_Map a website to discover all indexed URLs on the site._
+
+Parameters:
+- `url` (`string`): Starting URL for URL discovery
+- (Optional) `ignoreSitemap`, `includeSubdomains`, `limit`, `search`, `sitemapOnly`
+
+Returns: Array of URLs found on the site.
+
+#### `firecrawl_scrape`
+_Scrape content from a single URL with advanced options._
+
+Parameters:
+- `url` (`string`): The URL to scrape
+- (Optional) `actions`, `excludeTags`, `extract`, `formats`, `includeTags`, `location`, `mobile`, `onlyMainContent`, `removeBase64Images`, `skipTlsVerification`, `timeout`, `waitFor`
+
+Returns: Content in the requested format (e.g., Markdown, HTML).
+
+#### `firecrawl_search`
+_Search the web and optionally extract content from search results._
+
+Parameters:
+- `query` (`string`): Search query string
+- (Optional) `country`, `filter`, `lang`, `limit`, `location`, `scrapeOptions`, `tbs`
+
+Returns: Array of search results (with optional scraped content).
+
+---
+
+## Additional Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-firecrawl)

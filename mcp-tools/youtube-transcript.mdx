@@ -1,0 +1,69 @@
+---
+title: YouTube Transcript
+---
+
+
+Here’s how to rapidly launch an MCP server tool in the cloud using Meshagent:
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and Authenticate
+
+Follow the [Meshagent CLI getting started guide](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate your client.
+
+### 3. Start the MCP Server as a Service in a Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-youtube-transcript:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-youtube-transcript-service
+```
+- This command launches a Meshagent room named `test` with the MCP YouTube Transcript server available as a callable service.
+- **Note**: Rooms automatically close when they go inactive.
+
+### 4. Start a Chatbot Agent Using the Tool in the Room
+
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-youtube-transcript
+```
+- This starts a chatbot in the `test` room that can use the `youtube-transcript` toolkit.
+- You can add multiple toolkits in the same agent or room.
+- After running the command, you’ll receive a link to access the room UI and begin interacting with the agent and MCP tools.
+
+---
+
+## Tools Available
+
+### YouTube transcripts MCP Server
+
+Retrieves transcripts for given YouTube video URLs.
+
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+#### Available Tools
+
+| Tools provided by this Server | Short Description                     |
+|------------------------------|---------------------------------------|
+| `get_transcript`             | Retrieves the transcript of a YouTube video. |
+
+#### Tool Details
+
+**Tool: `get_transcript`**
+
+Retrieves the transcript of a YouTube video.
+
+| Parameters | Type    | Description                                   |
+|------------|---------|-----------------------------------------------|
+| `url`      | string  | The URL of the YouTube video                  |
+| `lang`     | string  | (optional) The preferred language for transcript |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started with Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image (`mcp-youtube-transcript`)](https://hub.docker.com/r/meshagent/mcp-youtube-transcript)

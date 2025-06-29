@@ -1,0 +1,102 @@
+---
+title: HyperSpell
+---
+
+
+### Requirements
+
+- Docker installed and running.
+- Python environment for installing the Meshagent CLI.
+- Meshagent account and authentication token.
+
+### Environment Variables
+
+Configure the following environment variables for your deployment:
+
+- `USE_RESOURCES`: Set to `"false"` to run without additional resource constraints.
+- `HYPERSPELL_COLLECTION`: Name of the Hyperspell collection (can be an empty string for default).
+- `HYPERSPELL_TOKEN`: **Required.** Your Hyperspell application or user token.
+
+### Steps
+
+1. **Install Meshagent CLI with all extras:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**
+
+   Follow instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Launch an MCP Hyperspell Agent in the Cloud:**
+
+   ```sh
+   meshagent service test --room=test \
+     --role=agent \
+     --image=meshagent/mcp-hyperspell:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env USE_RESOURCES=false \
+     --env HYPERSPELL_COLLECTION="" \
+     --env HYPERSPELL_TOKEN=<your_hyperspell_token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-hyperspell-service
+   ```
+   - This command starts a Meshagent room named `test` with the MCP server as an agent/tool. 
+   - **Rooms close if inactive.**
+
+4. **Join a Chatbot to the Room with the Hyperspell Toolkit:**
+
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-hyperspell
+   ```
+   - Starts a chatbot in the Meshagent room that can use the Hyperspell toolkit.
+   - Multiple toolkits can be added to the same room with the same agent.
+   - A link to the active room is output; use it to interact with the agent and Hyperspell tools in the UI.
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+Tool | Short Description
+-|- 
+`Add File` | Add a file or website from a URL to Hyperspell.
+`Add Memory` | Add a plain text document or memory to Hyperspell.
+`Search Hyperspell` | Search Hyperspell for documents and data.
+
+---
+
+### Tools Details
+
+#### Tool: **Add File**
+Add a file or website from a URL to Hyperspell.
+
+- **Parameters:**
+  - `url` (`string`): URL of the file or website.
+
+---
+
+#### Tool: **Add Memory**
+Add a plain text document or memory to Hyperspell.
+
+- **Parameters:**
+  - `text` (`string`): The text to be stored in memory.
+  - `title` (`string`, optional): Title for the memory.
+
+---
+
+#### Tool: **Search Hyperspell**
+Search Hyperspell for documents and data.
+
+- **Parameters:**
+  - `query` (`string`): The search query.
+
+---
+
+## References and Further Reading
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started**: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Overview**: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image**: [https://hub.docker.com/r/meshagent/mcp-hyperspell](https://hub.docker.com/r/meshagent/mcp-hyperspell)

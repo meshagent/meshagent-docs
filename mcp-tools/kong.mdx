@@ -1,0 +1,207 @@
+---
+title: Kong
+---
+
+
+Follow these steps to deploy, connect, and use this MCP server (with its full toolset) inside a Meshagent Room in the cloud.
+
+> **Environment Variables Required:**
+> - `KONNECT_REGION` – The Kong Konnect region (e.g., `us`)
+> - `KONNECT_ACCESS_TOKEN` – Your Kong Konnect personal API token
+
+### Deployment Guide
+
+1. **Install the Meshagent CLI with extras:**  
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent:**  
+   [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) using the CLI:
+   ```sh
+   meshagent login
+   ```
+
+3. **Start the MCP agent (in a new Meshagent Room):**
+
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-kong:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env KONNECT_REGION=<your_konnect_region> \
+     --env KONNECT_ACCESS_TOKEN=<your_konnect_access_token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-kong-service
+   ```
+   - This command will start a Meshagent room (`test`) with the wrapped Kong MCP server live in the room.
+   - Rooms automatically close if inactive.
+
+4. **Join the room as a chatbot agent (using the Kong toolkit):**
+
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-kong
+   ```
+   - This will start a chatbot in your room that can use the full Kong toolkit.
+   - You can run multiple toolkits in the same room with the same agent.
+   - When the agent joins, the CLI will print a link to your room; use this link to invite others or interact via chat and tools.
+
+---
+
+## Tools Available
+
+Kong Konnect MCP Server provides 10 tools for query and management operations. Below is a summary and detailed input/output of each:
+
+### Summary Table
+
+| Tools Provided | Short Description |
+|-----------------|------------------|
+| `check_control_plane_group_membership` | Check if a control plane is a member of any group. |
+| `get_consumer_requests` | Retrieve and analyze API requests made by a specific consumer. |
+| `get_control_plane` | Get detailed information about a specific control plane. |
+| `list_consumers` | List all consumers associated with a control plane. |
+| `list_control_plane_group_memberships` | List all control planes that are members of a specific control plane group. |
+| `list_control_planes` | List all control planes in your organization. |
+| `list_plugins` | List all plugins associated with a control plane. |
+| `list_routes` | List all routes associated with a control plane. |
+| `list_services` | List all services associated with a control plane. |
+| `query_api_requests` | Query and analyze Kong API Gateway requests with customizable filters. |
+
+---
+
+### Tool Details
+
+#### **`check_control_plane_group_membership`**
+Check if a control plane is a member of any group.
+
+- **Parameters:**
+  - `controlPlaneId` (string): Control plane ID to check (from `list_control_planes`)
+- **Returns:** Membership info, including group details and conflicts if any.
+
+---
+
+#### **`get_consumer_requests`**
+Retrieve and analyze API requests made by a specific consumer.
+
+- **Parameters:**
+  - `consumerId` (string): Must be in form `"controlPlaneID:consumerId"`.
+  - `timeRange` (string): (15M, 1H, 6H, etc.)
+  - `successOnly` / `failureOnly` (boolean): Filter by request outcome.
+  - `maxResults` (integer): Limit number of results (default/max 1000).
+- **Returns:** Usage statistics (latency, success rate, etc.) and full request details.
+
+---
+
+#### **`get_control_plane`**
+Get detailed info about a specific control plane.
+
+- **Parameters:**
+  - `controlPlaneId` (string): ID (from `list_control_planes`)
+- **Returns:** All metadata, endpoints, and configuration for the specified control plane.
+
+---
+
+#### **`list_consumers`**
+List all consumers associated with a control plane.
+
+- **Parameters:**
+  - `controlPlaneId` (string): ID
+  - `size` (integer): Number per page (default 100, max 1000)
+  - `offset` (string, optional): For pagination
+- **Returns:** Consumers, their tags, IDs, and state.
+
+---
+
+#### **`list_control_plane_group_memberships`**
+List all control planes that are members of a specific group.
+
+- **Parameters:**
+  - `groupId` (string): Control plane group ID
+  - `pageSize` (integer): Number per page (default 10, max 1000)
+  - `pageAfter` (string, optional): Cursor for pagination
+- **Returns:** Group membership status, any conflicts, full member list.
+
+---
+
+#### **`list_control_planes`**
+List all control planes in your organization.
+
+- **Parameters:**
+  - `pageSize` (integer): Per page (default 10, max 1000)
+  - `pageNumber`, `filterName`, `filterClusterType`, `labels`, `filterCloudGateway`, `sort`: Various filters & pagination options
+- **Returns:** Array of control planes, endpoints, types, and label info.
+
+---
+
+#### **`list_plugins`**
+List all plugins associated with a control plane.
+
+- **Parameters:**
+  - `controlPlaneId` (string): ID
+  - `size` (integer): Per page (default 100, max 1000)
+  - `offset` (string, optional): For pagination
+- **Returns:** Plugin details, IDs, config, scoping, etc.
+
+---
+
+#### **`list_routes`**
+List all routes associated with a control plane.
+
+- **Parameters:**
+  - `controlPlaneId` (string): ID
+  - `size` (integer): Per page (default 100, max 1000)
+  - `offset` (string, optional): For pagination
+- **Returns:** All route details, protocols, mappings, path settings, service linkages.
+
+---
+
+#### **`list_services`**
+List all services associated with a control plane.
+
+- **Parameters:**
+  - `controlPlaneId` (string): ID
+  - `size` (integer): Per page (default 100, max 1000)
+  - `offset` (string, optional): For pagination
+- **Returns:** Service IDs, hosts, targets, protocol, timeout, tags, etc.
+
+---
+
+#### **`query_api_requests`**
+Query and analyze Kong API Gateway requests with custom filters.
+
+- **Parameters:**
+  - `timeRange` (string): 15M, 1H, 6H, etc.
+  - Many optional filters by status code, method, consumer, service, route, maxResults, etc.
+- **Returns:** Raw request logs, summary metadata, and detailed breakdown fields.
+
+---
+
+## MCP Server Docker Usage Example
+
+To run the wrapped server manually via Docker:
+
+```sh
+docker run -it --rm \
+  -e KONNECT_REGION=us \
+  -e KONNECT_ACCESS_TOKEN=<your_konnect_access_token> \
+  mcp/kong
+```
+
+This matches the configuration used by Meshagent in the cloud.
+
+---
+
+## Meshagent Resources
+
+- **Meshagent**: [meshagent.com](https://www.meshagent.com/)
+- **Getting Started**: [docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview**: [docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **MCP Kong Image on Docker Hub**: [meshagent/mcp-kong](https://hub.docker.com/r/meshagent/mcp-kong)
+
+For questions, visit Meshagent [Docs](https://docs.meshagent.com/).  
+For Kong MCP specs, see the [project repo](https://github.com/Kong/mcp-konnect).

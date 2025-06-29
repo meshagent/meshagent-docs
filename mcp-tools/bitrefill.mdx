@@ -1,0 +1,182 @@
+---
+title: Bitrefill
+---
+
+
+This quick start guide shows how to run a Bitrefill MCP agent as a portable service in a Meshagent Room and connect a chatbot to it.
+
+### 1. Environment Variables
+
+Set the following environment variables for Bitrefill API authentication:
+
+- `BITREFILL_API_ID`: your_api_id_here
+- `BITREFILL_API_SECRET`: your_api_key_here
+
+### 2. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 3. Authenticate and Set Up
+
+- Sign up and authenticate at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started).
+
+### 4. Start Bitrefill MCP Server in a Meshagent Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-bitrefill:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env BITREFILL_API_ID=your_api_id_here \
+  --env BITREFILL_API_SECRET=your_api_key_here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-bitrefill-service
+```
+
+> This command will start a Meshagent room with the Bitrefill MCP server available in the room. **Rooms close if they go inactive.**
+
+### 5. Connect a Chatbot to the Bitrefill Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-bitrefill
+```
+
+- This joins a chatbot to the specified Meshagent room and makes the Bitrefill toolkit available to it.
+- Multiple toolkits can be loaded by the same agent in a room.
+- The room link will be displayed in your output; use it to interact live with the agent and tools!
+
+---
+
+## Tools Available
+
+A summary and details of all tools exposed by the Bitrefill MCP Server via the Meshagent Room:
+
+| Tool | Description |
+|---|---|
+| `categories` | Get the full product type/categories map. |
+| `create_invoice` | Create a new invoice for purchasing products with various payment methods. |
+| `detail` | Get detailed information about a product. |
+| `get_account_balance` | Retrieve your account balance. |
+| `get_invoice` | Retrieve details for a specific invoice by ID. |
+| `get_invoices` | Retrieve a list of invoices with optional filtering. |
+| `get_order` | Retrieve details for a specific order by ID. |
+| `get_orders` | Retrieve a list of orders with optional filtering. |
+| `pay_invoice` | Pay an unpaid invoice (only works with 'balance' payment method). |
+| `ping` | Check if the Bitrefill API is available. |
+| `search` | Search for gift cards, esims, mobile topups, and more. |
+| `unseal_order` | Reveal codes and PINs for a specific order by ID. |
+
+---
+
+### Tool Details
+
+#### `categories`
+Get the full product type/categories map. It's suggested to use this tool to get the categories and then use the `search` tool to search for products in a specific category.
+
+#### `create_invoice`
+Create a new invoice for purchasing products with various payment methods
+
+| Parameter         | Type      | Description                                                        |
+|-------------------|-----------|--------------------------------------------------------------------|
+| `payment_method`  | string    | Required payment method. Available: balance, lightning, bitcoin, eth_base, usdc_base |
+| `products`        | array     | Array of products to include in the invoice                        |
+| `auto_pay`        | boolean (optional) | Automatically pay with balance                   |
+| `webhook_url`     | string (optional)  | URL for webhook notifications                     |
+
+#### `detail`
+Get detailed information about a product
+
+| Parameter     | Type      | Description                      |
+|---------------|-----------|----------------------------------|
+| `id`          | string    | Unique identifier of the product |
+
+#### `get_account_balance`
+Retrieve your account balance
+
+#### `get_invoice`
+Retrieve details for a specific invoice by ID
+
+| Parameter     | Type      | Description                     |
+|---------------|-----------|---------------------------------|
+| `id`          | string    | Unique invoice identifier       |
+
+#### `get_invoices`
+Retrieve a list of invoices with optional filtering
+
+| Parameter     | Type            | Description                                    |
+|---------------|-----------------|------------------------------------------------|
+| `after`       | string (optional) | Start date for results (YYYY-MM-DD HH:MM:SS)  |
+| `before`      | string (optional) | End date for results (YYYY-MM-DD HH:MM:SS)    |
+| `limit`       | integer (optional)| Maximum records (max/default: 50)             |
+| `start`       | integer (optional)| Start index (default: 0)                      |
+
+#### `get_order`
+Retrieve details for a specific order by ID
+
+| Parameter     | Type      | Description                   |
+|---------------|-----------|-------------------------------|
+| `id`          | string    | Unique order identifier       |
+
+#### `get_orders`
+Retrieve a list of orders with optional filtering
+
+| Parameter     | Type            | Description                                    |
+|---------------|-----------------|------------------------------------------------|
+| `after`       | string (optional) | Start date for results (YYYY-MM-DD HH:MM:SS)  |
+| `before`      | string (optional) | End date for results (YYYY-MM-DD HH:MM:SS)    |
+| `limit`       | integer (optional)| Maximum records (max/default: 50)             |
+| `start`       | integer (optional)| Start index (default: 0)                      |
+
+#### `pay_invoice`
+Pay an unpaid invoice (only works with 'balance' payment method)
+
+| Parameter     | Type      | Description                 |
+|---------------|-----------|-----------------------------|
+| `id`          | string    | Unique invoice identifier   |
+
+#### `ping`
+Check if the Bitrefill API is available
+
+#### `search`
+Search for gift cards, esims, mobile topups and more. It's suggested to use the `categories` tool before searching.
+
+| Parameter     | Type         | Description                                            |
+|---------------|--------------|--------------------------------------------------------|
+| `query`       | string       | Search query (e.g., 'Amazon', 'Netflix', '*' for all)  |
+| `beta_flags`  | string (optional) | Beta feature flags                            |
+| `cart`        | string (optional) | Cart identifier                               |
+| `category`    | string (optional) | Filter by category                             |
+| `col`         | number (optional) | Column layout parameter                        |
+| `country`     | string (optional) | Country code (e.g., 'US', 'IT', 'GB')         |
+| `do_recommend`| number (optional) | Enable recommendations                        |
+| `language`    | string (optional) | Language code for results (e.g., 'en')        |
+| `limit`       | number (optional) | Max results                                    |
+| `prefcc`      | number (optional) | Preferred country code param                   |
+| `rec`         | number (optional) | Recommendation parameter                        |
+| `sec`         | number (optional) | Security parameter                              |
+| `skip`        | number (optional) | Pagination                                      |
+| `src`         | string (optional) | Source of request                               |
+
+#### `unseal_order`
+Reveal codes and PINs for a specific order by ID
+
+| Parameter     | Type      | Description                  |
+|---------------|-----------|------------------------------|
+| `id`          | string    | Unique order identifier      |
+
+
+---
+
+## Further Reading and Resources
+
+- Meshagent: [meshagent.com](https://www.meshagent.com/)
+- Meshagent Room API Getting Started: [docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- Meshagent Room API Overview: [docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- Meshagent MCP Bitrefill Docker Image: [hub.docker.com/r/meshagent/mcp-bitrefill](https://hub.docker.com/r/meshagent/mcp-bitrefill)

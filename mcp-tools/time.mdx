@@ -1,0 +1,64 @@
+---
+title: Time
+---
+
+
+Follow these steps to run an MCP server as a Meshagent cloud service and use its tools in a Meshagent room.
+
+1. **Install Meshagent Python SDK**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Visit the [Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to sign up and configure CLI authentication.
+
+3. **Run the MCP Server in a Meshagent Room**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-time:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-time-service
+   ```
+   - This command starts a Meshagent room named `test` with the MCP time server available as a tool. Rooms will close if they go inactive.
+
+4. **Start a Chatbot Connected to the Room with the Time Toolkit**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-time
+   ```
+   - This command launches a chatbot agent in the `test` room with the `mcp-time` toolkit enabled.
+   - Multiple toolkits can be specified and used by the same agent in a single room.
+   - A room link will be provided in the command output, which you can use to interact with the agent and the available tools.
+
+# Tools Available
+
+This MCP server exposes time and timezone conversion capabilities via the following tools.
+
+Tools provided by this Server | Short Description
+-|-
+`convert_time` | Convert time between timezones
+`get_current_time` | Get current time in a specific timezone
+
+## Tools Details
+
+#### Tool: **`convert_time`**
+_Convert time between timezones_
+
+Parameters      | Type     | Description
+----------------|----------|------------------------------
+`source_timezone` | string  | Source IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'UTC' as local timezone if no source timezone provided by the user.
+`target_timezone` | string  | Target IANA timezone name (e.g., 'Asia/Tokyo', 'America/San_Francisco'). Use 'UTC' as local timezone if no target timezone provided by the user.
+`time`           | string  | Time to convert in 24-hour format (HH:MM)
+
+---
+
+#### Tool: **`get_current_time`**
+_Get current time in a specific timezone_
+
+Parameters      | Type     | Description
+----------------|----------|------------------------------
+`timezone`       | string  | IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'UTC' as local timezone if no timezone provided by the user.
+
+# References and Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-time](https://hub.docker.com/r/meshagent/mcp-time)

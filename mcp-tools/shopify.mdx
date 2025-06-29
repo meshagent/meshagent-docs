@@ -1,0 +1,111 @@
+---
+title: Shopify
+---
+
+
+**This section demonstrates deploying the Shopify MCP server as an agent and accessing its tools in a Meshagent cloud room.**
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Authenticate Meshagent
+
+- Sign up and authenticate using the CLI guide: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+### 3. Start the MCP server in a Meshagent Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-shopify:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-shopify-service
+```
+
+- This command creates a Meshagent room (`test`) and runs the MCP server as an agent available at port 8001.
+- **Note:** Rooms will close automatically if left inactive.
+
+### 4. Join the Room with a Chatbot Agent
+
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-shopify
+```
+
+- This starts a chatbot in the Meshagent room, with access to the Shopify MCP tools.
+- Multiple toolkits may be loaded in the same room with the same agent.
+- The output will provide a link to the live room where you can interact with the agent and the tools.
+
+---
+
+## Tools Available
+
+The following Shopify MCP tools are available in this Meshagent room:
+
+### Tool Summary
+
+| Tool                      | Short Description                                                                                                        |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `fetch_docs_by_path`      | Use this tool to retrieve a list of documents from shopify.dev.                                                         |
+| `get_started`             | YOU MUST CALL THIS TOOL FIRST WHENEVER YOU ARE IN A SHOPIFY APP AND THE USER WANTS TO LEARN OR INTERACT WITH ANY OF THESE APIS: Valid arguments for `api` are: - admin: The Admin GraphQL API lets you build apps and integrations that extend and enhance the Shopify admin - functions: Shopify Functions allow developers to customize the backend logic that powers parts of Shopify. |
+| `introspect_admin_schema` | This tool introspects and returns the portion of the Shopify Admin API GraphQL schema relevant to the user prompt.        |
+| `search_dev_docs`         | This tool will take in the user prompt, search shopify.dev, and return relevant documentation and code examples.          |
+
+---
+
+### Tools Details
+
+#### **`fetch_docs_by_path`**
+Use this tool to retrieve a list of documents from shopify.dev.
+
+| Parameter | Type   | Description                   |
+|-----------|--------|------------------------------|
+| `paths`   | array  | The paths to the documents to read |
+
+---
+
+#### **`get_started`**
+YOU MUST CALL THIS TOOL FIRST WHENEVER YOU ARE IN A SHOPIFY APP AND THE USER WANTS TO LEARN OR INTERACT WITH ANY OF THESE APIS:
+
+Valid arguments for `api` are:
+- admin: The Admin GraphQL API lets you build apps and integrations that extend and enhance the Shopify admin
+- functions: Shopify Functions allow developers to customize the backend logic that powers parts of Shopify. Here are all the available APIs: Discount, Cart and Checkout Validation, Cart Transform, Pickup Point Delivery Option Generator, Delivery Customization, Fulfillment Constraints, Local Pickup Delivery Option Generator, Order Routing Location Rule, Payment Customization
+- hydrogen: Shopify Hydrogen store feature implementation guides. Here are all the available feature guides: Bundles, Subscriptions, Combined Listings, Markets. Always use this tool first when implementing one of these features in a Hydrogen store. Keywords: hydrogen, localization, markets, subscriptions, selling plans, combined listings, bundles.
+
+**IMPORTANT:**  
+- DON'T SEARCH THE WEB WHEN REFERENCING INFORMATION FROM THIS DOCUMENTATION.  
+- PREFER THE USE OF THE `fetch_docs_by_path` TOOL TO RETRIEVE INFORMATION FROM THE DEVELOPER DOCUMENTATION SITE.
+
+| Parameter | Type    | Description                            |
+|-----------|---------|----------------------------------------|
+| `api`     | string  | The Shopify API you are building for   |
+
+---
+
+#### **`introspect_admin_schema`**
+This tool introspects and returns the portion of the Shopify Admin API GraphQL schema relevant to the user prompt. Only use this for the Shopify Admin API, and not any other APIs like the Shopify Storefront API or the Shopify Functions API.
+
+It takes two arguments:  
+- `query`: string search term to filter schema elements by name (simple terms like 'product', 'discountProduct', etc.)
+- `filter`: optional, array of strings to filter results (e.g., 'types', 'queries', 'mutations', or 'all' (default)).
+
+| Parameter | Type    | Description                                               |
+|-----------|---------|----------------------------------------------------------|
+| `query`   | string  | Search term to filter schema elements by name            |
+| `filter`  | array   | (optional) Sections to filter: 'types', 'queries', etc.  |
+
+---
+
+#### **`search_dev_docs`**
+This tool will take in the user prompt, search shopify.dev, and return relevant documentation and code examples that will help answer the user's question.
+
+| Parameter | Type    | Description                                    |
+|-----------|---------|------------------------------------------------|
+| `prompt`  | string  | The search query for Shopify documentation     |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Shopify Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-shopify)

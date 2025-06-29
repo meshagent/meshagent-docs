@@ -1,0 +1,199 @@
+---
+title: Neo4j Cloud Aura API
+---
+
+
+Follow these steps to run the Neo4j Cloud Aura API MCP Server as a service using Meshagent, and interact with it in a Meshagent-powered room.
+
+### Prerequisites
+
+- Python environment ready (`pip`)
+- Meshagent account ([sign up & authenticate](https://docs.meshagent.com/cli/getting_started))
+- Docker installed (for running the MCP Server image)
+- Your Neo4j Aura API credentials
+
+### Required Environment Variables
+
+- `NEO4J_AURA_CLIENT_ID`: Your Neo4j Aura API Client ID
+- `NEO4J_AURA_CLIENT_SECRET`: Your Neo4j Aura API Client Secret
+
+### Steps
+
+1. **Install Meshagent**
+
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent**
+
+   Follow the instructions: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the Neo4j Aura API MCP Server in a Meshagent Room**
+
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-neo4j-cloud-aura-api:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env NEO4J_AURA_CLIENT_ID=<your-client-id> \
+     --env NEO4J_AURA_CLIENT_SECRET=<your-client-secret> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-neo4j-cloud-aura-api-service
+   ```
+   - This command will start a Meshagent Room called `test` with the MCP server available for use. **Rooms will close if they go inactive.**
+
+4. **Run a Chatbot in the Meshagent Room Using the Toolkit**
+
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-neo4j-cloud-aura-api
+   ```
+   - This starts a chatbot in the Meshagent room that can use the `neo4j-cloud-aura-api` toolkit.
+   - Multiple toolkits can be enabled for the same agent in the room.
+   - A web link to interact with the room and your agent/tools will be provided in the output of this command.
+
+---
+
+## Tools Available
+
+Manage Neo4j Aura database instances through the Neo4j Aura API.
+
+### Tools Summary
+
+| Tool Name                           | Description                                                      |
+|------------------------------------- |------------------------------------------------------------------|
+| `create_instance`                   | Create a new Neo4j Aura database instance                        |
+| `delete_instance`                   | Delete a Neo4j Aura database instance                            |
+| `get_instance_by_name`              | Find a Neo4j Aura instance by name and returns the details incl. id|
+| `get_instance_details`              | Get details for Neo4j Aura instances by ID                       |
+| `get_tenant_details`                | Get details for a specific Neo4j Aura tenant/project             |
+| `list_instances`                    | List all Neo4j Aura database instances                           |
+| `list_tenants`                      | List all Neo4j Aura tenants/projects                             |
+| `pause_instance`                    | Pause a Neo4j Aura database instance                             |
+| `resume_instance`                   | Resume a paused Neo4j Aura database instance                     |
+| `update_instance_memory`            | Update the memory allocation of a Neo4j Aura instance            |
+| `update_instance_name`              | Update the name of a Neo4j Aura instance                         |
+| `update_instance_vector_optimization` | Update the vector optimization setting of a Neo4j Aura instance  |
+
+---
+
+### Tools Details
+
+#### `create_instance`
+Create a new Neo4j Aura database instance.
+
+| Parameter             | Type      | Description                                                                                           |
+|-----------------------|-----------|-------------------------------------------------------------------------------------------------------|
+| `name`                | string    | Name for the new instance                                                                             |
+| `tenant_id`           | string    | ID of the tenant/project where the instance will be created                                           |
+| `cloud_provider`      | string    | *(optional)* Cloud provider (gcp, aws, azure)                                                        |
+| `graph_analytics_plugin` | boolean | *(optional)* Enable the graph analytics plugin                                                        |
+| `memory`              | integer   | *(optional)* Memory allocation in GB                                                                  |
+| `region`              | string    | *(optional)* Region for the instance (e.g., 'us-central1')                                           |
+| `source_instance_id`  | string    | *(optional)* ID of the source instance to clone from (professional/enterprise)                        |
+| `type`                | string    | *(optional)* Instance type (free-db, professional-db, enterprise-db, or business-critical)            |
+| `vector_optimized`    | boolean   | *(optional)* Optimize for vector operations (only for >4GB memory instances)                          |
+
+---
+
+#### `delete_instance`
+Delete a Neo4j Aura database instance.
+
+| Parameter    | Type    | Description             |
+|--------------|---------|-------------------------|
+| `instance_id`| string  | ID of the instance      |
+
+---
+
+#### `get_instance_by_name`
+Find a Neo4j Aura instance by name.
+
+| Parameter | Type   | Description        |
+|-----------|--------|-------------------|
+| `name`    | string | Name of instance  |
+
+---
+
+#### `get_instance_details`
+Get details for one or more Neo4j Aura instances by ID.
+
+| Parameter     | Type   | Description                   |
+|---------------|--------|------------------------------|
+| `instance_ids`| array  | List of instance IDs          |
+
+---
+
+#### `get_tenant_details`
+Get details for a specific Neo4j Aura tenant/project.
+
+| Parameter    | Type    | Description                  |
+|--------------|---------|-----------------------------|
+| `tenant_id`  | string  | ID of the tenant/project     |
+
+---
+
+#### `list_instances`
+List all Neo4j Aura database instances.
+
+#### `list_tenants`
+List all Neo4j Aura tenants/projects.
+
+#### `pause_instance`
+Pause a Neo4j Aura database instance.
+
+| Parameter    | Type    | Description               |
+|--------------|---------|--------------------------|
+| `instance_id`| string  | ID of the instance        |
+
+---
+
+#### `resume_instance`
+Resume a paused Neo4j Aura database instance.
+
+| Parameter    | Type    | Description                 |
+|--------------|---------|----------------------------|
+| `instance_id`| string  | ID of the instance          |
+
+---
+
+#### `update_instance_memory`
+Update the memory allocation of a Neo4j Aura instance.
+
+| Parameter    | Type    | Description                 |
+|--------------|---------|----------------------------|
+| `instance_id`| string  | ID of the instance          |
+| `memory`     | integer | New memory allocation (GB)  |
+
+---
+
+#### `update_instance_name`
+Update the name of a Neo4j Aura instance.
+
+| Parameter    | Type    | Description               |
+|--------------|---------|--------------------------|
+| `instance_id`| string  | ID of the instance        |
+| `name`       | string  | New name for the instance |
+
+---
+
+#### `update_instance_vector_optimization`
+Update the vector optimization setting of a Neo4j Aura instance.
+
+| Parameter        | Type    | Description                                |
+|------------------|---------|--------------------------------------------|
+| `instance_id`    | string  | ID of the instance                        |
+| `vector_optimized` | boolean | Whether the instance should be optimized  |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Overview of the Room API](https://docs.meshagent.com/room_api/overview)
+- [Docker Image: meshagent/mcp-neo4j-cloud-aura-api](https://hub.docker.com/r/meshagent/mcp-neo4j-cloud-aura-api)

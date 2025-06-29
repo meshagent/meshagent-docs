@@ -1,0 +1,85 @@
+---
+title: Pulumi
+---
+
+
+Follow these steps to run the MCP server as a Meshagent tool in the cloud:
+
+1. **Install Meshagent**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate**
+   - Sign up and authenticate to Meshagent:  
+     [Meshagent CLI: Get Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Service in a Meshagent Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-pulumi:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-pulumi-service
+   ```
+   - *This command starts a Meshagent room with the MCP server available. Rooms automatically close if left inactive.*
+
+4. **Join Room & Use Pulumi Toolkit with a Chatbot**
+   ```
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-pulumi
+   ```
+   - *Starts a chatbot in the Meshagent room enabled with the Pulumi toolkit. You can attach multiple toolkits to the same agent in a room.*
+   - *The output will include a link to the room UI where you can interact with the agent and tools.*
+
+---
+
+## Tools Available
+
+The following Pulumi tools are available through this MCP Server:
+
+| Tool                                | Short Description                                                         |
+|--------------------------------------|---------------------------------------------------------------------------|
+| `pulumi-cli-preview`                 | Run pulumi preview for a given project and stack                          |
+| `pulumi-cli-stack-output`            | Get the output value(s) of a given stack                                  |
+| `pulumi-cli-up`                      | Run pulumi up for a given project and stack                               |
+| `pulumi-registry-get-resource`       | Get information about a specific resource from the Pulumi Registry         |
+| `pulumi-registry-list-resources`     | List all resource types for a given provider and module                    |
+
+### Tool Details
+
+#### `pulumi-cli-preview`
+*Run pulumi preview for a given project and stack*  
+Parameters:
+- `workDir` (*string*): The working directory of the program.
+- `stackName` (*string*, optional): The associated stack name. Defaults to 'dev'.
+
+#### `pulumi-cli-stack-output`
+*Get the output value(s) of a given stack*  
+Parameters:
+- `workDir` (*string*): The working directory of the program.
+- `outputName` (*string*, optional): The specific stack output name to retrieve.
+- `stackName` (*string*, optional): The associated stack name. Defaults to 'dev'.
+
+#### `pulumi-cli-up`
+*Run pulumi up for a given project and stack*  
+Parameters:
+- `workDir` (*string*): The working directory of the program.
+- `stackName` (*string*, optional): The associated stack name. Defaults to 'dev'.
+
+#### `pulumi-registry-get-resource`
+*Get information about a specific resource from the Pulumi Registry*  
+Parameters:
+- `provider` (*string*): The cloud provider (e.g., 'aws', 'azure', 'gcp', 'random') or github.com/org/repo for Git-hosted components.
+- `resource` (*string*): The resource type to query (e.g., 'Bucket', 'Function', 'Instance').
+- `module` (*string*, optional): The module to query (e.g., 's3', 'ec2', 'lambda'). Optional for smaller providers; 'index' by default.
+
+#### `pulumi-registry-list-resources`
+*List all resource types for a given provider and module*  
+Parameters:
+- `provider` (*string*): The cloud provider (e.g., 'aws', 'azure', 'gcp', 'random') or github.com/org/repo for Git-hosted components.
+- `module` (*string*, optional): Optional module to filter by (e.g., 's3', 'ec2', 'lambda').
+
+---
+
+## Related Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Pulumi Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-pulumi](https://hub.docker.com/r/meshagent/mcp-pulumi)

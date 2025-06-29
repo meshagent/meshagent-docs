@@ -1,0 +1,161 @@
+---
+title: 3D printer
+---
+
+
+Here’s how to quickly deploy the MCP 3D printer server in a Meshagent Room and start using its tools through the cloud.
+
+### Required Environment Variables
+
+Make sure to set the following environment variables (if using a Bambu printer):
+
+- **BAMBU_SERIAL**: *The serial number of your Bambu Lab printer.*
+- **PRINTER_HOST**: Should be set to `REAL` for real hardware connections.
+- **PRINTER_TYPE**: The printer backend type, e.g., `bambu`.
+- **BAMBU_TOKEN**: *Your API access token for Bambu Lab.*
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Authenticate with Meshagent
+
+Follow the [CLI authentication guide](https://docs.meshagent.com/cli/getting_started) (sign up if needed):
+
+```bash
+meshagent auth login
+```
+
+### 3. Launch the MCP Server as a Meshagent Service
+
+Replace the variables in angle brackets `< >` with your own values:
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-3d-printer:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env BAMBU_SERIAL=<YOUR_BAMBU_SERIAL> \
+  --env PRINTER_HOST=REAL \
+  --env PRINTER_TYPE=bambu \
+  --env BAMBU_TOKEN=<YOUR_BAMBU_TOKEN> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-3d-printer-service
+```
+> This command will start an MCP 3D printer server as a Meshagent service in the `test` room. *Rooms close automatically if they become inactive.*
+
+### 4. Start a Chatbot Using the 3D Printer Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-3d-printer
+```
+- **4.1:** This starts a chatbot connected to the Meshagent room that can use the 3D printer toolkit for automation, conversational control, and workflow orchestration.
+- **4.2:** The CLI will display a link to enter your room and interact with the agent and the provided tools.
+
+---
+
+## Tools Available
+
+This MCP server provides the following powerful tools for 3D printing workflows:
+
+| Tool                         | Short Description                                                 |
+|------------------------------|-------------------------------------------------------------------|
+| `center_model`               | Translate the model so its geometric center is at the origin (0,0,0).|
+| `confirm_temperatures`       | Confirm temperature settings in a G-code file.                    |
+| `extend_stl_base`            | Extend the base of an STL file by a specified amount.             |
+| `generate_stl_visualization` | Generate an SVG visualization of an STL file from multiple angles.|
+| `get_printer_status`         | Get the current status of the 3D printer.                         |
+| `get_stl_info`               | Get detailed information about an STL file.                       |
+| `lay_flat`                   | Attempt to rotate the model so its largest flat face is on the XY plane (Z=0).|
+| `merge_vertices`             | Merge vertices in an STL file that are closer than the specified tolerance.|
+| `modify_stl_section`         | Apply a specific transformation to a selected section of an STL file.|
+| `print_3mf`                  | Print a 3MF file on a Bambu Lab printer, potentially overriding settings.|
+| `process_and_print_stl`      | Process an STL file (extend base), slice it, confirm temperatures, and start printing.|
+| `rotate_stl`                 | Rotate an STL model around specific axes.                         |
+| `scale_stl`                  | Scale an STL model uniformly or along specific axes.              |
+| `slice_stl`                  | Slice an STL file to generate G-code.                             |
+| `translate_stl`              | Move an STL model along specific axes.                            |
+
+---
+
+### Tools Details
+
+#### `center_model`
+Translate the model so its geometric center is at the origin (0,0,0).
+- **Parameters:** `stl_path` (string)
+
+#### `confirm_temperatures`
+Confirm temperature settings in a G-code file.
+- **Parameters:** `gcode_path` (string), `bed_temp` (number, optional), `extruder_temp` (number, optional)
+
+#### `extend_stl_base`
+Extend the base of an STL file by a specified amount.
+- **Parameters:** `extension_inches` (number), `stl_path` (string)
+
+#### `generate_stl_visualization`
+Generate an SVG visualization of an STL file from multiple angles.
+- **Parameters:** `stl_path` (string), `height` (number, optional), `width` (number, optional)
+
+#### `get_printer_status`
+Get the current status of the 3D printer.
+- **Parameters:** `api_key` (string, optional), `bambu_serial` (string, optional), `bambu_token` (string, optional), `host` (string, optional), `port` (string, optional), `type` (string, optional)
+
+#### `get_stl_info`
+Get detailed information about an STL file.
+- **Parameters:** `stl_path` (string)
+
+#### `lay_flat`
+Attempt to rotate the model so its largest flat face lies on the XY plane (Z=0).
+- **Parameters:** `stl_path` (string)
+
+#### `merge_vertices`
+Merge vertices in an STL file that are closer than the specified tolerance.
+- **Parameters:** `stl_path` (string), `tolerance` (number, optional)
+
+#### `modify_stl_section`
+Apply a specific transformation to a selected section of an STL file.
+- **Parameters:** `section` (string), `stl_path` (string), `transformation_type` (string), plus optional custom bounds and transformation values
+
+#### `print_3mf`
+Print a 3MF file on a Bambu Lab printer, potentially overriding settings.
+- **Parameters:** `three_mf_path` (string), `ams_mapping` (object, optional), `bambu_serial` (string, optional), `bambu_token` (string, optional), `bed_temperature` (number, optional), `host` (string, optional), `layer_height` (number, optional), `nozzle_temperature` (number, optional), `support_enabled` (boolean, optional)
+
+#### `process_and_print_stl`
+Process an STL file (extend base), slice it, confirm temperatures, and start printing.
+- **Parameters:** `extension_inches` (number), `stl_path` (string), plus optional printer and temperature params
+
+#### `rotate_stl`
+Rotate an STL model around specific axes.
+- **Parameters:** `stl_path` (string), `rotate_x/y/z` (number, optional)
+
+#### `scale_stl`
+Scale an STL model uniformly or along specific axes.
+- **Parameters:** `stl_path` (string), `scale_factor` (number, optional), `scale_x/y/z` (number, optional)
+
+#### `slice_stl`
+Slice an STL file to generate G-code.
+- **Parameters:** `stl_path` (string), `slicer_path` (string, optional), `slicer_profile` (string, optional), `slicer_type` (string, optional)
+
+#### `translate_stl`
+Move an STL model along specific axes.
+- **Parameters:** `stl_path` (string), `translate_x/y/z` (number, optional)
+
+---
+
+## Meshagent and MCP Server Resources
+
+- **Meshagent Site**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Room API Get Started**: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview**: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP 3D Printer Tool Image**: [https://hub.docker.com/r/meshagent/mcp-3d-printer](https://hub.docker.com/r/meshagent/mcp-3d-printer)
+
+---
+
+Empower your next 3D print workflow—securely and remotely—using Meshagent Rooms and the powerful MCP 3D Printer Toolkit!

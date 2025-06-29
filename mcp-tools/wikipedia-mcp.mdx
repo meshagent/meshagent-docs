@@ -1,0 +1,111 @@
+---
+title: Wikipedia-MCP
+---
+
+
+### 1. Install the Meshagent package
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+Follow the CLI guide at [Meshagent CLI: Get Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+
+### 3. Start an MCP Server Agent in a Meshagent Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-wikipedia-mcp:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-wikipedia-mcp-service
+```
+- This command will start a Meshagent Room named `test` with the Wikipedia MCP server accessible within the room.
+- `Rooms will close if they go inactive.`
+
+### 4. Start a Chatbot Connected to the MCP Server Tools
+
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-wikipedia-mcp
+```
+- Starts a chatbot in the same `test` room with access to the `wikipedia-mcp` toolkit.
+- Multiple toolkits can be loaded in a single room with the same agent.
+- A link to the room where you can interact with the agent and tools will be displayed in your terminal.
+
+---
+
+## Tools Available
+
+The Wikipedia MCP Server provides the following tools:
+
+| Tool Name              | Short Description                                               |
+|------------------------|----------------------------------------------------------------|
+| `get_article`          | Get the full content of a Wikipedia article.                   |
+| `get_links`            | Get the links contained within a Wikipedia article.            |
+| `get_related_topics`   | Get topics related to a Wikipedia article based on links and categories. |
+| `get_sections`         | Get the sections of a Wikipedia article.                       |
+| `get_summary`          | Get a summary of a Wikipedia article.                          |
+| `search_wikipedia`     | Search Wikipedia for articles matching a query.                |
+
+### Tool Details
+
+#### **get_article**
+*Get the full content of a Wikipedia article.*
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| title     | string |             |
+
+---
+
+#### **get_links**
+*Get the links contained within a Wikipedia article.*
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| title     | string |             |
+
+---
+
+#### **get_related_topics**
+*Get topics related to a Wikipedia article based on links and categories.*
+
+| Parameter | Type    | Description        |
+|-----------|---------|--------------------|
+| title     | string  |                    |
+| limit     | integer | *optional*         |
+
+---
+
+#### **get_sections**
+*Get the sections of a Wikipedia article.*
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| title     | string |             |
+
+---
+
+#### **get_summary**
+*Get a summary of a Wikipedia article.*
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| title     | string |             |
+
+---
+
+#### **search_wikipedia**
+*Search Wikipedia for articles matching a query.*
+
+| Parameter | Type    | Description |
+|-----------|---------|-------------|
+| query     | string  |             |
+| limit     | integer | *optional*  |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Getting Started with Meshagent Rooms](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-wikipedia-mcp)

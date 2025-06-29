@@ -1,0 +1,78 @@
+---
+title: AWS KB Retrieval Server
+---
+
+
+Run the AWS KB Retrieval MCP Server agent and toolkit in the cloud using Meshagent Rooms:
+
+**Required Environment Variables:**
+
+- `AWS_ACCESS_KEY_ID`: Your AWS access key.
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret access key.
+
+### Steps
+
+1. **Install Meshagent and all dependencies:**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate:**
+    Follow the authentication guide: [Meshagent CLI Authentication](https://docs.meshagent.com/cli/getting_started)
+
+3. **Launch the MCP server in a Meshagent Room:**
+    ```sh
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-aws-kb-retrieval-server:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_HERE \
+      --env AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY_HERE \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-aws-kb-retrieval-server-service
+    ```
+    - This command starts a Meshagent Room with the MCP server available in the room.
+    - Rooms automatically close after a period of inactivity.
+
+4. **Join the room with a chatbot agent and attach the toolkit:**
+    ```sh
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-aws-kb-retrieval-server
+    ```
+    - This starts a chatbot in the Meshagent room that can use the AWS KB Retrieval Server toolkit.
+    - Multiple toolkits can be used in the same room with the same agent.
+    - A link to the room will be provided in the output, which can be used to interact with the agent and tools.
+
+---
+
+## Tools Available
+
+### Tools Provided & Summary
+
+| Tool                   | Short Description |
+|------------------------|------------------|
+| `retrieve_from_aws_kb` | Performs retrieval from the AWS Knowledge Base using the provided query and Knowledge Base ID. |
+
+### Tool Details
+
+#### **`retrieve_from_aws_kb`**
+- **Description:** Performs retrieval from the AWS Knowledge Base using the provided query and Knowledge Base ID.
+
+| Parameter         | Type      | Description                                          |
+|-------------------|-----------|------------------------------------------------------|
+| `knowledgeBaseId` | `string`  | The ID of the AWS Knowledge Base                     |
+| `query`           | `string`  | The query to perform retrieval on                    |
+| `n`               | `number`  | Number of results to retrieve (optional)             |
+
+---
+
+## Meshagent & Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-aws-kb-retrieval-server](https://hub.docker.com/r/meshagent/mcp-aws-kb-retrieval-server)

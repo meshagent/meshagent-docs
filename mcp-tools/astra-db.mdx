@@ -1,0 +1,188 @@
+---
+title: Astra DB
+---
+
+
+Run a tool-wrapped Astra DB MCP server in a Meshagent Cloud Room:
+
+### Prerequisites
+
+- [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) with Meshagent CLI
+- An **Astra DB Application Token**
+- Python environment (for installing Meshagent CLI)
+
+### Required Environment Variables
+
+Set the following environment variables as needed:
+- `ASTRA_DB_API_ENDPOINT`: *The Astra DB API endpoint*  
+- `ASTRA_DB_APPLICATION_TOKEN`: *Your Astra DB application token (`your_astra_db_token`)*
+
+### Steps
+
+1. **Install Meshagent CLI Tools**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate the CLI**  
+   Follow the instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Service in a Room**  
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-astra-db:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env ASTRA_DB_API_ENDPOINT=<your_endpoint> \
+     --env ASTRA_DB_APPLICATION_TOKEN=<your_astra_db_token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-astra-db-service
+   ```
+   - This command launches the MCP server as a callable service inside a Meshagent Room.  
+   - *Rooms automatically close if inactive!*
+
+4. **Start a Chatbot Agent That Uses the Toolbox**  
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-astra-db
+   ```
+   - Starts a chatbot agent in the same Room, using the Astra DB tool suite.
+   - Multiple toolkits can be specified per agent/room.
+   - A web link to interact with the room will be printed in the CLI output.
+
+---
+
+## Tools Available
+
+The following tools are available via the Astra DB MCP server when run with Meshagent:
+
+| Tool | Description |
+|---|---|
+| **BulkCreateRecords** | Create multiple records in a collection at once |
+| **BulkDeleteRecords** | Delete multiple records from a collection at once |
+| **BulkUpdateRecords** | Update multiple records in a collection at once |
+| **CreateCollection** | Create a new collection in the database |
+| **CreateRecord** | Create a new record in a collection |
+| **DeleteCollection** | Delete a collection from the database |
+| **DeleteRecord** | Delete a record from a collection |
+| **EstimateDocumentCount** | Estimate the number of documents in a collection using a fast, approximate count method |
+| **FindRecord** | Find records in a collection by field value |
+| **GetCollections** | Get all collections in the Astra DB database |
+| **GetRecord** | Get a specific record from a collection by ID |
+| **HelpAddToClient** | Help the user add the Astra DB client to their MCP client |
+| **ListRecords** | List records from a collection in the database |
+| **OpenBrowser** | Open a web browser to a specific URL |
+| **UpdateCollection** | Update an existing collection in the database |
+| **UpdateRecord** | Update an existing record in a collection |
+
+---
+
+### Tool Details
+
+#### BulkCreateRecords
+**Description**: Create multiple records in a collection at once  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to create the records in  
+- `records` (`array`): Array of records to insert
+
+#### BulkDeleteRecords
+**Description**: Delete multiple records from a collection at once  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection containing the records  
+- `recordIds` (`array`): Array of record IDs to delete
+
+#### BulkUpdateRecords
+**Description**: Update multiple records in a collection at once  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection containing the records  
+- `records` (`array`): Array of records to update with their IDs
+
+#### CreateCollection
+**Description**: Create a new collection in the database  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to create  
+- `dimension` (`number`, optional): The dimensions of the vector collection, if vector is true  
+- `vector` (`boolean`, optional): Whether to create a vector collection
+
+#### CreateRecord
+**Description**: Create a new record in a collection  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to create the record in  
+- `record` (`object`): The record data to insert
+
+#### DeleteCollection
+**Description**: Delete a collection from the database  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to delete
+
+#### DeleteRecord
+**Description**: Delete a record from a collection  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection containing the record  
+- `recordId` (`string`): ID of the record to delete
+
+#### EstimateDocumentCount
+**Description**: Estimate the number of documents in a collection using a fast, approximate count method  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to estimate document count for
+
+#### FindRecord
+**Description**: Find records in a collection by field value  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to search in  
+- `field` (`string`): Field name to search by (e.g., 'title', '_id', or any property)  
+- `value` (`string`): Value to search for in the specified field  
+- `limit` (`number`, optional): Maximum number of records to return
+
+#### GetCollections
+**Description**: Get all collections in the Astra DB database  
+**Parameters:** _None_
+
+#### GetRecord
+**Description**: Get a specific record from a collection by ID  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to get the record from  
+- `recordId` (`string`): ID of the record to retrieve
+
+#### HelpAddToClient
+**Description**: Help the user add the Astra DB client to their MCP client  
+**Parameters:** _None_
+
+#### ListRecords
+**Description**: List records from a collection in the database  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to list records from  
+- `limit` (`number`, optional): Maximum number of records to return
+
+#### OpenBrowser
+**Description**: Open a web browser to a specific URL  
+**Parameters:**  
+- `url` (`string`): The URL to open in the browser
+
+#### UpdateCollection
+**Description**: Update an existing collection in the database  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection to update  
+- `newName` (`string`): New name for the collection
+
+#### UpdateRecord
+**Description**: Update an existing record in a collection  
+**Parameters:**  
+- `collectionName` (`string`): Name of the collection containing the record  
+- `record` (`object`): The updated record data  
+- `recordId` (`string`): ID of the record to update
+
+---
+
+## Useful Links
+
+- **Meshagent Website**: https://www.meshagent.com/
+- **Meshagent Room API Getting Started**: https://docs.meshagent.com/room_api/get_started
+- **Meshagent Room API Overview**: https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Astra DB Docker Image**: https://hub.docker.com/r/meshagent/mcp-astra-db
+
+For more about Meshagent rooms, chat-based MPC orchestration, and running MCP tool servers in cloud-native environments, check the [Official Documentation](https://docs.meshagent.com/room_api/overview).

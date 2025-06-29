@@ -1,0 +1,174 @@
+---
+title: Neo4j Memory
+---
+
+
+### Prerequisites
+
+- Docker installed (for running the MCP server image)
+- Meshagent CLI installed and authenticated ([Get Started](https://docs.meshagent.com/cli/getting_started))
+- Neo4j database running (local or remote instance)
+- Meshagent account
+
+### Required Environment Variables
+
+Set these environment variables with your Neo4j database credentials and connection string:
+
+- `NEO4J_URL` – e.g. `bolt://host.docker.internal:7687`
+- `NEO4J_USERNAME` – e.g. `neo4j`
+- `NEO4J_PASSWORD` – e.g. `password`
+
+### Steps
+
+1. **Install Meshagent with all plugins:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Visit: [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started)
+   - Follow instructions to login.
+
+3. **Launch the MCP server as a Meshagent service in a room:**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-neo4j-memory:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env NEO4J_URL=<bolt://your-neo4j-host:7687> \
+     --env NEO4J_USERNAME=<your-neo4j-username> \
+     --env NEO4J_PASSWORD=<your-neo4j-password> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-neo4j-memory-service
+   ```
+   - This launches the Neo4j Memory MCP server within the Meshagent room.  
+   - **Note:** Replace the angle-bracket values (`<...>`) with your actual Neo4j instance details.
+   - *Rooms will close if they go inactive.*
+
+4. **Start a chatbot in the Meshagent room with the Neo4j-memory toolkit:**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-neo4j-memory
+   ```
+   - This starts a chatbot with access to all `mcp-neo4j-memory` tools.
+   - You can load multiple toolkits for an agent in the same room.
+   - After running, a link to the room will be provided in the output for browser-based interaction.
+
+
+## Tools Available
+
+Below is an overview of the tools this MCP server provides for graph-based memory with Neo4j:
+
+| Tool Name             | Short Description                                               |
+|-----------------------|----------------------------------------------------------------|
+| `add_observations`    | Add new observations to existing entities in the knowledge graph|
+| `create_entities`     | Create multiple new entities in the knowledge graph            |
+| `create_relations`    | Create multiple new relations between entities                 |
+| `delete_entities`     | Delete multiple entities and their associated relations        |
+| `delete_observations` | Delete specific observations from entities                     |
+| `delete_relations`    | Delete multiple relations from the knowledge graph             |
+| `find_nodes`          | Find specific nodes by name                                    |
+| `open_nodes`          | Open specific nodes by name                                    |
+| `read_graph`          | Read the entire knowledge graph                                |
+| `search_nodes`        | Search nodes based on a query                                  |
+
+---
+
+### Tools Details
+
+#### **`add_observations`**
+*Add new observations to existing entities in the knowledge graph*
+
+| Parameter      | Type     | Description |
+|----------------|----------|-------------|
+| `observations` | `array`  |             |
+
+---
+
+#### **`create_entities`**
+*Create multiple new entities in the knowledge graph*
+
+| Parameter  | Type     | Description |
+|------------|----------|-------------|
+| `entities` | `array`  |             |
+
+---
+
+#### **`create_relations`**
+*Create multiple new relations between entities in the knowledge graph. Relations should be in active voice.*
+
+| Parameter  | Type     | Description |
+|------------|----------|-------------|
+| `relations`| `array`  |             |
+
+---
+
+#### **`delete_entities`**
+*Delete multiple entities and their associated relations from the knowledge graph*
+
+| Parameter     | Type     | Description                         |
+|---------------|----------|-------------------------------------|
+| `entityNames` | `array`  | An array of entity names to delete  |
+
+---
+
+#### **`delete_observations`**
+*Delete specific observations from entities in the knowledge graph*
+
+| Parameter   | Type     | Description |
+|-------------|----------|-------------|
+| `deletions` | `array`  |             |
+
+---
+
+#### **`delete_relations`**
+*Delete multiple relations from the knowledge graph*
+
+| Parameter   | Type     | Description                           |
+|-------------|----------|---------------------------------------|
+| `relations` | `array`  | An array of relations to delete       |
+
+---
+
+#### **`find_nodes`**
+*Find specific nodes in the knowledge graph by their names*
+
+| Parameter | Type     | Description                      |
+|-----------|----------|----------------------------------|
+| `names`   | `array`  | An array of entity names to find |
+
+---
+
+#### **`open_nodes`**
+*Open specific nodes in the knowledge graph by their names*
+
+| Parameter | Type     | Description                      |
+|-----------|----------|----------------------------------|
+| `names`   | `array`  | An array of entity names to open |
+
+---
+
+#### **`read_graph`**
+*Read the entire knowledge graph*
+
+---
+
+#### **`search_nodes`**
+*Search for nodes in the knowledge graph based on a query*
+
+| Parameter | Type     | Description                                                |
+|-----------|----------|------------------------------------------------------------|
+| `query`   | `string` | The search query to match against entity names, types, and observation content |
+
+---
+
+## Meshagent & Neo4j Memory MCP Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Room API:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Neo4j Memory Docker Image:** [https://hub.docker.com/r/meshagent/mcp-neo4j-memory](https://hub.docker.com/r/meshagent/mcp-neo4j-memory)

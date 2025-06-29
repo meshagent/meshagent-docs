@@ -1,0 +1,79 @@
+---
+title: OSP Marketing Tools
+---
+
+
+Follow these steps to run the OSP Marketing Tools MCP server with Meshagent in the cloud, and start using the tools interactively in a Meshagent Room:
+
+1. **Install the Meshagent CLI and dependencies:**
+
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+
+   Follow the guide at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Run the MCP server as a Meshagent Room Service:**
+
+   ```sh
+   meshagent service test --room=test --role=agent \
+   --image=meshagent/mcp-osp_marketing_tools:latest \
+   --env MESHAGENT_PORT=8001 \
+   --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+   --name=mcp-osp_marketing_tools-service
+   ```
+
+   *This command starts a Meshagent Room and launches the OSP Marketing Tools MCP server in it. Rooms auto-close if they go inactive.*
+
+4. **Start a chatbot agent using the OSP marketing tools toolkit:**
+
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample \
+   --name=sample --toolkit=mcp-osp_marketing_tools
+   ```
+
+   *This starts a chatbot in the room with access to the OSP Marketing Tools. Multiple toolkits can be enabled for the same agent. The CLI will output a link to the room web UI, where you can interact with the agent and toolkits.*
+
+---
+
+## Tools Available
+
+Tools provided by this Server | Short Description
+-|-  
+`get_editing_codes` | Get the Open Strategy Partners (OSP) editing codes documentation and usage protocol for editing texts.
+`get_meta_guide` | Get the Open Strategy Partners (OSP) Web Content Meta Information Generation System (titles, meta-titles, slugs).
+`get_on_page_seo_guide` | Get the Open Strategy Partners (OSP) On-Page SEO Optimization Guide.
+`get_value_map_positioning_guide` | Get the Open Strategy Partners (OSP) Product Communications Value Map Generation System for Product Positioning (value cases, feature extraction, taglines).
+`get_writing_guide` | Get the Open Strategy Partners (OSP) writing guide and usage protocol for editing texts.
+`health_check` | Check if the server is running and can access its resources.
+
+### Tool Details
+
+#### **`get_editing_codes`**  
+Get the Open Strategy Partners (OSP) editing codes documentation and usage protocol for editing texts.
+
+#### **`get_meta_guide`**  
+Get the Open Strategy Partners (OSP) Web Content Meta Information Generation System (titles, meta-titles, slugs).
+
+#### **`get_on_page_seo_guide`**  
+Get the Open Strategy Partners (OSP) On-Page SEO Optimization Guide.
+
+#### **`get_value_map_positioning_guide`**  
+Get the Open Strategy Partners (OSP) Product Communications Value Map Generation System for Product Positioning (value cases, feature extraction, taglines).
+
+#### **`get_writing_guide`**  
+Get the Open Strategy Partners (OSP) writing guide and usage protocol for editing texts.
+
+#### **`health_check`**  
+Check if the server is running and can access its resources.
+
+---
+
+## Related Links
+
+- **Meshagent:** [meshagent.com](https://www.meshagent.com/)
+- **Getting Started (Room API):** [docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image:** [meshagent/mcp-osp_marketing_tools on Docker Hub](https://hub.docker.com/r/meshagent/mcp-osp_marketing_tools)

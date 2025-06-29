@@ -1,0 +1,118 @@
+---
+title: Atlas Docs
+---
+
+
+1. **Install Meshagent CLI and dependencies:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Follow the steps at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Environment variables required:**
+   - `ATLAS_API_URL` – base URL for Atlas Docs API (default: `https://atlas.cartograph.app/api`)
+
+4. **Start the MCP Atlas Docs server as an agent in a Meshagent Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-atlas-docs:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env ATLAS_API_URL=https://atlas.cartograph.app/api \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-atlas-docs-service
+   ```
+   - **What this does:** Starts a Meshagent Room (`test`) running the MCP Atlas Docs server so its tools are callable in-cloud. Rooms close if inactive.
+
+5. **Connect a chatbot agent with tools to the Room:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-atlas-docs
+   ```
+   - Starts a chatbot ("sample") in the `test` room that can use the Atlas Docs toolkit.
+   - Multiple toolkits can be added to the same agent and room.
+   - The command output gives you a URL to interact with the chatbot and use the documentation tools live!
+
+### **Environment Variables (Summary):**
+- `ATLAS_API_URL`: *(string)* – URL of the Atlas Docs API (`https://atlas.cartograph.app/api`)
+- `MESHAGENT_PORT`: *(int)* – The port for the Meshagent server inside the container (`8001`)
+
+---
+
+## 🛠 Tools Available
+
+Atlas Docs MCP Server offers the following tools through Meshagent:
+
+### Tool Summary
+
+| Tool Name        | Short Description                                                                                        |
+|------------------|---------------------------------------------------------------------------------------------------------|
+| `get_docs_full`  | Retrieves complete documentation content for a doc set in one file.                                     |
+| `get_docs_index` | Gets a condensed, LLM-friendly index of all pages in a doc set.                                         |
+| `get_docs_page`  | Fetches a specific documentation page by its relative path.                                             |
+| `list_docs`      | Lists all available documentation libraries and frameworks.                                              |
+| `search_docs`    | Searches a doc set for content matching specific queries.                                               |
+
+---
+
+### Tool Details
+
+#### **`get_docs_full`**
+Retrieves the complete documentation content in a single consolidated file.  
+Use for comprehensive knowledge or full-context analysis. *(Returns large text volume.)*
+
+- **Parameters:**
+  - `docName` (string): Name of the documentation set
+
+---
+
+#### **`get_docs_index`**
+Retrieves a condensed, LLM-friendly index of pages in a doc set for initial exploration.
+
+- **Parameters:**
+  - `docName` (string): Name of the documentation set
+
+---
+
+#### **`get_docs_page`**
+Retrieves content of a specific page in a documentation set by relative path.
+
+- **Parameters:**
+  - `docName` (string): Name of the documentation set
+  - `pagePath` (string): Root-relative path of the page (e.g., `/guides/getting-started`)
+
+---
+
+#### **`list_docs`**
+Lists all available documentation libraries and frameworks.  
+Shows name, description, and source URL for each set.  
+*(Required before using other tools, as you'll need the `docName`.)*
+
+---
+
+#### **`search_docs`**
+Searches a documentation set for keywords, concepts, or topics.  
+Returns matching pages by relevance.
+
+- **Parameters:**
+  - `docName` (string): Name of the documentation set
+  - `query` (string): Search term/query
+
+---
+
+## 🏗 Meshagent and Atlas Docs Resources
+
+- [Meshagent website](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Atlas Docs image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-atlas-docs)
+
+---
+
+For further details on running, extending, or integrating these tools, see the [Meshagent documentation](https://docs.meshagent.com/room_api/get_started) and [Atlas Docs MCP repository](https://github.com/CartographAI/atlas-docs-mcp).

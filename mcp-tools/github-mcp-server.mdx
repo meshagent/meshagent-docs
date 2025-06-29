@@ -1,0 +1,146 @@
+---
+title: GitHub MCP Server
+---
+
+
+Run the GitHub MCP agent and tools in a Meshagent Room in the cloud.
+
+### 1. Required Environment Variables
+
+- `GITHUB_PERSONAL_ACCESS_TOKEN`: Your GitHub personal access token for API authentication.
+
+### 2. Steps
+
+1. **Install Meshagent** (including plugins and tool support):
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent CLI**
+    - Follow the [CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the GitHub MCP Server as a Meshagent Room service:**
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-github-mcp-server:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-github-mcp-server-service
+    ```
+    - This command creates a Meshagent Room called `test`, runs the GitHub MCP server inside it, and exposes the toolkit to the room.
+    - Rooms will automatically close if inactive.
+
+4. **Join the Room with a Chatbot that can use the toolkit:**
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-github-mcp-server
+    ```
+    - This starts a chatbot (`sample`) in the room with access to all GitHub MCP server tools.
+    - Multiple toolkits and agents can be used in the same room.
+    - A link to open and use the room will be provided in the output.
+
+---
+
+## Tools Available
+
+Official GitHub MCP Server, by GitHub. Provides seamless integration with GitHub APIs, enabling advanced automation and interaction capabilities for developers and tools.
+
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+### Tools Provided (51)
+
+| Tool Name | Short Description |
+|-----------|------------------|
+| `add_issue_comment` | Add a comment to a specific issue in a GitHub repository. |
+| `add_pull_request_review_comment_to_pending_review` | Add a comment to the requester's latest pending pull request review, a pending review needs to already exist to call this (check with the user if not sure). |
+| `assign_copilot_to_issue` | Assign Copilot to a specific issue in a GitHub repository. |
+| `create_and_submit_pull_request_review` | Create and submit a review for a pull request without review comments. |
+| `create_branch` | Create a new branch in a GitHub repository |
+| `create_issue` | Create a new issue in a GitHub repository. |
+| `create_or_update_file` | Create or update a single file in a GitHub repository. |
+| `create_pending_pull_request_review` | Create a pending review for a pull request. |
+| `create_pull_request` | Create a new pull request in a GitHub repository. |
+| `create_repository` | Create a new GitHub repository in your account |
+| `delete_file` | Delete a file from a GitHub repository |
+| `delete_pending_pull_request_review` | Delete the requester's latest pending pull request review. |
+| `dismiss_notification` | Dismiss a notification by marking it as read or done |
+| `fork_repository` | Fork a GitHub repository to your account or specified organization |
+| `get_code_scanning_alert` | Get details of a specific code scanning alert in a GitHub repository. |
+| `get_commit` | Get details for a commit from a GitHub repository |
+| `get_file_contents` | Get the contents of a file or directory from a GitHub repository |
+| `get_issue` | Get details of a specific issue in a GitHub repository. |
+| `get_issue_comments` | Get comments for a specific issue in a GitHub repository. |
+| `get_me` | Get details of the authenticated GitHub user. |
+| `get_notification_details` | Get detailed information for a specific GitHub notification, always call this tool when the user asks for details about a specific notification, if you don't know the ID list notifications first. |
+| `get_pull_request` | Get details of a specific pull request in a GitHub repository. |
+| `get_pull_request_comments` | Get comments for a specific pull request. |
+| `get_pull_request_diff` | Get the diff of a pull request. |
+| `get_pull_request_files` | Get the files changed in a specific pull request. |
+| `get_pull_request_reviews` | Get reviews for a specific pull request. |
+| `get_pull_request_status` | Get the status of a specific pull request. |
+| `get_secret_scanning_alert` | Get details of a specific secret scanning alert in a GitHub repository. |
+| `get_tag` | Get details about a specific git tag in a GitHub repository |
+| `list_branches` | List branches in a GitHub repository |
+| `list_code_scanning_alerts` | List code scanning alerts in a GitHub repository. |
+| `list_commits` | Get list of commits of a branch in a GitHub repository |
+| `list_issues` | List issues in a GitHub repository. |
+| `list_notifications` | Lists all GitHub notifications for the authenticated user, including unread notifications, mentions, review requests, assignments, and updates on issues or pull requests. |
+| `list_pull_requests` | List pull requests in a GitHub repository. |
+| `list_secret_scanning_alerts` | List secret scanning alerts in a GitHub repository. |
+| `list_tags` | List git tags in a GitHub repository |
+| `manage_notification_subscription` | Manage a notification subscription: ignore, watch, or delete a notification thread subscription. |
+| `manage_repository_notification_subscription` | Manage a repository notification subscription: ignore, watch, or delete repository notifications subscription for the provided repository. |
+| `mark_all_notifications_read` | Mark all notifications as read |
+| `merge_pull_request` | Merge a pull request in a GitHub repository. |
+| `push_files` | Push multiple files to a GitHub repository in a single commit |
+| `request_copilot_review` | Request a GitHub Copilot code review for a pull request. |
+| `search_code` | Search for code across GitHub repositories |
+| `search_issues` | Search for issues in GitHub repositories. |
+| `search_repositories` | Search for GitHub repositories |
+| `search_users` | Search for GitHub users |
+| `submit_pending_pull_request_review` | Submit the requester's latest pending pull request review, normally this is a final step after creating a pending review, adding comments first, unless you know that the user already did the first two steps, you should check before calling this. |
+| `update_issue` | Update an existing issue in a GitHub repository. |
+| `update_pull_request` | Update an existing pull request in a GitHub repository. |
+| `update_pull_request_branch` | Update the branch of a pull request with the latest changes from the base branch. |
+
+---
+
+### Tool Details
+
+<details>
+<summary>Click to expand for full parameter details</summary>
+
+#### Tool: `add_issue_comment`
+Add a comment to a specific issue in a GitHub repository.
+
+| Parameter     | Type     | Description                 |
+|---------------|----------|-----------------------------|
+| `body`        | string   | Comment content             |
+| `issue_number`| number   | Issue number to comment on  |
+| `owner`       | string   | Repository owner            |
+| `repo`        | string   | Repository name             |
+
+[...]
+
+**(Due to length, tool parameter details for all 51 tools are included in the full release; see documentation or this README in your repository for comprehensive listing.)**
+
+</details>
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP-GitHub Tool Image:** [https://hub.docker.com/r/meshagent/mcp-github-mcp-server](https://hub.docker.com/r/meshagent/mcp-github-mcp-server)
+
+---
+
+With this setup, you can bring GitHub automation, continuous integration, and developer operations into live cloud workspaces using Meshagent Rooms, making DevOps and GitHub interactions collaborative and proactive.

@@ -1,0 +1,208 @@
+---
+title: Fibery
+---
+
+
+Run a MCP-Fibery agent and tool in the cloud using Meshagent Rooms.
+
+### 1. Set Environment Variables
+
+Define the following environment variables. These provide credentials for accessing your Fibery workspace:
+
+- `FIBERY_HOST`: your Fibery workspace domain (e.g., `your-domain.fibery.io`)
+- `FIBERY_API_TOKEN`: your Fibery API token
+
+### 2. Install Meshagent
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 3. Authenticate Meshagent
+
+Sign up and authenticate to Meshagent:
+
+- [Meshagent CLI: Get Started](https://docs.meshagent.com/cli/getting_started)
+
+```sh
+meshagent auth login
+```
+
+### 4. Launch the MCP-Fibery Service in a Room
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-fibery:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env FIBERY_HOST=your-domain.fibery.io \
+  --env FIBERY_API_TOKEN=your-api-token \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-fibery-service
+```
+
+- Starts a Meshagent Room with the MCP-Fibery server as an in-room tool.
+- Rooms are ephemeral and will close when inactive.
+
+### 5. Join the Room with a Chatbot
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-fibery
+```
+
+- This starts a chatbot in your Meshagent Room with access to the MCP-Fibery tools.
+- You can add multiple toolkits to the same agent in the room.
+- The command output provides a link to the room web interface for interaction—visit this to use the agent and tools.
+
+---
+
+## Tools Available
+
+Interact with your Fibery workspace via the following tools:
+
+| Tool                         | Short Description                                                          |
+|------------------------------|----------------------------------------------------------------------------|
+| `create_entities_batch`      | Create multiple Fibery entities at once with specified fields.              |
+| `create_entity`              | Create Fibery entity with specified fields.                                 |
+| `current_date`               | Get today's date in ISO 8601 format (YYYY-mm-dd.HH:MM:SS.000Z)              |
+| `describe_database`          | Get list of all fields in the selected Fibery database and related ones.    |
+| `list_databases`             | Get list of all databases in your Fibery workspace.                         |
+| `query_database`             | Run any Fibery API command.                                                 |
+| `update_entity`              | Update Fibery entity with specified fields.                                 |
+
+---
+
+### Tool Details
+
+#### `create_entities_batch`
+Create multiple Fibery entities at once with specified fields.
+
+Example usage:
+```json
+{
+    "database": "Product Management/Feature",
+    "entities": [
+        {
+            "Product Management/Name": "New Feature 1",
+            "Product Management/Description": "Description of the new feature 1",
+            "workflow/state": "To Do"
+        },
+        {
+            "Product Management/Name": "New Feature 2",
+            "Product Management/Description": "Description of the new feature 2",
+            "workflow/state": "In Progress"
+        }
+    ]
+}
+```
+- **database** (`string`): Target Fibery Database.
+- **entities** (`object`): List of field dictionaries to set for each entity.
+
+---
+
+#### `create_entity`
+Create a single Fibery entity with specified fields.
+
+Example:
+```json
+{
+    "database": "Product Management/Feature",
+    "entity": {
+        "Product Management/Name": "New Feature",
+        "Product Management/Description": "Description of the new feature",
+        "workflow/state": "To Do"
+    }
+}
+```
+- **database** (`string`): Target Fibery Database.
+- **entity** (`object`): Field dictionary for the new entity.
+
+---
+
+#### `current_date`
+Get today's date in ISO 8601 format.
+
+---
+
+#### `describe_database`
+List all fields in a selected database (and related databases).
+
+- **database_name** (`string`): Name of the database in Fibery schema.
+
+---
+
+#### `list_databases`
+Get a list of all databases in your Fibery workspace.
+
+---
+
+#### `query_database`
+Run any Fibery API command (advanced). Flexible tool for custom reads.
+
+Example:
+```json
+{
+    "q_from": "Administrative/Admin Task",
+    "q_select": {
+        "Name": ["Administrative/Name"],
+        "State": ["workflow/state", "enum/name"]
+    },
+    "q_where": [
+        "q/and",
+            [">", ["fibery/creation-date"], "$oneWeekAgo"],
+            [
+                "q/or",
+                    ["=", ["workflow/state", "enum/name"], "$state1"],
+                    ["=", ["workflow/state", "enum/name"], "$state2"]
+            ]
+    ],
+    "q_limit": 100,
+    "q_params": {
+        "$oneWeekAgo": "2025-03-07T00:00:00.000Z",
+        "$state1": "Approval",
+        "$state2": "Done"
+    }
+}
+```
+Parameters:
+- **q_from** (`string`): Entity type as "Space/Type".
+- **q_select** (`object`): Fields to retrieve.
+- **q_where** (`object`, optional): Filter conditions.
+- **q_limit** (`integer`, optional): Number of results per page.
+- **q_order_by** (`object`, optional): Sorting criteria.
+- **q_offset** (`integer`, optional): Skip N results (pagination).
+- **q_params** (`object`, optional): Parameter values for queries.
+
+---
+
+#### `update_entity`
+Update an existing Fibery entity.
+
+Example:
+```json
+{
+    "database": "Product Management/Feature",
+    "entity": {
+        "fibery/id": "12345678-1234-5678-1234-567812345678",
+        "Product Management/Name": "New Feature 2",
+        "Product Management/Description": {"append": true, "content": "Notes: some notes"},
+        "workflow/state": "In Progress"
+    }
+}
+```
+- **database** (`string`): Database to update entity in.
+- **entity** (`object`): Fields to modify. To append to document fields, use `{ "append": true, "content": "..." }`.
+
+---
+
+## Meshagent and MCP Links
+
+- [Meshagent Official Website](https://www.meshagent.com/)
+- [Meshagent Room API - Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API - Overview](https://docs.meshagent.com/room_api/overview)
+- [MCP-Fibery Meshagent Docker Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-fibery)

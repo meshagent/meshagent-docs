@@ -1,0 +1,79 @@
+---
+title: Exa
+---
+
+
+### Run an Agent and Tool in the Cloud
+
+1. **Set required environment variables:**  
+   - `EXA_API_KEY`: Your Exa API key (replace as needed).
+
+2. **Install Meshagent CLI and dependencies**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Authenticate with Meshagent**  
+   - Follow [CLI Authentication instructions](https://docs.meshagent.com/cli/getting_started).
+
+4. **Start the Exa MCP service in a room**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-exa:latest \
+     --env EXA_API_KEY=your-api-key-here \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-exa-service
+   ```
+   - This command launches the Exa MCP server in a Meshagent room.
+   - **Rooms will close if they go inactive.**
+
+5. **Join the room with a chatbot agent using the Exa toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-exa
+   ```
+   - This starts a chatbot agent in the same room with access to the Exa tools.
+   - Multiple toolkits can be used with the same agent.
+   - **A link to the active room** will be shown in the command output; use it to interact with the agent and available tools.
+
+---
+
+#### Environment Variables
+
+- `EXA_API_KEY`: Your Exa API key (replace `your-api-key-here` accordingly)
+- `MESHAGENT_PORT`: Port used by the Meshagent service (default: 8001)
+
+---
+
+## Tools Available
+
+The following tool is available in this server:
+
+Tools provided by this Server|Short Description
+-|-
+`web_search_exa`|Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs.
+
+### Tools Details
+
+#### Tool: **`web_search_exa`**
+Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs. Supports configurable result counts and returns the content from the most relevant websites.
+
+Parameters|Type|Description
+-|-|-
+`query`|`string`|Search query
+`numResults`|`number` *optional*|Number of search results to return (default: 5)
+
+---
+
+## Meshagent & Related Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image (Docker Hub)](https://hub.docker.com/r/meshagent/mcp-exa)

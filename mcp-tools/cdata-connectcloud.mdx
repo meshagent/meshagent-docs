@@ -1,0 +1,188 @@
+---
+title: CData Connect Cloud
+---
+
+
+Follow these steps to run the MCP server agent and connect its tools to a Meshagent Room in the cloud:
+
+### Environment Variables
+
+Set these environment variables with your CData credentials:
+
+- `CDATA_USERNAME`: `<your-cdata-username>`
+- `CDATA_PAT`: `<your-cdata-pat>`
+
+### Steps
+
+1. **Install Meshagent:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate:**
+   - Register and authenticate via Meshagent CLI as described in the [Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Server in a Meshagent Room:**
+   ```bash
+   meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-cdata-connectcloud:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env CDATA_USERNAME=<your-cdata-username> \
+      --env CDATA_PAT=<your-cdata-pat> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-cdata-connectcloud-service
+   ```
+   - This command launches the CData Connect Cloud MCP Server inside a Meshagent Room named `test`, exposing its API tools. **Rooms will close if they go inactive.**
+
+4. **Join the Room with a Chatbot Agent:**
+   ```bash
+   meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-cdata-connectcloud
+   ```
+   - This starts a chatbot in the room. The chatbot will be able to use all CData Connect Cloud MCP Server tools.
+   - Multiple toolkits can be used by the same agent in the room.
+   - A link to the interactive Meshagent Room will be displayed in the output.
+
+---
+
+## Tools Available
+
+This MCP server provides a unified API and toolkit for accessing a wide array of catalog, schema, table, procedure, and query operations through CData Connect Cloud.
+
+### Tools Summary
+
+| Tool                | Short Description                                                         |
+|---------------------|---------------------------------------------------------------------------|
+| `execData`          | Execute stored procedures against connected data sources                   |
+| `getCatalogs`       | Retrieve a list of available connections from CData Connect Cloud          |
+| `getColumns`        | Retrieve a list of available database columns for a catalog/schema/table   |
+| `getExportedKeys`   | Retrieve foreign key relationships for a specific catalog/schema/table     |
+| `getImportedKeys`   | Retrieve foreign key relationships for a specific catalog/schema/table     |
+| `getIndexes`        | Retrieve a list of indexes for a specific catalog/schema/table             |
+| `getPrimaryKeys`    | Retrieve a list of primary keys for a specific catalog/schema/table        |
+| `getProcedureParameters` | Retrieve stored procedure parameters for a specific catalog/schema/procedure |
+| `getProcedures`     | Retrieve a list of stored procedures for a specific catalog and schema     |
+| `getSchemas`        | Retrieve a list of available database schemas for a specific catalog       |
+| `getTables`         | Retrieve a list of tables for a specific catalog and schema                |
+| `queryData`         | Execute SQL queries and retrieve results                                  |
+
+---
+
+### Tools Details
+
+#### **`execData`**
+Execute stored procedures against connected data sources  
+**Parameters:**  
+- `procedure` (`string`): The name of the stored procedure to execute  
+- `defaultSchema` (`string`, optional): Default schema if the procedure name is not schema-qualified  
+- `parameters` (`object`, optional): JSON object of procedure parameters (all names must begin with @)
+
+---
+
+#### **`getCatalogs`**
+Retrieve all available connections (catalogs).
+
+---
+
+#### **`getColumns`**
+Retrieve database columns for a specific catalog, schema, and table  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `columnName` (`string`, optional)  
+- `schemaName` (`string`, optional)  
+- `tableName` (`string`, optional)
+
+---
+
+#### **`getExportedKeys`**
+Retrieve foreign key relationships exported by a table  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `schemaName` (`string`, optional)  
+- `tableName` (`string`, optional)
+
+---
+
+#### **`getImportedKeys`**
+Retrieve foreign key relationships imported by a table  
+**Parameters:**  
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### **`getIndexes`**
+Retrieve indexes for a specific catalog, schema, and table  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `schemaName` (`string`, optional)  
+- `tableName` (`string`, optional)
+
+---
+
+#### **`getPrimaryKeys`**
+Retrieve primary keys for a specific catalog, schema, and table  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `schemaName` (`string`, optional)  
+- `tableName` (`string`, optional)
+
+---
+
+#### **`getProcedureParameters`**
+Retrieve stored procedure parameters  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `parameterName` (`string`, optional)  
+- `procedureName` (`string`, optional)  
+- `schemaName` (`string`, optional)
+
+---
+
+#### **`getProcedures`**
+Retrieve stored procedures available for a catalog and schema  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `procedureName` (`string`, optional)  
+- `schemaName` (`string`, optional)
+
+---
+
+#### **`getSchemas`**
+Retrieve schemas for a specific catalog  
+**Parameters:**  
+- `catalogName` (`string`, optional)
+
+---
+
+#### **`getTables`**
+Retrieve tables for a specific catalog and schema  
+**Parameters:**  
+- `catalogName` (`string`, optional)  
+- `schemaName` (`string`, optional)  
+- `tableName` (`string`, optional)
+
+---
+
+#### **`queryData`**
+Execute SQL queries against connected data sources  
+**Parameters:**  
+- `query` (`string`): The SQL statement(s) to execute  
+- `defaultSchema` (`string`, optional): Default schema  
+- `parameters` (`object`, optional): JSON object of query parameters (all names must begin with @)  
+- `schemaOnly` (`boolean`, optional): If true, returns only column metadata  
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Room API - Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API - Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-cdata-connectcloud)

@@ -1,0 +1,194 @@
+---
+title: Novita
+---
+
+
+Follow these steps to run the Novita MCP server as a Meshagent agent and connect a chatbot with the toolset in a cloud-hosted room.
+
+### Environment Variables
+
+Set the following environment variable for authentication:
+
+- `NOVITA_API_KEY`: **your_api_key_here** (Your Novita AI API Key)
+
+### Steps
+
+1. **Install Meshagent with all features:**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+2. **Sign up and authenticate with Meshagent:**
+    - See the [Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate.
+
+3. **Start the MCP server agent in a Meshagent Room:**
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-novita:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env NOVITA_API_KEY=your_api_key_here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-novita-service
+    ```
+    - This command launches the Novita MCP server in a Meshagent Room named `test`. Replace `your_api_key_here` with your actual Novita API key.
+    - The room is ephemeral and will close if inactive.
+
+4. **Join the room with a chatbot agent and the Novita toolkit:**
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-novita
+    ```
+    - Starts a chatbot agent in the same Meshagent Room. The agent can access the Novita toolset (`mcp-novita`).
+    - You can use multiple toolkits with the same agent for multi-functional bots.
+    - The command output will include a link to interact with your Meshagent Room and toolkit from your browser.
+
+---
+
+## Tools Available
+
+The following tools are provided by the Novita MCP Server and can be used via Meshagent:
+
+| Tool                                   | Short Description |
+|-----------------------------------------|------------------|
+| `create-container-registry-auth`        |                  |
+| `create-gpu-instance`                   |                  |
+| `create-network-storage`                |                  |
+| `create-template`                       |                  |
+| `delete-container-registry-auth`        |                  |
+| `delete-gpu-instance`                   |                  |
+| `delete-network-storage`                |                  |
+| `delete-template`                       |                  |
+| `get-gpu-instance`                      |                  |
+| `get-template`                          |                  |
+| `list-clusters`                         |                  |
+| `list-container-registry-auths`         |                  |
+| `list-gpu-instances`                    |                  |
+| `list-network-storage`                  |                  |
+| `list-products`                         |                  |
+| `list-templates`                        |                  |
+| `restart-gpu-instance`                  |                  |
+| `start-gpu-instance`                    |                  |
+| `stop-gpu-instance`                     |                  |
+| `update-network-storage`                |                  |
+
+---
+
+### Tools Details
+
+#### `create-container-registry-auth`
+- **Parameters:**
+  - `name` (string): Name for the container registry auth.
+  - `password` (string): Registry password.
+  - `username` (string): Registry username.
+
+#### `create-gpu-instance`
+- **Parameters:**
+  - `gpuNum` (number): Number of GPUs allocated to the instance.
+  - `imageUrl` (string): Docker image URL to initialize the instance.
+  - `name` (string): Name for the instance.
+  - `productId` (string): ID of the product used to deploy the instance.
+  - `rootfsSize` (number): Root filesystem size (GB).
+  - `command` (string, optional): Container start command.
+  - `env` (array, optional): Environment variables.
+  - `imageAuthId` (string, optional): ID of the container registry auth.
+  - `kind` (string, optional): Type of instance.
+  - `networkStorages` (array, optional): Network storages to mount.
+  - `ports` (string, optional): Ports to expose.
+
+#### `create-network-storage`
+- **Parameters:**
+  - `clusterId` (string): ID of the cluster.
+  - `storageName` (string): Name for the storage.
+  - `storageSize` (number): Size in GB.
+
+#### `create-template`
+- **Parameters:**
+  - `template` (object):
+
+#### `delete-container-registry-auth`
+- **Parameters:**
+  - `id` (string): ID of the container registry auth.
+
+#### `delete-gpu-instance`
+- **Parameters:**
+  - `instanceId` (string): ID of the instance to delete.
+
+#### `delete-network-storage`
+- **Parameters:**
+  - `storageId` (string): ID of the network storage.
+
+#### `delete-template`
+- **Parameters:**
+  - `templateId` (string): ID of the template.
+
+#### `get-gpu-instance`
+- **Parameters:**
+  - `instanceId` (string): ID of the instance.
+
+#### `get-template`
+- **Parameters:**
+  - `templateId` (string): ID of the template.
+
+#### `list-clusters`
+- No parameters.
+
+#### `list-container-registry-auths`
+- No parameters.
+
+#### `list-gpu-instances`
+- **Parameters:**
+  - `name` (string, optional)
+  - `pageNumber` (number, optional)
+  - `pageSize` (number, optional)
+  - `productName` (string, optional)
+  - `status` (string, optional)
+
+#### `list-network-storage`
+- **Parameters:**
+  - `pageNo` (number, optional)
+  - `pageSize` (number, optional)
+  - `storageId` (string, optional)
+  - `storageName` (string, optional)
+
+#### `list-products`
+- **Parameters:**
+  - `clusterId` (string, optional)
+  - `productName` (string, optional)
+
+#### `list-templates`
+- **Parameters:**
+  - `channel` (array, optional)
+  - `pageNum` (number, optional)
+  - `pageSize` (number, optional)
+  - `type` (string, optional)
+
+#### `restart-gpu-instance`
+- **Parameters:**
+  - `instanceId` (string): ID of the instance.
+
+#### `start-gpu-instance`
+- **Parameters:**
+  - `instanceId` (string): ID of the instance.
+
+#### `stop-gpu-instance`
+- **Parameters:**
+  - `instanceId` (string): ID of the instance.
+
+#### `update-network-storage`
+- **Parameters:**
+  - `storageId` (string): Unique ID of storage.
+  - `storageSize` (number): New size (GB).
+  - `storageName` (string, optional): New name.
+
+---
+
+## References & Additional Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Meshagent Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-novita](https://hub.docker.com/r/meshagent/mcp-novita)

@@ -1,0 +1,225 @@
+---
+title: Octomind
+---
+
+
+Run the Octomind MCP agent and toolkit inside a Meshagent Room in the cloud:
+
+### 1. Install Meshagent
+
+```shell
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up & Authenticate
+
+Follow the guide: [Meshagent CLI - Get Started](https://docs.meshagent.com/cli/getting_started)
+
+### 3. Start the MCP Server Agent in a Meshagent Room
+
+```shell
+meshagent service test --room=test --role=agent --image=meshagent/mcp-octomind:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-octomind-service
+```
+
+- This command creates a Meshagent Room and runs the Octomind MCP server as an agent inside it.
+- **Note:** Rooms will automatically close if they go inactive.
+
+### 4. Join with a Chatbot Agent Using the Octomind Toolkit
+
+```shell
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-octomind
+```
+
+- The chatbot launches in the same room and gains access to the Octomind toolkit.
+- Multiple toolkits can be used by the same agent within a room.
+- The command will output a link to the room UI for real-time interaction.
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+- **createEnvironment**: Create an environment for a given test target, including test accounts, headers, discovery URLs, and variables.
+- **createTestTarget**: Create a new test target/project (an application or service under test).
+- **deleteEnvironment**: Permanently delete an environment for a specific test target.
+- **deleteTestTarget**: Permanently delete an existing test target.
+- **discovery**: Generate a test case for a test target, based on a description or prompt.
+- **executeTests**: Trigger a set of tests for a specified test target.
+- **getEnvironments**: Retrieve all environments for a given test target.
+- **getPrivateLocations**: Retrieve all private server locations configured for the organization.
+- **getTestCase**: Retrieve a specific test case for a test target.
+- **getTestReport**: Retrieve a test report for a given test target.
+- **getTestReports**: Retrieve multiple test reports for a test target.
+- **getTestTargets**: Retrieve all test targets (projects/applications) for the organization.
+- **getVersion**: Display the current version of the Octomind MCP server.
+- **search**: Search Octomind documentation for any query.
+- **updateEnvironment**: Update an environment’s configuration for a test target.
+- **updateTestTarget**: Update details for an existing test target.
+
+---
+
+### Tool Details
+
+#### createEnvironment
+
+Creates an environment for a specific test target.
+
+| Parameter                | Type      | Description                                                                                  |
+|--------------------------|-----------|----------------------------------------------------------------------------------------------|
+| `discoveryUrl`           | `string`  | URL used for test discovery                                                                  |
+| `name`                   | `string`  | Name of the environment                                                                      |
+| `testTargetId`           | `string`  | Unique identifier of the test target                                                         |
+| `additionalHeaderFields` | `object`* | Optional additional HTTP header fields                                                       |
+| `basicAuth`              | `object`* | Optional basic authentication credentials                                                    |
+| `privateLocationName`    | `string`* | Optional private location name (e.g. if testing behind a firewall)                           |
+| `testAccount`            | `object`* | Optional test account credentials                                                            |
+
+#### createTestTarget
+
+Creates a new test target/project.
+
+| Parameter                    | Type      | Description                                           |
+|------------------------------|-----------|-------------------------------------------------------|
+| `app`                        | `string`  | The app/project name                                  |
+| `discoveryUrl`               | `string`  | The discovery URL                                     |
+| `skipAutomaticTestCreation`  | `boolean`*| Skip automatic test creation                          |
+
+#### deleteEnvironment
+
+Deletes an environment for a given test target (irreversible).
+
+| Parameter      | Type     | Description                     |
+|----------------|----------|---------------------------------|
+| `environmentId`| `string` | ID of environment to delete     |
+| `testTargetId` | `string` | ID of the associated test target|
+
+#### deleteTestTarget
+
+ Deletes a test target (irreversible).
+
+| Parameter      | Type     | Description         |
+|----------------|----------|---------------------|
+| `testTargetId` | `string` | ID of test target   |
+
+#### discovery
+
+Creates a test case for a specified test target.
+
+| Parameter             | Type         | Description                                      |
+|-----------------------|--------------|--------------------------------------------------|
+| `name`                | `string`     | Name of the test case                            |
+| `prompt`              | `string`     | Description/prompt for test case generation      |
+| `testTargetId`        | `string`     | ID of test target                                |
+| `assignedTagNames`    | `array`*     | Optional list of tag names                       |
+| `entryPointUrlPath`   | `string`*    | Optional entry point URL path                    |
+| `externalId`          | `string`*    | Optional external ID (e.g., ticket or test rail) |
+| `folderName`          | `string`*    | Optional folder name for the test case           |
+| `prerequisiteId`      | `string`*    | Optional prerequisite test case ID               |
+
+#### executeTests
+
+Triggers tests for a given test target.
+
+| Parameter               | Type      | Description                                    |
+|-------------------------|-----------|------------------------------------------------|
+| `testTargetId`          | `string`  | ID of test target                              |
+| `url`                   | `string`  | URL for test execution                         |
+| `description`           | `string`* | Optional description                           |
+| `environmentName`       | `string`* | Optional environment name                      |
+| `tags`                  | `array`*  | Optional filter by tags                        |
+| `variablesToOverwrite`  | `object`* | Optional override variables                     |
+
+#### getEnvironments
+
+Retrieves all environments for a test target.
+
+| Parameter      | Type     | Description                |
+|----------------|----------|----------------------------|
+| `testTargetId` | `string` | ID of test target          |
+
+#### getPrivateLocations
+
+Lists all private server locations configured for your organization.
+
+#### getTestCase
+
+Retrieves a single test case for a test target.
+
+| Parameter     | Type     | Description                  |
+|---------------|----------|------------------------------|
+| `testCaseId`  | `string` | ID of the test case          |
+| `testTargetId`| `string` | ID of test target            |
+
+#### getTestReport
+
+Retrieves a specific test report.
+
+| Parameter      | Type     | Description                |
+|----------------|----------|----------------------------|
+| `testReportId` | `string` | ID of the test report      |
+| `testTargetId` | `string` | ID of test target          |
+
+#### getTestReports
+
+Retrieves test reports for a test target.
+
+| Parameter      | Type     | Description                    |
+|----------------|----------|--------------------------------|
+| `testTargetId` | `string` | ID of test target              |
+| `filter`       | `array`* | Optional filters for the report|
+| `key`          | `object`*| Optional key filters           |
+
+#### getTestTargets
+
+Retrieves all test targets/projects.
+
+#### getVersion
+
+Returns the current version of the Octomind MCP server.
+
+#### search
+
+Searches Octomind documentation for a specific query.
+
+| Parameter | Type     | Description        |
+|-----------|----------|--------------------|
+| `query`   | `string` | Search query       |
+
+#### updateEnvironment
+
+Updates an environment’s configuration.
+
+| Parameter                | Type      | Description                                                     |
+|--------------------------|-----------|-----------------------------------------------------------------|
+| `environmentId`          | `string`  | ID of environment                                               |
+| `testTargetId`           | `string`  | ID of test target                                               |
+| `additionalHeaderFields` | `object`* | Optional extra HTTP header fields                               |
+| `basicAuth`              | `object`* | Optional basic authentication                                   |
+| `discoveryUrl`           | `string`* | Optional new discovery URL                                      |
+| `name`                   | `string`* | Optional new name                                               |
+| `privateLocationName`    | `string`* | Optional private location                                       |
+| `testAccount`            | `object`* | Optional test account credentials                               |
+
+#### updateTestTarget
+
+Updates an existing test target/project.
+
+| Parameter                   | Type      | Description                               |
+|-----------------------------|-----------|-------------------------------------------|
+| `testTargetId`              | `string`  | ID of the test target                     |
+| `app`                       | `string`* | Optional new app/project name              |
+| `discoveryUrl`              | `string`* | Optional new discovery URL                 |
+| `skipAutomaticTestCreation` | `boolean`*| Skip initial test creation                 |
+| `testIdAttribute`           | `string`* | Optional attribute for test ID             |
+| `testRailIntegration`       | `object`* | TestRail integration config                |
+| `timeoutPerStep`            | `number`* | Timeout per step (ms)                      |
+
+---
+
+## Meshagent and Related Links
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Getting Started with Meshagent Rooms](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Rooms API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Octomind Docker Image](https://hub.docker.com/r/meshagent/mcp-octomind)

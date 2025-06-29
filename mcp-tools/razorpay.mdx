@@ -1,0 +1,141 @@
+---
+title: Razorpay
+---
+
+
+### 1. Install and Set Up
+
+#### a. Install Meshagent
+
+```sh
+pip install "meshagent[all]"
+```
+
+#### b. Authenticate
+
+Sign up and authenticate to Meshagent CLI:  
+https://docs.meshagent.com/cli/getting_started
+
+---
+
+### 2. Environment Variables
+
+Set these environment variables with your Razorpay API credentials:
+
+- `RAZORPAY_KEY_ID` - Your Razorpay Key ID
+- `RAZORPAY_KEY_SECRET` - Your Razorpay Key Secret
+
+---
+
+### 3. Run Razorpay MCP Server in a Meshagent Room
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-razorpay:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env RAZORPAY_KEY_ID=your_razorpay_key_id \
+  --env RAZORPAY_KEY_SECRET=your_razorpay_key_secret \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-razorpay-service
+```
+- This starts a Meshagent Room (`test`) with the MCP Razorpay server running as an agent.
+- Rooms will close if inactive.
+
+---
+
+### 4. Join with a Chatbot Agent
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-razorpay
+```
+- This command will launch a chatbot inside the same Room using the Razorpay toolkit.
+- Multiple toolkits and services can be coordinated in one Room.
+- After joining, the CLI will output a link to access and interact with the Room and its tools.
+
+---
+
+## Tools Available
+
+The following tools from the Razorpay MCP server are available in your Meshagent Room:
+
+Tool | Short Description
+-|-
+`capture_payment` | Use this tool to capture a previously authorized payment.
+`close_qr_code` | Close a QR Code that's no longer needed
+`create_instant_settlement` | Create an instant settlement to get funds transferred to your bank account
+`create_order` | Create a new order in Razorpay
+`create_payment_link` | Create a new standard payment link in Razorpay with a specified amount
+`create_qr_code` | Create a new QR code in Razorpay that can be used to accept UPI payments
+`create_refund` | Use this tool to create a normal refund for a payment.
+`fetch_all_instant_settlements` | Fetch all instant settlements with optional filtering, pagination, and payout details
+`fetch_all_orders` | Fetch all orders with optional filtering and pagination
+`fetch_all_payment_links` | Fetch all payment links with optional filtering by payment ID or reference ID.
+`fetch_all_payments` | Fetch all payments with optional filtering and pagination
+`fetch_all_payouts` | Fetch all payouts for a bank account number
+`fetch_all_qr_codes` | Fetch all QR codes with optional filtering and pagination
+`fetch_all_refunds` | Use this tool to retrieve details of all refunds.
+`fetch_all_settlements` | Fetch all settlements with optional filtering and pagination
+`fetch_instant_settlement_with_id` | Fetch details of a specific instant settlement using its ID
+`fetch_multiple_refunds_for_payment` | Use this tool to retrieve multiple refunds for a payment.
+`fetch_order` | Fetch an order's details using its ID
+`fetch_order_payments` | Fetch all payments made for a specific order in Razorpay
+`fetch_payment` | Use this tool to retrieve the details of a specific payment using its id.
+`fetch_payment_card_details` | Use this tool to retrieve the details of the card used to make a payment.
+`fetch_payment_link` | Fetch payment link details using it's ID.
+`fetch_payments_for_qr_code` | Fetch all payments made on a QR code
+`fetch_payout_with_id` | Fetch a payout's details using its ID
+`fetch_qr_code` | Fetch a QR code's details using it's ID
+`fetch_qr_codes_by_customer_id` | Fetch all QR codes for a specific customer
+`fetch_qr_codes_by_payment_id` | Fetch all QR codes for a specific payment
+`fetch_refund` | Use this tool to retrieve the details of a specific refund using its id.
+`fetch_settlement_recon_details` | Fetch settlement reconciliation report for a specific time period
+`fetch_settlement_with_id` | Fetch details of a specific settlement using its ID
+`fetch_specific_refund_for_payment` | Use this tool to retrieve details of a specific refund made for a payment.
+`payment_link_notify` | Send or resend notification for a payment link via SMS or email.
+`payment_link_upi.create` | Create a new UPI payment link in Razorpay with a specified amount and additional options.
+`update_order` | Use this tool to update the notes for a specific order.
+`update_payment` | Use this tool to update the notes field of a payment.
+`update_payment_link` | Update any existing standard or UPI payment link with new details such as reference ID, expiry date, or notes.
+`update_refund` | Use this tool to update the notes for a specific refund.
+
+---
+
+### Tool Parameters & Details
+
+#### `capture_payment`
+Capture a previously authorized payment. Only payments with 'authorized' status can be captured.
+- **amount**: number (In paisa, equal to authorized amount)
+- **currency**: string (e.g., INR)
+- **payment_id**: string (starts with 'pay_')
+
+#### `close_qr_code`
+Close a QR Code that's no longer needed.
+- **qr_code_id**: string (starts with 'qr_')
+
+#### `create_instant_settlement`
+Create an instant settlement.
+- **amount**: number (smallest currency sub-unit)
+- **description**: string (optional)
+- **notes**: object (optional)
+- **settle_full_balance**: boolean (optional)
+
+*... (see the "full_description.md" for all detailed tool parameters) ...*
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Getting Started with Meshagent Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Docker Hub: meshagent/mcp-razorpay](https://hub.docker.com/r/meshagent/mcp-razorpay)
+
+---
+
+**Run Razorpay MCP in Meshagent Rooms to securely connect, automate, and collaborate with your payment tools!**

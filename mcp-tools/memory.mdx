@@ -1,0 +1,168 @@
+---
+title: Memory
+---
+
+
+Follow these steps to get the MCP Memory toolkit running in a Meshagent room in the cloud.
+
+### 1. Install Meshagent CLI
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+Follow the instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate your CLI.
+
+### 3. Start the MCP Server in a Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-memory:latest \
+  --env MESHAGENT_PORT=8001  \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-memory-service
+```
+
+- This command launches the MCP server inside a Meshagent room called `test`.
+- The server becomes available as a callable service in the room.
+- Rooms automatically close when inactive.
+
+### 4. Join the Room with a Chatbot Using the MCP Memory Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-memory
+```
+
+- This starts a chatbot in the same room, with access to the memory (MCP) toolkit.
+- You can add multiple toolkits to the same agent and invite more agents to the room.
+- The CLI will output a link to open the Meshagent Room in your browser and interact with the agent/tools.
+
+---
+
+## Tools Available
+
+The following MCP tools are available within Meshagent Rooms via the `mcp-memory` toolkit:
+
+### Tools Summary
+
+| Tool Name             | Short Description                                                        |
+|-----------------------|--------------------------------------------------------------------------|
+| `add_observations`    | Add new observations to existing entities in the knowledge graph         |
+| `create_entities`     | Create multiple new entities in the knowledge graph                      |
+| `create_relations`    | Create multiple new relations between entities in the knowledge graph    |
+| `delete_entities`     | Delete multiple entities and their associated relations                  |
+| `delete_observations` | Delete specific observations from entities in the knowledge graph        |
+| `delete_relations`    | Delete multiple relations from the knowledge graph                      |
+| `open_nodes`          | Open specific nodes in the knowledge graph by their names                |
+| `read_graph`          | Read the entire knowledge graph                                          |
+| `search_nodes`        | Search for nodes in the knowledge graph based on a query                 |
+
+### Tools Details
+
+#### Tool: **`add_observations`**
+*Add new observations to existing entities in the knowledge graph.*
+
+**Parameters**
+
+| Name         | Type   | Description |
+|--------------|--------|-------------|
+| observations | array  |             |
+
+---
+
+#### Tool: **`create_entities`**
+*Create multiple new entities in the knowledge graph.*
+
+**Parameters**
+
+| Name     | Type   | Description |
+|----------|--------|-------------|
+| entities | array  |             |
+
+---
+
+#### Tool: **`create_relations`**
+*Create multiple new relations between entities in the knowledge graph. Relations should be in active voice.*
+
+**Parameters**
+
+| Name      | Type   | Description |
+|-----------|--------|-------------|
+| relations | array  |             |
+
+---
+
+#### Tool: **`delete_entities`**
+*Delete multiple entities and their associated relations from the knowledge graph.*
+
+**Parameters**
+
+| Name        | Type   | Description                        |
+|-------------|--------|------------------------------------|
+| entityNames | array  | An array of entity names to delete |
+
+---
+
+#### Tool: **`delete_observations`**
+*Delete specific observations from entities in the knowledge graph.*
+
+**Parameters**
+
+| Name       | Type   | Description |
+|------------|--------|-------------|
+| deletions  | array  |             |
+
+---
+
+#### Tool: **`delete_relations`**
+*Delete multiple relations from the knowledge graph.*
+
+**Parameters**
+
+| Name      | Type   | Description                |
+|-----------|--------|---------------------------|
+| relations | array  | An array of relations to delete |
+
+---
+
+#### Tool: **`open_nodes`**
+*Open specific nodes in the knowledge graph by their names.*
+
+**Parameters**
+
+| Name  | Type   | Description                     |
+|-------|--------|---------------------------------|
+| names | array  | An array of entity names to retrieve |
+
+---
+
+#### Tool: **`read_graph`**
+*Read the entire knowledge graph.*
+
+---
+
+#### Tool: **`search_nodes`**
+*Search for nodes in the knowledge graph based on a query.*
+
+**Parameters**
+
+| Name  | Type   | Description                                                    |
+|-------|--------|----------------------------------------------------------------|
+| query | string | The search query to match against entity names, types, and observation content |
+
+---
+
+## Meshagent & MCP References
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Meshagent Room API – Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API – Overview](https://docs.meshagent.com/room_api/overview)
+- [MCP Memory Docker Image for Meshagent](https://hub.docker.com/r/meshagent/mcp-memory)

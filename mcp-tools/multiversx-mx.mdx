@@ -1,0 +1,199 @@
+---
+title: MultiversX MX
+---
+
+
+You can run the MultiversX MCP server as an agent in the cloud using Meshagent with the following steps:
+
+### Required Environment Variables
+
+Set the following environment variables for the MCP server:
+
+- **MVX_NETWORK**: The network to use (e.g., `devnet`)
+- **MVX_WALLET**: Absolute path to the PEM file used for wallet access (e.g., `/absolute/path/to/someWallet.pem`)
+
+---
+
+### Steps
+
+1. **Install Meshagent (with all extras):**
+
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+
+   See https://docs.meshagent.com/cli/getting_started for instructions.
+
+3. **Start an MCP server as a Meshagent service in a room:**
+
+   ```sh
+   meshagent service test --room=test --role=agent \
+     --image=meshagent/mcp-multiversx-mx:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env MVX_NETWORK=devnet \
+     --env MVX_WALLET=/absolute/path/to/someWallet.pem \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-multiversx-mx-service
+   ```
+
+   - This command starts a Meshagent room with the MCP server available. **Rooms will close if they go inactive.**
+
+4. **Join the room with a chatbot agent and enable the MultiversX toolkit:**
+
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-multiversx-mx
+   ```
+
+   - This starts a chatbot in the room that can use the MultiversX MCP tools.
+   - Multiple toolkits can be used in the same room with the same agent.
+   - A link to the room will be provided in the output — follow it to interact with the agent and tools.
+
+---
+
+## Tools Available
+
+This Meshagent-wrapped MCP server exposes the following tools for the MultiversX blockchain:
+
+| Tool Name                         | Summary                                                                                 |
+|------------------------------------|-----------------------------------------------------------------------------------------|
+| `create-sft-nft-mesdt-tokens`     | Create a transaction to issue a semi-fungible token (SFT), a non-fungible token (NFT), or a MetaESDT token for a collection and send it. |
+| `create-wallet`                   | Create a new wallet and save it as a PEM file.                                          |
+| `get-balance-of-address`          | Get the balance for a MultiversX address.                                               |
+| `get-network`                     | Get the network set in the environment config.                                          |
+| `get-tokens-of-address`           | Get the tokens of an address.                                                           |
+| `get-wallet-address`              | Get the bech32 address of the wallet set in the environment config.                     |
+| `issue-fungible-token`            | Issue a new fungible token and send it.                                                 |
+| `issue-meta-esdt-collection`      | Issue a MetaESDT token collection and send it.                                          |
+| `issue-nft-collection`            | Issue a non-fungible token collection and send it.                                      |
+| `issue-semi-fungible-collection`  | Issue a semi-fungible token collection and send it.                                     |
+| `send-egld`                       | Send EGLD using the wallet set in the environment to a receiver.                        |
+| `send-egld-to-multiple-receivers` | Send EGLD to multiple receivers.                                                        |
+| `send-fungible-tokens`            | Transfer fungible tokens to a receiver.                                                 |
+| `send-sft-nft-meta-tokens`        | Transfer NFT, SFT, or MetaESDT tokens to a receiver.                                    |
+
+
+### Tool Details
+
+#### `create-sft-nft-mesdt-tokens`
+Create a transaction to issue a semi-fungible token (SFT), or a non-fungible token (NFT), or a MetaESDT token for a collection and send it.
+
+| Parameter         | Type     | Description                                                                    |
+|-------------------|----------|--------------------------------------------------------------------------------|
+| `initialQuantity` | string   | Initial quantity (number of tokens) minted, default 1.                         |
+| `name`            | string   | The token name.                                                                |
+| `tokenIdentifier` | string   | Identifier of the collection.                                                  |
+| `royalties`       | string   | *(optional)* The royalties you'll receive.                                     |
+
+
+#### `create-wallet`
+Create a new wallet and save it as a PEM file. PEM files ARE NOT SECURE. Operation will abort if a wallet already exists.
+
+#### `get-balance-of-address`
+Get the balance for a MultiversX address.
+
+| Parameter | Type   | Description                         |
+|-----------|--------|-------------------------------------|
+| `address` | string | Bech32 representation of the address|
+
+
+#### `get-network`
+Get the network set in the environment config.
+
+#### `get-tokens-of-address`
+Get tokens held by an address. Returns up to 25 fungible and 25 non-fungible (NFT/SFT/MetaESDT) by default.
+
+| Parameter | Type    | Description                                               |
+|-----------|---------|-----------------------------------------------------------|
+| `address` | string  | Bech32 account address (erd1...)                          |
+| `size`    | number  | *(optional)* Number of each token type to return (default 25) |
+
+
+#### `get-wallet-address`
+Get the bech32 address of the wallet set in the environment config.
+
+#### `issue-fungible-token`
+Issue a new fungible token and send it.
+
+| Parameter      | Type   | Description                                          |
+|----------------|--------|------------------------------------------------------|
+| `initialSupply`| string | Initial supply to be minted                          |
+| `numDecimals`  | string | Number of decimals                                   |
+| `tokenName`    | string | Name of the token                                    |
+| `tokenTicker`  | string | Token ticker                                         |
+
+
+#### `issue-meta-esdt-collection`
+Issue a MetaESDT token collection and send it.
+
+| Parameter      | Type   | Description                                          |
+|----------------|--------|------------------------------------------------------|
+| `numDecimals`  | string | Number of decimals                                   |
+| `tokenName`    | string | Name of the token                                    |
+| `tokenTicker`  | string | Token ticker                                         |
+
+
+#### `issue-nft-collection`
+Issue a non-fungible token collection and send it.
+
+| Parameter      | Type   | Description                                          |
+|----------------|--------|------------------------------------------------------|
+| `tokenName`    | string | Name of the collection                               |
+| `tokenTicker`  | string | Token ticker                                         |
+
+
+#### `issue-semi-fungible-collection`
+Issue a semi-fungible collection and send it.
+
+| Parameter      | Type   | Description                                          |
+|----------------|--------|------------------------------------------------------|
+| `tokenName`    | string | Name of the collection                               |
+| `tokenTicker`  | string | Token ticker                                         |
+
+
+#### `send-egld`
+Send EGLD to a receiver.
+
+| Parameter | Type   | Description                                              |
+|-----------|--------|----------------------------------------------------------|
+| `amount`  | string | Amount of EGLD to send (1 EGLD=1000000000000000000)     |
+| `receiver`| string | Bech32 address of receiver (erd1...)                    |
+
+
+#### `send-egld-to-multiple-receivers`
+Send EGLD to multiple receivers.
+
+| Parameter  | Type    | Description                                                |
+|------------|---------|------------------------------------------------------------|
+| `amount`   | string  | Amount of EGLD to send                                    |
+| `receivers`| array   | Array of bech32 receiver addresses (erd1...)              |
+
+
+#### `send-fungible-tokens`
+Transfer fungible tokens to a receiver.
+
+| Parameter  | Type   | Description                        |
+|------------|--------|------------------------------------|
+| `amount`   | string | Amount to send (denominated)       |
+| `receiver` | string | Bech32 address of receiver         |
+| `token`    | string | Identifier of the token to send    |
+
+
+#### `send-sft-nft-meta-tokens`
+Transfer NFT, SFT or MetaESDT tokens to a receiver.
+
+| Parameter  | Type   | Description                                                |
+|------------|--------|------------------------------------------------------------|
+| `receiver` | string | Bech32 address of receiver (erd1...)                       |
+| `token`    | string | Extended token identifier (e.g., NFTEST-123456-0a)         |
+| `amount`   | string | *(optional)* Amount to send (ONLY for SFT or MetaESDT)     |
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started Guide:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP MultiversX Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-multiversx-mx](https://hub.docker.com/r/meshagent/mcp-multiversx-mx)

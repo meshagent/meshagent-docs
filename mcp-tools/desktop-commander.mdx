@@ -1,0 +1,280 @@
+---
+title: Desktop Commander
+---
+
+
+1. **Install Meshagent Python SDK (includes CLI and all dependencies):**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Follow the steps at [CLI: Get Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the Desktop Commander MCP server as a Meshagent service in a Room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-desktop-commander:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-desktop-commander-service
+   ```
+   - This command launches the MCP server inside a Meshagent Room (`test`). If the room goes inactive, it will automatically shut down.
+
+4. **Start a chatbot agent in the same room that can access Desktop Commander tools:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-desktop-commander
+   ```
+   - This command will connect a chatbot agent to the same Room, enabling use of the Desktop Commander's toolkit.
+   - **Tip:** You can use multiple toolkits in a single Room by specifying additional `--toolkit=...` parameters.
+   - After running the command, a link to the Room will be shown in the output. Use this link to interact with your deployed agent and tools.
+
+---
+
+## Tools Available
+
+Eighteen powerful tools are available through Desktop Commander MCP Server. See below for summaries and details.
+
+### Tools Summary
+
+Tool | Short Description
+-|-
+`create_directory` | Create a new directory or ensure a directory exists.
+`edit_block` | Apply surgical text replacements to files.
+`execute_command` | Execute a terminal command with timeout.
+`force_terminate` | Force terminate a running terminal session.
+`get_config` | Get the complete server configuration as JSON.
+`get_file_info` | Retrieve detailed metadata about a file or directory.
+`kill_process` | Terminate a running process by PID.
+`list_directory` | List all files and directories in a specified path.
+`list_processes` | List all running processes.
+`list_sessions` | List all active terminal sessions.
+`move_file` | Move or rename files and directories.
+`read_file` | Read the contents of a file from the file system or a URL.
+`read_multiple_files` | Read contents of multiple files simultaneously.
+`read_output` | Read new output from a running terminal session.
+`search_code` | Search for text/code patterns within file contents.
+`search_files` | Find files by name using substring matching.
+`set_config_value` | Set a specific configuration value by key.
+`write_file` | Write or append to file contents (chunking required for large files).
+
+---
+
+### Tools Details
+
+#### Tool: **`create_directory`**
+Create a new directory or ensure a directory exists.
+- Can create multiple nested directories in one operation.
+- Only works within allowed directories.
+- **Use absolute paths for reliability. Relative or tilde paths may fail.**
+
+Parameters | Type
+-|-
+`path` | `string`
+
+---
+
+#### Tool: **`edit_block`**
+Apply surgical text replacements to files.
+- Prefer small, focused edits. Each call changes only what’s necessary.
+- By default, only replaces one occurrence; use `expected_replacements` for more.
+- **Include enough context before/after changes. Use absolute paths.**
+
+Parameters | Type
+-|-
+`file_path` | `string`
+`new_string` | `string`
+`old_string` | `string`
+`expected_replacements` | `number` (optional)
+
+---
+
+#### Tool: **`execute_command`**
+Execute a terminal command with a timeout.
+- If the command exceeds timeout, it continues running in the background.
+- **Prefer specialized tools for file/system operations. Use absolute paths.**
+
+Parameters | Type
+-|-
+`command` | `string`
+`timeout_ms` | `number`
+`shell` | `string` (optional)
+
+---
+
+#### Tool: **`force_terminate`**
+Force terminate a running terminal session.
+
+Parameters | Type
+-|-
+`pid` | `number`
+
+---
+
+#### Tool: **`get_config`**
+Get the complete server configuration as JSON.
+- Includes blocked commands, allowed directories, shell, and server version details.
+
+---
+
+#### Tool: **`get_file_info`**
+Retrieve metadata about a file or directory (size, time, permissions, etc.).
+- Only works within allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`path` | `string`
+
+---
+
+#### Tool: **`kill_process`**
+Terminate a running process by PID.
+
+Parameters | Type
+-|-
+`pid` | `number`
+
+---
+
+#### Tool: **`list_directory`**
+Get a detailed listing of all files and directories in a specified path.
+- Distinguishes files and directories.
+- Only works within allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`path` | `string`
+
+---
+
+#### Tool: **`list_processes`**
+List all running processes with PID, command name, CPU/memory usage.
+
+---
+
+#### Tool: **`list_sessions`**
+List all active terminal sessions.
+
+---
+
+#### Tool: **`move_file`**
+Move or rename files and directories.
+- Both source and destination must be allowed.
+- **Use absolute paths.**
+
+Parameters | Type
+-|- 
+`destination` | `string`
+`source` | `string`
+
+---
+
+#### Tool: **`read_file`**
+Read the contents of a file (filesystem or URL).
+- Supports partial file reads and image preview for common types.
+- Only works within allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`path` | `string`
+`isUrl` | `boolean` (optional)
+`length` | `number` (optional)
+`offset` | `number` (optional)
+
+---
+
+#### Tool: **`read_multiple_files`**
+Read contents of multiple files at once.
+- Handles both text and images. Only in allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`paths` | `array`
+
+---
+
+#### Tool: **`read_output`**
+Read new output from a running terminal session.
+- Use `timeout_ms` for long-running commands.
+
+Parameters | Type
+-|-
+`pid` | `number`
+`timeout_ms` | `number` (optional)
+
+---
+
+#### Tool: **`search_code`**
+Search for regex/text/code patterns within file contents.
+- Fast, supports filtering and context lines, with customizable timeout.
+- Only within allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`path` | `string`
+`pattern` | `string`
+`contextLines` | `number` (optional)
+`filePattern` | `string` (optional)
+`ignoreCase` | `boolean` (optional)
+`includeHidden` | `boolean` (optional)
+`maxResults` | `number` (optional)
+`timeoutMs` | `number` (optional)
+
+---
+
+#### Tool: **`search_files`**
+Find files by name using case-insensitive substring search.
+- Searches subdirectories from path. Only in allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`path` | `string`
+`pattern` | `string`
+`timeoutMs` | `number` (optional)
+
+---
+
+#### Tool: **`set_config_value`**
+Set a specific server configuration value (e.g., allowed directories, command blocking).
+- **Use in a separate chat from file/command operations for safety.**
+
+Parameters | Type
+-|-
+`key` | `string`
+`value` | `string` (optional)
+
+---
+
+#### Tool: **`write_file`**
+Write or append to file contents (strict line/chunk limit).
+- **Files with more than 50 lines must be written in multiple calls (chunking required).**
+- See chunking and continuation instructions in the section summary.
+- Only works within allowed directories.
+- **Use absolute paths.**
+
+Parameters | Type
+-|-
+`content` | `string`
+`path` | `string`
+`mode` | `string` (optional)
+
+---
+
+## Meshagent Resources & Links
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent Desktop Commander Tool Image:** [https://hub.docker.com/r/meshagent/mcp-desktop-commander](https://hub.docker.com/r/meshagent/mcp-desktop-commander)
+
+---
+
+> **Why use Meshagent Rooms?**  
+> - No local installation or infrastructure required  
+> - Instantly share and collaborate on tools  
+> - Integrate with multiple agents and toolkits per room  
+> - Secure and ephemeral (rooms auto-close if inactive)
+
+---

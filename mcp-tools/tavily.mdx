@@ -1,0 +1,121 @@
+---
+title: Tavily
+---
+
+
+Follow these instructions to quickly run the Tavily MCP server and enable its tools inside a Meshagent Room:
+
+### Required Environment Variables
+
+- `TAVILY_API_KEY`: Your Tavily API key.
+
+### Steps
+
+1. **Install the Meshagent CLI and Agents**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+2. **Sign up and authenticate**
+    - Register and log in following the [CLI get started guide](https://docs.meshagent.com/cli/getting_started).
+
+3. **Launch the Tavily MCP Agent as a Service**
+    ```bash
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-tavily:latest --env MESHAGENT_PORT=8001 --env TAVILY_API_KEY=your-tavily-apikey-here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-tavily-service
+    ```
+    - This command creates a Meshagent room called `test` with the Tavily MCP server available as a callable service in the room.
+    - **Note:** Meshagent rooms will close automatically if they go inactive.
+
+4. **Join the Room with a Chatbot and Tools**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-tavily
+    ```
+    - This will start a chatbot in the Meshagent room, able to use the Tavily toolkit.
+        - Multiple toolkits can operate in the same room by repeating this command with different configurations.
+        - After launching, you'll receive a link in the command output to access the room, chat, and use the tools interactively.
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+| Tool Name         | Short Description                                                                                   |
+|-------------------|---------------------------------------------------------------------------------------------------|
+| `tavily-crawl`    | A web crawler that initiates a structured crawl from a specified base URL.                        |
+| `tavily-extract`  | Retrieves and processes raw content from URLs for data collection and content analysis.            |
+| `tavily-map`      | Creates a structured map of site URLs to discover content organization and navigation paths.       |
+| `tavily-search`   | Real-time web search with Tavily's AI search engine for comprehensive, current results.            |
+
+
+---
+
+### Tool Details
+
+#### **`tavily-crawl`**
+Initiates a structured crawl from a base URL, expanding tree-like across internal links. Supports filters, crawl depth, and custom instructions.
+
+| Parameter        | Type       | Description                                                                                       |
+|------------------|------------|---------------------------------------------------------------------------------------------------|
+| `url`            | string     | Root URL to begin crawl                                                                           |
+| `allow_external` | boolean    | *Optional*. Follow links to external domains                                                      |
+| `categories`     | array      | *Optional*. Filter by categories (documentation, blog, api, etc.)                                 |
+| `extract_depth`  | string     | *Optional*. Advanced extraction expands data (increases latency)                                  |
+| `instructions`   | string     | *Optional*. Natural language instructions for the crawler                                         |
+| `limit`          | integer    | *Optional*. Max links to process                                                                  |
+| `max_breadth`    | integer    | *Optional*. Max links to follow per level                                                         |
+| `max_depth`      | integer    | *Optional*. Max tree depth                                                                        |
+| `select_domains` | array      | *Optional*. Regex patterns for included domains                                                   |
+| `select_paths`   | array      | *Optional*. Regex patterns for included paths                                                     |
+
+
+#### **`tavily-extract`**
+Extracts and processes content from given URLs, including deep extraction modes and images.
+
+| Parameter          | Type       | Description                                                    |
+|--------------------|------------|----------------------------------------------------------------|
+| `urls`             | array      | List of URLs to extract content from                           |
+| `extract_depth`    | string     | *Optional*. 'basic' or 'advanced' extraction                   |
+| `include_images`   | boolean    | *Optional*. Return images extracted from the URLs              |
+
+#### **`tavily-map`**
+Builds a map of site URLs, showing structure and navigation.
+
+| Parameter        | Type       | Description                                                          |
+|------------------|------------|----------------------------------------------------------------------|
+| `url`            | string     | Root URL for mapping                                                 |
+| `allow_external` | boolean    | *Optional*. Follow external links                                    |
+| `categories`     | array      | *Optional*. Filter URLs by categories                                |
+| `instructions`   | string     | *Optional*. Natural language crawler instructions                    |
+| `limit`          | integer    | *Optional*. Max links to process                                     |
+| `max_breadth`    | integer    | *Optional*. Max links per level                                      |
+| `max_depth`      | integer    | *Optional*. Depth limit                                              |
+| `select_domains` | array      | *Optional*. Regex for domain inclusion                               |
+| `select_paths`   | array      | *Optional*. Regex for path inclusion                                 |
+
+#### **`tavily-search`**
+Performs real-time web search using Tavily’s AI engine.
+
+| Parameter                | Type     | Description                                                                      |
+|--------------------------|----------|----------------------------------------------------------------------------------|
+| `query`                  | string   | Search query                                                                     |
+| `days`                   | number   | *Optional*. Number of days back (for 'news' topic searches)                      |
+| `exclude_domains`        | array    | *Optional*. Domains to exclude                                                   |
+| `include_domains`        | array    | *Optional*. Domains to include                                                   |
+| `include_image_descriptions`| boolean  | *Optional*. Include images + their descriptions                                  |
+| `include_images`         | boolean  | *Optional*. Include related images                                               |
+| `include_raw_content`    | boolean  | *Optional*. Include cleaned HTML content                                         |
+| `max_results`            | number   | *Optional*. Maximum number of results                                            |
+| `search_depth`           | string   | *Optional*. 'basic' or 'advanced' depth                                          |
+| `time_range`             | string   | *Optional*. Time window for search                                               |
+| `topic`                  | string   | *Optional*. Category/topic of search                                             |
+
+---
+
+## Meshagent & Tavily Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Getting Started with the Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tavily Docker Image](https://hub.docker.com/r/meshagent/mcp-tavily)
+
+---

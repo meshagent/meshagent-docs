@@ -1,0 +1,80 @@
+---
+title: Wolfram Alpha
+---
+
+
+Follow these steps to run the MCP Wolfram Alpha agent and tool in the cloud using Meshagent Rooms.
+
+### Required Environment Variables
+
+- `WOLFRAM_API_KEY`: Your Wolfram Alpha App ID.
+
+### Steps
+
+1. **Install the Meshagent CLI and dependencies**
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate for Meshagent**
+
+   Follow the [authentication guide](https://docs.meshagent.com/cli/getting_started) to create an account and log in via the CLI.
+
+3. **Start the MCP Wolfram Alpha server in a Meshagent Room**
+
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-wolfram-alpha:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env WOLFRAM_API_KEY=your-app-id \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-wolfram-alpha-service
+   ```
+
+   *This command starts a Meshagent Room named `test` with the MCP Wolfram Alpha server available as a callable service. Rooms will close if they go inactive.*
+
+4. **Join the room as a chatbot with the Wolfram Alpha toolkit enabled**
+
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-wolfram-alpha
+   ```
+
+   - This starts a chatbot in the `test` room with access to the Wolfram Alpha toolkit.
+   - Multiple toolkits can be enabled in the same room for one agent.
+   - The command output provides a link to interact with the agent and tools through the web interface.
+
+## Tools Available
+
+Connect your chat repl to Wolfram Alpha computational intelligence.
+
+**Tools provided by this Server:**
+
+| Tool Name             | Short Description                                   |
+|-----------------------|-----------------------------------------------------|
+| `query-wolfram-alpha` | Use Wolfram Alpha to answer a question.             |
+
+### Tool Details
+
+#### Tool: `query-wolfram-alpha`
+
+Use Wolfram Alpha to answer a question. This tool should be used when you need complex math or symbolic intelligence.
+
+| Parameter | Type     | Description       |
+|-----------|----------|-------------------|
+| `query`   | `string` | The question (query) to answer |
+
+---
+
+## Related Information
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Getting Started with Meshagent Rooms](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-wolfram-alpha)

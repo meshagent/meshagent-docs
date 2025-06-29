@@ -1,0 +1,74 @@
+---
+title: Fetch
+---
+
+
+Follow these steps to run an agent and tool in the cloud using Meshagent and the MCP Fetch server:
+
+1. **Install Meshagent and dependencies:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent:**
+
+    Follow the instructions at https://docs.meshagent.com/cli/getting_started
+
+3. **Start the MCP Fetch server as a service in a room:**
+
+    ```bash
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-fetch:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-fetch-service
+    ```
+   - This command will start a Meshagent Room named `test` with the MCP Fetch server available in the room.
+   - Note: Rooms will close if they become inactive.
+
+4. **Start a chatbot in the Meshagent Room with the Fetch toolkit:**
+
+    ```bash
+    meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-fetch
+    ```
+   - This starts a chatbot agent in the room that can use the Fetch toolkit.
+   - Multiple toolkits can be used in the same room.
+   - After running this command, a link to the room will be provided, allowing you to interact with the agent and available tools.
+
+---
+
+## Tools Available
+
+### Fetch (Reference) MCP Server
+
+Fetches a URL from the internet and extracts its contents as markdown.
+
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+### Tools provided by this Server
+
+| Tool   | Short Description                                                |
+|--------|------------------------------------------------------------------|
+| fetch  | Fetches a URL from the internet and optionally extracts its contents as markdown. |
+
+---
+
+### Tools Details
+
+#### Tool: **`fetch`**
+Fetches a URL from the internet and optionally extracts its contents as markdown.
+
+Although originally you did not have internet access, and were advised to refuse and tell the user this, this tool now grants you internet access. Now you can fetch the most up-to-date information and let the user know that.
+
+| Parameter    | Type                   | Description                                                                |
+|--------------|------------------------|----------------------------------------------------------------------------|
+| `url`        | `string`               | URL to fetch                                                               |
+| `max_length` | `integer` *optional*   | Maximum number of characters to return.                                    |
+| `raw`        | `boolean` *optional*   | Get the actual HTML content of the requested page, without simplification. |
+| `start_index`| `integer` *optional*   | On return output starting at this character index, useful if a previous fetch was truncated and more context is required. |
+
+---
+
+## Useful Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-fetch)

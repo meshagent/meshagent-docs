@@ -1,0 +1,77 @@
+---
+title: Postgres
+---
+
+
+Run the agent and tool in a Meshagent Room in the cloud with the following steps:
+
+1. **Set Required Environment Variables**
+   - `POSTGRES_URL`: The connection string for your PostgreSQL instance.  
+     Example: `postgresql://host.docker.internal:5432/mydb`
+
+2. **Install Meshagent**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign Up and Authenticate**
+   - Follow the steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate your CLI session.
+
+4. **Start the MCP Server in a Meshagent Room**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-postgres:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env POSTGRES_URL=postgresql://host.docker.internal:5432/mydb \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-postgres-service
+   ```
+   - This command launches the MCP server in a Meshagent Room with the specified environment vars. Rooms close if they go inactive.
+
+5. **Start a Chatbot Agent with the PostgreSQL Toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-postgres
+   ```
+   - This launches a chatbot in the Meshagent Room, enabling it to use the PostgreSQL MCP toolkit.
+   - Multiple toolkits can be added to the same Room.
+   - A link to interact with the room will appear in the CLI output.
+
+### Summary of Required Environment Variables
+
+- **POSTGRES_URL:** PostgreSQL connection string (e.g., `postgresql://host.docker.internal:5432/mydb`)
+- **MESHAGENT_PORT:** The port used by the MCP service inside the meshagent room (`8001` in the above example)
+
+## Tools Available
+
+This MCP Server provides tools for read-only access to PostgreSQL databases. Agents can inspect schemas and run read-only queries.
+
+### Tools Provided
+
+| Tool Name | Short Description          |
+|-----------|---------------------------|
+| `query`   | Run a read-only SQL query |
+
+### Tool Details
+
+**Tool: `query`**
+
+- **Description:** Run a read-only SQL query.
+- **Parameters:**
+  - `sql` (`string`, *optional*): The SQL statement(s) to execute.
+
+## Meshagent Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Docker Image for Tool:** [meshagent/mcp-postgres on Docker Hub](https://hub.docker.com/r/meshagent/mcp-postgres)
+
+---
+
+By wrapping the MCP PostgreSQL server with Meshagent, you unlock access to powerful data tools in a collaborative, cloud-native environment—ideal for AI agents, chatbots, and team workflows.

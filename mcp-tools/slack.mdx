@@ -1,0 +1,149 @@
+---
+title: Slack
+---
+
+
+Run the Slack MCP agent and tools in the cloud with Meshagent Rooms:
+
+### Required Environment Variables
+
+Set these environment variables to configure Slack access:
+
+- `SLACK_TEAM_ID`: Your Slack workspace Team ID (format: T01234567)
+- `SLACK_CHANNEL_IDS`: Comma-separated list of Slack Channel IDs (format: C01234567, C76543210)
+- `SLACK_BOT_TOKEN`: Your Slack bot token (format: xoxb-your-bot-token)
+
+### Steps
+
+1. **Install Meshagent CLI**
+
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate**
+
+   - Follow steps at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the Slack MCP service in a Meshagent Room**
+
+   Replace the env variable values as needed:
+
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-slack:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SLACK_TEAM_ID=T01234567 \
+     --env SLACK_CHANNEL_IDS=C01234567,C76543210 \
+     --env SLACK_BOT_TOKEN=xoxb-your-bot-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-slack-service
+   ```
+   *This command will start a Meshagent Room with the Slack MCP server available. Rooms automatically close if they become inactive.*
+
+4. **Start a chatbot agent in the room using the Slack toolkit**
+
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-slack
+   ```
+
+   - *This will start a chatbot in the same room that can use the Slack toolkit.*
+   - *Multiple toolkits can be used concurrently in the same room with the same agent.*
+   - *A room link will be provided by the command output, allowing you to interact with the agent and the available tools directly in your browser or CLI.*
+
+---
+
+## Tools Available
+
+Interact with Slack Workspaces over the Slack API. This server provides the following tools:
+
+| Tool Name                     | Description                                            |
+|-------------------------------|--------------------------------------------------------|
+| `slack_add_reaction`          | Add a reaction emoji to a message                      |
+| `slack_get_channel_history`   | Get recent messages from a channel                     |
+| `slack_get_thread_replies`    | Get all replies in a message thread                    |
+| `slack_get_user_profile`      | Get detailed profile information for a specific user    |
+| `slack_get_users`             | Get a list of all users in the workspace               |
+| `slack_list_channels`         | List public or pre-defined channels with pagination     |
+| `slack_post_message`          | Post a message to a Slack channel                      |
+| `slack_reply_to_thread`       | Reply to a specific message thread in Slack            |
+
+### Tool Details
+
+#### `slack_add_reaction`
+Add a reaction emoji to a message  
+**Parameters:**  
+- `channel_id` (`string`) — The ID of the channel containing the message
+- `reaction` (`string`) — The name of the emoji reaction (without ::)
+- `timestamp` (`string`) — The timestamp of the message to react to
+
+---
+
+#### `slack_get_channel_history`
+Get recent messages from a channel  
+**Parameters:**  
+- `channel_id` (`string`) — The ID of the channel
+- `limit` (`number`, optional) — Number of messages to retrieve (default 10)
+
+---
+
+#### `slack_get_thread_replies`
+Get all replies in a message thread  
+**Parameters:**  
+- `channel_id` (`string`) — The ID of the channel containing the thread
+- `thread_ts` (`string`) — The timestamp of the parent message (e.g., '1234567890.123456')
+
+---
+
+#### `slack_get_user_profile`
+Get detailed profile information for a specific user  
+**Parameters:**  
+- `user_id` (`string`) — The ID of the user
+
+---
+
+#### `slack_get_users`
+Get a list of all users in the workspace  
+**Parameters:**  
+- `cursor` (`string`, optional) — Pagination cursor for next results page
+- `limit` (`number`, optional) — Maximum number of users (default 100, max 200)
+
+---
+
+#### `slack_list_channels`
+List public or pre-defined channels with pagination  
+**Parameters:**  
+- `cursor` (`string`, optional) — Pagination cursor for next results page
+- `limit` (`number`, optional) — Maximum number of channels (default 100, max 200)
+
+---
+
+#### `slack_post_message`
+Post a message to a Slack channel  
+**Parameters:**  
+- `channel_id` (`string`) — The channel ID
+- `text` (`string`) — The message text
+
+---
+
+#### `slack_reply_to_thread`
+Reply to a specific message thread in Slack  
+**Parameters:**  
+- `channel_id` (`string`) — The channel ID
+- `text` (`string`) — The reply text
+- `thread_ts` (`string`) — The timestamp of the parent message ('1234567890.123456')
+
+---
+
+## More about Meshagent
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Slack Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-slack)

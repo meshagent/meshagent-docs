@@ -1,0 +1,140 @@
+---
+title: Google Maps
+---
+
+
+Deploy the MCP Google Maps server as an agent in a Meshagent room, and connect a chatbot or agent that can use the Google Maps tools. 
+
+### Prerequisites
+
+- [Sign up and authenticate with Meshagent](https://docs.meshagent.com/cli/getting_started)
+- Obtain a Google Maps API key.
+
+### Required Environment Variables
+
+- `GOOGLE_MAPS_API_KEY`: **Your Google Maps API key**
+
+### Steps
+
+1. **Install Meshagent CLI (with all optional dependencies):**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**
+   [Follow Meshagent CLI authentication steps](https://docs.meshagent.com/cli/getting_started)
+
+3. **Run the Google Maps MCP Agent in a Meshagent Room:**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-google-maps:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env GOOGLE_MAPS_API_KEY=<YOUR_GOOGLE_MAPS_API_KEY> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-google-maps-service
+   ```
+   - *This command starts a Meshagent room with the MCP Google Maps server running and available to Room agents. Rooms will automatically close if they go inactive.*
+
+4. **Join an AI chatbot/agent to the Room with toolkit enabled:**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-google-maps
+   ```
+   - Starts a chatbot in the Meshagent room that can use the google-maps toolkit.
+   - Multiple toolkits can be used simultaneously in the same room with the same agent.
+   - A link to interact with the agent and access the tools will be provided in the output.
+
+---
+
+## Tools Available
+
+### Tools Provided By This Server
+
+| Tool | Short Description |
+|------|------------------|
+| `maps_directions` | Get directions between two points |
+| `maps_distance_matrix` | Calculate travel distance and time for multiple origins and destinations |
+| `maps_elevation` | Get elevation data for locations on the earth |
+| `maps_geocode` | Convert an address into geographic coordinates |
+| `maps_place_details` | Get detailed information about a specific place |
+| `maps_reverse_geocode` | Convert coordinates into an address |
+| `maps_search_places` | Search for places using Google Places API |
+
+---
+
+### Tools Details
+
+#### **`maps_directions`**
+*Get directions between two points*
+
+| Parameter   | Type    | Description                                      |
+|-------------|---------|--------------------------------------------------|
+| destination | string  | Ending point address or coordinates              |
+| origin      | string  | Starting point address or coordinates            |
+| mode        | string (optional) | Travel mode (driving, walking, bicycling, transit) |
+
+---
+
+#### **`maps_distance_matrix`**
+*Calculate travel distance and time for multiple origins and destinations*
+
+| Parameter    | Type    | Description                                      |
+|--------------|---------|--------------------------------------------------|
+| destinations | array   | Array of destination addresses or coordinates   |
+| origins      | array   | Array of origin addresses or coordinates        |
+| mode         | string (optional) | Travel mode (driving, walking, bicycling, transit) |
+
+---
+
+#### **`maps_elevation`**
+*Get elevation data for locations on the earth*
+
+| Parameter | Type  | Description                   |
+|-----------|-------|------------------------------|
+| locations | array | Array of locations to get elevation for |
+
+---
+
+#### **`maps_geocode`**
+*Convert an address into geographic coordinates*
+
+| Parameter | Type   | Description         |
+|-----------|--------|---------------------|
+| address   | string | The address to geocode |
+
+---
+
+#### **`maps_place_details`**
+*Get detailed information about a specific place*
+
+| Parameter | Type   | Description            |
+|-----------|--------|------------------------|
+| place_id  | string | The place ID to get details for |
+
+---
+
+#### **`maps_reverse_geocode`**
+*Convert coordinates into an address*
+
+| Parameter | Type   | Description         |
+|-----------|--------|---------------------|
+| latitude  | number | Latitude coordinate |
+| longitude | number | Longitude coordinate |
+
+---
+
+#### **`maps_search_places`**
+*Search for places using Google Places API*
+
+| Parameter | Type   | Description                                      |
+|-----------|--------|--------------------------------------------------|
+| query     | string | Search query                                     |
+| location  | object (optional) | Optional center point for the search   |
+| radius    | number (optional) | Search radius in meters (max 50000)    |
+
+---
+
+## Meshagent Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Google Maps Docker Image](https://hub.docker.com/r/meshagent/mcp-google-maps)

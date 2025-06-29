@@ -1,0 +1,139 @@
+---
+title: Puppeteer
+---
+
+
+Run the Puppeteer MCP Server agent and access its tools inside a Meshagent Room in the cloud.
+
+### Environment Variables
+
+Set these environment variables based on your desired configuration (example shown for Docker):
+
+- `DOCKER_CONTAINER`: Set to `"true"` to signal container environment (required).
+
+### Steps
+
+1. **Install the Meshagent CLI:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**
+   - Follow instructions at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the Puppeteer MCP Server as a Meshagent Room service:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-puppeteer:latest \
+     --env=DOCKER_CONTAINER=true \
+     --env=MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-puppeteer-service
+   ```
+   - This command launches a Meshagent Room with the Puppeteer MCP server available.
+   - Rooms automatically close if inactive.
+
+4. **Connect a chatbot agent with the Puppeteer toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-puppeteer
+   ```
+   - This starts a chatbot inside the room that can use the Puppeteer tool suite.
+   - Multiple toolkits can be loaded for the same agent in a room.
+   - The output will include a link to visit the room and interact with your agent and tools.
+
+---
+
+## Tools Available
+
+Browser automation and web scraping using Puppeteer tools via the MCP Server.
+
+### Tools Provided
+
+Tool | Short Description
+-|- 
+`puppeteer_click` | Click an element on the page
+`puppeteer_evaluate` | Execute JavaScript in the browser console
+`puppeteer_fill` | Fill out an input field
+`puppeteer_hover` | Hover an element on the page
+`puppeteer_navigate` | Navigate to a URL
+`puppeteer_screenshot` | Take a screenshot of the current page or a specific element
+`puppeteer_select` | Select an element on the page with Select tag
+
+### Tools Details
+
+#### **puppeteer_click**
+- Click an element on the page  
+  | Parameter | Type   | Description                        |
+  |-----------|--------|------------------------------------|
+  | selector  | string | CSS selector for element to click  |
+
+---
+
+#### **puppeteer_evaluate**
+- Execute JavaScript in the browser console  
+  | Parameter | Type   | Description                |
+  |-----------|--------|----------------------------|
+  | script    | string | JavaScript code to execute |
+
+---
+
+#### **puppeteer_fill**
+- Fill out an input field  
+  | Parameter | Type   | Description                       |
+  |-----------|--------|-----------------------------------|
+  | selector  | string | CSS selector for input field      |
+  | value     | string | Value to fill                     |
+
+---
+
+#### **puppeteer_hover**
+- Hover an element on the page  
+  | Parameter | Type   | Description                  |
+  |-----------|--------|------------------------------|
+  | selector  | string | CSS selector for element     |
+
+---
+
+#### **puppeteer_navigate**
+- Navigate to a URL  
+  | Parameter      | Type             | Description                                                                                     |
+  |----------------|------------------|-------------------------------------------------------------------------------------------------|
+  | url            | string           | URL to navigate to                                                                              |
+  | allowDangerous | boolean optional | Allow dangerous LaunchOptions (default: false)                                                  |
+  | launchOptions  | object optional  | PuppeteerJS LaunchOptions. Example: `{ headless: true, args: ['--no-sandbox'] }`                |
+
+---
+
+#### **puppeteer_screenshot**
+- Take a screenshot of the current page or a specific element  
+  | Parameter | Type     | Description                                 |
+  |---------- |----------|---------------------------------------------|
+  | name      | string   | Name for the screenshot                     |
+  | height    | number optional | Height in pixels (default: 600)       |
+  | selector  | string optional | CSS selector for element to screenshot|
+  | width     | number optional | Width in pixels (default: 800)        |
+
+---
+
+#### **puppeteer_select**
+- Select an element on the page with Select tag  
+  | Parameter | Type   | Description                         |
+  |-----------|--------|-------------------------------------|
+  | selector  | string | CSS selector for element to select  |
+  | value     | string | Value to select                     |
+
+
+---
+
+## Meshagent & Resources
+
+- **Meshagent Homepage:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP-Puppeteer Docker Image:** [https://hub.docker.com/r/meshagent/mcp-puppeteer](https://hub.docker.com/r/meshagent/mcp-puppeteer)

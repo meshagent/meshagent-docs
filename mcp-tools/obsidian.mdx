@@ -1,0 +1,177 @@
+---
+title: Obsidian
+---
+
+
+Get your MCP Obsidian server and tools running in the cloud using Meshagent in minutes!
+
+### Environment Variables
+Make sure to set the following required environment variables:
+
+- `OBSIDIAN_HOST`: The hostname or IP of your Obsidian REST API plugin (e.g., `host.docker.internal`)
+- `OBSIDIAN_API_KEY`: Your secret API key for accessing the API (`YOUR_OBSIDIAN_API_KEY`)
+
+### Step-By-Step
+
+1. **Install Meshagent and dependencies**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent**
+    - Follow instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Run the MCP Obsidian Server Agent in a room**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-obsidian:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env OBSIDIAN_HOST=host.docker.internal \
+     --env OBSIDIAN_API_KEY=YOUR_OBSIDIAN_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-obsidian-service
+   ```
+   - This command will start a Meshagent room (`test`) with the MCP Obsidian server tool available.
+   - Rooms will close automatically if they go inactive.
+
+4. **Start a chatbot in the Meshagent room**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-obsidian
+   ```
+   - This will launch a chatbot in the room that can use the Obsidian toolkit.
+   - You can run multiple toolkits in the same room with the same or different agents.
+   - A link to access and interact with the agent and tools will be shown in the output.
+
+---
+
+## Tools Available
+
+The following tools are available via the MCP Obsidian server:
+
+| Tool | Description |
+|------|-------------|
+| `obsidian_append_content` | Append content to a new or existing file in the vault. |
+| `obsidian_batch_get_file_contents` | Return the contents of multiple files in your vault, concatenated with headers. |
+| `obsidian_complex_search` | Complex search for documents using a JsonLogic query. |
+| `obsidian_delete_file` | Delete a file or directory from the vault. |
+| `obsidian_get_file_contents` | Return the content of a single file in your vault. |
+| `obsidian_get_periodic_note` | Get current periodic note for the specified period. |
+| `obsidian_get_recent_changes` | Get recently modified files in the vault. |
+| `obsidian_get_recent_periodic_notes` | Get most recent periodic notes for the specified period type. |
+| `obsidian_list_files_in_dir` | Lists all files and directories that exist in a specific Obsidian directory. |
+| `obsidian_list_files_in_vault` | Lists all files and directories in the root directory of your Obsidian vault. |
+| `obsidian_patch_content` | Insert content into an existing note relative to a heading, block reference, or frontmatter field. |
+| `obsidian_simple_search` | Simple search for documents matching a specified text query across all files in the vault. |
+
+---
+
+### Tools Details
+
+#### `obsidian_append_content`
+Append content to a new or existing file in the vault.
+- **Parameters:**
+  - `content` (string): Content to append
+  - `filepath` (string): Path to the file (relative)
+
+---
+
+#### `obsidian_batch_get_file_contents`
+Return the contents of multiple files, concatenated with headers.
+- **Parameters:**
+  - `filepaths` (array): List of file paths
+
+---
+
+#### `obsidian_complex_search`
+Complex search for documents using a JsonLogic query.
+- **Parameters:**
+  - `query` (object): Example: `{"glob": ["*.md", {"var": "path"}]}`
+
+---
+
+#### `obsidian_delete_file`
+Delete a file or directory from the vault.
+- **Parameters:**
+  - `confirm` (boolean): Confirmation (must be true)
+  - `filepath` (string): Path to file/dir
+
+---
+
+#### `obsidian_get_file_contents`
+Return the content of a single file.
+- **Parameters:**
+  - `filepath` (string): Path to the file
+
+---
+
+#### `obsidian_get_periodic_note`
+Get current periodic note for the specified period.
+- **Parameters:**
+  - `period` (string): daily, weekly, monthly, etc.
+
+---
+
+#### `obsidian_get_recent_changes`
+Get recently modified files.
+- **Parameters:**
+  - `days` (integer, optional): Files modified within N days (default: 90)
+  - `limit` (integer, optional): Max number (default: 10)
+
+---
+
+#### `obsidian_get_recent_periodic_notes`
+Get most recent periodic notes for the specified period type.
+- **Parameters:**
+  - `period` (string): The period type
+  - `include_content` (boolean, optional): Include note content (default: false)
+  - `limit` (integer, optional): Max number (default: 5)
+
+---
+
+#### `obsidian_list_files_in_dir`
+Lists all files and directories in a specific directory.
+- **Parameters:**
+  - `dirpath` (string): Directory path
+
+---
+
+#### `obsidian_list_files_in_vault`
+Lists all files and directories in the vault root.
+
+---
+
+#### `obsidian_patch_content`
+Insert content into an existing note relative to a heading, block, or frontmatter.
+- **Parameters:**
+  - `content` (string): Content to insert
+  - `filepath` (string): File path
+  - `operation` (string): append, prepend, replace
+  - `target` (string): Identifier (heading, block, etc.)
+  - `target_type` (string): Type of target
+
+---
+
+#### `obsidian_simple_search`
+Simple text search for documents in the vault.
+- **Parameters:**
+  - `query` (string): Search text
+  - `context_length` (integer, optional): How much context (default: 100)
+
+---
+
+## Useful Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **API Overview:** [docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Obsidian Docker Image:** [docker.com/r/meshagent/mcp-obsidian](https://hub.docker.com/r/meshagent/mcp-obsidian)
+
+---
+
+Run powerful Obsidian document automations and queries inside collaborative Meshagent Rooms using secure, scalable, cloud-native workflows!

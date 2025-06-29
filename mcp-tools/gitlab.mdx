@@ -1,0 +1,188 @@
+---
+title: GitLab
+---
+
+
+**Run the GitLab MCP server and tools in a Meshagent Room (Cloud/No Local Docker Needed)**
+
+**1. Install prerequisites**
+```bash
+pip install "meshagent[all]"
+```
+
+**2. Sign up and authenticate**
+- Visit: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+**3. Set required environment variables**
+- `GITLAB_API_URL`: The GitLab API endpoint (default: `https://gitlab.com/api/v4`)
+- `GITLAB_PERSONAL_ACCESS_TOKEN`: Your GitLab Personal Access Token
+
+**4. Start Meshagent service in a room**
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-gitlab:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env GITLAB_API_URL=https://gitlab.com/api/v4 \
+  --env GITLAB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-gitlab-service
+```
+
+- **This command starts a Meshagent room with the GitLab MCP server available as a callable service.**
+- *Meshagent rooms close if they go inactive, maximizing security and resource usage.*
+
+**5. Start a chatbot in your Meshagent room with the GitLab Toolkit**
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-gitlab
+```
+- Multiple toolkits can be enabled for the same agent in a room.
+- **A link to the room is provided in the command output—open it in your browser to chat and use tools.**
+
+---
+
+## Environment Variables
+
+- `GITLAB_API_URL`: The GitLab API endpoint to use (default: `https://gitlab.com/api/v4`)
+- `GITLAB_PERSONAL_ACCESS_TOKEN`: Your GitLab Personal Access Token
+
+---
+
+## Tools Available
+
+MCP Server for the GitLab API, enabling project management, file operations, and more.
+
+### Tools Provided (9)
+
+| Tool                        | Short Description                                         |
+|-----------------------------|----------------------------------------------------------|
+| `create_branch`             | Create a new branch in a GitLab project                  |
+| `create_issue`              | Create a new issue in a GitLab project                   |
+| `create_merge_request`      | Create a new merge request in a GitLab project           |
+| `create_or_update_file`     | Create or update a single file in a GitLab project       |
+| `create_repository`         | Create a new GitLab project                              |
+| `fork_repository`           | Fork a GitLab project to your account or specified ns    |
+| `get_file_contents`         | Get contents of a file or directory in a project         |
+| `push_files`                | Push multiple files to a project in a single commit      |
+| `search_repositories`       | Search for GitLab projects                               |
+
+### Tool Details
+
+#### **create_branch**
+Create a new branch in a GitLab project  
+| Parameter     | Type    | Description                       |
+|---------------|---------|-----------------------------------|
+| branch        | string  | Name for the new branch           |
+| project_id    | string  | Project ID or URL-encoded path    |
+| ref           | string? | Source branch/commit (optional)   |
+
+---
+
+#### **create_issue**
+Create a new issue in a GitLab project  
+| Parameter      | Type      | Description                           |
+|----------------|-----------|---------------------------------------|
+| project_id     | string    | Project ID or URL-encoded path        |
+| title          | string    | Issue title                           |
+| assignee_ids   | array?    | Array of user IDs (optional)          |
+| description    | string?   | Issue description (optional)          |
+| labels         | array?    | Array of label names (optional)       |
+| milestone_id   | number?   | Milestone ID (optional)               |
+
+---
+
+#### **create_merge_request**
+Create a new merge request  
+| Parameter            | Type     | Description                                   |
+|----------------------|----------|-----------------------------------------------|
+| project_id           | string   | Project ID or URL-encoded path                |
+| source_branch        | string   | Branch containing changes                     |
+| target_branch        | string   | Branch to merge into                          |
+| title                | string   | Merge request title                           |
+| allow_collaboration  | boolean? | Allow commits from upstream (optional)        |
+| description          | string?  | Description (optional)                        |
+| draft                | boolean? | Create as draft MR (optional)                 |
+
+---
+
+#### **create_or_update_file**
+Create or update a file in a GitLab project  
+| Parameter       | Type    | Description                              |
+|-----------------|---------|------------------------------------------|
+| branch          | string  | Branch to create/update file in          |
+| commit_message  | string  | Commit message                           |
+| content         | string  | File content                             |
+| file_path       | string  | Path for new/updated file                |
+| project_id      | string  | Project ID or URL-encoded path           |
+| previous_path   | string? | Path to move or rename (optional)        |
+
+---
+
+#### **create_repository**
+Create a new repository/project  
+| Parameter               | Type     | Description                           |
+|-------------------------|----------|---------------------------------------|
+| name                    | string   | Repository name                       |
+| description             | string?  | Description (optional)                |
+| initialize_with_readme  | boolean? | Init with README.md (optional)        |
+| visibility              | string?  | Visibility ("public/private/internal")|
+
+---
+
+#### **fork_repository**
+Fork a project  
+| Parameter    | Type     | Description                         |
+|--------------|----------|-------------------------------------|
+| project_id   | string   | Project ID or URL-encoded path      |
+| namespace    | string?  | Namespace (full path, optional)     |
+
+---
+
+#### **get_file_contents**
+Get file or directory contents  
+| Parameter    | Type     | Description                         |
+|--------------|----------|-------------------------------------|
+| file_path    | string   | Path to file or directory           |
+| project_id   | string   | Project ID or URL-encoded path      |
+| ref          | string?  | Branch/tag/commit (optional)        |
+
+---
+
+#### **push_files**
+Push multiple files in one commit  
+| Parameter       | Type    | Description                       |
+|-----------------|---------|-----------------------------------|
+| branch          | string  | Branch to push to                 |
+| commit_message  | string  | Commit message                    |
+| files           | array   | Array of files to push            |
+| project_id      | string  | Project ID or URL-encoded path    |
+
+---
+
+#### **search_repositories**
+Search for projects  
+| Parameter    | Type    | Description                          |
+|--------------|---------|--------------------------------------|
+| search       | string  | Search query                         |
+| page         | number? | Page for pagination (default: 1)     |
+| per_page     | number? | Results per page (default: 20)       |
+
+---
+
+## Links
+
+- **Meshagent Website:** https://www.meshagent.com/
+- **Getting Started with Rooms:** https://docs.meshagent.com/room_api/get_started
+- **API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Tool Image:** https://hub.docker.com/r/meshagent/mcp-gitlab
+
+---
+
+**Safer with Docker:**  
+For more on why running MCP Servers in containers is secure and recommended, see:  
+[The Model Context Protocol and Docker](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

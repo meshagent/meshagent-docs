@@ -1,0 +1,221 @@
+---
+title: MongoDB
+---
+
+
+### Prerequisites
+
+- [Python 3.8+](https://www.python.org/downloads/)
+- [Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+- Access to a MongoDB Atlas Cluster or other MongoDB server.
+
+### Required Environment Variables
+
+- **MDB_MCP_CONNECTION_STRING**: The MongoDB connection string, e.g. `mongodb+srv://username:password@cluster.mongodb.net/myDatabase`
+
+### Cloud Setup Steps
+
+1. **Install the Meshagent SDK and all extras:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate for Meshagent:**
+   - Follow instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP MongoDB Service in a Meshagent Room:**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-mongodb:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env MDB_MCP_CONNECTION_STRING=<your-mongodb-connection-string> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-mongodb-service
+   ```
+   - Replace `<your-mongodb-connection-string>` with your actual MongoDB connection string.
+   - This command starts a Meshagent Room with the MCP server available to the room. Rooms will close if they become inactive.
+
+4. **Start a chatbot agent in the Meshagent Room with access to the MongoDB toolkit:**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-mongodb
+   ```
+   - This starts a chatbot in your Meshagent Room. The agent can now use the MongoDB toolkit.
+   - You can add multiple toolkits in the same room with the same agent.
+   - After running, the CLI output will include a URL to access the agent and tools via the web.
+
+---
+
+## Tools Available
+
+### Tool Summary
+
+Tool | Short Description
+-|-
+`aggregate` | Run an aggregation against a MongoDB collection
+`collection-indexes` | Describe the indexes for a collection
+`collection-schema` | Describe the schema for a collection
+`collection-storage-size` | Gets the size of the collection
+`count` | Gets the number of documents in a MongoDB collection
+`create-collection` | Creates a new collection in a database.
+`create-index` | Create an index for a collection
+`db-stats` | Returns statistics that reflect the use state of a single database
+`delete-many` | Removes all documents that match the filter from a MongoDB collection
+`drop-collection` | Removes a collection or view from the database.
+`drop-database` | Removes the specified database, deleting the associated data files
+`explain` | Returns statistics describing the execution of the winning plan chosen by the query optimizer
+`find` | Run a find query against a MongoDB collection
+`insert-many` | Insert an array of documents into a MongoDB collection
+`list-collections` | List all collections for a given database
+`list-databases` | List all databases for a MongoDB connection
+`mongodb-logs` | Returns the most recent logged mongod events
+`rename-collection` | Renames a collection in a MongoDB database
+`switch-connection` | Switch to a different MongoDB connection
+`update-many` | Updates all documents that match the specified filter for a collection
+
+---
+
+### Tools Details
+
+#### `aggregate`
+**Description:** Run an aggregation against a MongoDB collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `pipeline` (`array`): Array of aggregation stages
+
+#### `collection-indexes`
+**Description:** Describe the indexes for a collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+
+#### `collection-schema`
+**Description:** Describe the schema for a collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+
+#### `collection-storage-size`
+**Description:** Gets the size of the collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+
+#### `count`
+**Description:** Gets the number of documents in a MongoDB collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `query` (`object`, optional): Query filter
+
+#### `create-collection`
+**Description:** Creates a new collection in a database. Creates the database if needed.  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+
+#### `create-index`
+**Description:** Create an index for a collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `keys` (`object`): Index definition
+- `name` (`string`, optional): Name of the index
+
+#### `db-stats`
+**Description:** Returns statistics that reflect the use state of a single database  
+Parameters:
+- `database` (`string`): Database name
+
+#### `delete-many`
+**Description:** Removes all documents matching a filter  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `filter` (`object`, optional): Deletion criteria
+
+#### `drop-collection`
+**Description:** Removes a collection or view from the database  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+
+#### `drop-database`
+**Description:** Removes the specified database and its data files  
+Parameters:
+- `database` (`string`): Database name
+
+#### `explain`
+**Description:** Returns stats about the winning plan for a query  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `method` (`array`): Method/arguments to run
+
+#### `find`
+**Description:** Run a find query  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `filter` (`object`, optional): Query filter
+- `limit` (`number`, optional): Max docs to return
+- `projection` (`object`, optional): Projection fields
+- `sort` (`object`, optional): Sort order
+
+#### `insert-many`
+**Description:** Insert multiple documents  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `documents` (`array`): Array of documents
+
+#### `list-collections`
+**Description:** List all collections in a database  
+Parameters:
+- `database` (`string`): Database name
+
+#### `list-databases`
+**Description:** List all databases
+
+#### `mongodb-logs`
+**Description:** Returns recent MongoDB logs  
+Parameters:
+- `limit` (`integer`, optional): Max log entries
+- `type` (`string`, optional): Type of logs (`global` or `startupWarnings`)
+
+#### `rename-collection`
+**Description:** Rename a collection  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `newName` (`string`): New collection name
+- `dropTarget` (`boolean`, optional): Drop target if exists
+
+#### `switch-connection`
+**Description:** Switch MongoDB connections  
+Parameters:
+- `connectionString` (`string`, optional): MongoDB connection string
+
+#### `update-many`
+**Description:** Update all documents matching filter  
+Parameters:
+- `collection` (`string`): Collection name
+- `database` (`string`): Database name
+- `update` (`object`): Update document
+- `filter` (`object`, optional): Selection criteria
+- `upsert` (`boolean`, optional): Insert if not found
+
+---
+
+## Meshagent and MCP Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image (Docker)](https://hub.docker.com/r/meshagent/mcp-mongodb)

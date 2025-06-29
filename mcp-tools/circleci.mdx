@@ -1,0 +1,121 @@
+---
+title: CircleCI
+---
+
+
+Run the CircleCI MCP server as a Meshagent service and a chatbot in the cloud using the following steps:
+
+### 1. **Environment Variables**
+
+Required environment variables for the CircleCI MCP server:
+
+- `CIRCLECI_BASE_URL`: (example: `https://circleci.com`)
+- `CIRCLECI_TOKEN`: (replace with your CircleCI Personal API Token)
+
+### 2. **Installation & Authentication**
+
+- Install Meshagent with all enhancements:
+  ```bash
+  pip install "meshagent[all]"
+  ```
+- [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) with the Meshagent CLI.
+
+### 3. **Start the MCP Server as a Service in a Room**
+
+- Run the following command (replace env values as needed):
+  ```bash
+  meshagent service test --room=test --role=agent \
+    --image=meshagent/mcp-circleci:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env CIRCLECI_BASE_URL=https://circleci.com \
+    --env CIRCLECI_TOKEN=your-circleci-token \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-circleci-service
+  ```
+  - This command starts a Meshagent room with the CircleCI MCP server available as a cloud service. **Note:** Rooms close if they go inactive.
+
+### 4. **Start a Chatbot in the Room (as a Tool User/Assistant)**
+
+- Join the room as a chatbot agent with access to the CircleCI toolkit:
+  ```bash
+  meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-circleci
+  ```
+  - This starts a chatbot in the Meshagent room that can use the CircleCI toolkit. You can load multiple toolkits with the same agent if needed.
+  - A link to the room will be shown in the command output—use it to interact with the agent and the CircleCI tools.
+
+---
+
+## Tools Available
+
+The following tools are available via the CircleCI MCP Server in Meshagent Rooms:
+
+| Tool                      | Description                                                                                      |
+|---------------------------|--------------------------------------------------------------------------------------------------|
+| `config_helper`           | Analyze, validate, and fix CircleCI configuration files.                                         |
+| `create_prompt_template`  | Generate a structured prompt template and context schema from requirements or existing prompts.   |
+| `find_flaky_tests`        | Retrieve information about flaky tests in a CircleCI project; includes truncation warnings.      |
+| `get_build_failure_logs`  | Get and analyze failure logs for CircleCI builds, with attention to possible log truncation.      |
+| `get_job_test_results`    | Retrieve and filter CircleCI job test metadata and status; warns if output is truncated.         |
+| `get_latest_pipeline_status` | Get the status of the latest pipeline for a CircleCI project.                              |
+| `list_followed_projects`  | List all CircleCI projects that the user is following for convenient project selection.           |
+| `recommend_prompt_template_tests` | Generate recommended test cases for a given prompt template and context schema.     |
+| `rerun_workflow`          | Rerun a CircleCI workflow from start or from the failed job.                                     |
+| `run_pipeline`            | Trigger a new CircleCI pipeline and obtain a monitoring URL.                                     |
+
+### Tool Details
+
+#### `config_helper`
+- **Purpose:** Analyze and auto-fix CircleCI YAML config files.
+- **Input:** `configFile` (string, raw CircleCI YAML).
+- **Output:** Reports errors or confirms validity.
+
+#### `create_prompt_template`
+- **Purpose:** Generate structured prompt templates and input schemas from functional requirements or codebase prompts.
+- **Input:** `prompt`, `promptOrigin` ("codebase" or "requirements"), `model`.
+- **Output:** Template, schema, and prompt origin for use in prompt-based test/assist workflows.
+
+#### `find_flaky_tests`
+- **Purpose:** Identify flaky tests in projects or pipelines.
+- **Input:** Provide either `projectSlug`, direct CircleCI URL, or workspace/git info.
+- **Behaviour:** Checks for and handles truncated outputs.
+
+#### `get_build_failure_logs`
+- **Purpose:** Fetch and report CircleCI build failure logs.
+- **Input:** Provide projectSlug & branch, URL, or workspace/git/branch.
+- **Note:** Always handle truncation warnings.
+
+#### `get_job_test_results`
+- **Purpose:** Retrieve detailed test metadata and filter by pass/fail.
+- **Input:** projectSlug & branch, job URL, or workspace/git/branch.
+- **Features:** Truncation handling, result filtering (`success`, `failure`).
+
+#### `get_latest_pipeline_status`
+- **Purpose:** Get the status or progress of the latest CircleCI pipeline for a project/branch.
+- **Input:** projectSlug & branch, project/pipeline/workflow/job URL, or workspace/git/branch.
+
+#### `list_followed_projects`
+- **Purpose:** List all CircleCI projects the current user follows; provides projectSlug for use by other tools.
+
+#### `recommend_prompt_template_tests`
+- **Purpose:** Generate recommended test cases for an LLM prompt template.
+- **Input:** Prompt template, schema, prompt origin, model.
+
+#### `rerun_workflow`
+- **Purpose:** Rerun a CircleCI workflow by ID or direct workflow URL, from the failed job or from scratch.
+
+#### `run_pipeline`
+- **Purpose:** Start a new pipeline in CircleCI and get a link to monitor it.
+- **Input:** projectSlug & branch, direct URL, or workspace/git/branch.
+
+---
+
+## More Resources
+
+- **Meshagent homepage:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Meshagent Rooms:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-circleci](https://hub.docker.com/r/meshagent/mcp-circleci)
+
+---
+
+With Meshagent and the CircleCI MCP Server, you can deploy powerful developer automation tools in collaborative cloud rooms—making AI-driven workflows available to your entire team, anywhere.

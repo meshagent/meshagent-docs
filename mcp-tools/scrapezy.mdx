@@ -1,0 +1,85 @@
+---
+title: Scrapezy
+---
+
+
+Follow these steps to run the Scrapezy MCP Server as an agent in the cloud, using Meshagent Rooms, and connect a chatbot that can utilize the included toolset.
+
+### 1. **Set up Environment Variables**
+
+You’ll need the following environment variable:
+
+- **`SCRAPEZY_API_KEY`**: `your_api_key` (Your Scrapezy API key, required.)
+
+### 2. **Install Meshagent CLI**
+
+```shell
+pip install "meshagent[all]"
+```
+
+### 3. **Authenticate with Meshagent CLI**
+
+- Sign up and authenticate:  
+  https://docs.meshagent.com/cli/getting_started
+
+### 4. **Start The MCP Scrapezy Agent as a Service**
+
+```shell
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-scrapezy:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env SCRAPEZY_API_KEY=your_api_key \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-scrapezy-service
+```
+- This command starts a Meshagent Room with the Scrapezy MCP server deployed in it.  
+- Note: Rooms close automatically if inactive.
+
+### 5. **Join the Room with a Chatbot, Enabling the Scrapezy Toolkit**
+
+```shell
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-scrapezy
+```
+- This launches a chatbot in the Meshagent Room with access to Scrapezy tools.
+- You can use multiple toolkits with the same agent in a room.
+- The CLI output will include a **URL to the Room** where you can interact with the agent and tools.
+
+---
+
+## Tools Available
+
+### Tools Provided
+
+| Tool                     | Short Description                      |
+|--------------------------|----------------------------------------|
+| `extract-structured-data`| Extract structured data from a website.|
+
+---
+
+### Tool: **`extract-structured-data`**
+
+Extract structured data from a website.
+
+| Parameter | Type   | Description                            |
+|-----------|--------|----------------------------------------|
+| prompt    | string | Prompt to extract data from the website |
+| url       | string | URL of the website to extract data from |
+
+---
+
+## Meshagent and Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Getting Started with Rooms:** https://docs.meshagent.com/room_api/get_started
+- **Room API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Tool Image:** https://hub.docker.com/r/meshagent/mcp-scrapezy
+
+---
+
+For more information about the Scrapezy MCP server, see the [Scrapezy repo](https://github.com/Scrapezy/mcp) and [Docker Hub listing](https://hub.docker.com/repository/docker/mcp/scrapezy).

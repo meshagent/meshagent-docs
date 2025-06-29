@@ -1,0 +1,163 @@
+---
+title: Descope
+---
+
+
+Follow these steps to get started running an agent and MCP-based tools in a Meshagent Room:
+
+### Environment Variables
+
+Set the following environment variables with your own Descope project configuration:
+
+- **DESCOPE_PROJECT_ID**: Your Descope project ID.
+- **DESCOPE_MANAGEMENT_KEY**: Your Descope management key.
+
+Example:
+```bash
+export DESCOPE_PROJECT_ID=your-descope-project-id-here
+export DESCOPE_MANAGEMENT_KEY=your-descope-management-key-here
+```
+
+### Installation & Run
+
+1. **Install Meshagent and plugins**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate**  
+   See [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started) for authentication steps.
+
+3. **Launch the Descope MCP Service in a Meshagent Room**
+    ```bash
+    meshagent service test --room=test --role=agent \
+      --image=meshagent/mcp-descope:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env DESCOPE_PROJECT_ID=your-descope-project-id-here \
+      --env DESCOPE_MANAGEMENT_KEY=your-descope-management-key-here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-descope-service
+    ```
+    > This command starts a Meshagent Room (`test`) with the MCP server accessible as an agent. **Rooms close if inactive.**
+
+4. **Join the Room with a Chatbot and Enabled Toolkits**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-descope
+    ```
+    - Starts a chatbot in the `test` room that can use the Descope toolkit.
+    - You may add multiple toolkits for the same agent in this way.
+    - **A link to the room to interact with the agent will appear in this command's output.**
+
+---
+
+## Tools Available
+
+The Meshagent-wrapped Descope MCP server provides the following tools:
+
+| Tool            | Short Description                                   |
+|-----------------|-----------------------------------------------------|
+| `create-user`   | Create a new user in Descope project                |
+| `invite-user`   | Create and invite a new user to the Descope project |
+| `search-audits` | Search Descope project audit logs                   |
+| `search-users`  | Search for users in Descope project                 |
+
+---
+
+### Tool Details
+
+#### `create-user`
+Create a new user in Descope project
+
+|Parameters|Type|Description|
+|----------|----|-----------|
+|`loginId`|`string`|Primary login identifier for the user|
+|`additionalLoginIds`|`array` *optional*|Additional login identifiers|
+|`customAttributes`|`object` *optional*|Custom attributes for the user|
+|`displayName`|`string` *optional*|User's display name|
+|`email`|`string` *optional*|User's email address|
+|`familyName`|`string` *optional*|User's family/last name|
+|`givenName`|`string` *optional*|User's given/first name|
+|`middleName`|`string` *optional*|User's middle name|
+|`phone`|`string` *optional*|User's phone number in E.164 format|
+|`picture`|`string` *optional*|URL to user's profile picture|
+|`roles`|`array` *optional*|Global role names to assign to the user|
+|`ssoAppIds`|`array` *optional*|SSO application IDs to associate|
+|`userTenants`|`array` *optional*|Tenant associations with specific roles|
+|`verifiedEmail`|`boolean` *optional*|Whether the email is pre-verified|
+|`verifiedPhone`|`boolean` *optional*|Whether the phone is pre-verified|
+
+---
+
+#### `invite-user`
+Create and invite a new user to the Descope project
+
+|Parameters|Type|Description|
+|----------|----|-----------|
+|`loginId`|`string`|Primary login identifier for the user|
+|`additionalLoginIds`|`array` *optional*|Additional login identifiers|
+|`customAttributes`|`object` *optional*|Custom attributes for the user|
+|`displayName`|`string` *optional*|User's display name|
+|`email`|`string` *optional*|User's email address|
+|`familyName`|`string` *optional*|User's family/last name|
+|`givenName`|`string` *optional*|User's given/first name|
+|`inviteUrl`|`string` *optional*|Custom URL for the invitation link|
+|`middleName`|`string` *optional*|User's middle name|
+|`phone`|`string` *optional*|User's phone number in E.164 format|
+|`picture`|`string` *optional*|URL to user's profile picture|
+|`roles`|`array` *optional*|Global role names to assign to the user|
+|`sendMail`|`boolean` *optional*|Send invite via email (default follows project settings)|
+|`sendSMS`|`boolean` *optional*|Send invite via SMS (default follows project settings)|
+|`ssoAppIds`|`array` *optional*|SSO application IDs to associate|
+|`templateId`|`string` *optional*|Custom template ID for the invitation|
+|`templateOptions`|`object` *optional*|Options for customizing the invitation template|
+|`userTenants`|`array` *optional*|Tenant associations with specific roles|
+|`verifiedEmail`|`boolean` *optional*|Whether the email is pre-verified|
+|`verifiedPhone`|`boolean` *optional*|Whether the phone is pre-verified|
+
+---
+
+#### `search-audits`
+Search Descope project audit logs
+
+|Parameters|Type|Description|
+|----------|----|-----------|
+|`actions`|`array` *optional*|Filter by specific action types|
+|`excludedActions`|`array` *optional*|Actions to exclude from results|
+|`geos`|`array` *optional*|Filter by geographic locations|
+|`hoursBack`|`number` *optional*|Hours to look back (max 720 hours / 30 days)|
+|`limit`|`number` *optional*|Number of audit logs to fetch (max 10)|
+|`loginIds`|`array` *optional*|Filter by specific login IDs|
+|`methods`|`array` *optional*|Filter by authentication methods|
+|`noTenants`|`boolean` *optional*|If true, only show events without tenants|
+|`tenants`|`array` *optional*|Filter by specific tenant IDs|
+
+---
+
+#### `search-users`
+Search for users in Descope project
+
+|Parameters|Type|Description|
+|----------|----|-----------|
+|`emails`|`array` *optional*|Filter by specific email addresses|
+|`limit`|`number` *optional*|Number of users per page (max 100)|
+|`loginIds`|`array` *optional*|Filter by specific login IDs|
+|`page`|`number` *optional*|Page number for pagination|
+|`phones`|`array` *optional*|Filter by specific phone numbers|
+|`roles`|`array` *optional*|Filter users by role names|
+|`ssoAppIds`|`array` *optional*|Filter users by SSO application IDs|
+|`statuses`|`array` *optional*|Filter by user statuses ('enabled', 'disabled', or 'invited')|
+|`tenantIds`|`array` *optional*|Filter users by specific tenant IDs|
+|`testUsersOnly`|`boolean` *optional*|Return only test users|
+|`text`|`string` *optional*|Text to search for in user fields|
+|`withTestUser`|`boolean` *optional*|Include test users in results|
+
+---
+
+## Additional Resources
+
+- Meshagent: https://www.meshagent.com/
+- Getting Started: https://docs.meshagent.com/room_api/get_started
+- Overview: https://docs.meshagent.com/room_api/overview
+- Meshagent MCP Tool Image: https://hub.docker.com/r/meshagent/mcp-descope
+
+---

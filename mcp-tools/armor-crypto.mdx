@@ -1,0 +1,370 @@
+---
+title: Armor Crypto
+---
+
+
+Here’s how to run the Armor Crypto MCP Server as a Meshagent agent and attach chatbots/tools in the cloud:
+
+### **1. Required Environment Variables**
+Set these environment variables (pass with `--env` when starting the agent):
+
+- `ARMOR_API_URL`: The Armor API endpoint.  
+  Example: `https://app.armorwallet.ai/api/v1`
+- `ARMOR_API_KEY`: Your API key for Armor services.  
+  Example: `<PUT-YOUR-KEY-HERE>`
+
+### **2. Install and Setup**
+
+- `pip install "meshagent[all]"`  
+  **Installs meshagent and required dependencies.**
+
+- **Sign up and authenticate with Meshagent:**  
+  [Follow this CLI setup guide](https://docs.meshagent.com/cli/getting_started).
+
+### **3. Launch the Armor Crypto MCP Service as an Agent**
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-armor-crypto:latest \
+  --env=MESHAGENT_PORT=8001 \
+  --env=ARMOR_API_URL=https://app.armorwallet.ai/api/v1 \
+  --env=ARMOR_API_KEY=<PUT-YOUR-KEY-HERE> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-armor-crypto-service
+```
+
+- Starts a Meshagent Room named `test` with the MCP server running as an agent in Docker.  
+- Rooms auto-close if left inactive.
+
+### **4. Attach a Chatbot Agent with the Armor Crypto Toolkit**
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-armor-crypto
+```
+
+- Joins a chatbot agent to the room, allowing anyone with the link (provided in the command output) to interact with Armor Crypto tools.  
+- Multiple toolkits and agents can co-exist in a room for collaborative or multi-agent tasks.
+
+---
+
+## Tools Available
+
+The Armor Crypto MCP Server offers a comprehensive set of blockchain and wallet automation tools, accessible via Meshagent Rooms. Below is a summary of key tools and detailed parameters for each:
+
+### **Summary Table**
+
+Tools Provided | Short Description
+-|-
+`add_wallets_to_group` | Add wallets to a specified group.
+`archive_wallet_group` | Archive wallet groups.
+`archive_wallets` | Archive wallets.
+`calculate_token_conversion` | Perform token conversion quotes between two tokens.
+`calculator` | Evaluate mathematical/statistical expression strings in Python syntax.
+`cancel_dca_order` | Cancel an existing DCA (Dollar Cost Average) order.
+`cancel_order` | Cancel a limit or stop loss order.
+`create_dca_order` | Create a DCA order.
+`create_groups` | Create wallet groups.
+`create_order` | Create an order (limit/stop loss).
+`create_wallet` | Create wallets.
+`get_all_orders` | Retrieve all limit and stop loss orders.
+`get_all_wallets` | Retrieve all wallets with balances.
+`get_armor_mcp_version` | Get current Armor Wallet version.
+`get_current_time` | Get the current time/date.
+`get_stake_balances` | Get the balance of staked SOL (jupSOL).
+`get_token_candle_data` | Retrieve candle data (market history) for tokens.
+`get_top_trending_tokens` | Get top trending tokens for a given timeframe.
+`get_wallet_token_balance` | Get balance for wallet/token pairs.
+`list_dca_orders` | List DCA orders.
+`list_groups` | List wallet groups.
+`list_single_group` | Retrieve single wallet group details.
+`remove_wallets_from_group` | Remove wallets from a specified group.
+`rename_wallets` | Rename wallets.
+`search_official_token_address` | Get official address and symbol for tokens.
+`search_token_details` | Get detailed info for a token.
+`send_key_to_telegram` | Send mnemonic/private key to Telegram.
+`stake_quote` | Retrieve a stake quote.
+`stake_transaction` | Execute a stake transaction.
+`swap_quote` | Retrieve a swap quote (add slippage manually).
+`swap_transaction` | Execute a swap transaction.
+`transfer_tokens` | Transfer tokens between wallets.
+`unarchive_wallet_group` | Unarchive wallet groups.
+`unarchive_wallets` | Unarchive wallets.
+`unstake_quote` | Retrieve an unstake quote.
+`unstake_transaction` | Execute an unstake transaction.
+`wait_a_moment` | Waits (pauses) for up to 10 seconds.
+
+---
+
+### **Tool Details**
+
+#### `add_wallets_to_group`
+Add wallets to a specified group.  
+**Parameters**:
+- `add_wallet_to_group_requests` (`string`)
+
+---
+
+#### `archive_wallet_group`
+Archive wallet groups.  
+**Parameters**:
+- `archive_wallet_group_requests` (`string`)
+
+---
+
+#### `archive_wallets`
+Archive wallets.  
+**Parameters**:
+- `archive_wallet_requests` (`string`)
+
+---
+
+#### `calculate_token_conversion`
+Perform token conversion quote between two tokens.  
+**Parameters**:
+- `conversion_requests` (`string`)
+
+---
+
+#### `calculator`
+Safely evaluates a mathematical or statistical expression string using Python syntax.  
+**Parameters**:
+- `expression` (`string`)
+- `variables` (`object`)
+
+---
+
+#### `cancel_dca_order`
+Cancel a DCA (Dollar Cost Averaging) order.  
+**Parameters**:
+- `cancel_dca_order_requests` (`string`)
+
+---
+
+#### `cancel_order`
+Cancel a limit or stop loss order.  
+**Parameters**:
+- `cancel_order_requests` (`string`)
+
+---
+
+#### `create_dca_order`
+Create a DCA order.  
+**Parameters**:
+- `dca_order_requests` (`string`)
+
+---
+
+#### `create_groups`
+Create new wallet groups.  
+**Parameters**:
+- `create_groups_requests` (`string`)
+
+---
+
+#### `create_order`
+Create an order (limit or stop loss).  
+**Parameters**:
+- `create_order_requests` (`string`)
+
+---
+
+#### `create_wallet`
+Create new wallets.  
+**Parameters**:
+- `create_wallet_requests` (`string`)
+
+---
+
+#### `get_all_orders`
+Retrieve all limit and stop loss orders.  
+**Parameters**:
+- `get_all_orders_requests` (`string`)
+
+---
+
+#### `get_all_wallets`
+Retrieve all wallets with balances.  
+**Parameters**:
+- `get_all_wallets_requests` (`string`)
+
+---
+
+#### `get_armor_mcp_version`
+Get the current Armor Wallet version.
+
+---
+
+#### `get_current_time`
+Get the current time and date.
+
+---
+
+#### `get_stake_balances`
+Get balance of staked SOL (jupSOL).
+
+---
+
+#### `get_token_candle_data`
+Get candle data for tokens (for analysis/trading).  
+**Parameters**:
+- `candle_stick_requests` (`string`)
+
+---
+
+#### `get_top_trending_tokens`
+Get top trending tokens by time frame.  
+**Parameters**:
+- `top_trending_tokens_requests` (`string`)
+
+---
+
+#### `get_wallet_token_balance`
+Retrieve balance for a list of wallet/token pairs.  
+**Parameters**:
+- `wallet_token_pairs` (`string`)
+
+---
+
+#### `list_dca_orders`
+List all DCA orders.  
+**Parameters**:
+- `list_dca_order_requests` (`string`)
+
+---
+
+#### `list_groups`
+List all wallet groups.
+
+---
+
+#### `list_single_group`
+Get details for a single wallet group.  
+**Parameters**:
+- `list_single_group_requests` (`string`)
+
+---
+
+#### `remove_wallets_from_group`
+Remove wallets from a specified group.  
+**Parameters**:
+- `remove_wallets_from_group_requests` (`string`)
+
+---
+
+#### `rename_wallets`
+Rename wallets.  
+**Parameters**:
+- `rename_wallet_requests` (`string`)
+
+---
+
+#### `search_official_token_address`
+Get official address and symbol for a token.  
+**Parameters**:
+- `token_details_requests` (`string`)
+
+---
+
+#### `search_token_details`
+Search and retrieve details for a single token.  
+**Parameters**:
+- `token_search_requests` (`string`)
+
+---
+
+#### `send_key_to_telegram`
+Send mnemonic/private key to Telegram.  
+**Parameters**:
+- `private_key_request` (`string`)
+
+---
+
+#### `stake_quote`
+Retrieve a quote for staking transactions.  
+**Parameters**:
+- `stake_quote_requests` (`string`)
+
+---
+
+#### `stake_transaction`
+Execute a staking transaction.  
+**Parameters**:
+- `stake_transaction_requests` (`string`)
+
+---
+
+#### `swap_quote`
+Retrieve swap quote (with slippage).  
+**Parameters**:
+- `swap_quote_requests` (`string`)
+
+---
+
+#### `swap_transaction`
+Execute a swap transaction.  
+**Parameters**:
+- `swap_transaction_requests` (`string`)
+
+---
+
+#### `transfer_tokens`
+Transfer tokens between wallets.  
+**Parameters**:
+- `transfer_tokens_requests` (`string`)
+
+---
+
+#### `unarchive_wallet_group`
+Unarchive previously archived wallet groups.  
+**Parameters**:
+- `unarchive_wallet_group_requests` (`string`)
+
+---
+
+#### `unarchive_wallets`
+Unarchive previously archived wallets.  
+**Parameters**:
+- `unarchive_wallet_requests` (`string`)
+
+---
+
+#### `unstake_quote`
+Retrieve a quote for unstaking tokens.  
+**Parameters**:
+- `unstake_quote_requests` (`string`)
+
+---
+
+#### `unstake_transaction`
+Execute an unstake transaction.  
+**Parameters**:
+- `unstake_transaction_requests` (`string`)
+
+---
+
+#### `wait_a_moment`
+Wait for up to 10 seconds.  
+**Parameters**:
+- `seconds` (`number`)
+
+---
+
+## Useful Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Room API (Getting Started):** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent Armor Crypto MCP Docker Image:** [https://hub.docker.com/r/meshagent/mcp-armor-crypto](https://hub.docker.com/r/meshagent/mcp-armor-crypto)
+
+---
+
+For more on the underlying MCP protocol, see [Anthropic’s Model Context Protocol](https://www.anthropic.com/news/model-context-protocol).
+
+**Why use Docker with MCP Servers?**  
+[Read here: The Model Context Protocol, Anthropic Claude Desktop, and Docker](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

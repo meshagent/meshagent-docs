@@ -1,0 +1,183 @@
+---
+title: Doit
+---
+
+
+### Running an Agent and Tool in the Cloud
+
+1. **Set Required Environment Variables:**
+   - `DOIT_API_KEY` - *(Your DoiT API key)*
+
+2. **Install Meshagent CLI with all required dependencies:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign up and authenticate with Meshagent:**
+   - Follow instructions at [Meshagent CLI Get Started](https://docs.meshagent.com/cli/getting_started)
+
+4. **Start the MCP DoiT service in a Meshagent Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-doit:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env DOIT_API_KEY=your_doit_api_key \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-doit-service
+   ```
+   - This command starts the MCP server as an agent in a Meshagent room. Note that rooms close automatically if inactive.
+
+5. **Join a chatbot agent to the room to use the toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-doit
+   ```
+   - This starts a chatbot in the room with access to the `doit` toolkit. You can launch multiple toolkits and agents in the same room for wider workflows.
+   - The command output will include a clickable link to interact with the room, agent, and available tools in your browser.
+
+---
+
+#### **Environment Variables Required**
+- `DOIT_API_KEY` — Specifies your DoiT MCP API key for connecting to the DoiT backend.
+
+---
+
+## Tools Available
+
+Tools provided by this Server | Short Description
+-|-
+`get_anomalies` | List anomalies detected in cloud costs
+`get_anomaly` | Get a specific anomaly by ID
+`get_cloud_incident` | Get a specific cloud incident by ID
+`get_cloud_incidents` | Get cloud incidents
+`get_dimension` | Get a specific Cloud Analytics dimension by type and ID
+`get_report_results` | Get the results of a specific report by ID
+`list_dimensions` | Lists Cloud Analytics dimensions that your account has access to.
+`list_reports` | Lists Cloud Analytics reports that your account has access to
+`run_query` | Runs a report query with the specified configuration without persisting it.
+`validate_user` | Validates the current API user and returns domain and email information
+
+---
+
+### Tool Details
+
+#### **`get_anomalies`**
+*List anomalies detected in cloud costs*
+
+Parameters | Type | Description
+-|-|-
+`filter` | `string` (optional) | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND.
+`pageToken` | `string` (optional) | Token for pagination. Use this to get the next page of results.
+
+---
+
+#### **`get_anomaly`**
+*Get a specific anomaly by ID*
+
+Parameters | Type | Description
+-|-|-
+`id` | `string` | anomaly ID
+
+---
+
+#### **`get_cloud_incident`**
+*Get a specific cloud incident by ID*
+
+Parameters | Type | Description
+-|-|-
+`id` | `string` | incident ID
+
+---
+
+#### **`get_cloud_incidents`**
+*Get cloud incidents*
+
+Parameters | Type | Description
+-|-|-
+`filter` | `string` (optional) | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. Example: 'platform:google-cloud|status:active' or 'platform:google-cloud|platform:amazon-web-services'
+`pageToken` | `string` (optional) | Token for pagination. Use this to get the next page of results.
+`platform` | `string` (optional) | Platform name
+
+---
+
+#### **`get_dimension`**
+*Get a specific Cloud Analytics dimension by type and ID*
+
+Parameters | Type | Description
+-|-|-
+`id` | `string` | Dimension id
+`type` | `string` | Dimension type
+
+---
+
+#### **`get_report_results`**
+*Get the results of a specific report by ID*
+
+Parameters | Type | Description
+-|-|-
+`id` | `string` | The ID of the report to retrieve results for
+
+---
+
+#### **`list_dimensions`**
+*Lists Cloud Analytics dimensions that your account has access to. Use this tool to get the dimensions that you can use in the run_query tool. Use filter to narrow down the results.*
+
+Parameters | Type | Description
+-|-|-
+`filter` | `string` (optional) | Filter string (optional) in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. The fields eligible for filtering are: type, label, key. Use the filter parameter only if you know the exact value of the key, otherwise the filter should be empty.
+`pageToken` | `string` (optional) | Token for pagination. Use this to get the next page of results.
+
+---
+
+#### **`list_reports`**
+*Lists Cloud Analytics reports that your account has access to*
+
+Parameters | Type | Description
+-|-|-
+`filter` | `string` (optional) | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. Possible filter keys: reportName, owner, type, updateTime, use the filter property only if you know for sure the value is a valid filter key, do not guess it.
+`pageToken` | `string` (optional) | Token for pagination. Use this to get the next page of results.
+
+---
+
+#### **`run_query`**
+*Runs a report query with the specified configuration without persisting it.*
+
+Fields that are not populated will use their default values if needed. Use the dimension tool before running the query to get the list of dimensions and their types. If possible, use `timeRange` instead of `customTimeRange` when no specific dates are given.
+
+Example for cost report:
+```json
+{
+  "config": {
+    "dataSource": "billing",
+    "metric": {"type": "basic", "value": "cost"},
+    "timeRange": {"mode": "last", "amount": 1, "unit": "month", "includeCurrent": true},
+    "group": [{"id": "service_description", "type": "fixed", "limit": {"metric": {"type": "basic", "value": "cost"}, "sort": "desc", "value": 10}}]
+  }
+}
+```
+
+Parameters | Type | Description
+-|-|-
+`config` | `object` | The configuration for the query, including dimensions, metrics, filters, etc.
+
+---
+
+#### **`validate_user`**
+*Validates the current API user and returns domain and email information*
+
+
+---
+
+## Further Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started Documentation:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Meshagent Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP DoiT Tool Image:** [https://hub.docker.com/r/meshagent/mcp-doit](https://hub.docker.com/r/meshagent/mcp-doit)
+
+---

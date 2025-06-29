@@ -1,0 +1,148 @@
+---
+title: Node Code Sandbox
+---
+
+
+Follow these steps to run the MCP Node code sandbox server and tools via Meshagent in the cloud.
+
+### 1. Install Meshagent Python package
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and authenticate
+
+Follow [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate:
+
+```sh
+meshagent login
+```
+
+### 3. Start an MCP Code Sandbox MCP server in a Meshagent room
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-node-code-sandbox:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-node-code-sandbox-service
+```
+- **This starts a Meshagent Room named `test` with the MCP server available in the room.**
+- **Rooms close automatically if inactive.**
+
+### 4. Join the room with a chatbot agent and tool
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-node-code-sandbox
+```
+- **This launches a chatbot in the Meshagent Room that can use the Node.js code sandbox toolkit.**
+- **Multiple toolkits can be loaded for the same agent in a room.**
+- **A room link will be shown in the output, which you can use to interact with the agent and its tools.**
+
+---
+
+## Tools Available
+
+Below are the tools provided by the MCP Node.js code sandbox server, as available through Meshagent:
+
+| Tool Name                | Summary |
+|--------------------------|---------|
+| `get_dependency_types`   | Given an array of npm package names (and optional versions), fetch whether each package ships its own TypeScript definitions or has a corresponding @types/… package, and return the raw .d.ts text.|
+| `run_js`                 | Install npm dependencies and run JavaScript code inside a running sandbox container.|
+| `run_js_ephemeral`       | Run a JavaScript snippet in a temporary disposable container with optional npm dependencies, then automatically clean up.|
+| `sandbox_exec`           | Execute one or more shell commands inside a running sandbox container.|
+| `sandbox_initialize`     | Start a new isolated Docker container running Node.js.|
+| `sandbox_stop`           | Terminate and remove a running sandbox container.|
+
+---
+
+### Tool Details
+
+#### **`get_dependency_types`**
+Given an array of npm package names (and optional versions), fetch whether each package ships its own TypeScript definitions or has a corresponding `@types/…` package, and return the raw `.d.ts` text.
+
+_Useful to inspect APIs and types exposed by dependencies before running Node.js scripts._
+
+| Parameter    | Type   | Description                         |
+|--------------|--------|-------------------------------------|
+| dependencies | array  | Array of npm package names/versions |
+
+---
+
+#### **`run_js`**
+Install npm dependencies and run JavaScript code inside a running sandbox container.  
+_Manual container stop required to free resources. Code must use ESModules (import/export syntax). Useful for complex workflows with environment reuse._
+
+_Use the `./files` directory for persistent read/write operations._
+
+| Parameter      | Type    | Description                                                                                |
+|----------------|---------|--------------------------------------------------------------------------------------------|
+| code           | string  | JavaScript code to run inside the container.                                               |
+| container_id   | string  | Docker container identifier.                                                               |
+| dependencies   | array*  | Optional list of npm dependencies with `name` and `version`.                              |
+| listenOnPort   | number* | Optional: Expose container process on this port.                                           |
+
+---
+
+#### **`run_js_ephemeral`**
+Run JS code in a temporary container with optional dependencies, then auto-cleanup.  
+_Use ESModules, best for single-use execution; all file IO should happen in `./files`._
+
+**Example:**
+```js
+import fs from "fs/promises";
+await fs.writeFile("./files/hello.txt", "Hello world!");
+console.log("Saved ./files/hello.txt");
+```
+
+| Parameter    | Type    | Description                                                                                 |
+|--------------|---------|---------------------------------------------------------------------------------------------|
+| code         | string  | JavaScript code to run ephemerally.                                                         |
+| dependencies | array*  | Optional npm dependencies (`name`/`version`).                                               |
+| image        | string* | Optional Docker image for execution. E.g. `node:lts-slim`, `mcr.microsoft.com/playwright`, etc.|
+
+---
+
+#### **`sandbox_exec`**
+Execute one or more shell commands within a running Node.js sandbox container.
+
+| Parameter    | Type   | Description                |
+|--------------|--------|----------------------------|
+| commands     | array  | Commands to execute.       |
+| container_id | string | Target container ID.       |
+
+---
+
+#### **`sandbox_initialize`**
+Start a new isolated Docker container running Node.js.
+
+| Parameter | Type    | Description                |
+|-----------|---------|----------------------------|
+| image     | string* | Optional base image.        |
+| port      | number* | Optional port mapping.      |
+
+---
+
+#### **`sandbox_stop`**
+Terminate and remove a running sandbox container.  
+Call after finishing work in a sandbox.
+
+| Parameter    | Type   | Description         |
+|--------------|--------|---------------------|
+| container_id | string | ID of the container |
+
+---
+
+## Resources & Links
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Meshagent Room API Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Node Code Sandbox Docker Image](https://hub.docker.com/r/meshagent/mcp-node-code-sandbox)

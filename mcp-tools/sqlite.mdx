@@ -1,0 +1,109 @@
+---
+title: SQLite
+---
+
+
+Get set up in the cloud in just a few steps:
+
+### 1. Install Meshagent (with all features)
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up & Authenticate
+Follow the guide at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+### 3. Start the MCP SQLite Server in a Meshagent Room
+```bash
+meshagent service test --room=test --role=agent \
+  --image=meshagent/mcp-sqlite:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-sqlite-service
+```
+This command starts a Meshagent Room named `test` with the MCP server running. Note: Rooms automatically close if inactive.
+
+### 4. Join with a Chatbot Agent (with SQLite toolkit)
+```bash
+meshagent chatbot join --room=test --agent-name=sample \
+  --name=sample --toolkit=mcp-sqlite
+```
+- The chatbot agent `sample` will join the `test` room, equipped with the SQLite toolkit.
+- You may use multiple toolkits in a single room.
+- After running, you’ll receive a link to the room in your terminal output for web-based interaction with the agent and tools.
+
+---
+
+## Tools Available
+
+### Summary of Tools
+
+| Tool Name          | Short Description                                    |
+|--------------------|-----------------------------------------------------|
+| `append_insight`   | Add a business insight to the memo                  |
+| `create_table`     | Create a new table in the SQLite database           |
+| `describe_table`   | Get the schema information for a specific table     |
+| `list_tables`      | List all tables in the SQLite database              |
+| `read_query`       | Execute a SELECT query on the SQLite database       |
+| `write_query`      | Execute an INSERT, UPDATE, or DELETE query          |
+
+### Details
+
+#### **`append_insight`**
+_Add a business insight to the memo_
+
+| Parameter | Type   | Description                                 |
+|-----------|--------|---------------------------------------------|
+| insight   | string | Business insight discovered from data analysis |
+
+---
+
+#### **`create_table`**
+_Create a new table in the SQLite database_
+
+| Parameter | Type   | Description                 |
+|-----------|--------|-----------------------------|
+| query     | string | CREATE TABLE SQL statement  |
+
+---
+
+#### **`describe_table`**
+_Get the schema information for a specific table_
+
+| Parameter  | Type   | Description                   |
+|------------|--------|-------------------------------|
+| table_name | string | Name of the table to describe |
+
+---
+
+#### **`list_tables`**
+_List all tables in the SQLite database_
+
+_No parameters._
+
+---
+
+#### **`read_query`**
+_Execute a SELECT query on the SQLite database_
+
+| Parameter | Type   | Description                  |
+|-----------|--------|------------------------------|
+| query     | string | SELECT SQL query to execute  |
+
+---
+
+#### **`write_query`**
+_Execute an INSERT, UPDATE, or DELETE query_
+
+| Parameter | Type   | Description                  |
+|-----------|--------|------------------------------|
+| query     | string | SQL query to execute         |
+
+---
+
+## Meshagent & Related Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-sqlite](https://hub.docker.com/r/meshagent/mcp-sqlite)

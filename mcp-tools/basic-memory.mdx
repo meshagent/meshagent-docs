@@ -1,0 +1,138 @@
+---
+title: Basic Memory
+---
+
+
+Get up and running with Meshagent and the Basic Memory MCP Server in the cloud:
+
+**1. Install Meshagent CLI and all dependencies:**
+
+```sh
+pip install "meshagent[all]"
+```
+
+**2. Sign up and authenticate:**
+
+Follow the instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+**3. Start the MCP service in a Meshagent Room:**
+
+```sh
+meshagent service test --room=test --role=agent --image=meshagent/mcp-basic-memory:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-basic-memory-service
+```
+- This command launches a Meshagent Room named `test` with the MCP server available inside.
+- If rooms go inactive, they will auto-close.
+
+**4. Start a chatbot in the Meshagent Room with the MCP toolkit:**
+
+```sh
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-basic-memory
+```
+- This joins the `test` room with a chatbot that can use the Basic Memory toolkit.
+- You can include multiple toolkits and agents in a single room.
+- The output of this command provides a link you can open in your browser to interact with the tools in your room.
+
+---
+
+## Tools Available
+
+The following tools are provided by the Basic Memory MCP Server integration:
+
+| Tool               | Short Description                                                       |
+|--------------------|------------------------------------------------------------------------|
+| `build_context`    | Build context from a memory:// URI to continue conversations naturally. |
+| `canvas`           | Create an Obsidian canvas file to visualize concepts and connections.   |
+| `delete_note`      | Delete a note by title or permalink.                                   |
+| `project_info`     | Get information and statistics about the current Basic Memory project.  |
+| `read_content`     | Read a file's raw content by path or permalink.                        |
+| `read_note`        | Read a markdown note by title or permalink.                            |
+| `recent_activity`  | Get recent activity from across the knowledge base.                    |
+| `search_notes`     | Search across all content in the knowledge base.                       |
+| `write_note`       | Create or update a markdown note.                                      |
+
+### Tool Details
+
+#### `build_context`
+Build context from a memory:// URI to continue conversations naturally. Useful for following up on previous discussions or exploring related topics.
+
+- **Parameters:**  
+  - `url` (string)  
+  - `depth` (string, optional)  
+  - `max_related` (integer, optional)  
+  - `page` (integer, optional)  
+  - `page_size` (integer, optional)  
+  - `timeframe` (string, optional; natural language or standard format)
+
+#### `canvas`
+Create an Obsidian canvas file to visualize concepts and connections.
+
+- **Parameters:**  
+  - `edges` (array)  
+  - `folder` (string)  
+  - `nodes` (array)  
+  - `title` (string)  
+
+#### `delete_note`
+Delete a note by title or permalink.
+
+- **Parameters:**  
+  - `identifier` (string)  
+
+#### `project_info`
+Get information and statistics about the current Basic Memory project.
+
+#### `read_content`
+Read a file's raw content by path or permalink.
+
+- **Parameters:**  
+  - `path` (string)  
+
+#### `read_note`
+Read a markdown note by title or permalink.
+
+- **Parameters:**  
+  - `identifier` (string)  
+  - `page` (integer, optional)  
+  - `page_size` (integer, optional)  
+
+#### `recent_activity`
+Get recent activity from across the knowledge base. Supports natural language or standard timeframes.
+
+- **Parameters:**  
+  - `depth` (integer, optional)  
+  - `max_related` (integer, optional)  
+  - `page` (integer, optional)  
+  - `page_size` (integer, optional)  
+  - `timeframe` (string, optional)  
+  - `type` (string, optional)  
+
+#### `search_notes`
+Search across all content in the knowledge base.
+
+- **Parameters:**  
+  - `query` (string)  
+  - `after_date` (string, optional)  
+  - `entity_types` (string, optional)  
+  - `page` (integer, optional)  
+  - `page_size` (integer, optional)  
+  - `search_type` (string, optional)  
+  - `types` (string, optional)  
+
+#### `write_note`
+Create or update a markdown note. Returns a markdown formatted summary of the semantic content.
+
+- **Parameters:**  
+  - `content` (string)  
+  - `folder` (string)  
+  - `title` (string)  
+  - `tags` (string, optional)  
+
+---
+
+## Additional Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image (Docker):** [https://hub.docker.com/r/meshagent/mcp-basic-memory](https://hub.docker.com/r/meshagent/mcp-basic-memory)
+- **Basic Memory MCP Server Source:** [https://github.com/basicmachines-co/basic-memory](https://github.com/basicmachines-co/basic-memory)

@@ -1,0 +1,93 @@
+---
+title: Perplexity Ask
+---
+
+
+Run the agent and tools in the cloud quickly using the steps below.
+
+### Required Environment Variables
+
+- `PERPLEXITY_API_KEY`: Your [Perplexity API key](https://www.perplexity.ai/)
+
+### Step-by-step Instructions
+
+1. **Install Meshagent**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+2. **Sign Up & Authenticate**
+   - Follow instructions at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the MCP Perplexity Server in a Meshagent Room**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-perplexity-ask:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env PERPLEXITY_API_KEY=YOUR_PERPLEXITY_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-perplexity-ask-service
+   ```
+   - This command starts a Meshagent room (`test`) running the MCP server instance.
+   - **Note:** Rooms automatically close if inactive.
+
+4. **Join the Room With a Chatbot & Toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-perplexity-ask
+   ```
+   - This starts a chatbot in the room using the `mcp-perplexity-ask` toolkit.
+   - Multiple toolkits and agents can be run in the same room for richer interactions.
+   - After running, a link to interact with the agent and tools will be provided in the command output.
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+| Tool | Short Description |
+|------|------------------|
+| `perplexity_ask` | Engages in a conversation using the Sonar API. |
+| `perplexity_reason` | Performs reasoning tasks using the Perplexity API. |
+| `perplexity_research` | Performs deep research using the Perplexity API. |
+
+### Tools Details
+
+#### **`perplexity_ask`**
+Engages in a conversation using the Sonar API. Accepts an array of messages (each with a role and content) and returns a ask completion response from the Perplexity model.
+
+| Parameters | Type   | Description                  |
+|------------|--------|-----------------------------|
+| `messages` | array  | Array of conversation messages |
+
+---
+
+#### **`perplexity_reason`**
+Performs reasoning tasks using the Perplexity API. Accepts an array of messages (each with a role and content) and returns a well-reasoned response using the sonar-reasoning-pro model.
+
+| Parameters | Type   | Description                  |
+|------------|--------|-----------------------------|
+| `messages` | array  | Array of conversation messages |
+
+---
+
+#### **`perplexity_research`**
+Performs deep research using the Perplexity API. Accepts an array of messages (each with a role and content) and returns a comprehensive research response with citations.
+
+| Parameters | Type   | Description                  |
+|------------|--------|-----------------------------|
+| `messages` | array  | Array of conversation messages |
+
+---
+
+## Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-perplexity-ask)

@@ -1,0 +1,230 @@
+---
+title: Dart
+---
+
+
+Get up and running with Dart MCP in a Meshagent Room:
+
+### Environment Variables
+
+Set these environment variables for the Dart MCP server:
+
+- `DART_HOST`: The Dart API endpoint (e.g., `https://app.itsdart.com`)
+- `DART_TOKEN`: Your Dart API token (e.g., `dsa_...`)
+
+---
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Authenticate with Meshagent
+
+Sign up and authenticate using the CLI as [described here](https://docs.meshagent.com/cli/getting_started).
+
+---
+
+### 3. Start the Dart MCP Service in a Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-dart:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env DART_HOST=https://app.itsdart.com \
+  --env DART_TOKEN=dsa_... \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-dart-service
+```
+- This command starts a Meshagent room with the Dart MCP server accessible as a callable service. Rooms close automatically when inactive.
+
+---
+
+### 4. Join the Room With a Chatbot Agent
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-dart
+```
+- This starts a chatbot in the Meshagent room that can access Dart tools.
+- Multiple toolkits can be used by a single agent in the same room.
+- A link to the room will be provided in the command output, which you can use to interact with your agent and tools.
+
+---
+
+## Tools Available
+
+Below are the tools provided by this MCP server, each callable via the Meshagent environment.
+
+Tool | Short Description
+-|-  
+**`add_task_comment`** | Add a comment to an existing task without modifying the task description.  
+**`create_doc`** | Create a new doc in Dart.  
+**`create_task`** | Create a new task in Dart.  
+**`delete_doc`** | Move an existing doc to the trash, where it can be recovered if needed.  
+**`delete_task`** | Move an existing task to the trash, where it can be recovered if needed.  
+**`get_config`** | Get information about the user's space, including all of the possible values that can be provided to other endpoints.  
+**`get_doc`** | Retrieve an existing doc by its ID.  
+**`get_task`** | Retrieve an existing task by its ID.  
+**`list_docs`** | List docs from Dart with optional filtering parameters.  
+**`list_tasks`** | List tasks from Dart with optional filtering parameters.  
+**`update_doc`** | Update an existing doc.  
+**`update_task`** | Update an existing task.  
+
+---
+
+### Tool Details
+
+#### `add_task_comment`
+Add a comment to an existing task without modifying the task description. Comments support markdown formatting.  
+**Parameters:**  
+- `taskId` (`string`): The 12-character alphanumeric ID of the task  
+- `text` (`string`): The full content of the comment, which can include markdown formatting.
+
+---
+
+#### `create_doc`
+Create a new doc in Dart. You can specify title, text content, and folder.  
+**Parameters:**  
+- `title` (`string`): The title of the doc (**required**)  
+- `folder` (`string`, optional): The title of the folder to place the doc in  
+- `text` (`string`, optional): The text content of the doc
+
+---
+
+#### `create_task`
+Create a new task in Dart. You can specify title, description, status, priority, size, dates, dartboard, assignees, tags, and parent task.  
+**Parameters:**  
+- `title` (`string`): The title of the task (**required**)  
+- `assignee` (`string`, optional): Single assignee name or email  
+- `assignees` (`array`, optional): Array of assignee names or emails  
+- `dartboard` (`string`, optional): Title of the dartboard  
+- `description` (`string`, optional): Task description  
+- `dueAt` (`string`, optional): Due date (ISO format)  
+- `parentId` (`string`, optional): Parent task ID  
+- `priority` (`string`, optional): Priority (Critical, High, Medium, Low)  
+- `size` (`number`, optional): Amount of work needed  
+- `startAt` (`string`, optional): Start date (ISO format)  
+- `status` (`string`, optional): Task status  
+- `tags` (`array`, optional): Tags for the task
+
+---
+
+#### `delete_doc`
+Move an existing doc to the trash, where it can be recovered if needed.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the doc
+
+---
+
+#### `delete_task`
+Move an existing task to the trash, where it can be recovered if needed.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the task
+
+---
+
+#### `get_config`
+Get information about the user's space, including all possible values for other endpoints.
+
+---
+
+#### `get_doc`
+Retrieve an existing doc by its ID.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the doc
+
+---
+
+#### `get_task`
+Retrieve an existing task by its ID.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the task
+
+---
+
+#### `list_docs`
+List docs from Dart with optional filtering parameters.  
+**Parameters:**  
+- `duids` (`string`, optional): Filter by IDs  
+- `folder` (`string`, optional): Filter by folder title  
+- `folder_duid` (`string`, optional): Filter by folder ID  
+- `in_trash` (`boolean`, optional): Filter by trash status  
+- `is_draft` (`boolean`, optional): Filter by draft status  
+- `limit` (`number`, optional): Results per page  
+- `offset` (`number`, optional): Offset for pagination  
+- `s` (`string`, optional): Search by title, text, or folder  
+- `text` (`string`, optional): Filter by text  
+- `title` (`string`, optional): Filter by title
+
+---
+
+#### `list_tasks`
+List tasks from Dart with optional filtering parameters.  
+**Parameters:**  
+- `assignee` (`string`, optional): Filter by assignee  
+- `assignee_duid` (`string`, optional): Assignee ID  
+- `dartboard` (`string`, optional): Dartboard title  
+- `dartboard_duid` (`string`, optional): Dartboard ID  
+- `description` (`string`, optional): Description content  
+- `due_at_after` (`string`, optional): Due after (ISO)  
+- `due_at_before` (`string`, optional): Due before (ISO)  
+- `duids` (`string`, optional): Filter by IDs  
+- `in_trash` (`boolean`, optional): Trash status  
+- `is_draft` (`boolean`, optional): Draft status  
+- `kind` (`string`, optional): Task kind  
+- `limit` (`number`, optional): Per page  
+- `offset` (`number`, optional): Offset for pagination  
+- `priority` (`string`, optional): Priority  
+- `size` (`number`, optional): Task size  
+- `start_at_after` (`string`, optional): Start after (ISO)  
+- `start_at_before` (`string`, optional): Start before (ISO)  
+- `status` (`string`, optional): Status  
+- `status_duid` (`string`, optional): Status ID  
+- `subscriber_duid` (`string`, optional): Subscriber ID  
+- `tag` (`string`, optional): Filter by tag  
+- `title` (`string`, optional): Filter by title
+
+---
+
+#### `update_doc`
+Update an existing doc.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the doc  
+- `folder` (`string`, optional): Folder title  
+- `text` (`string`, optional): Text content  
+- `title` (`string`, optional): Doc title
+
+---
+
+#### `update_task`
+Update an existing task.  
+**Parameters:**  
+- `id` (`string`): The 12-character alphanumeric ID of the task  
+- `assignee` (`string`, optional): Single assignee  
+- `assignees` (`array`, optional): Array of assignees  
+- `dartboard` (`string`, optional): Dartboard title  
+- `description` (`string`, optional): Description  
+- `dueAt` (`string`, optional): Due date (ISO)  
+- `parentId` (`string`, optional): Parent task ID  
+- `priority` (`string`, optional): Priority  
+- `size` (`number`, optional): Amount of work needed  
+- `startAt` (`string`, optional): Start date (ISO)  
+- `status` (`string`, optional): Status  
+- `tags` (`array`, optional): Tags  
+- `title` (`string`, optional): Task title
+
+---
+
+## Further Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Dart Tool (Docker Image)](https://hub.docker.com/r/meshagent/mcp-dart)

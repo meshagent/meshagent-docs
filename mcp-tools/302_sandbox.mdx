@@ -1,0 +1,160 @@
+---
+title: 302 Sandbox
+---
+
+
+Run a Meshagent room with the MCP server and interact with its tools:
+
+### Environment Variables
+- `302AI_API_KEY`: **Your API key for MCP 302 Sandbox.** _(Required)_
+
+### Steps
+
+1. **Install Meshagent** (with all features):
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign Up and Authenticate**  
+   Follow instructions to create an account and login: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start MCP Server as a Meshagent Room Agent**
+    ```bash
+    meshagent service test --room=test --role=agent \
+      --image=meshagent/mcp-302_sandbox:latest \
+      --env MESHAGENT_PORT=8001 --env 302AI_API_KEY=<YOUR_API_KEY_HERE> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-302_sandbox-service
+    ```
+    - This command launches the MCP server inside a Meshagent room. The room will close automatically if it goes inactive.
+
+4. **Join the Room as a Chatbot That Can Use the Toolkit**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-302_sandbox
+    ```
+    - The chatbot joins the Meshagent room and can use all the available tools from the MCP 302 Sandbox toolkit.
+    - _You can load multiple toolkits for different capabilities in the same room._
+    - **A link to the room will be displayed after running this command. Use it to interact with the agent and its tools.**
+
+---
+
+## Tools Available
+
+**Tools provided by the MCP 302 Sandbox Server:**
+
+| Tool                     | Short Description                                                                                                   |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `createSandbox`          | Create a Linux sandbox that can execute code, run commands, upload and download files, and has complete Linux functionality.   |
+| `directRunCode`          | Automatically creates a sandbox, executes code, and immediately destroys the sandbox after execution.               |
+| `downloadSandboxFiles`   | Export files from a sandbox directory or file path to downloadable URLs.                                            |
+| `killSandbox`            | Destroy a sandbox by its ID.                                                                                       |
+| `listSandboxFiles`       | List files and directories at specified paths within a sandbox.                                                     |
+| `listSandboxes`          | Query the list of sandboxes associated with the current API key.                                                   |
+| `runCode`                | Run code on a specific sandbox.                                                                                    |
+| `runCommand`             | Run a command line command on a specific Linux sandbox.                                                            |
+| `writeSandboxFiles`      | Import files from public URLs or base64 data into a sandbox.                                                       |
+
+### Tools Details
+
+#### **`createSandbox`**
+Create a Linux sandbox that can execute code, run commands, upload and download files, and has complete Linux functionality. After creation, a `sandbox_id` is returned for further operations. The sandbox will pause automatically to save on costs.
+
+**Parameters:**  
+- `max_alive_time` (`integer`): Maximum sandbox lifetime in seconds (recommended: 300)
+- `envs` (`object`, optional): Environment variables
+- `metadata` (`object`, optional): Sandbox metadata
+- `sandbox_name` (`string`, optional): Custom sandbox name
+
+-----
+
+#### **`directRunCode`**
+Creates a sandbox, runs a code snippet, and destroys the sandbox after execution. Optionally downloads generated files.
+
+**Parameters:**  
+- `code` (`string`): Source code to execute
+- `language` (`string`): Programming language (defaults to Python if omitted)
+- `envs` (`object`, optional): Environment variables
+- `is_download` (`boolean`, optional): Enable to download generated files
+- `timeout` (`number`, optional): Maximum execution time (default: 5 seconds)
+
+-----
+
+#### **`downloadSandboxFiles`**
+Export files or folders from a sandbox to downloadable URLs. Batch export supported; only common file formats are included on directory export.
+
+**Parameters:**  
+- `path` (`string`): Path(s) to export  
+- `sandbox_id` (`string`): Target sandbox ID
+
+-----
+
+#### **`killSandbox`**
+Destroys a sandbox by ID.
+
+**Parameters:**  
+- `sandbox_id` (`string`): Sandbox ID
+
+-----
+
+#### **`listSandboxFiles`**
+List files and folders at specific paths inside a sandbox.
+
+**Parameters:**  
+- `path` (`string`)
+- `sandbox_id` (`string`): Target sandbox ID
+
+-----
+
+#### **`listSandboxes`**
+Query all sandboxes for the current API key.
+
+**Parameters:**  
+- `sandbox_id` (`string`, optional): Filter by ID
+- `sandbox_name` (`string`, optional): Filter by custom name
+
+-----
+
+#### **`runCode`**
+Run code in a selected sandbox; returns text output.
+
+**Parameters:**  
+- `code` (`string`)
+- `sandbox_id` (`string`)
+- `envs` (`object`, optional): Environment variables
+- `language` (`string`, optional): Programming language
+- `timeout` (`integer`, optional): Execution timeout (seconds)
+
+-----
+
+#### **`runCommand`**
+Run a shell command in a sandbox; returns text output.
+
+**Parameters:**  
+- `cmd` (`string`)
+- `sandbox_id` (`string`)
+- `envs` (`object`, optional): Environment variables
+- `timeout` (`integer`, optional): Execution timeout (recommended: ≥120s for installs)
+
+-----
+
+#### **`writeSandboxFiles`**
+Upload files (via public URLs or base64) into a sandbox.
+
+**Parameters:**  
+- `file_list` (`array`): Files to upload
+- `sandbox_id` (`string`): Target sandbox
+
+-----
+
+---
+
+## Meshagent Resources
+
+- Main Website: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Getting Started Guide: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- Room API Overview: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- MCP Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-302_sandbox](https://hub.docker.com/r/meshagent/mcp-302_sandbox)
+
+---
+
+**Ready to leverage cloud-based sandboxes with your Meshagent room? Start integrating the MCP Server tools in your distributed, multi-agent workflows today!**

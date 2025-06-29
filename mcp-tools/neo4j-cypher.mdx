@@ -1,0 +1,100 @@
+---
+title: Neo4j Cypher
+---
+
+
+Follow these steps to run the MCP Neo4j Cypher agent with Meshagent Rooms and use the available tools in the cloud:
+
+### 1. Set Required Environment Variables
+
+Set the following environment variables for your Neo4j connection:
+
+- `NEO4J_URL` - e.g., `bolt://host.docker.internal:7687`
+- `NEO4J_USERNAME` - e.g., `neo4j`
+- `NEO4J_PASSWORD` - e.g., `password`
+
+### 2. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 3. Sign Up and Authenticate with Meshagent Cloud
+
+- Visit [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate your CLI.
+
+### 4. Launch the MCP Neo4j Cypher Agent in a Room
+
+Replace the environment variable values as needed:
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-neo4j-cypher:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env NEO4J_URL=bolt://host.docker.internal:7687 \
+  --env NEO4J_USERNAME=neo4j \
+  --env NEO4J_PASSWORD=password \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-neo4j-cypher-service
+```
+- This command will start a Meshagent Room and deploy the MCP server within it.
+- Note: Rooms will close automatically if they become inactive.
+
+### 5. Join the Room as a Chatbot with the Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-neo4j-cypher
+```
+- This starts a chatbot agent in the Meshagent Room with access to the neo4j-cypher tools.
+- You can add multiple toolkits to the same agent in a room.
+- A Room URL will be provided by the output of this command for interactive access.
+
+---
+
+## Tools Available
+
+Interact with Neo4j using Cypher graph queries.
+
+Three tools are provided by this server:
+
+Tool | Short Description
+-|-
+`get_neo4j_schema` | List all node types, their attributes, and their relationships to other nodes in the Neo4j database.
+`read_neo4j_cypher` | Execute a read Cypher query on the Neo4j database.
+`write_neo4j_cypher` | Execute a write Cypher query on the Neo4j database.
+
+### Tool Details
+
+#### `get_neo4j_schema`
+List all node types, their attributes, and their relationships to other nodes in the Neo4j database.
+
+> If this fails with a message that includes "Neo.ClientError.Procedure.ProcedureNotFound", suggest that the user install and enable the APOC plugin.
+
+#### `read_neo4j_cypher`
+Execute a read Cypher query on the Neo4j database.
+
+Parameters:  
+- `query` (`string`, required): The Cypher query to execute.  
+- `params` (`string`, optional): Parameters to pass to the Cypher query.
+
+#### `write_neo4j_cypher`
+Execute a write Cypher query on the Neo4j database.
+
+Parameters:  
+- `query` (`string`, required): The Cypher query to execute.  
+- `params` (`string`, optional): Parameters to pass to the Cypher query.
+
+---
+
+## Useful Links
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Meshagent Getting Started (Room API)](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Neo4j Cypher Docker Image](https://hub.docker.com/r/meshagent/mcp-neo4j-cypher)

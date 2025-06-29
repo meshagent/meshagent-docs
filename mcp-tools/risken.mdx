@@ -1,0 +1,122 @@
+---
+title: Risken
+---
+
+
+Run the RISKEN MCP agent and tools in a Meshagent Room in the cloud:
+
+### Prerequisites
+
+- Docker must be available.
+- [Meshagent CLI](https://docs.meshagent.com/cli/getting_started) installed and authenticated.
+
+### Required Environment Variables
+
+Set these as part of your deployment command:
+
+- **RISKEN_URL**: Base URL of your RISKEN deployment (e.g., `http://localhost:8000`)
+- **RISKEN_ACCESS_TOKEN**: RISKEN access token (replace with your actual token)
+
+### Steps
+
+1. **Install Meshagent with all extras:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate with Meshagent:**
+   - Follow instructions at: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the RISKEN MCP agent in a Meshagent room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-risken:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env RISKEN_URL=http://localhost:8000 \
+     --env RISKEN_ACCESS_TOKEN=your_access_token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-risken-service
+   ```
+   - *This command deploys the MCP server inside a Meshagent room (here, named `test`). If the room goes inactive, it will close automatically.*
+
+4. **Join the room with a chatbot agent using the RISKEN MCP toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-risken
+   ```
+   - *This starts a chatbot in the room that can access the RISKEN toolset. The room's interactive link will be shown in the output.*
+   - *You can add more toolkits or agents to the same room for even richer collaboration.*
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+Tool | Short Description
+-|-
+`archive_finding` | Archive RISKEN finding.
+`get_project`    | Get details of the authenticated RISKEN project.
+`search_alert`   | Search RISKEN alert.
+`search_finding` | Search RISKEN findings.
+
+---
+
+### Tools Details
+
+#### `archive_finding`
+Archive RISKEN finding. Use this tool for requests involving "archive", "アーカイブ", "ペンディング", etc.
+
+Parameters | Type | Description
+-|-|-
+`finding_id` | number | Finding ID.
+`note` | string (optional) | Note, e.g., "This is no risk finding."
+
+---
+
+#### `get_project`
+Get details of the authenticated RISKEN project. Use for queries like "project", "my project", "プロジェクト", etc.
+
+---
+
+#### `search_alert`
+Search RISKEN alert. Use for requests involving "alert", "アラート", etc.
+
+Parameters | Type | Description
+-|-|-
+`status` | number (optional) | Status of alert. 1: active (有効なアラート), 2: pending (保留中), 3: deactive (解決済みアラート).
+
+---
+
+#### `search_finding`
+Search RISKEN findings. For queries like "finding", "issue", "ファインディング", "問題", etc.
+
+Parameters | Type | Description
+-|-|-
+`alert_id` | number (optional) | Alert ID.
+`data_source` | array (optional) | RISKEN DataSource, e.g., aws, google, code, osint, diagnosis, azure, etc.
+`finding_id` | number (optional) | Finding ID.
+`from_score` | number (optional) | Minimum score of the findings.
+`limit` | number (optional) | Limit of the findings.
+`offset` | number (optional) | Offset of the findings.
+`resource_name` | array (optional) | RISKEN ResourceName, e.g., "arn:aws:iam::123456789012:user/test-user", etc.
+`status` | number (optional) | Status of the findings (0: all, 1: active, 2: pending).
+
+---
+
+## Links & Further Reading
+
+- [Meshagent website](https://www.meshagent.com/)
+- [Room API Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent RISKEN MCP Tool Image](https://hub.docker.com/r/meshagent/mcp-risken)
+- [RISKEN MCP Server on Docker Hub](https://hub.docker.com/repository/docker/mcp/risken)
+- [Model Context Protocol by Anthropic](https://www.anthropic.com/news/model-context-protocol)
+
+---
+
+Ready to supercharge your workflows with RISKEN tools in collaborative Meshagent Rooms! 🚀

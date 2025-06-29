@@ -1,0 +1,193 @@
+---
+title: Azure
+---
+
+
+Follow these steps to run an Azure MCP agent and toolkit in a Meshagent room in the cloud:
+
+1. **Install Meshagent CLI and integrations:**
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+
+   Follow [the CLI getting started guide](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate.
+
+3. **Start the MCP Server in a Meshagent room (as a cloud service):**
+
+   ```bash
+   meshagent service test --room=test --role=agent \
+       --image=meshagent/mcp-azure:latest \
+       --env MESHAGENT_PORT=8001  \
+       --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+       --name=mcp-azure-service
+   ```
+
+   - This command launches the Azure MCP server in a Meshagent room named `test`.
+   - The room will remain active while in use and close automatically if inactive.
+
+4. **Join the room with a chatbot agent using the Azure toolkit:**
+
+   ```bash
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-azure
+   ```
+
+   - This starts a chatbot agent, ready to use Azure tools in the `test` room.
+   - You can connect multiple toolkits or agents into the same room.
+   - The output will provide a link to the Meshagent room where you can interact with the agent and all loaded toolkits.
+
+---
+
+## Tools Available
+
+The Azure MCP server provides the following tools for managing Azure resources:
+
+| Tool Name | Short Description |
+|-----------|------------------|
+| `azmcp-appconfig-account-list` | List all App Configuration stores in a subscription. |
+| `azmcp-appconfig-kv-delete` | Delete a key-value pair from an App Configuration store. |
+| `azmcp-appconfig-kv-list` | List all key-values in an App Configuration store. |
+| `azmcp-appconfig-kv-lock` | Lock a key-value in an App Configuration store. |
+| `azmcp-appconfig-kv-set` | Set a key-value setting in an App Configuration store. |
+| `azmcp-appconfig-kv-show` | Show a specific key-value setting in an App Configuration store. |
+| `azmcp-appconfig-kv-unlock` | Unlock a key-value setting in an App Configuration store. |
+| `azmcp-cosmos-account-list` | List all Cosmos DB accounts in a subscription. |
+| `azmcp-cosmos-database-container-item-query` | Execute a SQL query against items in a Cosmos DB container. |
+| `azmcp-cosmos-database-container-list` | List all containers in a Cosmos DB database. |
+| `azmcp-cosmos-database-list` | List all databases in a Cosmos DB account. |
+| `azmcp-extension-az` | Answer questions about an Azure environment using Azure CLI commands. |
+| `azmcp-extension-azd` | Execute Azure Developer CLI (azd) commands for initializing projects, managing environments, provisioning, and deployment. |
+| `azmcp-group-list` | List all resource groups in a subscription. |
+| `azmcp-monitor-log-query` | Execute a KQL query against a Log Analytics workspace. |
+| `azmcp-monitor-table-list` | List all tables in a Log Analytics workspace. |
+| `azmcp-monitor-workspace-list` | List Log Analytics workspaces in a subscription. |
+| `azmcp-search-index-describe` | Get the full definition of an Azure AI Search index. |
+| `azmcp-search-index-list` | List all indexes in an Azure AI Search service. |
+| `azmcp-search-index-query` | Query an Azure AI Search index. |
+| `azmcp-search-service-list` | List all Azure AI Search services in a subscription. |
+| `azmcp-storage-account-list` | List all Storage accounts in a subscription. |
+| `azmcp-storage-blob-container-details` | Get detailed properties of a storage container (metadata, lease status, access level, etc.). |
+| `azmcp-storage-blob-container-list` | List all containers in a Storage account. |
+| `azmcp-storage-blob-list` | List all blobs in a Storage container. |
+| `azmcp-storage-table-list` | List all tables in a Storage account. |
+| `azmcp-subscription-list` | List all Azure subscriptions accessible to your account. |
+
+### Tool Details
+
+#### `azmcp-appconfig-account-list`
+List all App Configuration stores in a subscription. Returns store names as a JSON array.
+- **Parameters:** `subscription` (required), plus optional authentication/retry/tenant params.
+
+#### `azmcp-appconfig-kv-delete`
+Delete a key-value pair from an App Configuration store. Can specify key and optional label.
+- **Parameters:** `account-name`, `key`, `subscription` (required); others optional.
+
+#### `azmcp-appconfig-kv-list`
+List all key-values in an App Configuration store. Supports key/label filtering/wildcards.
+- **Parameters:** `account-name`, `subscription` (required); others optional.
+
+#### `azmcp-appconfig-kv-lock`
+Lock a key-value setting in an App Configuration store, setting it to read-only.
+- **Parameters:** `account-name`, `key`, `subscription` (required); others optional.
+
+#### `azmcp-appconfig-kv-set`
+Set (create or update) a key-value pair in an App Configuration store.
+- **Parameters:** `account-name`, `key`, `value`, `subscription` (required); others optional.
+
+#### `azmcp-appconfig-kv-show`
+Show a specific key-value detail in an App Configuration store.
+- **Parameters:** `account-name`, `key`, `subscription` (required); others optional.
+
+#### `azmcp-appconfig-kv-unlock`
+Unlock a previously locked (read-only) key-value setting in App Configuration.
+- **Parameters:** `account-name`, `key`, `subscription` (required); others optional.
+
+#### `azmcp-cosmos-account-list`
+List all Cosmos DB accounts in a given subscription.
+- **Parameters:** `subscription` (required); others optional.
+
+#### `azmcp-cosmos-database-container-item-query`
+Run SQL queries against Cosmos DB containers for complex item lookups.
+- **Parameters:** `account-name`, `database-name`, `container-name`, `subscription` (required); `query` optional.
+
+#### `azmcp-cosmos-database-container-list`
+List all containers in a specified Cosmos DB database.
+- **Parameters:** `account-name`, `database-name`, `subscription` (required).
+
+#### `azmcp-cosmos-database-list`
+List all databases in a Cosmos DB account.
+- **Parameters:** `account-name`, `subscription` (required).
+
+#### `azmcp-extension-az`
+Execute Azure CLI commands to manage resources and answer environment questions.
+- **Parameters:** `command` (required); others optional.
+
+#### `azmcp-extension-azd`
+Execute Azure Developer CLI (azd) commands for building/deploying Azure apps and infrastructure.
+- **Parameters:** CLI command parameters required as per activity.
+
+#### `azmcp-group-list`
+List all resource groups in an Azure subscription.
+- **Parameters:** `subscription` (required).
+
+#### `azmcp-monitor-log-query`
+Run KQL queries against Log Analytics workspaces.
+- **Parameters:** `workspace-name`, `subscription`, `query` (required).
+
+#### `azmcp-monitor-table-list`
+List all tables in a Log Analytics workspace.
+- **Parameters:** `workspace-name`, `subscription` (required).
+
+#### `azmcp-monitor-workspace-list`
+List all Log Analytics workspaces in a subscription.
+- **Parameters:** `subscription` (required).
+
+#### `azmcp-search-index-describe`
+Show a detailed schema of an Azure AI Search index.
+- **Parameters:** `service-name`, `index-name`, `subscription` (required).
+
+#### `azmcp-search-index-list`
+List search indexes in an AI Search service.
+- **Parameters:** `service-name`, `subscription` (required).
+
+#### `azmcp-search-index-query`
+Query the contents of an Azure AI Search index.
+- **Parameters:** `service-name`, `index-name`, `subscription`, `search` (text query).
+
+#### `azmcp-search-service-list`
+List all Azure AI Search services for a subscription.
+- **Parameters:** `subscription` (required).
+
+#### `azmcp-storage-account-list`
+List all Azure Storage accounts in a subscription.
+- **Parameters:** `subscription` (required).
+
+#### `azmcp-storage-blob-container-details`
+View properties, metadata, and access level for a Storage blob container.
+- **Parameters:** `account-name`, `container-name`, `subscription` (required).
+
+#### `azmcp-storage-blob-container-list`
+List all blob containers in a Storage account.
+- **Parameters:** `account-name`, `subscription` (required).
+
+#### `azmcp-storage-blob-list`
+List all blobs in a container.
+- **Parameters:** `account-name`, `container-name`, `subscription` (required).
+
+#### `azmcp-storage-table-list`
+List all table storage tables in a Storage account.
+- **Parameters:** `account-name`, `subscription` (required).
+
+#### `azmcp-subscription-list`
+List all subscriptions accessible to your authenticated Azure account.
+
+---
+
+## Related Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API - Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API - Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Official Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-azure](https://hub.docker.com/r/meshagent/mcp-azure)

@@ -1,0 +1,119 @@
+---
+title: Handwriting OCR
+---
+
+
+### Run Handwriting OCR MCP Agent and Tool in a Meshagent Room
+
+These instructions will help you deploy the Handwriting OCR MCP server as a tool, and connect an agent in a Meshagent Room to use this tool.
+
+#### **Environment Variables Needed**
+- `API_TOKEN`: *your-api-token*  
+  (Token for authenticating with the MCP server)
+
+#### **Step-by-Step**
+1. Install Meshagent (and all dependencies):
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. Sign up and authenticate with Meshagent:
+
+   - [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. Start the MCP Handwriting OCR server in a Meshagent Room (cloud):
+
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-handwriting-ocr:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_TOKEN=your-api-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-handwriting-ocr-service
+   ```
+
+   - This command will start a Meshagent room with the MCP server accessible as a toolkit. Rooms are ephemeral and may close if inactive.
+
+4. Connect a chatbot to the Meshagent Room, loading the MCP tool:
+
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-handwriting-ocr
+   ```
+
+   - This starts a chatbot in your Meshagent room, letting you interact with the Handwriting OCR API via the agent.  
+   - Multiple MCP toolkits can be loaded into one room by the same or different agents.
+   - The output will include a URL link to the room—use it to interact with the agent and tools via the Meshagent UI.
+
+---
+
+## Tools Available
+
+Below are the tools exposed by the MCP Handwriting OCR server when integrated with Meshagent:
+
+### Tools Summary
+
+| Tool               | Short Description                       |
+|--------------------|----------------------------------------|
+| `check_status`     | Check the status of a document         |
+| `get_text`         | Retrieve the transcribed text          |
+| `upload_document`  | Upload a document for transcription    |
+
+---
+
+### Tools Details
+
+#### **`check_status`**
+Check the status of a document.
+
+| Parameter | Type    | Description    |
+|-----------|---------|---------------|
+| `id`      | string  | Document ID   |
+
+---
+
+#### **`get_text`**
+Retrieve the transcribed text from a document.
+
+| Parameter | Type    | Description   |
+|-----------|---------|--------------|
+| `id`      | string  | Document ID  |
+
+---
+
+#### **`upload_document`**
+Upload a document to the Handwriting OCR API for transcription.
+
+| Parameter      | Type      | Description                                                                                          |
+|----------------|-----------|------------------------------------------------------------------------------------------------------|
+| `file`         | string    | Path to the document (PDF, JPG, PNG, etc.)                                                           |
+| `delete_after` | integer*  | *(Optional)* Seconds until auto-deletion                                                             |
+| `extractor_id` | string*   | *(Optional)* Extractor ID (required if action is extractor, will be ignored)                         |
+| `prompt_id`    | string*   | *(Optional)* Prompt ID (requires Enterprise subscription, will be ignored)                            |
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Homepage:**  
+  https://www.meshagent.com/
+- **Getting Started with Room API:**  
+  https://docs.meshagent.com/room_api/get_started
+- **Room API Overview:**  
+  https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Handwriting OCR Docker Image:**  
+  https://hub.docker.com/r/meshagent/mcp-handwriting-ocr
+
+---
+
+**For more about MCP Servers:**  
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+**Why is it safer to run MCP Servers with Docker?**  
+[Read the Docker blog](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

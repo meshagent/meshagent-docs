@@ -1,0 +1,103 @@
+---
+title: Sequential Thinking
+---
+
+
+Follow this guide to run the Sequential Thinking agent and toolkit in a Meshagent Room in the cloud:
+
+1. **Install Meshagent with all dependencies:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**
+   - Follow the instructions at: [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start a Meshagent Room with the MCP server:**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-sequentialthinking:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-sequentialthinking-service
+   ```
+   - **Note:** This command launches a Meshagent room called `test` and starts the Sequential Thinking MCP server within that room. Meshagent Rooms automatically close if they go inactive.
+
+4. **Join the room with a chatbot and Sequential Thinking toolkit:**
+   ```
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-sequentialthinking
+   ```
+   - The chatbot named `sample` enters the room and can use the Sequential Thinking toolkit.
+   - You can use multiple toolkits per agent in the same room.
+   - **After running this**, you'll get a link to the Meshagent room in your console, which you can use to interact with the agent and toolkit.
+
+---
+
+## Tools Available
+
+The Sequential Thinking MCP server provides dynamic, reflective problem-solving through directed thought sequences.
+
+### Tools Provided
+
+| Tool Name            | Short Description                                                        |
+|----------------------|--------------------------------------------------------------------------|
+| `sequentialthinking` | A detailed tool for dynamic and reflective problem-solving through thoughts.|
+
+---
+
+### Tool Details
+
+#### Tool: **`sequentialthinking`**
+A detailed tool for dynamic and reflective problem-solving through thoughts.  
+This tool helps analyze problems through a flexible thinking process that can adapt and evolve. Each thought can build on, question, or revise previous insights as understanding deepens.
+
+**When to use:**
+- Breaking down complex problems into steps
+- Planning and design with room for revision
+- Analysis that might need course correction
+- Problems where the full scope might not be clear initially
+- Multi-step solutions
+- Tasks that must maintain context over multiple steps
+- Filtering out irrelevant information
+
+**Key Features:**
+- Dynamically adjust the number of thought steps as you progress
+- Revise or question previous thoughts anytime
+- Add more thoughts on the fly—even “after the end”
+- Branch or backtrack as needed
+- Express uncertainty and explore alternatives
+- Generates and verifies solution hypotheses
+- Iterates until satisfied with the outcome
+
+**You should:**
+1. Begin with an initial estimate of needed thoughts, but adjust along the way
+2. Question or revise anything as needed
+3. Add more thoughts if necessary—even after reaching “the end”
+4. Express uncertainty; not every step needs to be certain
+5. Mark revised or branched thoughts appropriately
+6. Ignore irrelevant information
+7. Generate and verify hypotheses
+8. Repeat until truly satisfied with the answer
+9. Output a single, best answer in the end
+
+**Parameters:**
+
+| Parameter            | Type       | Description                                            |
+|----------------------|------------|--------------------------------------------------------|
+| nextThoughtNeeded    | boolean    | Whether another thought step is needed                 |
+| thought              | string     | Your current thinking step                             |
+| thoughtNumber        | integer    | Current thought number                                 |
+| totalThoughts        | integer    | Estimated total thoughts needed                        |
+| branchFromThought    | integer*   | Branching point thought number                         |
+| branchId             | string*    | Branch identifier                                      |
+| isRevision           | boolean*   | Whether this revises previous thinking                 |
+| needsMoreThoughts    | boolean*   | If more thoughts are needed                            |
+| revisesThought       | integer*   | Which thought is being reconsidered                    |
+
+\* *optional
+
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Home:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started with Rooms API:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Rooms API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-sequentialthinking](https://hub.docker.com/r/meshagent/mcp-sequentialthinking)

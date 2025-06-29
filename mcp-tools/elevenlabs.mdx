@@ -1,0 +1,206 @@
+---
+title: ElevenLabs
+---
+
+
+Run the ElevenLabs MCP server and toolkit in a Meshagent Room in the cloud.
+
+### Required Environment Variables
+
+- `ELEVENLABS_API_KEY`: Your ElevenLabs API key.
+
+### Steps
+
+1. **Install Meshagent:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Follow instructions at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start MCP Server as a Room Service:**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-elevenlabs:latest --env MESHAGENT_PORT=8001 --env ELEVENLABS_API_KEY=<insert-your-api-key-here> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-elevenlabs-service
+   ```
+   **What this does:**  
+   - Launches the ElevenLabs MCP server in a Meshagent room (`test`).  
+   - MCP server will be accessible as a callable service.  
+   - **Note:** Rooms close automatically if they go inactive.
+
+4. **Join the Room with a Chatbot Agent:**
+   ```
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-elevenlabs
+   ```
+   - Starts a chatbot in the same room, with ElevenLabs toolkit enabled.
+   - Multiple toolkits can be added to the same agent.
+   - The output will include a room link for you to interact with the agent and ElevenLabs tools.
+
+---
+
+## Tools Available
+
+_ElevenLabs MCP Server provides the following tools in Meshagent Rooms:_
+
+| Tool                              | Short Description                                                                               |
+|------------------------------------|-----------------------------------------------------------------------------------------------|
+| `add_knowledge_base_to_agent`      | Add a knowledge base to ElevenLabs workspace.                                                  |
+| `check_subscription`               | Check the current subscription status.                                                         |
+| `create_agent`                     | Create a conversational AI agent with custom configuration.                                    |
+| `create_voice_from_preview`        | Add a generated voice to the voice library.                                                    |
+| `get_agent`                        | Get details about a specific conversational AI agent                                           |
+| `get_voice`                        | Get details of a specific voice                                                                |
+| `isolate_audio`                    | Isolate audio from a file and save the output audio file to a given directory.                 |
+| `list_agents`                      | List all available conversational AI agents                                                    |
+| `list_phone_numbers`               | List all phone numbers associated with the ElevenLabs account                                  |
+| `make_outbound_call`               | Make an outbound call via Twilio using an ElevenLabs agent.                                    |
+| `play_audio`                       | Play an audio file.                                                                            |
+| `search_voice_library`             | Search for a voice across the entire ElevenLabs voice library.                                 |
+| `search_voices`                    | Search for existing voices in your ElevenLabs voice library.                                   |
+| `speech_to_speech`                 | Transform audio from one voice to another using provided audio files.                          |
+| `speech_to_text`                   | Transcribe speech from an audio file and save or return the text.                              |
+| `text_to_sound_effects`            | Convert a text description of a sound effect into an audio file.                               |
+| `text_to_speech`                   | Convert text to speech with a given voice and save the output audio.                           |
+| `text_to_voice`                    | Create voice previews from a text prompt.                                                      |
+| `voice_clone`                      | Clone a voice using provided audio files.                                                      |
+
+---
+
+### Tools Details
+
+#### **add_knowledge_base_to_agent**
+Add a knowledge base to ElevenLabs workspace. Allowed file types: epub, pdf, docx, txt, html.
+- **Parameters:**  
+  - `agent_id` (string, required): ID of the agent to add the knowledge base to.
+  - `knowledge_base_name` (string, required): Name of the knowledge base.
+  - `input_file_path` (string, optional): Path to the file.
+  - `text` (string, optional): Text to add.
+  - `url` (string, optional): URL of the knowledge base.
+
+#### **check_subscription**
+Check the current subscription status.
+
+#### **create_agent**
+Create a conversational AI agent with custom configuration.
+- **Parameters:**  
+  - `first_message` (string, required): Initial message for conversations.
+  - `name` (string, required): Name of the agent.
+  - `system_prompt` (string, required): System prompt for the agent.
+  - Other options: `asr_quality`, `language`, `llm`, `max_duration_seconds`, `max_tokens`, `model_id`, `optimize_streaming_latency`, `record_voice`, `retention_days`, `similarity_boost`, `stability`, `temperature`, `turn_timeout`, `voice_id`.
+
+#### **create_voice_from_preview**
+Add a generated voice to the voice library.
+- **Parameters:**  
+  - `generated_voice_id` (string, required)
+  - `voice_description` (string, required)
+  - `voice_name` (string, required)
+
+#### **get_agent**
+Retrieve details about a specific conversational AI agent.
+- **Parameters:**  
+  - `agent_id` (string, required)
+
+#### **get_voice**
+Retrieve details of a specific voice.
+- **Parameters:**  
+  - `voice_id` (string, required)
+
+#### **isolate_audio**
+Isolate audio from a file and save it to a directory (default: `$HOME/Desktop`).
+- **Parameters:**  
+  - `input_file_path` (string, required)
+  - `output_directory` (string, optional)
+
+#### **list_agents**
+List all conversational AI agents.
+
+#### **list_phone_numbers**
+List all phone numbers associated with the ElevenLabs account.
+
+#### **make_outbound_call**
+Make an outbound call using an ElevenLabs agent via Twilio.
+- **Parameters:**  
+  - `agent_id` (string, required): Agent to handle the call
+  - `agent_phone_number_id` (string, required): Phone number to use
+  - `to_number` (string, required): Destination number (E.164 format)
+
+#### **play_audio**
+Play an audio file (WAV or MP3).
+- **Parameters:**  
+  - `input_file_path` (string, required)
+
+#### **search_voice_library**
+Search the entire ElevenLabs voice library.
+- **Parameters:**  
+  - `page` (integer, optional)
+  - `page_size` (integer, optional)
+  - `search` (string, optional)
+
+#### **search_voices**
+Search for voices in your ElevenLabs voice library.
+- **Parameters:**  
+  - `search` (string, optional)
+  - `sort` (string, optional)
+  - `sort_direction` (string, optional)
+
+#### **speech_to_speech**
+Transform audio from one voice to another.
+- **Parameters:**  
+  - `input_file_path` (string, required)
+  - `output_directory` (string, optional)
+  - `voice_name` (string, optional)
+
+#### **speech_to_text**
+Transcribe speech from an audio file and save or return text.
+- **Parameters:**  
+  - `input_file_path` (string, required)
+  - `diarize` (boolean, optional)
+  - `language_code` (string, optional)
+  - `output_directory` (string, optional)
+  - `return_transcript_to_client_directly` (boolean, optional)
+  - `save_transcript_to_file` (boolean, optional)
+
+#### **text_to_sound_effects**
+Convert text to a sound effect and save as audio (duration: 0.5–5 seconds).
+- **Parameters:**  
+  - `text` (string, required)
+  - `duration_seconds` (number, optional)
+  - `output_directory` (string, optional)
+
+#### **text_to_speech**
+Convert text to speech with a selected voice, save as audio.
+- **Parameters:**  
+  - `text` (string, required)
+  - `output_directory` (string, optional)
+  - `similarity_boost` (number, optional)
+  - `speed` (number, optional)
+  - `stability` (number, optional)
+  - `style` (number, optional)
+  - `use_speaker_boost` (boolean, optional)
+  - `voice_id` (string, optional)
+  - `voice_name` (string, optional)
+
+#### **text_to_voice**
+Create voice previews from a text prompt.
+- **Parameters:**  
+  - `voice_description` (string, required)
+  - `output_directory` (string, optional)
+  - `text` (string, optional)
+
+#### **voice_clone**
+Clone a voice using provided audio files.
+- **Parameters:**  
+  - `files` (array, required)
+  - `name` (string, required)
+  - `description` (string, optional)
+
+---
+
+## Learn More
+
+- **Meshagent:** https://www.meshagent.com/
+- **Room API Getting Started:** https://docs.meshagent.com/room_api/get_started
+- **Room API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP ElevenLabs Image:** https://hub.docker.com/r/meshagent/mcp-elevenlabs
+
+See [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/) for best practices on secure deployment.

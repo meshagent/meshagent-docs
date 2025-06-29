@@ -1,0 +1,116 @@
+---
+title: Elasticsearch
+---
+
+
+### Run the MCP Elasticsearch Agent and Toolkit in the Cloud
+
+**Required Environment Variables:**
+- `ES_URL`: URL of your Elasticsearch instance (e.g., `http://localhost:9200`)
+- `ES_API_KEY`: Your Elasticsearch API key (e.g., `your-api-key`)
+
+### Steps
+
+1. **Install Meshagent CLI and Toolkits**
+
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign Up and Authenticate**
+
+    - Follow the steps at [Meshagent CLI: Get Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+
+3. **Start the MCP Elasticsearch Server as a Meshagent Service**
+
+    ```sh
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-elasticsearch:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env ES_URL=<your-es-url> \
+      --env ES_API_KEY=<your-es-api-key> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-elasticsearch-service
+    ```
+
+    - *This command starts a Meshagent room with the MCP Elasticsearch server available. Rooms will automatically close if they become inactive.*
+
+4. **Join the Room with a Chatbot Agent Using the Elasticsearch Toolkit**
+
+    ```sh
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-elasticsearch
+    ```
+
+    - *This starts a chatbot in the Meshagent room enabled with the Elasticsearch toolkit. Multiple toolkits can be used in the same room with the same agent.*
+    - *A link to the room will be provided in the output of this command, where you can interact with the agent and tools.*
+
+---
+
+## Tools Available
+
+Interact with your Elasticsearch indices through natural language conversations.
+
+> [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+### Tools Summary
+
+| Tool Name      | Short Description                                         |
+|----------------|----------------------------------------------------------|
+| `get_mappings` | Get field mappings for a specific Elasticsearch index    |
+| `get_shards`   | Get shard info for all or specific indices               |
+| `list_indices` | List all available Elasticsearch indices                 |
+| `search`       | Perform an Elasticsearch search with provided query DSL  |
+
+---
+
+### Tools Details
+
+#### **`get_mappings`**
+*Get field mappings for a specific Elasticsearch index.*
+
+| Parameter | Type     | Description                                      |
+|-----------|----------|--------------------------------------------------|
+| `index`   | `string` | Name of the Elasticsearch index to get mappings for |
+
+---
+
+#### **`get_shards`**
+*Get shard information for all or specific indices.*
+
+| Parameter | Type     | Description                                      |
+|-----------|----------|--------------------------------------------------|
+| `index`   | `string` (*optional*) | Optional index name to get shard information for |
+
+---
+
+#### **`list_indices`**
+*List all available Elasticsearch indices.*
+
+| Parameter    | Type     | Description                                   |
+|--------------|----------|-----------------------------------------------|
+| `indexPattern` | `string` | Index pattern of Elasticsearch indices to list |
+
+---
+
+#### **`search`**
+*Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.*
+
+| Parameter   | Type     | Description                                   |
+|-------------|----------|-----------------------------------------------|
+| `index`     | `string` | Name of the Elasticsearch index to search     |
+| `queryBody` | `object` | Complete Elasticsearch query DSL object       |
+
+---
+
+## Meshagent & MCP Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [Room API Quickstart](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [Overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Image:** [meshagent/mcp-elasticsearch on Docker Hub](https://hub.docker.com/r/meshagent/mcp-elasticsearch)

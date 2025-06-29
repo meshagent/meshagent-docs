@@ -1,0 +1,104 @@
+---
+title: Gyazo
+---
+
+
+Get your Gyazo tools running in a Meshagent Room:
+
+### 1. Environment Variables
+
+Set the following environment variable before running the MCP service:
+
+- **GYAZO_ACCESS_TOKEN**: Your Gyazo access token (required for all Gyazo API operations).
+
+### 2. Steps
+
+1. **Install Meshagent with all toolkits:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Follow instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Gyazo Service in a Meshagent Room:**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-gyazo:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env GYAZO_ACCESS_TOKEN=your-access-token-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-gyazo-service
+   ```
+   - This command wraps the Gyazo MCP server in a Meshagent Room. The room will automatically close if no activity is detected.
+
+4. **Join the Room with a Chatbot Agent using the Toolkit:**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-gyazo
+   ```
+   - This launches a chatbot in the Meshagent Room with access to the Gyazo tools.
+   - Multiple toolkits can be enabled for one agent in a room.
+   - The output includes a link to join and interact with the agent and tools in the room.
+
+---
+
+## Tools Available
+
+Tools included by the Gyazo MCP Server:
+
+| Tool                | Short Description                                    |
+|---------------------|-----------------------------------------------------|
+| `gyazo_image`       | Fetch image content and metadata from Gyazo          |
+| `gyazo_latest_image`| Fetch latest uploaded image content and metadata     |
+| `gyazo_search`      | Full-text search for captures uploaded by users      |
+| `gyazo_upload`      | Upload an image to Gyazo                             |
+
+### Tools Details
+
+#### Tool: **`gyazo_image`**
+Fetch image content and metadata from Gyazo  
+**Parameters:**
+- `id_or_url` (`string`): ID or URL of the image on Gyazo
+
+---
+
+#### Tool: **`gyazo_latest_image`**
+Fetch latest uploaded image content and metadata from Gyazo  
+**Parameters:**
+- `name` (`string`)
+
+---
+
+#### Tool: **`gyazo_search`**
+Full-text search for captures uploaded by users on Gyazo  
+**Parameters:**
+- `query` (`string`): Search keyword (max length: 200 characters). Example: 'cat', 'title:cat', 'app:"Google Chrome"', 'url:google.com', 'cat since:2024-01-01 until:2024-12-31'  
+  *Tip*: If you don’t find the right capture, rephrase your query based on user intent and try again.
+- `page` (`integer`, *optional*): Page number for pagination
+- `per` (`integer`, *optional*): Number of results per page (max: 100)
+
+---
+
+#### Tool: **`gyazo_upload`**
+Upload an image to Gyazo  
+**Parameters:**
+- `imageData` (`string`): Base64 encoded image data
+- `app` (`string`, *optional*): Application name for the image
+- `description` (`string`, *optional*): Description for the image
+- `refererUrl` (`string`, *optional*): Source URL for image
+- `title` (`string`, *optional*): Title for the image
+
+---
+
+## Related Links
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Meshagent Room API Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Gyazo Docker Image](https://hub.docker.com/r/meshagent/mcp-gyazo)

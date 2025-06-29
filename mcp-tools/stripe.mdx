@@ -1,0 +1,281 @@
+---
+title: Stripe
+---
+
+
+**This section explains how to run a Stripe MCP agent and tools in the cloud using Meshagent Rooms.**
+
+> **You’ll need a [Stripe Secret Key](https://dashboard.stripe.com/apikeys) to use the Stripe API.**
+
+### Environment Variables Required
+
+- `STRIPE_SECRET_KEY` — Your Stripe API Secret Key.
+
+### Steps
+
+1. **Install Meshagent CLI and dependencies:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   - Follow the [getting started guide](https://docs.meshagent.com/cli/getting_started) to create an account and run:
+     ```sh
+     meshagent user login
+     ```
+   
+3. **Launch the Stripe MCP agent in a Meshagent Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-stripe:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env STRIPE_SECRET_KEY=sk_YOUR_STRIPE_SECRET_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-stripe-service
+   ```
+   - Replace `sk_YOUR_STRIPE_SECRET_KEY` with your actual Stripe Secret Key.
+   - This command launches the MCP server in a Meshagent Room. The room will automatically close if it goes inactive.
+
+4. **Join the room with a chatbot agent and toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-stripe
+   ```
+   - This starts a chatbot in the Meshagent Room with access to the Stripe toolkit.
+   - Multiple toolkits and agents can be attached to the same room.
+   - The command output will provide a room link to interact with the agent and tools via web UI.
+
+---
+
+## Tools Available
+
+Interact with Stripe services over the Stripe API using these tools in Meshagent Rooms.
+
+**Tool summary:**
+
+| Tool | Short Description |
+|------|------------------|
+| `cancel_subscription` | Cancel a subscription in Stripe. |
+| `create_coupon` | Create a coupon in Stripe. |
+| `create_customer` | Create a customer in Stripe. |
+| `create_invoice` | Create an invoice in Stripe. |
+| `create_invoice_item` | Create an invoice item in Stripe. |
+| `create_payment_link` | Create a payment link in Stripe. |
+| `create_price` | Create a price in Stripe. |
+| `create_product` | Create a product in Stripe. |
+| `create_refund` | Refund a payment intent in Stripe. |
+| `finalize_invoice` | Finalize an invoice in Stripe. |
+| `list_coupons` | Fetch a list of Coupons from Stripe. |
+| `list_customers` | Fetch a list of Customers from Stripe. |
+| `list_disputes` | Fetch a list of disputes in Stripe. |
+| `list_payment_intents` | List payment intents in Stripe. |
+| `list_prices` | Fetch a list of Prices from Stripe. |
+| `list_products` | Fetch a list of Products from Stripe. |
+| `list_subscriptions` | List all subscriptions in Stripe. |
+| `retrieve_balance` | Retrieve the balance from Stripe. |
+| `update_dispute` | Upload evidence or respond to a dispute in Stripe. |
+| `update_subscription` | Update an existing subscription in Stripe. |
+
+---
+
+### Tools Details
+
+#### cancel_subscription
+Cancels a subscription in Stripe.
+
+**Parameters:**
+- `subscription` (`string`, required): The ID of the subscription to cancel.
+
+---
+
+#### create_coupon
+Creates a coupon in Stripe.
+
+**Parameters:**
+- `name` (`string`): Coupon display name.
+- `amount_off` (`number`, optional): Amount to subtract (in cents).
+  - `currency` (`string`, optional): ISO currency code; required if `amount_off` is set.
+- `percent_off` (`number`, optional): Percentage discount (0–100), required if `amount_off` is not set.
+- `duration` (`string`, optional): How long the discount lasts (`once`, `repeating`, or `forever`). Defaults to `once`.
+- `duration_in_months` (`number`, optional): If `duration` is `repeating`.
+
+---
+
+#### create_customer
+Creates a customer in Stripe.
+
+**Parameters:**
+- `name` (`string`): Customer name.
+- `email` (`string`, optional): Customer email.
+
+---
+
+#### create_invoice
+Creates an invoice in Stripe.
+
+**Parameters:**
+- `customer` (`string`): Customer ID.
+- `days_until_due` (`integer`, optional): Number of days until due.
+
+---
+
+#### create_invoice_item
+Creates an invoice item in Stripe.
+
+**Parameters:**
+- `customer` (`string`): Customer ID.
+- `invoice` (`string`): Invoice ID.
+- `price` (`string`): Price ID.
+
+---
+
+#### create_payment_link
+Creates a payment link in Stripe.
+
+**Parameters:**
+- `price` (`string`): Price ID.
+- `quantity` (`integer`): Quantity.
+
+---
+
+#### create_price
+Creates a price in Stripe.
+
+**Parameters:**
+- `product` (`string`): Product ID.
+- `unit_amount` (`integer`): Price (in cents).
+- `currency` (`string`): Currency code.
+
+---
+
+#### create_product
+Creates a product in Stripe.
+
+**Parameters:**
+- `name` (`string`): Product name.
+- `description` (`string`, optional): Product description.
+
+---
+
+#### create_refund
+Refunds a payment intent in Stripe.
+
+**Parameters:**
+- `payment_intent` (`string`): PaymentIntent ID.
+- `amount` (`integer`, optional): Amount (in cents).
+- `reason` (`string`, optional): Reason for refund.
+
+---
+
+#### finalize_invoice
+Finalizes an invoice in Stripe.
+
+**Parameters:**
+- `invoice` (`string`): Invoice ID.
+
+---
+
+#### list_coupons
+Fetches a list of coupons from Stripe.
+
+**Parameters:**
+- `limit` (`integer`, optional): Maximum number to return (1–100).
+
+---
+
+#### list_customers
+Fetches a list of customers from Stripe.
+
+**Parameters:**
+- `limit` (`integer`, optional): Maximum number to return (1–100).
+- `email` (`string`, optional): Filter by email.
+
+---
+
+#### list_disputes
+Fetches a list of disputes in Stripe.
+
+**Parameters:**
+- `charge` (`string`, optional): Filter by charge ID.
+- `payment_intent` (`string`, optional): Filter by PaymentIntent ID.
+- `limit` (`integer`, optional): Maximum number to return (1–100, default 10).
+
+---
+
+#### list_payment_intents
+Lists payment intents in Stripe.
+
+**Parameters:**
+- `customer` (`string`, optional): Customer ID.
+- `limit` (`integer`, optional): Number to return (1–100).
+
+---
+
+#### list_prices
+Fetches a list of prices from Stripe.
+
+**Parameters:**
+- `product` (`string`, optional): Product ID.
+- `limit` (`integer`, optional): Number to return (default 10).
+
+---
+
+#### list_products
+Fetches a list of products from Stripe.
+
+**Parameters:**
+- `limit` (`integer`, optional): Number to return (default 10).
+
+---
+
+#### list_subscriptions
+Lists subscriptions in Stripe.
+
+**Parameters:**
+- `customer` (`string`, optional): Customer ID.
+- `price` (`string`, optional): Price ID.
+- `status` (`string`, optional): Subscription status.
+- `limit` (`integer`, optional): Number to return (1–100).
+
+---
+
+#### retrieve_balance
+Retrieves the balance from Stripe.
+
+**Parameters:** None.
+
+---
+
+#### update_dispute
+Uploads evidence or responds to a dispute in Stripe.
+
+**Parameters:**
+- `dispute` (`string`): Dispute ID.
+- `evidence` (`object`, optional): Evidence fields.
+  - `cancellation_policy_disclosure`, `cancellation_rebuttal`, `duplicate_charge_explanation`, `uncategorized_text`.
+- `submit` (`boolean`, optional): Whether to immediately submit evidence.
+
+---
+
+#### update_subscription
+Updates an existing subscription in Stripe.
+
+**Parameters:**
+- `subscription` (`string`): Subscription ID.
+- `proration_behavior` (`string`, optional): Proration handling (`create_prorations`, `none`, `always_invoice`, `none_implicit`).
+- `items` (`array`, optional): List of items — each may contain:
+  - `id`, `price`, `quantity`, `deleted`.
+
+---
+
+## Resources & Links
+
+- **Meshagent Homepage:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Stripe Docker Image:** [https://hub.docker.com/r/meshagent/mcp-stripe](https://hub.docker.com/r/meshagent/mcp-stripe)

@@ -1,0 +1,219 @@
+---
+title: iAptic
+---
+
+
+Run the Iaptic MCP agent and chatbot tool in the cloud through Meshagent Rooms. 
+
+### Set Required Environment Variables
+
+- `IAPTIC_APP_NAME` — *your Iaptic app name*
+- `IAPTIC_API_KEY` — *your Iaptic API key*
+
+Example:
+```bash
+export IAPTIC_APP_NAME=your-app-name-here
+export IAPTIC_API_KEY=your-api-key-here
+```
+
+### Cloud Run Instructions
+
+1. **Install Meshagent CLI and Toolkit**
+    ```
+    pip install "meshagent[all]"
+    ```
+2. **Sign Up and Authenticate with Meshagent**
+    - Follow the Meshagent [CLI Get Started guide](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+3. **Start the MCP Server as a Meshagent Service**
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-iaptic:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env IAPTIC_APP_NAME=your-app-name-here \
+      --env IAPTIC_API_KEY=your-api-key-here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-iaptic-service
+    ```
+    - This command launches a Meshagent Room (`--room=test`) running the Iaptic MCP server as a callable cloud agent. Rooms auto-close if inactive.
+
+4. **Join a Chatbot Agent with Tool Access**
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-iaptic
+    ```
+    - This starts a chatbot in the `test` room using the Iaptic toolkit. You can use multiple toolkits or connect multiple bots in the same room.
+    - After startup, the command output provides a room link to interact with the agent, tools, and collaborators.
+
+---
+
+## Tools Available
+
+| Tool Name                   | Description                                                      |
+|-----------------------------|------------------------------------------------------------------|
+| `customer_add_purchase`     | Manually associate a customer with a purchase.                   |
+| `customer_get`              | Get detailed information about a specific customer.              |
+| `customer_list`             | List customers from your Iaptic account.                         |
+| `customer_subscription`     | Get customer's subscription status.                              |
+| `customer_transactions`     | Get customer's transaction history.                              |
+| `event_list`                | List recent events from your Iaptic account.                     |
+| `iaptic_current_app`        | Get information about the currently active Iaptic app.           |
+| `iaptic_reset_app`          | Reset to the default Iaptic app.                                 |
+| `iaptic_switch_app`         | Switch to a different Iaptic app.                                |
+| `purchase_get`              | Get detailed information about a specific purchase.              |
+| `purchase_list`             | List purchases from your Iaptic account.                         |
+| `stats_app`                 | Get statistics specific to your application.                     |
+| `stats_get`                 | Get general transactions, revenue and usage statistics.          |
+| `stripe_prices`             | Get available Stripe products and prices.                        |
+| `transaction_get`           | Get detailed information about a specific transaction.           |
+| `transaction_list`          | List financial transactions from your Iaptic account.            |
+
+### Tool Details
+
+#### `customer_add_purchase`
+Manually associate a customer with a purchase.
+- Links a purchase to a customer; useful for manual purchase management.
+- Required: `customerId`, `purchaseId` (format: `platform:purchaseId`, e.g., `apple:123109519983`)
+- **Parameters:**
+  - `customerId` (string): Application username of the customer
+  - `purchaseId` (string): ID of the purchase to associate
+
+---
+
+#### `customer_get`
+Get detailed information about a specific customer.
+- Returns customer profile: username, purchase history, subscriptions, renewal status, etc.
+- Required: `customerId`
+- **Parameters:**
+  - `customerId` (string): Unique identifier of the customer
+
+---
+
+#### `customer_list`
+List customers from your Iaptic account.
+- Paginated customer listing with subscription and purchase status.
+- **Parameters:**
+  - `limit` (number, optional): Max customers to return (default: 100)
+  - `offset` (number, optional): Pagination offset
+
+---
+
+#### `customer_subscription`
+Get customer's subscription status.
+- Returns subscription details: status, expiry, payment, renewal, trial info.
+- Required: `customerId`
+- **Parameters:**
+  - `customerId` (string): Application username of the customer
+
+---
+
+#### `customer_transactions`
+Get customer's transaction history.
+- Lists all transactions for a customer with payment details and timestamps.
+- **Parameters:**
+  - `customerId` (string): Application username of the customer
+
+---
+
+#### `event_list`
+List recent events from your Iaptic account.
+- Returns system events (receipt validations, platform notifications, webhook deliveries, etc).
+- **Parameters:**
+  - `enddate` (string, optional): Filter events before date (ISO)
+  - `limit` (number, optional): Max events (default: 100)
+  - `offset` (number, optional): Pagination offset
+  - `startdate` (string, optional): Filter events after date (ISO)
+
+---
+
+#### `iaptic_current_app`
+Get current app information.
+- Shows current app name, credential method, master key usage.
+
+---
+
+#### `iaptic_reset_app`
+Reset to the default Iaptic app.
+- Reverts to initial app credentials after switching apps.
+
+---
+
+#### `iaptic_switch_app`
+Switch to a different Iaptic app.
+- Temporarily use another app's credentials.
+- **Parameters:**
+  - `appName` (string): New app's name
+  - `apiKey` (string, optional): API key if not using master key
+
+---
+
+#### `purchase_get`
+Get detailed information about a specific purchase.
+- Returns info: product, status, transaction, customer, subscription details.
+- Required: `purchaseId`
+- **Parameters:**
+  - `purchaseId` (string): Unique identifier of the purchase
+
+---
+
+#### `purchase_list`
+List purchases from your Iaptic account.
+- Paginated purchase listing, filter by customer or date.
+- **Parameters:**
+  - `customerId` (string, optional)
+  - `enddate` (string, optional)
+  - `limit` (number, optional): Default 100, max 1000
+  - `offset` (number, optional)
+  - `startdate` (string, optional)
+
+---
+
+#### `stats_app`
+Get statistics specific to your application.
+- App-specific metrics: revenue, growth, active subscriptions, product stats.
+
+---
+
+#### `stats_get`
+Get general transactions, revenue, and usage statistics from your Iaptic account.
+- Aggregated metrics across all applications.
+
+---
+
+#### `stripe_prices`
+Get available Stripe products and prices.
+- Product list with prices, offers, and subscription terms (cached for 5 mins).
+
+---
+
+#### `transaction_get`
+Get detailed information about a specific transaction.
+- Returns transaction details: status, amount, payment data, associated purchase/customer.
+- Required: `transactionId`
+- **Parameters:**
+  - `transactionId` (string): Unique ID of the transaction
+
+---
+
+#### `transaction_list`
+List financial transactions from your Iaptic account.
+- Paginated, filter by purchase or date. Lists status, amount, payment info.
+- **Parameters:**
+  - `enddate` (string, optional)
+  - `limit` (number, optional): Default 100, max 1000
+  - `offset` (number, optional)
+  - `purchaseId` (string, optional)
+  - `startdate` (string, optional)
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started Guide](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-iaptic)

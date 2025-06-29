@@ -1,0 +1,257 @@
+---
+title: Notion
+---
+
+
+The steps below show how to run a Notion MCP agent and tool within a Meshagent room in the cloud.
+
+### **Environment Variables**
+Set the following environment variable with your secret:
+
+- **INTERNAL_INTEGRATION_TOKEN** – The Notion Integration Token, e.g. `ntn_****`
+
+---
+
+### **Steps**
+
+1. **Install Meshagent CLI:**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate:**
+    - Follow: [Meshagent CLI authentication guide](https://docs.meshagent.com/cli/getting_started)
+
+3. **Launch the Notion MCP agent in the room:**
+    ```sh
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-notion:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env INTERNAL_INTEGRATION_TOKEN=ntn_**** \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-notion-service
+    ```
+    - **What happens?**  
+      This command starts a Meshagent room, launches the Notion MCP server into the room, and exposes its tools as callable endpoints for agents or bots. *Rooms auto-close if they go inactive.*
+
+4. **Join the chatbot agent to the room and use the Notion toolkit:**
+    ```sh
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-notion
+    ```
+    - Output will contain a URL to interact with the agent in your room.
+    - *You can use multiple toolkits with a single agent in the same room!*
+
+---
+
+## Tools Available
+
+Tools provided by this server (19):
+
+| Tool | Short Description |
+|------|------------------|
+| `API-create-a-comment` | Create comment |
+| `API-create-a-database` | Create a database |
+| `API-delete-a-block` | Delete a block |
+| `API-get-block-children` | Retrieve block children |
+| `API-get-self` | Retrieve your token's bot user |
+| `API-get-user` | Retrieve a user |
+| `API-get-users` | List all users |
+| `API-patch-block-children` | Append block children |
+| `API-patch-page` | Update page properties |
+| `API-post-database-query` | Query a database |
+| `API-post-page` | Create a page |
+| `API-post-search` | Search by title |
+| `API-retrieve-a-block` | Retrieve a block |
+| `API-retrieve-a-comment` | Retrieve comments |
+| `API-retrieve-a-database` | Retrieve a database |
+| `API-retrieve-a-page` | Retrieve a page |
+| `API-retrieve-a-page-property` | Retrieve a page property item |
+| `API-update-a-block` | Update a block |
+| `API-update-a-database` | Update a database |
+
+### Tools Details
+
+#### `API-create-a-comment`
+Create comment  
+Parameters:
+- **parent** (`object`): The page that contains the comment
+- **rich_text** (`array`)
+
+---
+
+#### `API-create-a-database`
+Create a database  
+Parameters:
+- **parent** (`object`)
+- **properties** (`object`): Property schema of database.
+- **title** (`array`, optional)
+
+---
+
+#### `API-delete-a-block`
+Delete a block  
+Parameters:
+- **block_id** (`string`): Identifier for a Notion block
+
+---
+
+#### `API-get-block-children`
+Retrieve block children  
+Parameters:
+- **block_id** (`string`)
+- **page_size** (`integer`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-get-self`
+Retrieve your token's bot user
+
+---
+
+#### `API-get-user`
+Retrieve a user  
+Parameters:
+- **user_id** (`string`)
+
+---
+
+#### `API-get-users`
+List all users  
+Parameters:
+- **page_size** (`integer`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-patch-block-children`
+Append block children  
+Parameters:
+- **block_id** (`string`)
+- **children** (`array`)
+- **after** (`string`, optional)
+
+---
+
+#### `API-patch-page`
+Update page properties  
+Parameters:
+- **page_id** (`string`)
+- **archived** (`boolean`, optional)
+- **cover** (`object`, optional)
+- **icon** (`object`, optional)
+- **in_trash** (`boolean`, optional)
+- **properties** (`object`, optional)
+
+---
+
+#### `API-post-database-query`
+Query a database  
+Parameters:
+- **database_id** (`string`)
+- **archived** (`boolean`, optional)
+- **filter** (`object`, optional)
+- **filter_properties** (`array`, optional)
+- **in_trash** (`boolean`, optional)
+- **page_size** (`integer`, optional)
+- **sorts** (`array`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-post-page`
+Create a page  
+Parameters:
+- **parent** (`object`)
+- **properties** (`object`)
+- **children** (`array`, optional)
+- **cover** (`string`, optional)
+- **icon** (`string`, optional)
+
+---
+
+#### `API-post-search`
+Search by title  
+Parameters:
+- **filter** (`object`, optional)
+- **page_size** (`integer`, optional)
+- **query** (`string`, optional)
+- **sort** (`object`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-retrieve-a-block`
+Retrieve a block  
+Parameters:
+- **block_id** (`string`)
+
+---
+
+#### `API-retrieve-a-comment`
+Retrieve comments  
+Parameters:
+- **block_id** (`string`)
+- **page_size** (`integer`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-retrieve-a-database`
+Retrieve a database  
+Parameters:
+- **database_id** (`string`)
+
+---
+
+#### `API-retrieve-a-page`
+Retrieve a page  
+Parameters:
+- **page_id** (`string`)
+- **filter_properties** (`string`, optional)
+
+---
+
+#### `API-retrieve-a-page-property`
+Retrieve a page property item  
+Parameters:
+- **page_id** (`string`)
+- **property_id** (`string`)
+- **page_size** (`integer`, optional)
+- **start_cursor** (`string`, optional)
+
+---
+
+#### `API-update-a-block`
+Update a block  
+Parameters:
+- **block_id** (`string`)
+- **archived** (`boolean`, optional)
+- **type** (`object`, optional)
+
+---
+
+#### `API-update-a-database`
+Update a database  
+Parameters:
+- **database_id** (`string`)
+- **description** (`array`, optional)
+- **properties** (`object`, optional)
+- **title** (`array`, optional)
+
+---
+
+## Meshagent & Notion MCP Links
+
+- [Meshagent.com](https://www.meshagent.com/)
+- [Getting Started with Meshagent Room API](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Notion Docker Image](https://hub.docker.com/r/meshagent/mcp-notion)
+- [Official Notion MCP Server](https://github.com/makenotion/notion-mcp-server)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

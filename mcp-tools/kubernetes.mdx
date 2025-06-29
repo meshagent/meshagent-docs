@@ -1,0 +1,240 @@
+---
+title: Kubernetes
+---
+
+
+Follow these steps to run an MCP Kubernetes agent and tool in a Meshagent Room:
+
+### 1. Install the Meshagent CLI with all features:
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and authenticate your account:
+See [Getting Started with the CLI](https://docs.meshagent.com/cli/getting_started).
+
+### 3. Start an MCP server in a Meshagent Room:
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-kubernetes:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-kubernetes-service
+```
+- This command launches a Meshagent Room with the MCP Kubernetes server available inside the room.
+- Meshagent Rooms will close if they go inactive.
+
+### 4. Start a chatbot in the room, with access to the Kubernetes toolkit:
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-kubernetes
+```
+- This starts a chatbot agent in the Meshagent Room, capable of using the Kubernetes toolkit.
+- You can use multiple toolkits with the same agent.
+- A link to the room is provided in the command output—follow it to interact live with the agent and tools.
+
+---
+
+## Tools Available
+
+The MCP Kubernetes Server provides the following tools for remote Kubernetes management:
+
+| Tool | Short Description |
+|------|------------------|
+| `cleanup` | Cleanup all managed resources |
+| `explain_resource` | Get documentation for a Kubernetes resource or field |
+| `install_helm_chart` | Install a Helm chart |
+| `kubectl_apply` | Apply a Kubernetes YAML manifest from a string or file |
+| `kubectl_context` | Manage Kubernetes contexts - list, get, or set the current context |
+| `kubectl_create` | Create Kubernetes resources using various methods (from file or using subcommands) |
+| `kubectl_delete` | Delete Kubernetes resources by resource type, name, labels, or from a manifest file |
+| `kubectl_describe` | Describe Kubernetes resources by resource type, name, and optionally namespace |
+| `kubectl_generic` | Execute any kubectl command with the provided arguments and flags |
+| `kubectl_get` | Get or list Kubernetes resources by resource type, name, and optionally namespace |
+| `kubectl_list` | List Kubernetes resources by resource type and optionally namespace |
+| `kubectl_logs` | Get logs from Kubernetes resources like pods, deployments, or jobs |
+| `kubectl_patch` | Update field(s) of a resource using strategic merge patch, JSON merge patch, or JSON patch |
+| `kubectl_rollout` | Manage the rollout of a resource (e.g., deployment, daemonset, statefulset) |
+| `kubectl_scale` | Scale a Kubernetes deployment |
+| `list_api_resources` | List the API resources available in the cluster |
+| `port_forward` | Forward a local port to a port on a Kubernetes resource |
+| `stop_port_forward` | Stop a port-forward process |
+| `uninstall_helm_chart` | Uninstall a Helm release |
+| `upgrade_helm_chart` | Upgrade a Helm release |
+
+### Tool Details
+
+#### `cleanup`
+Cleanup all managed resources
+
+---
+
+#### `explain_resource`
+Get documentation for a Kubernetes resource or field  
+Parameters:
+- `resource` (`string`): Resource name or field path (e.g. 'pods' or 'pods.spec.containers')
+- `apiVersion` (`string`, optional): API version to use (e.g. 'apps/v1')
+- `output` (`string`, optional): Output format (plaintext or plaintext-openapiv2)
+- `recursive` (`boolean`, optional): Print the fields of fields recursively
+
+---
+
+#### `install_helm_chart`
+Install a Helm chart  
+Parameters:
+- `chart` (`string`): Chart name
+- `name` (`string`): Release name
+- `namespace` (`string`): Kubernetes namespace
+- `repo` (`string`): Chart repository URL
+- `values` (`object`, optional): Chart values
+
+---
+
+#### `kubectl_apply`
+Apply a Kubernetes YAML manifest from a string or file  
+Parameters:
+- `dryRun` (`boolean`, optional): Only validate the resource without applying
+- `filename` (`string`, optional): Path to a YAML file to apply
+- `force` (`boolean`, optional): Immediately remove resources and bypass graceful deletion
+- `manifest` (`string`, optional): YAML manifest to apply
+- `namespace` (`string`, optional): Namespace
+
+---
+
+#### `kubectl_context`
+Manage Kubernetes contexts  
+Parameters:
+- `operation` (`string`): list/get/set
+- `detailed` (`boolean`, optional): Include detailed info
+- `name` (`string`, optional): Name of the context to set (for set)
+- `output` (`string`, optional): Output format
+- `showCurrent` (`boolean`, optional): Highlight the current context when listing
+
+---
+
+#### `kubectl_create`
+Create Kubernetes resources  
+Parameters:
+- Extensive parameter list: see [full list above](#tools-available)
+
+---
+
+#### `kubectl_delete`
+Delete Kubernetes resources  
+Parameters:
+- Extensive parameter list: see [full list above](#tools-available)
+
+---
+
+#### `kubectl_describe`
+Describe Kubernetes resources  
+Parameters:
+- `name` (`string`): Name of the resource
+- `resourceType` (`string`): Type of resource
+- `allNamespaces` (`boolean`, optional)
+- `namespace` (`string`, optional)
+
+---
+
+#### `kubectl_generic`
+Execute arbitrary kubectl commands  
+Parameters:
+- `command` (`string`)
+- Additional args and flags
+
+---
+
+#### `kubectl_get`
+Get or list Kubernetes resources  
+Parameters:
+- `resourceType` (`string`)
+- `allNamespaces`, `fieldSelector`, `labelSelector`, `name`, `namespace`, `output`, `sortBy` (all optional)
+
+---
+
+#### `kubectl_list`
+List Kubernetes resources  
+Parameters:
+- `resourceType` (`string`)
+- Optional: `allNamespaces`, `fieldSelector`, `labelSelector`, `namespace`, `output`
+
+---
+
+#### `kubectl_logs`
+Get logs from Kubernetes resources  
+Parameters:
+- `name`, `namespace`, `resourceType` (all `string`)
+- Several optional parameters for granularity
+
+---
+
+#### `kubectl_patch`
+Patch Kubernetes resources  
+Parameters:
+- `name`, `resourceType` (both `string`)
+- Optional: `dryRun`, `namespace`, `patchData`, `patchFile`, `patchType`
+
+---
+
+#### `kubectl_rollout`
+Manage the rollout of a resource  
+Parameters:
+- `name`, `resourceType`, `subCommand` (all `string`)
+- Optional: `namespace`, `revision`, `timeout`, `toRevision`, `watch`
+
+---
+
+#### `kubectl_scale`
+Scale a deployment  
+Parameters:
+- `name` (`string`)
+- `replicas` (`number`)
+- Optional: `namespace`, `resourceType`
+
+---
+
+#### `list_api_resources`
+List resources  
+Parameters:
+- Optional: `apiGroup`, `namespaced`, `output`, `verbs`
+
+---
+
+#### `port_forward`
+Forward ports  
+Parameters:
+- `localPort` (`number`)
+- `resourceName`, `resourceType` (`string`)
+- `targetPort` (`number`)
+- Optional: `namespace`
+
+---
+
+#### `stop_port_forward`
+Stop a port-forward  
+Parameters:
+- `id` (`string`)
+
+---
+
+#### `uninstall_helm_chart`
+Uninstall a Helm chart  
+Parameters:
+- `name` (`string`)
+- `namespace` (`string`)
+
+---
+
+#### `upgrade_helm_chart`
+Upgrade a Helm release  
+Parameters:
+- `chart`, `name`, `namespace`, `repo` (`string`)
+- Optional: `values` (`object`)
+
+---
+
+## Meshagent & MCP Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API: Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Kubernetes Docker Image](https://hub.docker.com/r/meshagent/mcp-kubernetes)
+
+---
+
+By wrapping the MCP server in Meshagent Rooms, Kubernetes administrators, developers, and AI agents can share secured access to robust cluster management tools and automation in a modern, collaborative environment.

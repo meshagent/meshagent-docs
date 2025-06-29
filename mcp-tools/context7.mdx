@@ -1,0 +1,83 @@
+---
+title: Context7
+---
+
+
+The following steps show how to run the Context7 MCP agent and tool suite in the cloud, accessible via a Meshagent Room.
+
+1. **Install Meshagent Python SDK**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   Follow the guide: [Authenticate with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Server as a Meshagent Room Service**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-context7:latest \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-context7-service
+   ```
+   > This command deploys a Context7 MCP server in a new or existing "test" Room. If a Room is inactive, it will automatically close to conserve resources.
+
+4. **Join the Room with a Chatbot Agent and Attach the Tool**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-context7
+   ```
+   - After running this, the output will include a link to the Meshagent Room. Open it in your browser to chat and try out the tools.
+   - You can load multiple toolkits for the same agent to combine their powers within a Room.
+
+---
+
+## Tools Available
+
+The following tools are provided by the Context7 MCP Server in Meshagent environments:
+
+| Tool Name            | Short Description                                                 |
+|----------------------|-------------------------------------------------------------------|
+| `get-library-docs`   | Fetches up-to-date documentation for a library.                   |
+| `resolve-library-id` | Resolves a package/product name to a Context7 library ID.         |
+
+### Tool Details
+
+#### `get-library-docs`
+Fetches up-to-date documentation for a library.  
+*You must call `resolve-library-id` first to obtain the exact Context7-compatible library ID required for this tool, unless the user provides a library ID in the format `/org/project` or `/org/project/version`.*
+
+**Parameters:**
+- `context7CompatibleLibraryID` (`string`): The exact Context7-compatible library ID (e.g., `/vercel/next.js`, `/mongodb/docs/v1.2.3`).
+- `tokens` (`number`, optional): Max tokens to retrieve (default: 10000).
+- `topic` (`string`, optional): Documentation topic focus (e.g., "hooks", "routing").
+
+#### `resolve-library-id`
+Resolves a package or product name to a Context7-compatible library ID and provides a list of matches.
+
+*You must call this before using `get-library-docs`—unless you already have an ID in `/org/project` format.*
+
+**Selection Process:**
+- Best matches by name, documentation coverage, and trust.
+- Returns the most relevant library ID with an explanation.
+- Handles ambiguous queries by requesting clarification if needed.
+
+**Parameters:**
+- `libraryName` (`string`): Library or package name to search for.
+
+---
+
+## Meshagent and Room Links
+
+- **Meshagent Homepage:** https://www.meshagent.com/
+- **Getting Started with Meshagent Room API:** https://docs.meshagent.com/room_api/get_started
+- **Meshagent Room API Overview:** https://docs.meshagent.com/room_api/overview
+- **Docker Image for MCP Tool in Meshagent:** https://hub.docker.com/r/meshagent/mcp-context7
+
+**For more examples and advanced orchestration, visit the official Meshagent documentation.**

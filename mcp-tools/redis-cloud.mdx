@@ -1,0 +1,231 @@
+---
+title: Redis Cloud
+---
+
+
+This guide shows how to run the Redis Cloud MCP server as an agent and make its tools available within a Meshagent room.
+
+### Environment Variables
+
+Before starting, set the following environment variables for the Redis Cloud MCP server:
+- `API_KEY`: Your Redis Cloud API key (`<redis_cloud_api_key>`)
+- `SECRET_KEY`: Your Redis Cloud API secret key (`<redis_cloud_api_secret_key>`)
+
+### Steps
+
+1. **Install Meshagent CLI:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate for Meshagent:**
+   - Follow the [CLI getting started guide](https://docs.meshagent.com/cli/getting_started) to configure your credentials.
+
+3. **Start the MCP Server as an Agent in a Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-redis-cloud:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_KEY=<redis_cloud_api_key> \
+     --env SECRET_KEY=<redis_cloud_api_secret_key> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-redis-cloud-service
+   ```
+   - This command launches a Meshagent room with the Redis Cloud MCP server agent running in it.
+   - **Note:** Rooms are ephemeral and close after a period of inactivity.
+
+4. **Join the Room with a Chatbot to Use the Toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-redis-cloud
+   ```
+   - This starts a chatbot in the same Meshagent room, with access to the Redis Cloud toolkits.
+   - You can use multiple toolkits in the same room with the same agent.
+   - **A direct link to the room will be printed in the output for you to interact with the agent and its tools.**
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+The Redis Cloud MCP server provides the following tools for managing your Redis Cloud resources:
+
+| Tool | Description |
+|------|-------------|
+| `create-essential-database` | Create a new essential database inside the specified subscription ID. |
+| `create-essential-subscription` | Create a new essential subscription. |
+| `create-pro-database` | Create a new database inside the specified subscription ID. |
+| `create-pro-subscription` | Create a new pro subscription. |
+| `delete-essential-subscription` | Delete an essential subscription by ID |
+| `get-current-account` | Get the current Cloud Redis account |
+| `get-current-payment-methods` | Get the current payment methods for the current Cloud Redis account |
+| `get-database-modules` | Lookup list of database modules supported in current account |
+| `get-essential-databases` | Get the essential databases for the provided subscription Id |
+| `get-essential-subscription-by-id` | Get an essential subscription by ID for the current Cloud Redis account |
+| `get-essential-subscriptions` | Get the essential subscriptions for the current Cloud Redis account. |
+| `get-essentials-plans` | Get the available plans for essential subscriptions. |
+| `get-pro-databases` | Get the pro databases for the provided subscription Id |
+| `get-pro-plans-regions` | Lookup list of regions for cloud provider. |
+| `get-pro-subscription` | Get pro subscription by ID. |
+| `get-pro-subscriptions` | Get the pro subscriptions for the current Cloud Redis account |
+| `get-task-by-id` | Get a task by ID for the current Cloud Redis account |
+| `get-tasks` | Get the current tasks for the current Cloud Redis account |
+
+---
+
+### Tools Details
+
+#### `create-essential-database`
+Create a new essential database inside the specified subscription ID. Returns a TASK ID that can be used to track the status of the database creation.
+
+Parameters include:
+- `name` (string, required): Database name (max 40 chars, letters, digits, and hyphens, must start/end with a letter/digit)
+- `subscriptionId` (number): Subscription ID
+- Additional optional parameters include eviction policy, dataset size, persistence, clustering, TLS, modules (validated by `get-database-modules`), sharding, password, backup path, protocol, replication, respVersion, allowed source IPs, support for OSS Cluster API, and endpoint usage.
+
+---
+
+#### `create-essential-subscription`
+Create a new essential subscription. Returns a TASK ID to track the creation status.
+
+Parameters include:
+- `name` (string): Subscription name
+- `planId` (number): Plan ID (see `/fixed/plans`)
+- `paymentMethod` (string, optional)
+- `paymentMethodId` (number, optional)
+
+---
+
+#### `create-pro-database`
+Create a new database inside the specified subscription ID. Returns a TASK ID for status tracking.
+
+Parameters include:
+- `name` (string, required): Database name (see above constraints)
+- `subscriptionId` (number): Subscription ID
+- Optional parameters cover item size, eviction policy, persistence, dataset size, dry run flag, TLS, modules, password, protocol, sharding options, source IPs, cluster API support, and throughput configuration.
+
+---
+
+#### `create-pro-subscription`
+Create a new pro subscription, returning a TASK ID for status tracking.
+
+Parameters include:
+- `cloudProviders` (array, required): Cloud hosting/networking details (validate before submission)
+- `databases` (array, required): Databases specs for each planned database (validate before submission)
+- Optional parameters for deployment type, dry run, memory storage, name, payment method, payment method ID, and Redis version.
+
+---
+
+#### `delete-essential-subscription`
+Delete an essential subscription by ID
+
+- `subscriptionId` (number): Subscription ID
+
+---
+
+#### `get-current-account`
+Get the current Cloud Redis account.
+
+---
+
+#### `get-current-payment-methods`
+Get the current payment methods for the account.
+
+---
+
+#### `get-database-modules`
+Lookup modules/capabilities supported in the current account.
+
+---
+
+#### `get-essential-databases`
+Get the essential databases for a given subscription ID.
+
+Parameters:
+- `subscriptionId` (number)
+- `limit` (number, optional)
+- `offset` (number, optional)
+
+---
+
+#### `get-essential-subscription-by-id`
+Get an essential subscription by ID.
+
+Parameters:
+- `subscriptionId` (number)
+
+---
+
+#### `get-essential-subscriptions`
+Get the essential subscriptions for the account, paginated.
+
+Parameters:
+- `page` (number, optional)
+- `size` (number, optional)
+
+---
+
+#### `get-essentials-plans`
+Get available plans for essential subscriptions. Always specify the provider.
+
+Parameters:
+- `provider` (string)
+- `page` (number, optional)
+- `redisFlex` (boolean, optional)
+- `size` (number, optional)
+
+---
+
+#### `get-pro-databases`
+Get pro databases for a subscription ID.
+
+Parameters:
+- `subscriptionId` (number)
+- `limit` (number, optional)
+- `offset` (number, optional)
+
+---
+
+#### `get-pro-plans-regions`
+Lookup list of regions for cloud providers.
+
+---
+
+#### `get-pro-subscription`
+Get pro subscription by ID.
+
+Parameters:
+- `subscriptionId` (number)
+
+---
+
+#### `get-pro-subscriptions`
+List all pro subscriptions for the account.
+
+---
+
+#### `get-task-by-id`
+Get a task by task ID.
+
+Parameters:
+- `taskId` (string)
+
+---
+
+#### `get-tasks`
+Get current tasks for the account.
+
+---
+
+## Meshagent & Redis Cloud MCP Links
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent Redis Cloud MCP Docker Image:** [https://hub.docker.com/r/meshagent/mcp-redis-cloud](https://hub.docker.com/r/meshagent/mcp-redis-cloud)

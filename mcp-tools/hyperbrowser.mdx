@@ -1,0 +1,160 @@
+---
+title: HyperBrowser
+---
+
+
+Quickly launch a Hyperbrowser agent and tool in a Meshagent cloud room.
+
+### Environment Variables
+
+- `HYPERBROWSER_API_KEY`: `<app or user token>`
+
+### Steps
+
+1. **Install Meshagent**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent**
+   - [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) (`meshagent login`)
+
+3. **Start the MCP Server in a Meshagent Room**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-hyperbrowser:latest --env MESHAGENT_PORT=8001 --env HYPERBROWSER_API_KEY=<your-api-key> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-hyperbrowser-service
+   ```
+   - This command launches a Meshagent Room (`test`) with the Hyperbrowser MCP server running inside.
+   - Replace `<your-api-key>` with your actual API token.
+   - Rooms close if they go inactive.
+
+4. **Join the Room as a Chatbot Agent**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-hyperbrowser
+   ```
+   - Starts a chatbot agent in the room capable of using Hyperbrowser tools.
+   - Multiple toolkits (besides `mcp-hyperbrowser`) can be attached to the same agent.
+   - A link to the Meshagent Room will be shown in the output—use it to interact with your agent and tools.
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`browser_use_agent` | Fast, cost-effective browser automation for explicit tasks using an open-source agent.
+`claude_computer_use_agent` | Executes complex browser tasks using Anthropic’s Claude model for nuanced reasoning.
+`crawl_webpages` | Crawl a website from a URL, following links and exploring multiple pages.
+`create_profile` | Create a persistent Hyperbrowser browser profile.
+`delete_profile` | Delete an existing persistent Hyperbrowser profile.
+`extract_structured_data` | Extract structured data from webpages using prompts and optional schemas.
+`list_profiles` | List all persistent browser profiles, with pagination.
+`openai_computer_use_agent` | General-purpose browser automation using OpenAI models.
+`scrape_webpage` | Scrape content from webpages in various formats.
+`search_with_bing` | Search the web using Bing.
+
+---
+
+### Tools Details
+
+---
+
+#### Tool: **`browser_use_agent`**
+Employs an open-source browser automation agent for fast, efficient, and cost-effective browser tasks using a cloud browser. Requires detailed, explicit instructions for precise, high-speed automation.  
+Best for: rigid workflows like logins, navigation, and explicit scraping.  
+**Parameters:**  
+- `task` (`string`)
+- `maxSteps` (`integer`, optional)
+- `returnStepInfo` (`boolean`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`claude_computer_use_agent`**
+Uses Anthropic's Claude model to run browser tasks that require sophisticated reasoning or multi-step logic in the cloud.  
+Best for: complex, reasoning-intensive interactions, research, or onboarding flows.  
+**Parameters:**  
+- `task` (`string`)
+- `maxSteps` (`integer`, optional)
+- `returnStepInfo` (`boolean`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`crawl_webpages`**
+Crawls a website from a given URL, traversing linked pages for systematic content collection.  
+**Parameters:**  
+- `followLinks` (`boolean`)
+- `outputFormat` (`array`)
+- `url` (`string`)
+- `ignoreSitemap` (`boolean`, optional)
+- `maxPages` (`integer`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`create_profile`**
+Creates a new persistent Hyperbrowser profile.
+
+---
+
+#### Tool: **`delete_profile`**
+Deletes an existing persistent Hyperbrowser profile.  
+**Parameters:**  
+- `profileId` (`string`)
+
+---
+
+#### Tool: **`extract_structured_data`**
+Extracts structured data from webpages using provided schema and prompts.  
+**Parameters:**  
+- `prompt` (`string`)
+- `urls` (`array`)
+- `schema` (`string`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`list_profiles`**
+Lists persistent Hyperbrowser profiles, with optional pagination.  
+**Parameters:**  
+- `limit` (`integer`, optional)
+- `page` (`integer`, optional)
+
+---
+
+#### Tool: **`openai_computer_use_agent`**
+Utilizes OpenAI's model for balanced, flexible browser automation—good for general-purpose tasks with moderate complexity.  
+**Parameters:**  
+- `task` (`string`)
+- `maxSteps` (`integer`, optional)
+- `returnStepInfo` (`boolean`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`scrape_webpage`**
+Fetches and extracts webpage content in various formats (HTML, text, screenshots, etc).  
+**Parameters:**  
+- `outputFormat` (`array`)
+- `url` (`string`)
+- `sessionOptions` (`object`, optional)
+
+---
+
+#### Tool: **`search_with_bing`**
+Performs searches using Bing and returns web results.  
+**Parameters:**  
+- `query` (`string`)
+- `numResults` (`integer`, optional)
+- `sessionOptions` (`object`, optional)
+
+---
+
+## Additional Resources & Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Getting Started with Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Hyperbrowser Docker Image](https://hub.docker.com/r/meshagent/mcp-hyperbrowser)

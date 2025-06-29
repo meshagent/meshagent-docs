@@ -1,0 +1,169 @@
+---
+title: Tembo
+---
+
+
+Launch the Tembo MCP Server inside a Meshagent Room and interact with it using Meshagent's agent toolkit features:
+
+### 1. Set Environment Variables
+
+- `TEMBO_API_KEY` — Your Tembo Cloud API key
+
+Example:
+```sh
+export TEMBO_API_KEY=your-tembo-apikey-here
+```
+
+### 2. Install Meshagent
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 3. Sign Up and Authenticate
+
+Follow [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate with your credentials:
+```sh
+meshagent login
+```
+
+### 4. Start the MCP Server in a Meshagent Room
+
+Launch the Tembo MCP server as a Meshagent service (agent role) in a room named `test`:
+
+```sh
+meshagent service test --room=test --role=agent --image=meshagent/mcp-tembo:latest \
+  --env MESHAGENT_PORT=8001 --env TEMBO_API_KEY=your-tembo-apikey-here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-tembo-service
+```
+
+- This command starts a Meshagent room with the MCP server available inside. Meshagent Rooms will close when inactive.
+
+### 5. Join the Room with a Chatbot Agent
+
+Connect a chatbot to the room with the Tembo toolkit available:
+
+```sh
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-tembo
+```
+
+- Starts a chatbot in the Meshagent room that can use the Tembo toolkit (`mcp-tembo`).
+- Multiple toolkits and agents can be used in the same room.
+- A link to the room will be provided in the output to enable chat-based interaction with the agent and Tembo tools.
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`ask_tembo` | Ask a question to Tembo Docs
+`create_instance` | Create a new Tembo instance
+`delete_instance` | Delete an existing Tembo instance
+`get_all_apps` | Get attributes for all apps
+`get_all_instances` | Get all Tembo instances in an organization
+`get_app` | Get the attributes of a single App
+`get_instance` | Get an existing Tembo instance
+`get_instance_schema` | Get the json-schema for an instance
+`patch_instance` | Update attributes on an existing Tembo instance
+`restore_instance` | Restore a Tembo instance
+
+---
+
+### Tools Details
+
+#### Tool: `ask_tembo`
+Ask a question to Tembo Docs  
+**Parameters**
+- `query` (string): The ask query. For example, "how to create a Tembo instance"
+
+---
+
+#### Tool: `create_instance`
+Create a new Tembo instance  
+**Parameters**
+- `cpu` (string)
+- `environment` (string)
+- `instance_name` (string)
+- `memory` (string)
+- `org_id` (string): Organization ID that owns the Tembo instance
+- `stack_type` (string)
+- `storage` (string)
+- `replicas` (integer, optional)
+- `spot` (boolean, optional)
+
+---
+
+#### Tool: `delete_instance`
+Delete an existing Tembo instance  
+**Parameters**
+- `instance_id` (string): Delete this instance id
+- `org_id` (string): Organization id of the instance to delete
+
+---
+
+#### Tool: `get_all_apps`
+Get attributes for all apps
+
+---
+
+#### Tool: `get_all_instances`
+Get all Tembo instances in an organization  
+**Parameters**
+- `org_id` (string): Organization id for the request
+
+---
+
+#### Tool: `get_app`
+Get the attributes of a single App  
+**Parameters**
+- `type` (string): The app type to get details for
+
+---
+
+#### Tool: `get_instance`
+Get an existing Tembo instance  
+**Parameters**
+- `instance_id` (string)
+- `org_id` (string): Organization ID that owns the instance
+
+---
+
+#### Tool: `get_instance_schema`
+Get the json-schema for an instance
+
+---
+
+#### Tool: `patch_instance`
+Update attributes on an existing Tembo instance  
+**Parameters**
+- `instance_id` (string)
+- `org_id` (string): Organization ID that owns the instance
+- `cpu` (string, optional)
+- `environment` (string, optional)
+- `instance_name` (string, optional)
+- `memory` (string, optional)
+- `replicas` (integer, optional)
+- `spot` (boolean, optional)
+- `storage` (string, optional)
+
+---
+
+#### Tool: `restore_instance`
+Restore a Tembo instance  
+**Parameters**
+- `instance_name` (string)
+- `org_id` (string): Organization ID that owns the Tembo instance
+- `restore` (object)
+
+---
+
+## Meshagent Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started with the Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tembo Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-tembo)

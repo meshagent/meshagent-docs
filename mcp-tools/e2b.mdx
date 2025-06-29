@@ -1,0 +1,80 @@
+---
+title: E2B
+---
+
+
+Follow these steps to run the agent and E2B tool in the cloud with Meshagent:
+
+### 1. Required Environment Variables
+
+- `E2B_API_KEY`: Your E2B API key (Replace `YOUR_API_KEY_HERE` with your actual key)
+
+### 2. Setup and Launch
+
+1. **Install Meshagent and dependencies**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent**
+   - Visit [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) and follow the steps to sign up and authenticate.
+
+3. **Start Meshagent service in a room with the MCP server**
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-e2b:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env E2B_API_KEY=YOUR_API_KEY_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-e2b-service
+   ```
+   - This command starts a Meshagent room with the E2B MCP server available. **Rooms will close if inactive.**
+
+4. **Join the room with a chatbot agent that can use the E2B toolkit**
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-e2b
+   ```
+   - Now, a chatbot will join the Meshagent room and can access E2B's tools.
+   - *Multiple toolkits can be used in the same room with the same agent.*
+   - The command will output a **room link** you can use to interact with the agent and the E2B tool.
+
+---
+
+## Tools Available
+
+### Tools provided by this Server
+
+| Tool       | Short Description                               |
+|------------|-------------------------------------------------|
+| `run_code` | Run python code in a secure sandbox by E2B.     |
+
+
+### Tools Details
+
+#### Tool: `run_code`
+Run python code in a secure sandbox by E2B. Using the Jupyter Notebook syntax.
+
+| Parameter | Type    | Description |
+|-----------|---------|-------------|
+| code      | string  |             |
+
+
+---
+
+## More Information
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-e2b](https://hub.docker.com/r/meshagent/mcp-e2b)
+
+---
+
+**Tip:** [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)  
+**Reference:** [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

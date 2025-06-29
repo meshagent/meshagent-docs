@@ -1,0 +1,180 @@
+---
+title: Neon
+---
+
+
+The following steps will get you running an MCP agent and tool in a Meshagent Room in the cloud.
+
+1. Install Meshagent with all dependencies:
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. Sign up and authenticate using the Meshagent CLI. For guides, see [CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. Run the MCP server as a Meshagent Room service:
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-neon:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-neon-service
+   ```
+   > This command will start a Meshagent Room called `test` with the MCP server available within the room. Rooms will automatically close if inactive.
+
+4. Start a chatbot agent inside the room with the Neon toolkit:
+   ```bash
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-neon
+   ```
+   > - This spawns a chatbot in the `test` room using the Neon toolkit.
+   > - Multiple toolkits can be loaded for the same agent.
+   > - The CLI output will include a link to interact with the agent and tools in the Room.
+
+---
+
+## Tools Available
+
+The Neon MCP Server provides an extensive set of tools for interacting with the Neon Management API and databases via Meshagent Rooms.
+
+### Tools Summary
+
+Tool | Description
+-----|------------
+`__node_version` | Get the Node.js version used by the MCP server
+`complete_database_migration` | Complete a database migration when the user confirms the migration is ready to be applied to the main branch
+`complete_query_tuning` | Complete a query tuning session by applying or discarding query optimization changes
+`create_branch` | Create a branch in a Neon project
+`create_project` | Create a new Neon project
+`delete_branch` | Delete a branch from a Neon project
+`delete_project` | Delete a Neon project
+`describe_branch` | Get a tree view of all objects in a branch, including databases, schemas, tables, views, and functions
+`describe_project` | Describe a Neon project
+`describe_table_schema` | Describe the schema of a table in a Neon database
+`explain_sql_statement` | Show the PostgreSQL query execution plan for a SQL statement
+`get_connection_string` | Get a PostgreSQL connection string for a Neon database
+`get_database_tables` | List all tables in a Neon database
+`list_projects` | List all Neon projects in your account
+`prepare_database_migration` | Perform database schema migrations with automatic DDL generation and execution in a temporary branch
+`prepare_query_tuning` | Improve PostgreSQL query performance by analyzing and optimizing slow queries in a temporary branch
+`provision_neon_auth` | Provision authentication for a Neon project, integrating with Stack Auth
+`run_sql` | Execute a single SQL statement against a Neon database
+`run_sql_transaction` | Execute a multi-statement SQL transaction against a Neon database
+
+### Tools Details
+
+#### `__node_version`
+Get the Node.js version used by the MCP server  
+**Parameters:** `params` (object)
+
+---
+
+#### `complete_database_migration`
+Complete a database migration when the user confirms the migration is ready to be applied to the main branch. Also deletes the temporary branch created during migration preparation.  
+**Parameters:** `params` (object)
+
+---
+
+#### `complete_query_tuning`
+Complete a query tuning session by applying optimization changes to the main branch or discarding them. Handles temporary branch cleanup and ensures all changes from query tuning are finalized or reverted only via this tool.  
+**Parameters:** `params` (object)
+
+---
+
+#### `create_branch`
+Create a branch in a Neon project.  
+**Parameters:** `params` (object)
+
+---
+
+#### `create_project`
+Create a new Neon project. Use this to provision new database environments.  
+**Parameters:** `params` (object)
+
+---
+
+#### `delete_branch`
+Delete a branch from a Neon project.  
+**Parameters:** `params` (object)
+
+---
+
+#### `delete_project`
+Delete a Neon project.  
+**Parameters:** `params` (object)
+
+---
+
+#### `describe_branch`
+Get a tree view of all objects in a branch, including databases, schemas, tables, views, and functions.  
+**Parameters:** `params` (object)
+
+---
+
+#### `describe_project`
+Describe a Neon project.  
+**Parameters:** `params` (object)
+
+---
+
+#### `describe_table_schema`
+Describe the schema of a table in a Neon database.  
+**Parameters:** `params` (object)
+
+---
+
+#### `explain_sql_statement`
+Show the PostgreSQL query execution plan for a SQL statement by running EXPLAIN (ANALYZE...) in the database.  
+**Parameters:** `params` (object)
+
+---
+
+#### `get_connection_string`
+Get a PostgreSQL connection string for a Neon database, with all parameters being optional.  
+**Parameters:** `params` (object)
+
+---
+
+#### `get_database_tables`
+List all tables in a Neon database.  
+**Parameters:** `params` (object)
+
+---
+
+#### `list_projects`
+List all Neon projects in your account.  
+**Parameters:** `params` (object)
+
+---
+
+#### `prepare_database_migration`
+Automatically generate and execute DDL statements for database schema migrations. Runs migration in a temporary branch, requiring user confirmation before finalizing.  
+**Parameters:** `params` (object)
+
+---
+
+#### `prepare_query_tuning`
+Analyze slow PostgreSQL queries, suggest and test performance improvements (such as indexes or query rewrites) in a temporary branch. Supports verification and approval before applying to main branch.  
+**Parameters:** `params` (object)
+
+---
+
+#### `provision_neon_auth`
+Provision authentication infrastructure for a Neon project by integrating with Stack Auth (`@stackframe/stack`). Sets up dedicated auth schema, generates credentials, and supports easy setup in Next.js and other frameworks.  
+**Parameters:** `params` (object)
+
+---
+
+#### `run_sql`
+Execute a single SQL statement against a Neon database. Supports execution against a temporary branch for testing or migration workflows.  
+**Parameters:** `params` (object)
+
+---
+
+#### `run_sql_transaction`
+Execute a multi-statement SQL transaction against a Neon database. Supports execution against a temporary branch.  
+**Parameters:** `params` (object)
+
+---
+
+## Meshagent Links
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Getting Started with Room API](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Neon Docker Image](https://hub.docker.com/r/meshagent/mcp-neon)

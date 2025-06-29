@@ -1,0 +1,82 @@
+---
+title: EverArt
+---
+
+
+**Run the EverArt agent and toolkit in a Meshagent Room (Cloud Example)**
+
+**Environment Variables Required:**
+- `EVERART_API_KEY`: Your EverArt API key
+
+1. **Install Meshagent:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and Authenticate**
+   - Register and authenticate with Meshagent via CLI: [Get Started Guide](https://docs.meshagent.com/cli/getting_started)
+3. **Launch the EverArt MCP Server in a Room**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-everart:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env EVERART_API_KEY=your_key_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-everart-service
+   ```
+   - This command starts an MCP server inside a Meshagent room, accessible to users and agents in that room. (**Rooms close if inactive.**)
+4. **Start a Chatbot with the EverArt Toolkit in the Room**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=sample \
+     --name=sample \
+     --toolkit=mcp-everart
+   ```
+   - The chatbot agent can now access and use the EverArt image generation tools.
+   - **Multiple toolkits can be loaded per agent in a room.**
+   - **A link to the live room will be displayed in your CLI output. Use this link to interact with the chatbot and tools in the browser.**
+
+---
+
+## Tools Available
+
+### Summary
+
+| Tool             | Short Description                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `generate_image` | Generate images using EverArt Models and returns a clickable link to view the generated image.                |
+
+---
+
+### Tool Details
+
+#### Tool: **`generate_image`**
+Generate images using EverArt Models and returns a clickable link to view the generated image. The tool will return a URL that can be clicked to view the image in a browser.
+
+**Available models:**
+- 5000:FLUX1.1: Standard quality
+- 9000:FLUX1.1-ultra: Ultra high quality
+- 6000:SD3.5: Stable Diffusion 3.5
+- 7000:Recraft-Real: Photorealistic style
+- 8000:Recraft-Vector: Vector art style
+
+**Parameters:**
+
+| Parameter      | Type      | Description                                                           |
+| -------------- | --------- | --------------------------------------------------------------------- |
+| `prompt`       | string    | Text description of desired image                                     |
+| `image_count`  | number *(optional)* | Number of images to generate                                   |
+| `model`        | string *(optional)* | Model ID (see available models above)                           |
+
+The response will contain a direct link to view the generated image.
+
+---
+
+## Meshagent & MCP Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Room API Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-everart)

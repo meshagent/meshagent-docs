@@ -1,0 +1,99 @@
+---
+title: ScrapeGraph
+---
+
+
+Run the ScrapeGraph MCP server as a Meshagent service and interact with its tools in the cloud.
+
+### Required Environment Variables
+
+- **SGAI_API_KEY**: Your [ScrapeGraphAI API Key](https://github.com/ScrapeGraphAI)
+
+### Steps
+
+1. **Install Meshagent CLI & Dependencies:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Authenticate with Meshagent:**
+
+    - Sign up and authenticate using the CLI as described in the [Getting Started Guide](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start a Meshagent Room Service with the MCP Server:**
+
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-scrapegraph:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env SGAI_API_KEY=YOUR_SGAI_API_KEY \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-scrapegraph-service
+    ```
+
+    - **Note:** This command launches the ScrapeGraph MCP server as a Meshagent service inside a room named `test`. Include your real `SGAI_API_KEY`.
+    - **Tip:** Rooms automatically close if they go inactive.
+
+4. **Join the Room with a Chatbot Agent:**
+
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-scrapegraph
+    ```
+
+    - Starts a chatbot agent in the `test` room with access to the ScrapeGraph toolkit.
+    - You can add multiple toolkits to the same agent in one room.
+    - After running, the CLI will display a link to interact with the agent and its tools through your browser.
+
+---
+
+## Tools Available
+
+ScrapeGraph MCP Server provides these tools:
+
+| Tool             | Short Description                                      |
+|------------------|-------------------------------------------------------|
+| `markdownify`    | Convert a webpage into clean, formatted markdown.      |
+| `searchscraper`  | Perform AI-powered web searches with structured results.|
+| `smartscraper`   | Extract structured data from a webpage using AI.      |
+
+### Tools Details
+
+#### Tool: **`markdownify`**
+Convert a webpage into clean, formatted markdown.
+
+| Parameter      | Type     | Description                      |
+|----------------|----------|----------------------------------|
+| `website_url`  | `string` | URL of the webpage to convert    |
+
+
+#### Tool: **`searchscraper`**
+Perform AI-powered web searches with structured results.
+
+| Parameter      | Type     | Description                                 |
+|----------------|----------|---------------------------------------------|
+| `user_prompt`  | `string` | Search query or instructions                |
+
+
+#### Tool: **`smartscraper`**
+Extract structured data from a webpage using AI.
+
+| Parameter      | Type     | Description                                 |
+|----------------|----------|---------------------------------------------|
+| `user_prompt`  | `string` | Instructions for what data to extract       |
+| `website_url`  | `string` | URL of the webpage to scrape                |
+
+---
+
+## Meshagent & Related Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-scrapegraph](https://hub.docker.com/r/meshagent/mcp-scrapegraph)

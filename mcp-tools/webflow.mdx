@@ -1,0 +1,261 @@
+---
+title: Webflow
+---
+
+
+Easily run the Webflow MCP server as an agent and use it with Meshagent toolkits in the cloud:
+
+### 1. Required Environment Variables
+
+- **WEBFLOW_TOKEN**: Your Webflow API token.
+
+If running via Docker/Meshagent, pass each variable using: `--env <VAR>=<value>`
+
+---
+
+### 2. Install Meshagent
+
+Install Meshagent and all dependencies:
+
+```bash
+pip install "meshagent[all]"
+```
+
+---
+
+### 3. Authenticate & Sign Up
+
+Register and authenticate your Meshagent account:
+
+- [Follow the CLI Getting Started guide](https://docs.meshagent.com/cli/getting_started)
+
+---
+
+### 4. Start the MCP Webflow Server in a Meshagent Room
+
+Launch the MCP server running in `test` room, exposing the required env variables:
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-webflow:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env WEBFLOW_TOKEN=your_api_token \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-webflow-service
+```
+- This command starts a Meshagent room with the MCP server available as a callable tool.
+- Note: Rooms are ephemeral and will close if they remain inactive.
+
+---
+
+### 5. Start a Chatbot Agent with the Webflow Toolkit
+
+Join the same Meshagent room and enable the Webflow toolkit:
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-webflow
+```
+- This starts a chatbot in the Meshagent room that can use the Webflow toolkit.
+- Multiple toolkits can be added in the same room for richer agent abilities.
+- Output will provide a link to the interactable room for direct tool and agent use.
+
+---
+
+## Tools Available
+
+Meshagent exposes the following Webflow MCP toolkit operations:
+
+| Tool Name | Short Description |
+|-----------|------------------|
+| `collection_fields_create_option` |  |
+| `collection_fields_create_reference` |  |
+| `collection_fields_create_static` |  |
+| `collection_fields_update` |  |
+| `collections_create` |  |
+| `collections_get` |  |
+| `collections_items_create_item` |  |
+| `collections_items_create_item_live` |  |
+| `collections_items_list_items` |  |
+| `collections_items_publish_items` |  |
+| `collections_items_update_items` |  |
+| `collections_items_update_items_live` |  |
+| `collections_list` |  |
+| `pages_get_content` |  |
+| `pages_get_metadata` |  |
+| `pages_list` |  |
+| `pages_update_page_settings` |  |
+| `pages_update_static_content` |  |
+| `sites_get` |  |
+| `sites_list` |  |
+| `sites_publish` |  |
+
+### Tool Details
+
+#### `collection_fields_create_option`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collection_fields_create_reference`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collection_fields_create_static`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collection_fields_update`
+Parameters:
+- `collection_id` *(string)*
+- `field_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collections_create`
+Parameters:
+- `request` *(object)*
+- `site_id` *(string)*
+
+---
+
+#### `collections_get`
+Parameters:
+- `collection_id` *(string)*
+
+---
+
+#### `collections_items_create_item`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collections_items_create_item_live`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collections_items_list_items`
+Parameters:
+- `collection_id` *(string)*
+- `cmsLocaleId` *(string, optional)*
+- `limit` *(number, optional)*
+- `name` *(string, optional)*
+- `offset` *(number, optional)*
+- `slug` *(string, optional)*
+- `sortBy` *(string, optional)*
+- `sortOrder` *(string, optional)*
+
+---
+
+#### `collections_items_publish_items`
+Parameters:
+- `collection_id` *(string)*
+- `itemIds` *(array)*
+
+---
+
+#### `collections_items_update_items`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collections_items_update_items_live`
+Parameters:
+- `collection_id` *(string)*
+- `request` *(object)*
+
+---
+
+#### `collections_list`
+Parameters:
+- `site_id` *(string)*
+
+---
+
+#### `pages_get_content`
+Parameters:
+- `page_id` *(string)*
+- `limit` *(number, optional)*
+- `localeId` *(string, optional)*
+- `offset` *(number, optional)*
+
+---
+
+#### `pages_get_metadata`
+Parameters:
+- `page_id` *(string)*
+- `localeId` *(string, optional)*
+
+---
+
+#### `pages_list`
+Parameters:
+- `site_id` *(string)*
+- `limit` *(number, optional)*
+- `localeId` *(string, optional)*
+- `offset` *(number, optional)*
+
+---
+
+#### `pages_update_page_settings`
+Parameters:
+- `body` *(object)*
+- `page_id` *(string)*
+- `localeId` *(string, optional)*
+
+---
+
+#### `pages_update_static_content`
+Parameters:
+- `localeId` *(string)*
+- `nodes` *(array)*
+- `page_id` *(string)*
+
+---
+
+#### `sites_get`
+Parameters:
+- `site_id` *(string)*
+
+---
+
+#### `sites_list`
+---
+
+#### `sites_publish`
+Parameters:
+- `site_id` *(string)*
+- `customDomains` *(array, optional)*
+- `publishToWebflowSubdomain` *(boolean, optional)*
+
+---
+
+## Additional Resources
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Getting Started**: [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview**: [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Webflow Docker Image**: [https://hub.docker.com/r/meshagent/mcp-webflow](https://hub.docker.com/r/meshagent/mcp-webflow)
+
+---

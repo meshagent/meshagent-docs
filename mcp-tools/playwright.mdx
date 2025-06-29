@@ -1,0 +1,219 @@
+---
+title: Playwright
+---
+
+
+Follow these steps to run a Playwright MCP agent and tool in the cloud using Meshagent Rooms:
+
+1. **Install Meshagent with all plugins:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate:**
+
+    - Visit the [Meshagent CLI Getting Started page](https://docs.meshagent.com/cli/getting_started) and follow the authentication steps.
+
+3. **Launch the Playwright MCP agent as a service in a room:**
+
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-playwright:latest \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-playwright-service
+    ```
+    - This creates a Meshagent Room called `test` and starts the MCP Playwright server in it.
+    - **Note:** Rooms close if they go inactive.
+
+4. **Join a chatbot agent to the room with the MCP Playwright toolkit:**
+
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-playwright
+    ```
+    - This launches a chatbot in the room, able to use the Playwright toolkit.
+    - Multiple toolkits and agents can share the same room.
+    - Look for the output link to your room for interactive access.
+
+---
+
+## Tools Available
+
+The following tools are available via the Playwright MCP server in your Meshagent Room:
+
+| Tool                       | Description                                              |
+|----------------------------|---------------------------------------------------------|
+| `browser_click`            | Perform click on a web page                             |
+| `browser_close`            | Close the page                                          |
+| `browser_console_messages` | Returns all console messages                            |
+| `browser_drag`             | Perform drag and drop between two elements              |
+| `browser_file_upload`      | Upload one or multiple files                            |
+| `browser_generate_playwright_test` | Generate a Playwright test for given scenario   |
+| `browser_handle_dialog`    | Handle a dialog                                         |
+| `browser_hover`            | Hover over element on page                              |
+| `browser_install`          | Install the browser specified in the config             |
+| `browser_navigate`         | Navigate to a URL                                       |
+| `browser_navigate_back`    | Go back to the previous page                            |
+| `browser_navigate_forward` | Go forward to the next page                             |
+| `browser_network_requests` | Returns all network requests since loading the page      |
+| `browser_pdf_save`         | Save page as PDF                                        |
+| `browser_press_key`        | Press a key on the keyboard                             |
+| `browser_resize`           | Resize the browser window                               |
+| `browser_select_option`    | Select an option in a dropdown                          |
+| `browser_snapshot`         | Capture accessibility snapshot of the current page      |
+| `browser_tab_close`        | Close a tab                                             |
+| `browser_tab_list`         | List browser tabs                                       |
+| `browser_tab_new`          | Open a new tab                                          |
+| `browser_tab_select`       | Select a tab by index                                   |
+| `browser_take_screenshot`  | Take a screenshot of the current page                   |
+| `browser_type`             | Type text into editable element                         |
+| `browser_wait_for`         | Wait for text to appear/disappear, or a time to pass    |
+
+---
+
+### Tool Details
+
+#### **`browser_click`**
+Perform click on a web page  
+Parameters:
+- `element` (`string`): Human-readable element description used to obtain permission to interact with the element
+- `ref` (`string`): Exact target element reference from the page snapshot
+
+#### **`browser_close`**
+Close the page
+
+#### **`browser_console_messages`**
+Returns all console messages
+
+#### **`browser_drag`**
+Perform drag and drop between two elements  
+Parameters:
+- `startElement` (`string`): Human-readable source element description
+- `startRef` (`string`): Exact source element reference
+- `endElement` (`string`): Human-readable target element description
+- `endRef` (`string`): Exact target element reference
+
+#### **`browser_file_upload`**
+Upload one or multiple files  
+Parameters:
+- `paths` (`array`): Absolute paths to upload; can be single or multiple
+
+#### **`browser_generate_playwright_test`**
+Generate a Playwright test for a given scenario  
+Parameters:
+- `description` (`string`): Test description
+- `name` (`string`): Test name
+- `steps` (`array`): The steps of the test
+
+#### **`browser_handle_dialog`**
+Handle a dialog  
+Parameters:
+- `accept` (`boolean`): Whether to accept the dialog
+- `promptText` (`string`, optional): Text for prompt dialogs
+
+#### **`browser_hover`**
+Hover over element on page  
+Parameters:
+- `element` (`string`): Human-readable element description
+- `ref` (`string`): Exact target element reference
+
+#### **`browser_install`**
+Install the browser specified in the config
+
+#### **`browser_navigate`**
+Navigate to a URL  
+Parameters:
+- `url` (`string`): The URL to navigate to
+
+#### **`browser_navigate_back`**
+Go back to the previous page
+
+#### **`browser_navigate_forward`**
+Go forward to the next page
+
+#### **`browser_network_requests`**
+Returns all network requests since loading the page
+
+#### **`browser_pdf_save`**
+Save page as PDF  
+Parameters:
+- `filename` (`string`, optional): PDF file name (defaults provided)
+
+#### **`browser_press_key`**
+Press a key on the keyboard  
+Parameters:
+- `key` (`string`): Key name or character
+
+#### **`browser_resize`**
+Resize the browser window  
+Parameters:
+- `height` (`number`): Window height
+- `width` (`number`): Window width
+
+#### **`browser_select_option`**
+Select an option in a dropdown  
+Parameters:
+- `element` (`string`): Human-readable element description
+- `ref` (`string`): Exact target element reference
+- `values` (`array`): Values to select (single or multiple)
+
+#### **`browser_snapshot`**
+Capture accessibility snapshot of the current page
+
+#### **`browser_tab_close`**
+Close a tab  
+Parameters:
+- `index` (`number`, optional): Tab index to close (current if not given)
+
+#### **`browser_tab_list`**
+List browser tabs
+
+#### **`browser_tab_new`**
+Open a new tab  
+Parameters:
+- `url` (`string`, optional): URL to navigate to (blank if omitted)
+
+#### **`browser_tab_select`**
+Select a tab by index  
+Parameters:
+- `index` (`number`): Index of the tab to select
+
+#### **`browser_take_screenshot`**
+Take a screenshot of the current page  
+Parameters:
+- `element` (`string`, optional): Human-readable element description (with `ref`)
+- `filename` (`string`, optional): File name
+- `raw` (`boolean`, optional): PNG (if true) or JPEG (default)
+- `ref` (`string`, optional): Exact target element reference
+
+#### **`browser_type`**
+Type text into editable element  
+Parameters:
+- `element` (`string`): Human-readable element description
+- `ref` (`string`): Exact target element reference
+- `text` (`string`): Text to type
+- `slowly` (`boolean`, optional): Type one char at a time (slower)
+- `submit` (`boolean`, optional): Press Enter after
+
+#### **`browser_wait_for`**
+Wait for text to appear/disappear or a time to pass  
+Parameters:
+- `text` (`string`, optional): Text to wait for
+- `textGone` (`string`, optional): Text to wait to disappear
+- `time` (`number`, optional): Seconds to wait
+
+---
+
+## Meshagent Links
+
+- **Meshagent Website:** https://www.meshagent.com/
+- **Room API Getting Started:** https://docs.meshagent.com/room_api/get_started
+- **API Overview:** https://docs.meshagent.com/room_api/overview
+- **Meshagent MCP Playwright Image:** [Docker Hub - meshagent/mcp-playwright](https://hub.docker.com/r/meshagent/mcp-playwright)

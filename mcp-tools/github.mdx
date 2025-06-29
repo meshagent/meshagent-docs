@@ -1,0 +1,399 @@
+---
+title: GitHub
+---
+
+
+Use the following steps to run the MCP GitHub agent and tools in a Room in the cloud.
+
+### Prerequisites
+
+- A [GitHub Personal Access Token](https://github.com/settings/tokens)
+- [pip](https://pip.pypa.io/)
+- A free Meshagent account: [Sign Up & Authenticate](https://docs.meshagent.com/cli/getting_started)
+
+### Environment Variables
+
+Set the following environment variable before running cloud agents:
+
+- `GITHUB_PERSONAL_ACCESS_TOKEN`: **(string, required)** Your GitHub personal access token.
+
+### Steps
+
+1. **Install the Meshagent CLI and toolkit libraries:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent CLI:**
+
+    ```bash
+    meshagent auth login
+    # Or follow instructions at https://docs.meshagent.com/cli/getting_started
+    ```
+
+3. **Start an MCP GitHub service as an agent in a Meshagent Room:**
+
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-github:latest \
+      --env GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-github-service
+    ```
+    - This command launches the MCP server in a Meshagent Room (`test`).  
+    - Rooms are ephemeral by default and close if they go inactive.
+
+4. **Start a chatbot in the Room with GitHub tools:**
+
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=sample \
+      --name=sample \
+      --toolkit=mcp-github
+    ```
+    - This launches a chatbot in the same Room, enabling use of the GitHub toolkit.
+    - Multiple toolkits and agents can coexist in one Room.
+    - The command output shows a link to interact with the Room via browser.
+
+---
+
+## Tools Available
+
+Tools for interacting with the GitHub API, enabling file operations, repository management, search functionality, and more.
+
+### Tools Provided
+
+| Tool                                 | Short Description                                              |
+|---------------------------------------|---------------------------------------------------------------|
+| `add_issue_comment`                   | Add a comment to an existing issue                            |
+| `create_branch`                       | Create a new branch in a GitHub repository                    |
+| `create_issue`                        | Create a new issue in a GitHub repository                     |
+| `create_or_update_file`               | Create or update a single file in a GitHub repository         |
+| `create_pull_request`                 | Create a new pull request in a GitHub repository              |
+| `create_pull_request_review`          | Create a review on a pull request                             |
+| `create_repository`                   | Create a new GitHub repository in your account                |
+| `fork_repository`                     | Fork a GitHub repository to your account or org               |
+| `get_file_contents`                   | Get contents of file/directory from a repo                    |
+| `get_issue`                           | Get details of a specific issue                               |
+| `get_pull_request`                    | Get details of a specific pull request                        |
+| `get_pull_request_comments`           | Get the review comments on a pull request                     |
+| `get_pull_request_files`              | Get files changed in a pull request                           |
+| `get_pull_request_reviews`            | Get reviews on a pull request                                 |
+| `get_pull_request_status`             | Get combined status of all status checks for a pull request   |
+| `list_commits`                        | List commits of a branch                                      |
+| `list_issues`                         | List issues in a repository                                   |
+| `list_pull_requests`                  | List and filter pull requests                                 |
+| `merge_pull_request`                  | Merge a pull request                                          |
+| `push_files`                          | Push multiple files in a single commit                        |
+| `search_code`                         | Search for code across repos                                  |
+| `search_issues`                       | Search issues and pull requests across GitHub                 |
+| `search_repositories`                 | Search for repositories                                       |
+| `search_users`                        | Search for users                                              |
+| `update_issue`                        | Update an existing issue                                      |
+| `update_pull_request_branch`          | Update a pull request branch with latest changes              |
+
+
+### Tool Details
+
+<details>
+<summary>Click to expand tool parameter reference</summary>
+
+#### add_issue_comment
+Add a comment to an existing issue  
+Parameters:
+- `body` (`string`)
+- `issue_number` (`number`)
+- `owner` (`string`)
+- `repo` (`string`)
+
+---
+
+#### create_branch
+Create a new branch in a GitHub repository  
+Parameters:
+- `branch` (`string`): Name for the new branch
+- `owner` (`string`): Repository owner
+- `repo` (`string`): Repository name
+- `from_branch` (`string`, optional): Source branch (default: repo's default)
+
+---
+
+#### create_issue
+Create a new issue in a GitHub repository  
+Parameters:
+- `owner` (`string`)
+- `repo` (`string`)
+- `title` (`string`)
+- `assignees` (`array`, optional)
+- `body` (`string`, optional)
+- `labels` (`array`, optional)
+- `milestone` (`number`, optional)
+
+---
+
+#### create_or_update_file
+Create or update a single file in a GitHub repository  
+Parameters:
+- `branch` (`string`)
+- `content` (`string`)
+- `message` (`string`)
+- `owner` (`string`)
+- `path` (`string`)
+- `repo` (`string`)
+- `sha` (`string`, optional)
+
+---
+
+#### create_pull_request
+Create a new pull request in a GitHub repository  
+Parameters:
+- `base` (`string`)
+- `head` (`string`)
+- `owner` (`string`)
+- `repo` (`string`)
+- `title` (`string`)
+- `body` (`string`, optional)
+- `draft` (`boolean`, optional)
+- `maintainer_can_modify` (`boolean`, optional)
+
+---
+
+#### create_pull_request_review
+Create a review on a pull request  
+Parameters:
+- `body` (`string`)
+- `event` (`string`)
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+- `comments` (`array`, optional)
+- `commit_id` (`string`, optional)
+
+---
+
+#### create_repository
+Create a new GitHub repository in your account  
+Parameters:
+- `name` (`string`)
+- `autoInit` (`boolean`, optional)
+- `description` (`string`, optional)
+- `private` (`boolean`, optional)
+
+---
+
+#### fork_repository
+Fork a GitHub repo to your account or org  
+Parameters:
+- `owner` (`string`)
+- `repo` (`string`)
+- `organization` (`string`, optional)
+
+---
+
+#### get_file_contents
+Get the contents of a file/directory from a repo  
+Parameters:
+- `owner` (`string`)
+- `path` (`string`)
+- `repo` (`string`)
+- `branch` (`string`, optional)
+
+---
+
+#### get_issue
+Get details of a specific issue  
+Parameters:
+- `issue_number` (`number`)
+- `owner` (`string`)
+- `repo` (`string`)
+
+---
+
+#### get_pull_request
+Get details of a specific pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+
+---
+
+#### get_pull_request_comments
+Get review comments on a pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+
+---
+
+#### get_pull_request_files
+Get list of files changed in a pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+
+---
+
+#### get_pull_request_reviews
+Get reviews on a pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+
+---
+
+#### get_pull_request_status
+Get status of all status checks for a pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+
+---
+
+#### list_commits
+List commits of a branch  
+Parameters:
+- `owner` (`string`)
+- `repo` (`string`)
+- `page` (`number`, optional)
+- `perPage` (`number`, optional)
+- `sha` (`string`, optional)
+
+---
+
+#### list_issues
+List issues in a repo  
+Parameters:
+- `owner` (`string`)
+- `repo` (`string`)
+- `direction` (`string`, optional)
+- `labels` (`array`, optional)
+- `page` (`number`, optional)
+- `per_page` (`number`, optional)
+- `since` (`string`, optional)
+- `sort` (`string`, optional)
+- `state` (`string`, optional)
+
+---
+
+#### list_pull_requests
+List/filter pull requests  
+Parameters:
+- `owner` (`string`)
+- `repo` (`string`)
+- `base` (`string`, optional)
+- `direction` (`string`, optional)
+- `head` (`string`, optional)
+- `page` (`number`, optional)
+- `per_page` (`number`, optional)
+- `sort` (`string`, optional)
+- `state` (`string`, optional)
+
+---
+
+#### merge_pull_request
+Merge a pull request  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+- `commit_message` (`string`, optional)
+- `commit_title` (`string`, optional)
+- `merge_method` (`string`, optional)
+
+---
+
+#### push_files
+Push multiple files with single commit  
+Parameters:
+- `branch` (`string`)
+- `files` (`array`)
+- `message` (`string`)
+- `owner` (`string`)
+- `repo` (`string`)
+
+---
+
+#### search_code
+Search for code across GitHub repos  
+Parameters:
+- `q` (`string`)
+- `order` (`string`, optional)
+- `page` (`number`, optional)
+- `per_page` (`number`, optional)
+
+---
+
+#### search_issues
+Search issues and pull requests  
+Parameters:
+- `q` (`string`)
+- `order` (`string`, optional)
+- `page` (`number`, optional)
+- `per_page` (`number`, optional)
+- `sort` (`string`, optional)
+
+---
+
+#### search_repositories
+Search for GitHub repositories  
+Parameters:
+- `query` (`string`)
+- `page` (`number`, optional)
+- `perPage` (`number`, optional)
+
+---
+
+#### search_users
+Search for users  
+Parameters:
+- `q` (`string`)
+- `order` (`string`, optional)
+- `page` (`number`, optional)
+- `per_page` (`number`, optional)
+- `sort` (`string`, optional)
+
+---
+
+#### update_issue
+Update an existing issue  
+Parameters:
+- `issue_number` (`number`)
+- `owner` (`string`)
+- `repo` (`string`)
+- `assignees` (`array`, optional)
+- `body` (`string`, optional)
+- `labels` (`array`, optional)
+- `milestone` (`number`, optional)
+- `state` (`string`, optional)
+- `title` (`string`, optional)
+
+---
+
+#### update_pull_request_branch
+Update a pull request’s branch  
+Parameters:
+- `owner` (`string`)
+- `pull_number` (`number`)
+- `repo` (`string`)
+- `expected_head_sha` (`string`, optional)
+
+</details>
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Room API – Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API – Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP GitHub Docker Image](https://hub.docker.com/r/meshagent/mcp-github)

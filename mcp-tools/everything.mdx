@@ -1,0 +1,134 @@
+---
+title: Everything
+---
+
+
+Get started instantly by running the Everything MCP toolkit as a service agent and connecting an LLM chatbot that can use all its tools.
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Set Up and Authenticate Your Meshagent Account
+
+- [Sign up and authenticate with Meshagent](https://docs.meshagent.com/cli/getting_started)  
+  (Follow instructions for creating an account and authenticating your CLI.)
+
+### 3. Start the MCP Everything Service in a Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-everything:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-everything-service
+```
+
+- This launches the MCP Everything server as a callable service agent in the "test" room.
+- **Note:** Rooms will close if left inactive.
+
+### 4. Start a Chatbot Agent with the MCP Everything Toolkit
+
+```bash
+meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-everything
+```
+
+- This launches a chatbot agent in the same room, with access to the MCP Everything toolkit.
+- **Tip:** Multiple toolkits can be loaded in the same room with the same agent, enabling rich workflows.
+- The output of this command includes a link to the Meshagent Room UI, where you can interact live with the agent and tools.
+
+---
+
+## Tools Available
+
+The Meshagent MCP Everything service exposes the following tools from the reference server:
+
+| Tool                       | Short Description                                                    |
+|----------------------------|---------------------------------------------------------------------|
+| `add`                      | Adds two numbers                                                    |
+| `annotatedMessage`         | Demonstrates how annotations can be used to provide metadata         |
+| `echo`                     | Echoes back the input                                               |
+| `getResourceReference`     | Returns a resource reference usable by MCP clients                   |
+| `getTinyImage`             | Returns the MCP_TINY_IMAGE                                          |
+| `longRunningOperation`     | Demonstrates a long running operation with progress updates          |
+| `printEnv`                 | Prints all environment variables, for debugging configuration        |
+| `sampleLLM`                | Samples from an LLM using MCP's sampling feature                    |
+
+---
+
+### Tools Details
+
+#### **add**
+*Adds two numbers*
+
+| Parameter | Type    | Description    |
+|-----------|---------|----------------|
+| a         | number  | First number   |
+| b         | number  | Second number  |
+
+---
+
+#### **annotatedMessage**
+*Demonstrates how annotations can be used to provide metadata about content*
+
+| Parameter     | Type     | Description                                            |
+|---------------|----------|--------------------------------------------------------|
+| messageType   | string   | Type of message to demonstrate different patterns       |
+| includeImage  | boolean  | *optional* Whether to include an example image         |
+
+---
+
+#### **echo**
+*Echoes back the input*
+
+| Parameter | Type    | Description     |
+|-----------|---------|-----------------|
+| message   | string  | Message to echo |
+
+---
+
+#### **getResourceReference**
+*Returns a resource reference that can be used by MCP clients*
+
+| Parameter   | Type    | Description                             |
+|-------------|---------|-----------------------------------------|
+| resourceId  | number  | ID of the resource to reference (1-100) |
+
+---
+
+#### **getTinyImage**
+*Returns the MCP_TINY_IMAGE*
+
+---
+
+#### **longRunningOperation**
+*Demonstrates a long running operation with progress updates*
+
+| Parameter | Type    | Description                                  |
+|-----------|---------|----------------------------------------------|
+| duration  | number  | *optional* Duration (seconds)                |
+| steps     | number  | *optional* Number of steps                   |
+
+---
+
+#### **printEnv**
+*Prints all environment variables, helpful for debugging MCP server configuration*
+
+---
+
+#### **sampleLLM**
+*Samples from an LLM using MCP's sampling feature*
+
+| Parameter   | Type    | Description                        |
+|-------------|---------|------------------------------------|
+| prompt      | string  | The prompt to send to the LLM      |
+| maxTokens   | number  | *optional* Max tokens to generate  |
+
+---
+
+## References & Further Reading
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Room API Getting Started:** [https://docs.meshagent.com/room_api/get_started](https://docs.meshagent.com/room_api/get_started)
+- **Room API Overview:** [https://docs.meshagent.com/room_api/overview](https://docs.meshagent.com/room_api/overview)
+- **Meshagent MCP Everything Tool Image:** [https://hub.docker.com/r/meshagent/mcp-everything](https://hub.docker.com/r/meshagent/mcp-everything)
+- **What is an MCP Server?** [Anthropic: The Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
+- **MCP Everything Reference Server Repo:** [https://github.com/modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers)

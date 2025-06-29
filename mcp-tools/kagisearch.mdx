@@ -1,0 +1,109 @@
+---
+title: Kagi Search
+---
+
+
+Follow these steps to run the agent and tools in a cloud-hosted Meshagent Room.
+
+### 1. Install the Meshagent CLI
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+Sign up and log in via the CLI:  
+[Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started)
+
+### 3. Set Your Environment Variables
+
+- `KAGI_SUMMARIZER_ENGINE` - The summarization engine to use (e.g., `cecil`)
+- `KAGI_API_KEY` - Your Kagi API key (get one at [Kagi](https://kagi.com/settings))
+
+You’ll pass these as `--env` arguments during service startup.
+
+### 4. Start the MCP Tool Service in a Room
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-kagisearch:latest \
+  --env KAGI_SUMMARIZER_ENGINE=cecil \
+  --env KAGI_API_KEY=YOUR_API_KEY_HERE \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-kagisearch-service
+```
+
+- This starts a Meshagent Room with the MCP Server available as a tool.  
+- **Note:** Rooms automatically close if they go inactive.
+
+### 5. Join the Room with a Chatbot Agent
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=sample \
+  --name=sample \
+  --toolkit=mcp-kagisearch
+```
+
+- This starts a chatbot in the room with access to Kagi search and summarization tools.
+- Multiple toolkits can be attached to the same agent or room.
+- A **link** to the room will be provided in the output—use it to interact with the agent and tools.
+
+---
+
+## Environment Variables
+
+| Variable                   | Description                         |
+|----------------------------|-------------------------------------|
+| `KAGI_SUMMARIZER_ENGINE`   | Summarization engine (e.g., `cecil`)|
+| `KAGI_API_KEY`             | Your Kagi API key                   |
+
+---
+
+## Tools Available
+
+### Tools Provided
+
+| Tool Name            | Short Description                                                                              |
+|----------------------|-----------------------------------------------------------------------------------------------|
+| `kagi_search_fetch`  | Fetch web results based on one or more queries using the Kagi Search API.                     |
+| `kagi_summarizer`    | Summarize content from a URL using the Kagi Summarizer API.                                   |
+
+
+### Tools Details
+
+#### Tool: **`kagi_search_fetch`**
+
+Fetch web results based on one or more queries using the Kagi Search API. Use for general search and when the user explicitly tells you to "fetch" results/information. Results are from all queries given. They are numbered continuously, so that a user may refer to a result by a specific number.
+
+- **Parameters:**
+  - `queries` (`array`): One or more concise, keyword-focused search queries. Include essential context within each query for standalone use.
+
+---
+
+#### Tool: **`kagi_summarizer`**
+
+Summarize content from a URL using the Kagi Summarizer API. The Summarizer can handle any document type (text webpage, video, audio, etc.).
+
+- **Parameters:**
+  - `url` (`string`): A URL to a document to summarize.
+  - `summary_type` (`string`, *optional*): Type of summary to produce. Options are `'summary'` (paragraph prose) and `'takeaway'` (bulleted list).
+  - `target_language` (`string`, *optional*): Desired output language (e.g., `'EN'`). If not provided, the original document language is used.
+
+---
+
+## Meshagent and Kagi MCP Tool Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Room API: Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Meshagent Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Kagi Search Docker Image](https://hub.docker.com/r/meshagent/mcp-kagisearch)
+
+---
+
+Run your Kagi search & summarization tools interactively, collaboratively, and scalably—with Meshagent Rooms!

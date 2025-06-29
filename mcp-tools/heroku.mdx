@@ -1,0 +1,96 @@
+---
+title: Heroku
+---
+
+
+Run the Heroku agent and tools in a Meshagent Room in the cloud:
+
+### Required Environment Variables
+
+- `HEROKU_API_KEY`: Your Heroku authentication token.
+
+### Steps
+
+1. **Install Meshagent Tools**  
+   ```shell
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate with Meshagent**  
+   Follow the [CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to authenticate.
+
+3. **Start the Room with the Heroku MCP Agent**
+   ```shell
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-heroku:latest --env MESHAGENT_PORT=8001 --env HEROKU_API_KEY=<YOUR_HEROKU_AUTH_TOKEN> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-heroku-service
+   ```
+   - This command starts a Meshagent Room with the MCP Heroku server available.  
+   - *Tip:* Rooms auto-close if left inactive.
+
+4. **Join Room with a Chatbot Agent and Heroku Toolkit**
+   ```shell
+   meshagent chatbot join --room=test --agent-name=sample --name=sample --toolkit=mcp-heroku
+   ```
+   - This joins the room with a chatbot agent enabled with the Heroku toolkit.
+   - Multiple toolkits can be enabled in a room.
+   - The output will provide a link to the room for interactive use.
+
+---
+
+## Tools Available
+
+Below are the tools provided by this Meshagent-wrapped Heroku MCP server, ready to use within Meshagent Rooms and chatbots:
+
+| Tool Name                 | Short Description                                                                      |
+|---------------------------|---------------------------------------------------------------------------------------|
+| `create_addon`            | Create add-on: specify service, plan, custom names                                    |
+| `create_app`              | Create app: custom name, region (US/EU), team, private space                          |
+| `deploy_one_off_dyno`     | Run code/commands in Heroku one-off dyno with network and filesystem access           |
+| `deploy_to_heroku`        | Use for all deployments                                                               |
+| `get_addon_info`          | Get add-on details: plan, state, billing                                              |
+| `get_app_info`            | Get app details: config, dynos, addons, access, domains                              |
+| `get_app_logs`            | App logs: monitor/debug/filter by dyno/process/source                                 |
+| `list_addon_plans`        | List service plans: features, pricing, availability                                   |
+| `list_addon_services`     | List available add-on services and features                                           |
+| `list_addons`             | List add-ons: all apps or specific app, detailed metadata                             |
+| `list_apps`               | List Heroku apps: owned, collaborator access, team/space filtering                    |
+| `list_private_spaces`     | Lists Heroku Private Spaces with CIDR blocks, regions, compliance and capacity details|
+| `list_teams`              | Lists accessible Heroku Teams                                                         |
+| `maintenance_off`         | Disable maintenance mode and restore normal app operations                            |
+| `maintenance_on`          | Enable maintenance mode and redirect traffic for a Heroku app                         |
+| `pg_backups`              | Manage backups: schedules, status, verification, recovery                             |
+| `pg_credentials`          | Manage access: credentials, permissions, security, monitoring                         |
+| `pg_info`                 | View database status: config, metrics, resources, health                              |
+| `pg_kill`                 | Stop processes: stuck queries, blocking transactions, runaway operations              |
+| `pg_locks`                | Analyze locks: blocked queries, deadlocks, concurrency                                |
+| `pg_maintenance`          | Track maintenance: windows, schedules, progress, planning                             |
+| `pg_outliers`             | Find resource-heavy queries: performance, patterns, optimization                      |
+| `pg_ps`                   | Monitor active queries: progress, resources, performance                              |
+| `pg_psql`                 | Execute SQL queries: analyze, debug, modify schema, manage data                       |
+| `pg_upgrade`              | Upgrade PostgreSQL: version migration, compatibility, safety                          |
+| `pipelines_create`        | Creates new Heroku deployment pipeline with configurable stages, apps, and team       |
+| `pipelines_info`          | Displays detailed pipeline configuration, stages, and connected apps                  |
+| `pipelines_list`          | Lists accessible Heroku pipelines                                                     |
+| `pipelines_promote`       | Promotes apps between pipeline stages with configurable targets                       |
+| `ps_list`                 | List and monitor Heroku app dynos                                                     |
+| `ps_restart`              | Restart Heroku app processes                                                          |
+| `ps_scale`                | Scale Heroku app dynos                                                                |
+| `rename_app`              | Rename app: validate and update app name                                              |
+| `transfer_app`            | Transfer app ownership to user/team                                                   |
+
+### Tool Details
+
+*For full argument details and usage patterns, see the [Docker Hub page](https://hub.docker.com/r/meshagent/mcp-heroku).*
+
+---
+
+## Meshagent and Further Reading
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Room API Getting Started](https://docs.meshagent.com/room_api/get_started)
+- [Room API Overview](https://docs.meshagent.com/room_api/overview)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-heroku)
+
+---
+
+**Why wrap MCP in Meshagent Rooms?**  
+Meshagent Rooms provide a secure, cloud-hosted environment for agents and conversational tools with ephemeral isolation. Wrapping MCP servers like Heroku in Meshagent allows teams and chatbots to seamlessly access, automate, and collaborate on cloud tasks, all in real time and with fine-grained control over API keys and toolkits. Learn more about the concept in the [Meshagent docs](https://docs.meshagent.com/room_api/overview).
