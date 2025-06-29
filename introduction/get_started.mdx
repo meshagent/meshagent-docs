@@ -1,0 +1,123 @@
+---
+title: MeshAgent Setup
+description: Instructions to get started with MeshAgent
+---
+
+import RoomConnectPy from "/snippets/examples/python/room-connect.mdx";
+import RoomConnectJs from "/snippets/examples/javascript/room-connect.mdx";
+import RoomConnectTs from "/snippets/examples/typescript/room-connect.mdx";
+import RoomConnectDart from "/snippets/examples/dart/room-connect.mdx";
+
+import QuickstartDocumentPy from "/snippets/examples/python/quickstart-document.mdx";
+import QuickstartDocumentJs from "/snippets/examples/javascript/quickstart-document.mdx";
+import QuickstartDocumentTs from "/snippets/examples/typescript/quickstart-document.mdx";
+import QuickstartDocumentDart from "/snippets/examples/dart/quickstart-document.mdx";
+
+import QuickstartAgentPy from "/snippets/examples/python/quickstart-agent.mdx";
+import QuickstartAgentJs from "/snippets/examples/javascript/quickstart-agent.mdx";
+import QuickstartAgentTs from "/snippets/examples/typescript/quickstart-agent.mdx";
+import QuickstartAgentDart from "/snippets/examples/dart/quickstart-agent.mdx";
+
+## Getting Started with MeshAgent
+
+MeshAgent is an **end to end platform** for building, deploying, and hosting AI Agents. MeshAgent 
+integrates AI Agents and human teams in real time by bundling LLM orchestration, tool integration, real-time messaging, observability, and deployment so you can ship and share agents in minutes instead of weeks. 
+
+### In this guide you will learn how to:
+1. Create an account, project, and MeshAgent API Keys in MeshAgent Studio
+2. Install MeshAgent for Python, JavaScript, TypeScript, or Dart
+3. Understand the core building blocks of MeshAgent: Projects, Rooms, and Agents
+4. Connect to your first MeshAgent Room and call a chat and voice agent into your room
+
+
+## Creating an Account, Project, and MeshAgent API Keys
+
+1. Go to [studio.meshagent.com](https://www.studio.meshagent.com/) and sign in or sign up for an account.
+2. Create a project and give it a name (e.g., MyFirstAgentProject)
+3. On the project tab bar, click API Keys, then click +New API Key. Give your key a name and description then click "ok". 
+4. Click on the key to copy the MESHAGENT_KEY_ID, MESHAGENT_PROJECT_ID, and MESHAGENT_SECRET. You will need to export these as environment variables to connect to your Project.
+
+
+## Set Environment Variables
+
+Before you begin, you **must** export three environment variables. Make sure to substitute the placeholder values (`xxxx-xxxx...`) with your actual keys and secrets.
+
+<CodeGroup>
+```bash Bash
+export MESHAGENT_KEY_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export MESHAGENT_PROJECT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export MESHAGENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+```json Flutter
+// flutter run -d chrome --dart-define-from-file=config.json
+{
+    "MESHAGENT_KEY_ID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "MESHAGENT_PROJECT_ID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "MESHAGENT_SECRET": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+}
+```
+</CodeGroup>
+
+
+## Installing MeshAgent
+
+This guide will help you configure **MeshAgent** across various environments: Browser, Node.js, Python, and Dart/Flutter.
+
+To get started, install the MeshAgent API:
+
+<CodeGroup>
+```bash Python
+pip3 install meshagent[all]
+```
+```bash JavaScript
+npm install @meshagent/meshagent
+```
+```bash TypeScript
+npm install @meshagent/meshagent
+```
+```bash Dart
+dart pub add meshagent
+```
+</CodeGroup>
+
+
+## Understanding MeshAgent Projects, Rooms, and Agents
+- **Projects**: Groups related Rooms and the Agents that serve them. It is best to create a different Project for each use case you are working on.
+- **Rooms**: A dedicated space for humans and Agents to collaborate. 
+- **Agents**: ChatBots, VoiceBots, TaskRunners, and Workers that you build and deploy with custom tools or out of the box MeshAgent tools. Agents live inside a Project and once deployed are automatically available in every room under that project. 
+
+
+## Let's call an agent into a room using the MeshAgent CLI
+
+To call a chat agent into the room run: 
+
+```sh
+meshagent chatbot join --room YOUR_ROOM_NAME --agent-name YOUR_CHATBOT_NAME --name YOUR_CHATBOT_NAME
+```
+
+To call a voice agent into the room run: 
+```sh
+meshagent voicebot join --room YOUR_ROOM_NAME --agent-name YOUR_VOICEBOT_NAME --name YOUR_VOICEBOT_NAME
+```
+
+## Let's connect to a room
+
+<CodeGroup>
+    <RoomConnectPy />
+    <RoomConnectJs />
+    <RoomConnectTs />
+    <RoomConnectDart />
+</CodeGroup>
+
+MeshAgent Rooms provide a shared workspace for agents and participants to collaborate in real time. Each room includes a participant list, presence tracking, and a mechanism for sharing information. Because MeshAgent is designed for seamless integration, rooms are provisioned on demand as participants connect. This eliminates the complexity of syncing rules and allows agents and people to quickly spin up a shared environment to collaborate in.
+
+## How Rooms Work
+
+- **Temporary by design**  
+  A room is provisioned when the first participant joins and deprovisioned when the last participant leaves. It only exists to facilitate communication during the session.
+
+- **No state persistence**  
+ The MeshAgent admin console logs session activity for debugging, such as which agents participated and what questions were asked. However, the state of the room will be discarded at the end of the session, so any data that should persist after the session ends needs to be written to an external storage provider.
+
+- **Document management**  
+A room can help participants discover, sync, and share documents when they connect to it, but the room only temporarily stores MeshDocuments in memory while they are open. When documents are modified, or a session ends, the changes are written to an external storage provider. By default, MeshAgent Cloud provides a storage folder (named for the room) where documents are kept. For more complex scenarios, you can configure an existing storage solution using a custom provider and save the documents in your own database or storage buckets.
