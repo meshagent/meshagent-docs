@@ -3,7 +3,7 @@ title: "Build and Deploy a Voice Agent"
 ---
 
 ## Overview
-The MeshAgent **VoiceBot** lets you add a voice agent to any MeshAgent Room with just a few lines of code! VoiceBots use the *same toolkits* as ChatBots, so everything you learned in the [build and deploy a chatbot quick-start](./buildanddeploychatbot.mdx) still applies—your agent simply talks instead of types.
+The MeshAgent **VoiceBot** lets you add a voice agent to any MeshAgent Room with just a few lines of code! VoiceBots use the *same toolkits* as ChatBots, so everything you learned in the [build and deploy a chat agent quick-start](./buildanddeploychatbot) still applies—your agent simply talks instead of types.
 
 In this guide we'll build a voice agent in three phases: 
 1. **Basic Voicebot**: A simple voice agent with a system prompt (rules)
@@ -16,41 +16,30 @@ You'll learn how to:
 - Deploy the agent as a MeshAgent Service.
 - Generate a shareable link so others can start talking to the voice agent right away.
 
-## Getting Started
-*Note: These steps are identical to the [Build and Deploy a ChatBot](./buildanddeploychatbot.mdx) getting started steps. Feel free to skip if you are already setup.*
+## Prerequisites
+Be sure you have created your MeshAgent account and project, set up and activated a virtual environment, and installed the MeshAgent Python SDK. 
 
-### Install MeshAgent
+For help getting setup see the [Getting Started Guide](../../introduction/get_started). 
 
-```sh
-uv add 'meshagent[all]'
-```
-
-*Note: uv is the faster drop-in replacement for pip; feel free to use pip install meshagent[all] if you don’t have uv.*
-
-### Connect to MeshAgent Project
+## Connect to MeshAgent Project
 
 ```sh
-meshagent auth login
-meshagent project list
-meshagent project activate YOUR_PROJECT_ID
-meshagent api-key list
-meshagent api-key activate YOUR_MESHAGENT_API_KEY_ID
+meshagent setup
 ```
-
-*Note: You can create a MeshAgent API Key through the MeshAgent Studio UI or by running meshagent api-key create and passing in the key name and description*
 
 ## Chat with the built-in VoiceBot (zero code)
 Let's bring a ready-made voicebot into a room and talk to it: 
 
 ```sh
-meshagent voicebot join --room YOUR_ROOM --agent-name YOUR_VOICEBOT --name YOUR_VOICEBOT
+meshagent voicebot join --room gettingstarted --agent-name voiceagent --name voiceagent
 ```
 
 Running this command will: 
-1. Create and open a room
-2. Call the voicebot into the room 
+1. Create and open a room called ``gettingstarted`` inside your project
+2. Call the ``voiceagent`` into the ``gettingstarted`` room 
 
-Now you can type a question to the voicebot and watch it reply.
+In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com) and join the ``gettingstarted`` room. You will see the ``voiceagent`` participant appear! Simply select the agent and begin talking to it. We recommend muting the microphone after you finish speaking so that the agent does not pick up on any undesired background noise.
+
 
 ## Phase 1: Building a Simple VoiceBot
 Now that we've seen the default voicebot in action, let's create one from scratch. 
@@ -151,7 +140,7 @@ asyncio.run(service.run())
 ### Running the Simple VoiceBot in Test Mode: 
 Testing a VoiceBot works the same way as a ChatBot -- just be sure to update your agent name and service path. 
 
-To run the agent you will need two tabs open in your terminal. Be sure you have saved / exported your environment variables to your environment, installed the MeshAgent libraries, and authenticated to MeshAgent (see above steps).
+To run the agent you will need two tabs open in your terminal. You need to be in the appropriate directory and have your virtual environment activated in each tab. 
 
 In the first tab run: 
 ```sh
@@ -161,15 +150,13 @@ python main.py
 In the second tab run the call agent command to bring our agent into the room: 
 
 ```sh
-meshagent call agent --url=http://localhost:MESHAGENT_PORT/SERVICE_PATH --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
 ```
 
-As an example: 
-```sh
-meshagent call agent --url=http://localhost:7777/voice --room=myroom --agent-name=myvoiceagent --name=myvoiceagent
-```
+**Note**: This will bring in the agent named ``voiceagent`` into the ``gettingstarted`` room and run it on port ``7777`` using the service path ``voice``. If you want to rename the agent, room, port, or service path simply update the variables in the command.
 
-Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, "myvoiceagent" show up under the messaging tab! We can talk to the agent now and make sure that it responds with a fun fact like we instructed it to.
+
+Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, ``voiceagent`` show up under the participants tab! We can talk to the agent now and make sure that it responds with a fun fact like we instructed it to.
 
 ## Phase 2: Adding Built-in MeshAgent Tools to our VoiceBot
 Next, let's add the same built-in MeshAgent tools to our VoiceBot that we gave to our ChatBot in the previous example. These tools will give the voice agent the ability to interact with the user, convert documents to markdown, and write documents to the room. 
@@ -300,7 +287,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:MESHAGENT_PORT/SERVICE_PATH --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
 ```
 
 ## Phase 3: Adding Custom Tools to our VoiceBot
@@ -496,7 +483,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:MESHAGENT_PORT/SERVICE_PATH --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
 ```
 
 Once we're satisfied with how the agent is performing we can deploy and share it. 
@@ -539,7 +526,7 @@ docker buildx build . --platform linux/amd64 --output=type=image,name=myregistry
 2. Add the MESHAGENT_PORT as an environment variable, this needs to match the port that you register the service with. 
 
 ### Step 3: Try your agent!
-Navigate to the Sessions tab in the MeshAgent Studio and either join an existing room or create a new room by starting a session. You will then see the VoiceBot Agent available in the room for you to interact with!
+Navigate to the Sessions tab in the [MeshAgent Studio](https://studio.meshagent.com) and either join an existing room or create a new room by starting a session. You will then see the VoiceBot Agent available in the room for you to interact with!
 
 ## Generate a Link and Share Your Agent
 1. Navigate to your Room, click the hamburger menu icon in the top left corner, next click "Share"

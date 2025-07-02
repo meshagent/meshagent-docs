@@ -4,18 +4,43 @@ title: Key Concepts
 
 This guide will help you understand the **core building blocks that make MeshAgent a powerful platform for building, deploying, and operating AI agents** — collaboratively, securely, and at any scale. By the end of this document you will understand how **Agents**, **Tools**, and **Rooms** work together to **create seamless AI powered experiences**. 
 
-## Core Concepts at a Glance: Agents, Tools, and Rooms
+## Key Concepts at a Glance: Agents, Tools, and Rooms
 MeshAgent enables people, AI agents, and external capabilities (tools) to meet in a secure **Room** where they can collaborate in real-time, share context, and work together toward common goals.
 
-- **Agents**: LLM powered entities that can understand natural language, make decisions, and perform tasks. Giving agents tools extends their capabilities by allowing them to take action on your behalf -- something an LLM itself cannot do. 
-- **Tools**: Capabilities registered in the Room and callable by participants. Agents can be equipped with specific tools, and human participants can invoke registered tools. 
+- **Agents**: Language model powered entities that can understand natural language, make decisions, and execute goals over multiple iterations. Agents are typically given a persona (aka system prompt or rules) and access to tools to help them understand and perform their job. 
+- **Tools**: Tools extend a model's capabilities by allowing the model to take action on your behalf -- something an LLM itself cannot do. Tools can be registered in the Room and called by human and agent participants. Agents can be equipped with specific tools, and human participants can invoke registered tools. 
 - **Rooms**: A temporary, secure collaboration space that automatically spins up when the first participant arrives and vanishes when the last one leaves. All context, conversations, and shared resources live within the Room. Rooms are provisioned on demand and can scale up or down as your demand changes. 
 
 ## Agents: Your AI Teammates
 ### What are Agents?
+Agents are backed by an LLM plus a reasoning loop which allows the agent to continue working until a task is complete. 
+
+Agents have rules or system prompts which give them insight into their role (e.g. "You are a Document Writer for MeshAgent, an AI startup that provides the missing infrastructure to scale AI Agents") and are equipped with various tools to help them complete their task (e.g. DocumentCreation tool, WebSearch tool, SendEmail tool, etc.).
+
+### Types of Agents in MeshAgent
+- **Chat Agents**: Handle text-based conversations and queries
+- **Voice Agents**: Process spoken language and response with voice
+
+Alternatively, you can run agents in your agent framework of choice inside of a MeshAgent Room.
+
 
 ## Tools: Extending Agent Capabilities
 ### What are Tools?
+Tools are specialized functions that extend what agents can do beyond basic conversation. MeshAgent ships prebuilt, reusable toolkits for common Room interactions (e.g., file and document handling, media generation, dynamic UI interactions) and high-demand tasks (e.g., web search or document-to-Markdown conversion).
+
+#### Built-in toolkits 
+- **Document Authoring**: Create and edit documents in the room
+- **UI Interactions**: Interact with the user through the UI (create and generate content for forms to gather additional information to help the agent execute the request)
+- **Media Generation**: Create images, videos, and presentations
+- **Document Processing**: Convert documents from PDF to Markdown
+
+#### Custom tools and toolkits
+- **Model Context Protocol (MCP) Support**: Integrate any [MCP compatible service into a Room](https://docs.meshagent.com/mcp-overview/overview). Simply wrap the MCP image and launch it as a service inside a MeshAgent Room. 
+- **Fully Custom Tools**: 
+
+### How Tools Work
+- **Reusable Architecture**: Tools are centrally managed like agents, allowing you to deploy them once and reuse them effortlessly across projects.
+
 
 ## Rooms: The Secure, Scalable Collaboration Hub
 
