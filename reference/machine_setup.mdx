@@ -2,9 +2,9 @@
 title: Machine Setup Guide
 ---
 
-# Machine Setup Guide
+## Python Development Environment Setup
 
-This page takes you from zero tooling to the point where you can run any command in the [**Getting Started**](./get_started.mdx) guide.
+This page takes you from zero tooling to the point where you can run any command in the [**Getting Started**](../introduction/get_started) guide.
 
 In this document we will walk through: 
 - Setting up your IDE, terminal, and GitHub account
@@ -12,8 +12,9 @@ In this document we will walk through:
 - Choosing and installing a Python package manager (we recommend uv)
 - Creating a Repository and Project Folder to run the code
 - Setting up a virtual environment
+- Installing MeshAgent
 
-## Step 0: Install an IDE, Terminal, and Create a GitHub Account
+## Step 0: Install an IDE, terminal, and create a GitHub account
 
 If you don't already have a code editor installed, download one of your choice, for example [VS Code](https://code.visualstudio.com/), [Windsurf](https://windsurf.com/), or [Cursor](https://cursor.com/en). 
 
@@ -84,7 +85,7 @@ pip --version
 </CodeGroup>
 
 
-## Step 3: Create a Repository and / or Project Folder 
+## Step 3: Create a repository and / or project folder 
 ### Option A: With GitHub (Recommended)
 If you have a GitHub account, create a repository and then clone it to your machine:
 
@@ -114,21 +115,62 @@ cd meshagent-getting-started
 ## Step 4: Create your virtual environment
 Virtual environments are important because they isolate your project dependencies from your system Python installation. This prevents version conflicts between different projects and keeps your system clean.
 
-In your terminal, run the following commands to create your virtual environment based on the package manager you are using:
+In your terminal, inside the project folder, run the following commands to create your virtual environment based on the package manager you are using:
 
 <CodeGroup>
-```bash pip
-pip 
-```
 ```bash uv
 uv init # only run this the first time you are creating a project 
+uv venv # create the virtual environment (only run the first time)
+```
+```bash pip
+python -m venv .venv
 ```
 </CodeGroup>
 
+Now activate the virtual environment (you will do this every time you cd into the project folder where you're running your code)
 
+<CodeGroup>
+```bash macOS/Linux
+source .venv/bin/activate
+```
+```bash Windows
+.venv\Scripts\activate
+```
+</CodeGroup>
 
 You'll know your virtual environment is active when you see ``.venv`` at the beginning of your terminal prompt.
 
 ## Step 5: Install MeshAgent
 
-Now that you have your virtual environment setup you can install MeshAgent! Head back to the [Getting Started](./get_started.mdx) Docs and follow along to get going!
+Now that you have your virtual environment setup you can install MeshAgent! 
+
+<CodeGroup>
+```bash uv
+uv add 'meshagent[all]' 
+```
+```bash pip
+pip3 install meshagent[all]
+```
+</CodeGroup>
+
+## Next Steps
+
+Congratulations! You now have everything set up to run the examples in the [Getting Started](../introduction/get_started) guide.
+
+### Important Reminders:
+- Always activate your virtual environment before working on your project: 
+<CodeGroup>
+```bash macOS/Linux
+source .venv/bin/activate
+```
+```bash Windows
+.venv\Scripts\activate
+```
+</CodeGroup>
+- If using uv, you can use ``uv run python your_script.py`` to automatically use the virtual environment
+- Keep your virtual environment activated while following the [Getting Started](../introduction/get_started) guide
+
+### Troubleshooting Common Issues
+- Python not found: Make sure Python was added to your PATH during installation (Windows) or use python3 instead of python (macOS/Linux).
+- Permission errors: On macOS/Linux, you might need to restart your terminal after installing uv, or run source ~/.bashrc or source ~/.zshrc.
+- Virtual environment not activating: Make sure you're in the correct project directory when running the activation commands.
