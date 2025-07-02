@@ -7,7 +7,7 @@ This guide will help you understand the **core building blocks that make MeshAge
 ## Key Concepts at a Glance: Agents, Tools, and Rooms
 MeshAgent enables people, AI agents, and external capabilities (tools) to meet in a secure **Room** where they can collaborate in real-time, share context, and work together toward common goals.
 
-- **Agents**: Language model powered entities that can understand natural language, make decisions, and execute goals over multiple iterations. Agents are typically given a persona (aka system prompt or rules) and access to tools to help them understand and perform their job. 
+- **Agents**: Language model (LLM) powered entities that can understand natural language, make decisions, and execute goals over multiple iterations. Agents are typically given a persona (aka system prompt or rules) and access to tools to help them understand and perform their job. 
 - **Tools**: Tools extend a model's capabilities by allowing the model to take action on your behalf -- something an LLM itself cannot do. Tools can be registered in the Room and called by human and agent participants. Agents can be equipped with specific tools, and human participants can invoke registered tools. 
 - **Rooms**: A temporary, secure collaboration space that automatically spins up when the first participant arrives and vanishes when the last one leaves. All context, conversations, and shared resources live within the Room. Rooms are provisioned on demand and can scale up or down as your demand changes. 
 
@@ -15,18 +15,20 @@ MeshAgent enables people, AI agents, and external capabilities (tools) to meet i
 ### What are Agents?
 Agents are backed by an LLM plus a reasoning loop which allows the agent to continue working until a task is complete. 
 
-Agents have rules or system prompts which give them insight into their role (e.g. "You are a Document Writer for MeshAgent, an AI startup that provides the missing infrastructure to scale AI Agents") and are equipped with various tools to help them complete their task (e.g. DocumentCreation tool, WebSearch tool, SendEmail tool, etc.).
+Agents have **rules or system prompts which give them insight into their role** (e.g. "You are a Document Writer for MeshAgent, an AI startup that provides the missing infrastructure to scale AI Agents") and are **equipped with tools** to help them complete their task (e.g. DocumentCreation tool, WebSearch tool, SendEmail tool, etc.).
 
 ### Types of Agents in MeshAgent
 - **Chat Agents**: Handle text-based conversations and queries
-- **Voice Agents**: Process spoken language and response with voice
+- **Voice Agents**: Process spoken language and respond with voice
+- **Task Runners**: Agents with structured inputs and outputs. A Task Runner might be given to a Chat or Voice Agent as a tool. Task Runners are helpful when you need a certain format to be followed.
 
 Alternatively, you can run agents in your agent framework of choice inside of a MeshAgent Room.
-
 
 ## Tools: Extending Agent Capabilities
 ### What are Tools?
 Tools are specialized functions that extend what agents can do beyond basic conversation. MeshAgent ships prebuilt, reusable toolkits for common Room interactions (e.g., file and document handling, media generation, dynamic UI interactions) and high-demand tasks (e.g., web search or document-to-Markdown conversion).
+
+MeshAgent toolkits group together related tools and pass the set of tools to the agent for use. 
 
 #### Built-in toolkits 
 - **Document Authoring**: Create and edit documents in the room
@@ -36,11 +38,12 @@ Tools are specialized functions that extend what agents can do beyond basic conv
 
 #### Custom tools and toolkits
 - **Model Context Protocol (MCP) Support**: Integrate any [MCP compatible service into a Room](https://docs.meshagent.com/mcp-overview/overview). Simply wrap the MCP image and launch it as a service inside a MeshAgent Room. 
-- **Fully Custom Tools**: 
+- **Fully Custom Tools**: You can write your own custom tools and toolkits with MeshAgent. Tools require an `__init__` and ``execute`` function and should return a specific data type (e.g. ``TextResponse``, ``JsonResponse``). 
 
 ### How Tools Work
-- **Reusable Architecture**: Tools are centrally managed like agents, allowing you to deploy them once and reuse them effortlessly across projects.
-
+- Toolkits are passed to an Agent and the Agent determines when they need to invoke a tool to perform a task. 
+- When an agent invokes a tool, the tool logic is executed and the results are streamed back to the agent. 
+- Tools are centrally managed like agents, allowing you to deploy them once and reuse them effortlessly within a project.
 
 ## Rooms: The Secure, Scalable Collaboration Hub
 
