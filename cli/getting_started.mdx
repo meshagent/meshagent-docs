@@ -11,24 +11,49 @@ The MeshAgent CLI streamlines Room interactions and agent management right from 
 - Deploy finished agents as MeshAgent services
 - Inspect and manage existing projects, secrets, agents, and services
 
-### Pre-requisites: Set up MeshAgent
+## Before you begin
+1. **Set up MeshAgent**: If you haven't installed MeshAgent yet, follow our [Getting Started](../introduction/get_started.mdx) guide. This will walk you throughhow to set up your MeshAgent account, create your first project, install MeshAgent, and connect to your first room with your first agent.
 
-If you haven't installed MeshAgent yet, follow our [Getting Started](../introduction/get_started.mdx) guide. Once you're setup, come back here to better understand and start using the MeshAgent CLI. Our [Getting Started](../introduction/get_started.mdx) docs will walk you through how to set up your MeshAgent account, create your first project, install MeshAgent, and connect to your first room with your first agent. 
+2. **Activate your virtual environment**: Be sure you are in the appropriate project folder and have activated your virtual environment with MeshAgent installed. If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). To activate your virtual environment run: 
 
+    <CodeGroup>
+    ```bash macOS/Linux
+    source .venv/bin/activate
+    ```
+    ```bash Windows
+    .venv\Scripts\activate
+    ```
+    </CodeGroup>
 
-## Using the MeshAgent CLI
+    You'll know your virtual environment is active when you see ``.venv`` at the beginning of your terminal prompt.
+
+3. **Verify the MeshAgent CLI is installed**: Display the packages installed in your virtual environment and their dependencies.
+    <CodeGroup>
+    ```bash uv
+    uv tree
+    ```
+    ```bash pip
+    pip list
+    ```
+    </CodeGroup>
+
+     You should see various MeshAgent packages including ``meshagent-cli``. The MeshAgent CLI installs automatically if you installed the entire MeshAgent SDK. You can also install the CLI directly by running: 
+
+    <CodeGroup>
+    ```bash uv
+    uv add meshagent-cli
+    ```
+    ```bash pip
+    pip install meshagent-cli 
+    ```
+    </CodeGroup>
+
+## CLI Fundamentals
+The core MeshAgent workflow involves connecting to your MeshAgent project, calling in and deploying AI Agents. 
 
 ### Authenticate
 
-Be sure you have already installed the MeshAgent CLI, it installs automatically if you installed the entire MeshAgent SDK. You can also install the CLI directly by running: 
-
-<CodeGroup>
-```bash bash
-pip3 install meshagent-cli
-```
-</CodeGroup>
-
-Next, authenticate and activate a project:
+First, authenticate and activate a project. These commands will open a browser window for you to authenticate with your MeshAgent account. 
 
 <CodeGroup>
 ```bash bash
@@ -84,10 +109,25 @@ meshagent service create --image=meshagent/cli:latest --port "num=9001 path=/age
 ```
 </CodeGroup>
 
-The chatbot is now deployed. In a web browser, go back to [studio.meshagent.com](https://studio.meshagent.com/), click the services tab and you will see the information about your deployed agent. To test the agent go to the Sessions tab, create a session, and you will see the deployed agent appear in the participants list.
+The chatbot is now deployed. In a web browser, go back to [studio.meshagent.com](https://studio.meshagent.com/), click the Services tab and you will see the information about your deployed agent. To test the agent go to the Sessions tab, create a session, and you will see the deployed agent appear in the participants list. To interact with the agent simply select it from the participants list and begin talking to the agent.
 
+
+## Create MeshAgent Secrets
+
+When deploying a custom agent, you will need to build and push a docker image. For an example of this, checkout the [Build and Deploy a Chat Agent](../agents/standard/buildanddeploychatbot) guide where you'll learn how to build and deploy a custom chat agent with various tools.
+
+If your docker image is not public, then you will need to configure a secret so that the image can be pulled.
+
+<CodeGroup>
+```bash Python
+meshagent secret docker create --name "my-image-secret" --server "index.docker.io" --username "my-username" --password "my-password"
+```
+</CodeGroup>
+
+
+## Environment Helpers
 ### Export Credentials
-Export credentials with shell-ready commands. This is necessary if you are not using the meshagent setup command and want to connect to a room directly without calling in an agent. 
+If you want to connect to a room directly without calling in an agent you will need to export your MeshAgent credentials to your environment. This is necessary if you are not using the ``meshagent setup`` command.
 
 <CodeGroup>
 ```bash bash
@@ -95,6 +135,7 @@ meshagent env
 ```
 </CodeGroup>
 
+This will give you the appropriate environment variables to export and allow you to connect to a Room directly. 
 
 ### Logout 
 
