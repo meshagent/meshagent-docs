@@ -2,17 +2,103 @@
 title: Architecture Overview
 ---
 
-MeshAgent’s [Key Concepts](./key_concepts) page explains what Agents, Tools, and Rooms are. This guide shows how those ideas become real code by walking through the MeshAgent Python SDK.
+MeshAgent is a collection of tools and SDKs for building agents that collaborate in real time. At a high level it provides:
+
+- A room‑based infrastructure for agents and participants to communicate.
+- A set of clients (messaging, storage, document sync, etc.) to simplify common tasks.
+- Integrations for popular services (OpenAI, LiveKit, etc.).
+- A command‑line interface (CLI) to manage projects and agents.
+
+The ``meshagent.api`` package forms the foundation. Other packages such as ``meshagent.tools``, ``meshagent.agents``, ``meshagent.openai``, and ``meshagent.livekit`` build on this base.
+
+MeshAgent’s [Key Concepts](./key_concepts) page explains what Agents, Tools, and Rooms are. This guide shows how those ideas are implemented in the MeshAgent SDK.
+
+## MeshAgent Packages at a Glance
 
 In this guide you will understand the relationships and key uses for each of the MeshAgent packages: 
-- **meshagent.api**: the base layer providing JWT auth, websocket protocols, rooms, messaging, storage, document sync, and webhooks
-- **meshagent.tools**: builds on meshagent.api to create reusable tools and toolkits that run inside or outside a room
-- **meshagent.agents**: adds agent classes (e.g., TaskRunner, ChatBot) that orchestrate toolkits and planning logic on top of the core API
-- **meshagent.openai**: supplies adapters so those agents and tools can leverage OpenAI models and convert tool calls/responses appropriately
-- **meshagent.livekit**: plugs in LiveKit for voice communication and streaming, providing specialized agents like VoiceBot
+- **[meshagent.api](#meshagent-api)**: the base layer providing JWT auth, websocket protocols, rooms, messaging, storage, document sync, and webhooks
+- **[meshagent.agents](#meshagent-agents)**: adds agent classes (e.g., TaskRunner, ChatBot) that orchestrate toolkits and planning logic on top of the core API
+- **meshagent.tools**: builds on meshagent.api to create reusable tools and toolkits (collections of tools) that operate over a ToolContext that integrates with the room
+- **meshagent.openai**: supplies adapters so those agents and tools can leverage [OpenAI models](./https://openai.com/api/) and convert tool calls/responses appropriately
+- **meshagent.livekit**: plugs in [LiveKit](https://livekit.io/) for voice communication and streaming, providing specialized agents like VoiceBot
 - **meshagent.mcp**: exposes MCP-hosted tools using the same toolkit interface so agents can call them
 - **meshagent.computers**: offers abstractions to control browsers or OS environments (useful for automation tools or remote control)
 - **meshagent.cli**: wraps everything in a user-facing command line interface for managing projects, tokens, agents, messaging, etc
 
 Together these packages form a layered ecosystem: ``meshagent.api`` → ``tools`` and ``agents`` → integrations like ``openai``, ``livekit``, ``mcp``, ``computers`` → command line utilities via ``meshagent.cli``. This modular design lets developers build agents with custom tools, integrate OpenAI or LiveKit features, and run or deploy them via the CLI.
 
+## MeshAgent API
+The ``meshagent.api`` is the foundation that all other packages build on. 
+### Core Concepts
+#### JWT Authentication
+ MeshAgent uses **JSON Web Tokens (JWTs)** to authenticate participants. A token encodes who you are (participant name) and what you’re allowed to access (project ID, room name, role). The token is signed, so the server can verify it without storing any state.
+
+<CodeGroup>
+```Python Python
+from meshagent.api import ParticipantToken
+token = ParticipantToken(
+    name="alice",
+    project_id="your-project-id",
+    api_key_id="your-api-key-id",
+)
+token.add_room_grant(room_name="my-room", role="user")
+jwt = token.to_jwt(secret="your-api-secret")
+```
+</CodeGroup>
+
+#### WebSocket Protocol
+A WebSocket keeps a two-way connection open between your Python code and the Meshagent server. This allows instant messaging, file transfers, and document updates. ``WebSocketClientProtocol`` manages the underlying connection:
+
+<CodeGroup>
+```Python Python
+from meshagent.api import WebSocketClientProtocol
+protocol = WebSocketClientProtocol(url=room_url, token=jwt)
+async with protocol:
+    # communication occurs over this protocol
+```
+</CodeGroup>
+
+Messages are encoded and decoded using a ``Protocol`` layer that is transport-agnostic.
+
+#### RoomClient
+``RoomClient`` is the main entry point for interacting with a room. Once you pass in the protocol, the room becomes ready and you gain access to specialized sub-clients:
+
+- ``messaging``: send or broadcast text/files.
+- ``storage``: open or write files in the room.
+- ``sync``: collaborate on structured documents.
+- ``agents``: manage agent instances.
+- ``queues``, ``database``, ``livekit``, and more.
+
+<CodeGroup>
+```Python Python
+from meshagent.api import RoomClient
+async with RoomClient(protocol=protocol) as room:
+    await room.messaging.send("hello everyone!")
+    async with room.storage.open(path="example.txt", overwrite=True) as f:
+        await f.write(b"content")
+```
+</CodeGroup>
+
+#### Document Runtime and Schemas
+``SyncClient`` and the document runtime allow multiple participants to edit structured documents (defined by a ``MeshSchema``) with real-time updates propagated via WebSocket messages.
+
+#### WebhookServer
+``WebhookServer`` can run in your own service to receive signed events (HTTP webhooks) from MeshAgent—such as room lifecycle events (e.g., room started/ended)—allowing you to trigger custom logic.
+
+#### AccountsClient
+Separate from rooms, ``AccountsClient`` is a REST-based client for managing projects, API keys, and secrets. It is useful for administrative tasks.
+
+## MeshAgent Agents
+The ``meshagent.agents`` package provides higher-level agent classes that orchestrate tools and tasks. 
+
+## MeshAgent Tools
+
+## MeshAgent OpenAI
+
+## MeshAgent LiveKit
+
+## Meshagent MCP
+
+## MeshAgent Computers
+
+## MeshAgent CLI
