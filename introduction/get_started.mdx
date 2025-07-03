@@ -22,14 +22,19 @@ import QuickstartAgentDart from "/snippets/examples/dart/quickstart-agent.mdx";
 MeshAgent is an **end to end platform** for building, deploying, and hosting AI Agents. MeshAgent 
 integrates AI Agents and human teams in real time by bundling LLM orchestration, tool integration, real-time messaging, observability, and deployment so you can ship and share agents in minutes instead of weeks. 
 
+### Prerequisites 
+
+Before you start, make sure your machine matches the appropriate requirements. If you’ve *never* set up Python, pip, or uv before, follow the [**Machine Setup Guide**](../reference/machine_setup) first, then return here.
+
 ### Key Concepts
 - **Projects**: Groups related Rooms and the Agents that serve them. It is best to create a different Project for each use case.
 - **Rooms**: A dedicated space for humans and Agents to collaborate in real time. 
 - **Agents**: ChatBots, VoiceBots, TaskRunners, and Workers that you build and deploy with custom tools or out of the box MeshAgent tools. Once deployed, Agents are automatically available in every Room under that Project. 
 
+
 ### In this guide you will learn how to:
 1. Create a MeshAgent account and project in MeshAgent Studio
-2. Install MeshAgent for Python, JavaScript, TypeScript, or Dart
+2. Install MeshAgent for Python
 3. Connect to your first MeshAgent Room and call a chat and voice agent into your room
 
 ## Setup Guide
@@ -41,35 +46,28 @@ integrates AI Agents and human teams in real time by bundling LLM orchestration,
 
 
 ### Step 2: Install MeshAgent
+First navigate to your project and activate your virtual environment, for help with this see our [Machine Setup Guide](../reference/machine_setup).
 
-Configure **MeshAgent** across various environments: Browser, Node.js, Python, and Dart/Flutter.
-
-To get started, install the MeshAgent SDK:
+Once your virtual environment is activated, install MeshAgent using the Python package manager of your choice. 
 
 <CodeGroup>
-```bash Python
+```bash uv
+uv add 'meshagent[all]' 
+```
+```bash pip
 pip3 install meshagent[all]
 ```
-```bash JavaScript
-npm install @meshagent/meshagent
-```
-```bash TypeScript
-npm install @meshagent/meshagent
-```
-```bash Dart
-dart pub add meshagent
-```
 </CodeGroup>
+
+**Note**: Installing the entire MeshAgent SDK as shown above automatically installs the MeshAgent CLI package, but the CLI can also be installed independently using ``uv add meshagent-cli`` or ``pip3 install meshagent-cli``.
+
 
 ### Step 3: Use the MeshAgent CLI to Connect to a Project
 
 Authenticate and activate a project. 
 
-*Note: Installing the entire MeshAgent SDK as shown above automatically installs the MeshAgent CLI, but the CLI can also be installed independently as shown here.*
-
 <CodeGroup>
-```bash Python
-pip3 install meshagent-cli
+```bash bash
 # A browser window will open for OAUTH.
 meshagent setup
 ```
@@ -78,7 +76,7 @@ meshagent setup
 __Optional__: Alternatively, instead of running the `meshagent setup` command you can run:
 
 <CodeGroup>
-```bash Python
+```bash bash
 # A browser window will open for OAUTH.
 meshagent auth login
 meshagent project activate -i
@@ -94,23 +92,16 @@ You are now authenticated and ready to use the cli to perform operations involvi
 To call a chat agent into the room run: 
 
 ```sh
-meshagent chatbot join --room YOUR_ROOM_NAME --agent-name YOUR_CHATBOT_NAME --name YOUR_CHATBOT_NAME
+meshagent chatbot join --room gettingstarted --agent-name chatagent --name chatagent
 ```
 
-To call a voice agent into the room run: 
+The chatbot is now connected to the "gettingstarted" Room. 
+
+In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com/) and join the "gettingstarted" session. In the participants tab you will see the "chatagent" participant appear. To talk to the agent, just select it from the participants list and begin chatting! 
+
+Next, to call a voice agent into the room run: 
 ```sh
-meshagent voicebot join --room YOUR_ROOM_NAME --agent-name YOUR_VOICEBOT_NAME --name YOUR_VOICEBOT_NAME
+meshagent voicebot join --room gettingstarted --agent-name voiceagent --name voiceagent
 ```
 
-## How Rooms Work
-
-MeshAgent Rooms provide a shared workspace for agents and participants to collaborate in real time. Each room includes a participant list, presence tracking, and a mechanism for sharing information. Because MeshAgent is designed for seamless integration, rooms are provisioned on demand as participants connect. This eliminates the complexity of syncing rules and allows agents and people to quickly spin up a shared environment to collaborate in.
-
-- **Temporary by design**  
-  A room is provisioned when the first participant joins and deprovisioned when the last participant leaves. It only exists to facilitate communication during the session.
-
-- **No state persistence**  
- The MeshAgent admin console logs session activity for debugging, such as which agents participated and what questions were asked. However, the state of the room will be discarded at the end of the session, so any data that should persist after the session ends needs to be written to an external storage provider.
-
-- **Document management**  
-A room can help participants discover, sync, and share documents when they connect to it, but the room only temporarily stores MeshDocuments in memory while they are open. When documents are modified, or a session ends, the changes are written to an external storage provider. By default, MeshAgent Cloud provides a storage folder (named for the room) where documents are kept. For more complex scenarios, you can configure an existing storage solution using a custom provider and save the documents in your own database or storage buckets.
+Go back to [studio.meshagent.com](https://studio.meshagent.com/) and go to the "gettingstarted" room where you'll now see the voiceagent. To talk to the voice agent, select it from the participants tab and begin speaking. We recommend clicking the mute button once you are done talking so the agent does not get interrupted by any potential background noise near you. 
