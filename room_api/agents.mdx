@@ -1,0 +1,377 @@
+
+---
+
+## Overview
+
+The `AgentsClient` defines methods to call agents, ask questions, list available toolkits, list available agents, and invoke specific tools. It uses an underlying `RoomClient` to send requests.
+
+- **AgentsClient**: The main client class for interacting with agents. It handles:
+  - Calling agents
+  - Asking questions to agents
+  - Listing available toolkits
+  - Listing available agents
+  - Invoking specific tools
+
+- **AgentDescription**: Describes an agent, its input/output schemas, requirements, labels, etc.
+- **ToolDescription**: Describes an individual tool, including metadata and input schemas.
+- **ToolkitDescription**: Groups multiple tools under one toolkit name, allowing retrieval of individual tools by name.
+- **ToolkitConfiguration**: Describes which tools in a toolkit you want to enable or use.
+
+---
+
+## API Methods
+
+### 1. Call
+
+- **Description**:  
+  - Allows you to send a request to an agent to perform a specific action or function.
+- **Parameters**:
+  - `name`: The name of the agent you want to call.
+  - `url`: The URL endpoint or route on the agent side that you want to call.
+  - `arguments`: A record of arguments (payload) that you want to send to the agent.
+- **Returns**:  `Response` object (likely a `JsonResponse`), containing the output or result from the agent.
+
+<CodeGroup>
+```python Python
+await room.agents.make_call(
+  name="example-agent",
+  url="some-endpoint",
+  arguments={ "foo": "bar" }
+);
+```
+```typescript Typescript
+await room.agents.call({
+  name: "example-agent",
+  url: "some-endpoint",
+  arguments: { "foo": "bar" }
+});
+```
+```javascript Javascript
+await room.agents.call({
+  name: "example-agent",
+  url: "some-endpoint",
+  arguments: { "foo": "bar" }
+});
+```
+```dart Dart
+await room.agents.call(
+  name: "example-agent",
+  url: "some-endpoint",
+  arguments: { "foo": "bar" }
+);
+```
+</CodeGroup>
+
+---
+
+### 2. Ask
+
+- **Description**:  
+  - Sends a question or prompt to the specified agent. You can optionally provide an array of `ToolkitConfiguration` objects indicating which toolkits (and which tools within them) are available for this agent to use. 
+  - The `ask` method allows you to send a question or prompt to an agent, specifying the agent's name, any toolkits you want to enable, and the arguments you want to pass.
+  - This is useful for getting responses from agents that can process natural language or perform specific tasks.
+- **Parameters**:
+  - `agentName`: The name/identifier of the agent you want to ask.
+  - `toolkits?`: An optional array of `ToolkitConfiguration` objects that specify which toolkits are allowed for this ask.
+  - `arguments`: A record of arguments (payload) that you want to send to the agent.
+- **Returns** the `answer` field from the JSON response.
+
+<CodeGroup>
+```python Python
+answer = await room.agents.ask(
+  agentName="example-agent",
+  toolkits=[ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"])],
+  arguments={
+    "prompt": "Explain quantum computing in simple terms."
+  }
+)
+
+print(answer)  # logs the JSON structure from the agent
+```
+```typescript Typescript
+const answer = await room.agents.ask({
+  agentName: "example-agent",
+  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  arguments: {
+    prompt: "Explain quantum computing in simple terms."
+  }
+});
+
+console.log(answer); // logs the JSON structure from the agent
+```
+```javascript Javascript
+const answer = await room.agents.ask({
+  agentName: "example-agent",
+  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  arguments: {
+    prompt: "Explain quantum computing in simple terms."
+  }
+});
+console.log(answer); // logs the JSON structure from the agent
+```
+```dart Dart
+final answer = await room.agents.ask(
+  agentName: "example-agent",
+  toolkits: [ ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  arguments: {
+    "prompt": "Explain quantum computing in simple terms."
+  }
+);
+print(answer); // logs the JSON structure from the agent
+```
+</CodeGroup>
+
+---
+
+### 3. List Toolkits
+
+- **Description**:  
+  - Retrieves a list of all available toolkits and parses each one into a `ToolkitDescription`.
+  - This is useful for discovering which toolkits are available for use and what tools they contain.
+- **Parameters**: None
+- **Returns** An array of `ToolkitDescription` objects.
+
+<CodeGroup>
+```python Python
+all_toolkits = await room.agents.list_toolkits()
+
+for toolkit in all_toolkits:
+  print(f"Toolkit: {toolkit.name}, Tools: {[tool.name for tool in toolkit.tools]}")
+```
+```typescript Typescript
+const allToolkits = await room.agents.listToolkits();
+
+allToolkits.forEach((toolkit) => {
+  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map(t => t.name)}`);
+});
+```
+```javascript Javascript
+const allToolkits = await room.agents.listToolkits();
+
+allToolkits.forEach((toolkit) => {
+  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map(t => t.name)}`);
+});
+```
+```dart Dart
+final allToolkits = await room.agents.listToolkits();
+
+for (final toolkit in allToolkits) {
+  print('Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name).join(", ")}');
+}
+```
+</CodeGroup>
+
+---
+
+### 4. List Agents
+
+- **Description**:  
+  - Lists the agents currently available. Each is converted into an `AgentDescription` object.
+  - This is useful for discovering which agents are available for use and what their capabilities are.
+- **Parameters**: None
+- **Returns** An array of `AgentDescription` objects.
+
+<CodeGroup>
+```python Python
+agents = await room.agents.list_agents()
+for agent in agents:
+  print(f"Agent: {agent.name}, Title: {agent.title}")
+```
+```typescript Typescript
+const agents = await room.agents.listAgents();
+
+agents.forEach((agent) => {
+  console.log(`Agent: ${agent.name}, Title: ${agent.title}`);
+});
+```
+```javascript Javascript
+const agents = await room.agents.listAgents();
+
+agents.forEach((agent) => {
+  console.log(`Agent: ${agent.name}, Title: ${agent.title}`);
+});
+```
+```dart Dart
+final agents = await room.agents.listAgents();
+
+for (final agent in agents) {
+  print('Agent: ${agent.name}, Title: ${agent.title}');
+}
+```
+</CodeGroup>
+
+---
+
+### 5. Invoke Tool
+
+- **Description**:  
+  - Invokes a specific tool within a toolkit in a given toolkit with the provided arguments.
+  - This is useful for directly interacting with tools without going through an agent.
+- **Parameters**:
+  - `toolkit`: The name of the toolkit that contains the tool you want to invoke.
+  - `tool`: The name of the specific tool you want to invoke.
+  - `arguments`: A record of arguments (payload) that you want to send to the tool.
+**Returns** `Response` object (likely a `JsonResponse`), containing the output or result from the invoked tool.
+
+<CodeGroup>
+```python Python
+response = await room.agents.invoke_tool(
+  toolkit="exampleToolkit",
+  tool="toolA",
+  arguments={"param1": "value1"}
+)
+# 'response' may contain JSON data or a message detailing the tool's output.
+```
+```typescript Typescript
+const response = await room.agents.invokeTool({
+  toolkit: "exampleToolkit",
+  tool: "toolA",
+  arguments: { param1: "value1" }
+});
+
+// 'response' may contain JSON data or a message detailing the tool's output.
+```
+```javascript Javascript
+const response = await room.agents.invokeTool({
+  toolkit: "exampleToolkit",
+  tool: "toolA",
+  arguments: { param1: "value1" }
+});
+// 'response' may contain JSON data or a message detailing the tool's output.
+```
+```dart Dart
+final response = await room.agents.invokeTool(
+  toolkit: "exampleToolkit",
+  tool: "toolA",
+  arguments: {"param1": "value1"}
+);
+
+// 'response' may contain JSON data or a message detailing the tool's output.
+```
+</CodeGroup>
+
+
+---
+
+## Typical Workflow
+
+1. **Instantiate `RoomClient`**  
+   ```ts
+   const room = new RoomClient(...);
+   ```
+
+2. **List or Discover Available Agents and Toolkits**  
+   ```ts
+   const agents = await room.agents.listAgents();
+   const toolkits = await room.agents.listToolkits();
+   ```
+
+3. **Configure Toolkits (Optional)**  
+   - Create one or more `ToolkitConfiguration` objects to specify which tools to enable.
+   ```ts
+   const toolkitConfig = new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]);
+   ```
+
+4. **Ask a Question to an Agent**  
+   ```ts
+   const result = await room.agents.ask({
+     agentName: "myAgent",
+     toolkits: [toolkitConfig],
+     arguments: { prompt: "Explain the concept of entanglement." }
+   });
+   console.log("Agent Answer:", result);
+   ```
+
+5. **Invoke a Specific Tool** (If needed)  
+   ```ts
+   const toolResponse = await room.agents.invokeTool({
+     toolkit: "exampleToolkit",
+     tool: "toolA",
+     arguments: { foo: "bar" }
+   });
+   console.log("Tool Response:", toolResponse);
+   ```
+
+6. **Call an Agent Directly** (If the agent supports such calls)  
+   ```ts
+   await room.agents.call({
+     name: "myAgent",
+     url: "run-something",
+     arguments: { data: "payload" }
+   });
+   ```
+
+---
+
+## Error Handling & Validation
+
+- **Parsing Errors**:  
+  In `AgentDescription.fromJson`, if a requirement object cannot be identified as a `RequiredToolkit` or `RequiredSchema`, it throws an error. Make sure your JSON structure matches the expected shape.
+
+- **Missing Fields**:  
+  If certain fields (like `name` in the agent or tool description) are missing, the constructors or static factories might produce incomplete objects. Validate these fields before usage.
+
+- **Tool/Toolkit Not Found**:  
+  Methods like `ToolkitDescription.getTool` return `undefined` if the tool name doesn’t match. Handle this case to avoid runtime errors.
+
+- **Network/Request Failures**:  
+  The underlying `RoomClient.sendRequest` might throw errors on network failures. Ensure you handle rejections from `AgentsClient` methods (e.g., using `try/catch`).
+
+---
+
+## AgentDescription
+
+Represents an agent’s descriptive information, including schemas for input/output data and any special requirements the agent may have (for instance, a required toolkit or schema).
+
+- **Fields**
+  - **`name`**: The agent's internal name.
+  - **`title`**: A short, human-readable title for the agent.
+  - **`description`**: Detailed description of the agent’s behavior or purpose.
+  - **`outputSchema?`**: Optional JSON schema that describes the output format of the agent.
+  - **`inputSchema?`**: Optional JSON schema that describes the input format expected by the agent.
+  - **`requires`**: An array of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`) that define dependencies.
+  - **`labels`**: A list of labels/tags associated with the agent.
+  - **`supportsTools`**: Boolean indicating whether the agent can use external tools.
+
+---
+
+## ToolDescription
+
+Represents metadata and input requirements for an individual tool. Tools can exist independently or be grouped in a `ToolkitDescription`.
+
+- **Fields**
+  - **`title`**: Tool’s display-friendly name.
+  - **`name`**: Tool’s unique name.
+  - **`description`**: Describes what the tool does and how it might be used.
+  - **`inputSchema`**: JSON schema describing the expected input.
+  - **`thumbnailUrl?`**: Optional thumbnail image link.
+  - **`defs?`**: Optional dictionary of additional definitions or metadata.
+
+
+---
+
+## ToolkitDescription
+
+Groups multiple tools under a single toolkit. Allows easy retrieval of tools by name and provides a common structure for describing a set of tools.
+
+- **Fields**
+  - **`title`**: Toolkit’s title.
+  - **`name`**: Toolkit’s internal name.
+  - **`description`**: Description of the toolkit.
+  - **`tools`**: An array of `ToolDescription` items.
+  - **`thumbnailUrl?`**: An optional thumbnail image link.
+
+
+---
+
+## ToolkitConfiguration
+
+Specifies how a particular toolkit should be used. It can indicate whether to use all tools or only specific ones within the toolkit.
+
+---
+
+## Conclusion
+
+The `AgentsClient` module provides a flexible, high-level API for managing and interacting with agents and toolkits in a distributed or plugin-based environment. Use `AgentsClient` for routine operations—listing agents and toolkits, invoking tools, or asking questions—and rely on the description classes (`AgentDescription`, `ToolDescription`, and `ToolkitDescription`) to manage the metadata and validation for those resources.
+
+For more details on the underlying request/response flow, refer to your implementation of `RoomClient`, `Response`, and `JsonResponse`.

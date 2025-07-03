@@ -1,0 +1,50 @@
+import express, { Request, Response } from 'express';
+
+// The structure of the input
+interface Input {
+  a: number;
+  b: number;
+}
+
+// The structure of the output
+interface Output {
+  result: number;
+}
+
+// This mimics the "ask_model" logic in Python.
+function computeSum(input: Input): Output {
+  return {
+    result: input.a + input.b,
+  };
+}
+
+async function main() {
+  const app = express();
+
+  // Middleware to parse JSON bodies
+  app.use(express.json());
+
+  // POST endpoint to handle requests
+  app.post('/sum', (req: Request, res: Response) => {
+    try {
+      // We expect an object with { a: number, b: number }
+      const input: Input = req.body;
+      const output: Output = computeSum(input);
+      return res.status(200).json(output);
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid request', details: err });
+    }
+  });
+
+  // Start the server
+  const port = 8080;
+  app.listen(port, () => {
+    console.log(`Listening on http://localhost:${port}/`);
+  });
+}
+
+// Run the main function
+main()
+.catch((err) => {
+  console.error(err);
+});

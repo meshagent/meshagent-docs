@@ -1,0 +1,58 @@
+---
+title: "Chatbot"
+---
+
+The Chatbot agent allows users to chat with an agent over the MeshAgent messaging protocol. The chatbot supports advanced features like stream responses, thinking indicators, and saving
+and loading threads using MeshDocuments.
+
+After joining a MeshAgent room, the Chatbot will show up as a participant on the messaging pane. You can interact with it directly in the studio. You can build your own
+custom chatbot by extending the chatbot class and customizing its initialization options:
+
+```python Python
+from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.agents.chat import ChatBot
+from meshagent.openai import OpenAIResponsesAdapter
+
+class SampleChatbot(ChatBot):
+    def __init__(self):
+        super().__init__(
+            # A unique name for the participant
+            name="mychatbot",
+            # add custom rools to guide the behavior of the chatbot
+            rules=[
+                "use the ask_user tool to gather information from the user",
+            ],
+            # Use the OpenAI Responses API
+            llm_adapter = OpenAIResponsesAdapter(),
+            # Add custom tools
+            requires=[
+                RequiredToolkit(name="ui", tools=[ "ask_user" ]),
+            ],
+            toolkits=[
+                # Optionally add local toolkits
+            ],
+            # Add a message that is automatically sent to the user
+            auto_greet_message="What would you like me to do?",
+        )
+
+```
+
+To send it a message via the room API and integrate it into your own applications, you can send a message using a room client:
+
+```python Python
+await room.messaging.send(
+    to=participant, 
+    type="chat",
+    message={
+        "path" : "thread_path.thread"
+        "text" : "a chat message" 
+    })
+```
+
+You can use the ChatThreadLoader in the Flutter SDK to integrate the same functionality contained in the MeshAgent Studio interface into your own Flutter applications.
+
+# ComputerAgent
+
+The ComputerAgent in ```meshagent-computers``` extends the chatbot with support for using browsers and computers. The computer agent will periodically send screenshots to participants on the
+thread using the MeshAgent messaging protocol, by sending a message of the type "computer_screen" and an attachment that contains a binary screenshot. Install
+meshagent-computers to use the ComputerAgent.
