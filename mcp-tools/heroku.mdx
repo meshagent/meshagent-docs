@@ -1,0 +1,324 @@
+---
+title: Heroku
+---
+
+
+Run the Heroku MCP server inside a Meshagent Room for instant, isolated cloud testing—no persistent deployment required! When the Room closes (e.g., after inactivity), both the MCP server and chatbot are shutdown automatically.
+
+Environment variables needed:
+
+- `HEROKU_API_KEY` — Your Heroku account authentication token
+
+### Steps
+
+1. **Install Meshagent CLI**
+   ```shell
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate**
+   - Visit the [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) page for authentication instructions.
+
+3. **Start the MCP Heroku Server in a test Room**
+   ```shell
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-heroku:latest --env MESHAGENT_PORT=8001 --env HEROKU_API_KEY=<YOUR_HEROKU_AUTH_TOKEN> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-heroku-service-test
+   ```
+   - *This command launches a Meshagent Room with a test MCP server. The Room and included services are automatically cleaned up on inactivity.*
+
+4. **Join a chatbot with MCP Heroku tools**
+   ```shell
+   meshagent chatbot join --room=test --agent-name=mcp-heroku --name=mcp-heroku --toolkit=mcp-heroku
+   ```
+   - *This starts a chatbot in the room with access to the Heroku MCP toolkit. Multiple toolkits in the same Room are supported.*
+   - *The CLI will provide a room link.*
+
+5. **Try it out**
+   - Open the room link in your browser and chat with the agent to interactively use Heroku MCP server tools.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+Deploy the MCP server and chatbot as persistent, project-level Meshagent services—these will join all new Rooms upon creation, ideal for production or shared environments. You don't need to run local services; everything is managed by Meshagent in the cloud.
+
+### Steps
+
+1. **Create a persistent MCP Heroku service**
+   ```shell
+   meshagent service create --role=agent --image=meshagent/mcp-heroku:latest --env MESHAGENT_PORT=8001 --env HEROKU_API_KEY=<YOUR_HEROKU_AUTH_TOKEN> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-heroku-service
+   ```
+
+2. **Create a persistent chatbot service**
+   ```shell
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-heroku-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-heroku-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-heroku-chatbot --toolkit=mcp-heroku"
+   ```
+   - *Both the MCP server and chatbot will join every Meshagent project room on creation.*
+
+---
+
+## Tools Available
+
+### Heroku MCP Server
+
+Heroku Platform MCP Server using the Heroku CLI.
+
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+#### Tools Summary
+
+| Tool                      | Short Description                                                     |
+|---------------------------|-----------------------------------------------------------------------|
+| `create_addon`            | Create add-on: specify service, plan, custom names                    |
+| `create_app`              | Create app: custom name, region (US/EU), team, private space          |
+| `deploy_one_off_dyno`     | Run code/commands in Heroku one-off dyno with network and FS access   |
+| `deploy_to_heroku`        | Use for all deployments                                               |
+| `get_addon_info`          | Get add-on details: plan, state, billing                              |
+| `get_app_info`            | Get app details: config, dynos, addons, access, domains               |
+| `get_app_logs`            | App logs: monitor/debug/filter by dyno/process/source                 |
+| `list_addon_plans`        | List service plans: features, pricing, availability                   |
+| `list_addon_services`     | List available add-on services and features                           |
+| `list_addons`             | List add-ons: all apps or specific app, detailed metadata             |
+| `list_apps`               | List Heroku apps: owned, collaborator access, team/space filtering    |
+| `list_private_spaces`     | Lists Heroku Private Spaces with metadata                             |
+| `list_teams`              | Lists accessible Heroku Teams                                         |
+| `maintenance_off`         | Disable maintenance mode and restore normal app operations            |
+| `maintenance_on`          | Enable maintenance mode and redirect traffic                          |
+| `pg_backups`              | Manage backups: schedules, status, verification, recovery             |
+| `pg_credentials`          | Manage access: credentials, permissions, security, monitoring         |
+| `pg_info`                 | View database status: config, metrics, resources, health              |
+| `pg_kill`                 | Stop processes: stuck queries, operations                             |
+| `pg_locks`                | Analyze locks: blocked queries, deadlocks                             |
+| `pg_maintenance`          | Track maintenance: windows, planning                                  |
+| `pg_outliers`             | Find resource-heavy queries                                           |
+| `pg_ps`                   | Monitor active queries: progress, resources                           |
+| `pg_psql`                 | Execute SQL queries                                                   |
+| `pg_upgrade`              | Upgrade PostgreSQL safely                                             |
+| `pipelines_create`        | Create deployment pipeline                                            |
+| `pipelines_info`          | View pipeline configuration                                           |
+| `pipelines_list`          | List accessible pipelines                                             |
+| `pipelines_promote`       | Promote apps between pipeline stages                                  |
+| `ps_list`                 | List and monitor app dynos                                            |
+| `ps_restart`              | Restart app processes                                                 |
+| `ps_scale`                | Scale app dynos                                                       |
+| `rename_app`              | Rename app                                                            |
+| `transfer_app`            | Transfer app ownership                                                |
+
+### Tools Details
+
+#### `create_addon`
+Create add-on: specify service, plan, custom names
+- **Parameters:**
+  - `app` (`string`): Target app for add-on.
+  - `serviceAndPlan` (`string`): Format `service_slug:plan_slug` (e.g., heroku-postgresql:essential-0).
+  - `as` (`string`, optional): Custom attachment name.
+  - `name` (`string`, optional): Global add-on identifier.
+
+#### `create_app`
+Create app: custom name, region (US/EU), team, private space
+- **Parameters:**
+  - `app` (`string`, optional): App name, autogenerated if omitted.
+  - `region` (`string`, optional): `us`/`eu`, default: us.
+  - `space` (`string`, optional): Private space name.
+  - `team` (`string`, optional): Team name.
+
+#### `deploy_one_off_dyno`
+Run one-off dyno with command, shell setup, env, file access, TTL.
+- **Parameters:**
+  - `command` (`string`): Command to run.
+  - `name` (`string`): App name.
+  - `env` (`object`, optional): Dyno environment.
+  - `size` (`string`, optional): Dyno size.
+  - `sources` (`array`, optional): Include files.
+  - `timeToLive` (`number`, optional): Dyno TTL (secs).
+
+#### `deploy_to_heroku`
+Deploy to Heroku, create app if missing. Accepts config, environment, and tarball.
+- **Parameters:**
+  - `appJson` (`string`): App.json config (see Heroku docs).
+  - `name` (`string`): App name.
+  - `rootUri` (`string`): Workspace root.
+  - `env` (`object`, optional): Env vars.
+  - `internalRouting` (`boolean`, optional)
+  - `spaceId` (`string`, optional)
+  - `tarballUri` (`string`, optional)
+  - `teamId` (`string`, optional)
+
+#### `get_addon_info`
+Get add-on details: plan, state, billing
+- **Parameters:**
+  - `addon` (`string`): Identifier; UUID/name/attachment.
+  - `app` (`string`, optional): Context.
+
+#### `get_app_info`
+Get app details: config, dynos, addons, etc.
+- **Parameters:**
+  - `app` (`string`): App name.
+  - `json` (`boolean`, optional): Output as JSON.
+
+#### `get_app_logs`
+App logs: monitor/debug/filter
+- **Parameters:**
+  - `app` (`string`)
+  - `dynoName` (`string`, optional)
+  - `processType` (`string`, optional)
+  - `source` (`string`, optional)
+
+#### `list_addon_plans`
+List service plans: features, pricing, region
+- **Parameters:**
+  - `service` (`string`)
+  - `json` (`boolean`, optional)
+
+#### `list_addon_services`
+List available add-on services
+- **Parameters:**
+  - `json` (`boolean`, optional)
+
+#### `list_addons`
+List add-ons: apps or All
+- **Parameters:**
+  - `all` (`boolean`, optional)
+  - `app` (`string`, optional)
+
+#### `list_apps`
+List apps: filtering, team, private space
+- **Parameters:**
+  - `all` (`boolean`, optional)
+  - `personal` (`boolean`, optional)
+  - `space` (`string`, optional)
+  - `team` (`string`, optional)
+
+#### `list_private_spaces`
+List Private Spaces, compliance, CIDR
+- **Parameters:**
+  - `json` (`boolean`, optional)
+
+#### `list_teams`
+List available teams, membership
+- **Parameters:**
+  - `json` (`boolean`, optional)
+
+#### `maintenance_off` / `maintenance_on`
+Enable/disable maintenance mode
+- **Parameters:**
+  - `app` (`string`)
+
+#### `pg_backups`
+Manage backups: status, recovery
+- **Parameters:**
+  - `app` (`string`)
+
+#### `pg_credentials`
+Credentials, permissions, users
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+
+#### `pg_info`
+Database status and health
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+
+#### `pg_kill`
+Terminate queries/processes
+- **Parameters:**
+  - `app` (`string`)
+  - `pid` (`number`)
+  - `database` (`string`, optional)
+  - `force` (`boolean`, optional)
+
+#### `pg_locks`
+Locks/blocking queries
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+  - `truncate` (`boolean`, optional)
+
+#### `pg_maintenance`
+Track/plan maintenance
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+
+#### `pg_outliers`
+Find slow queries
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+  - `num` (`number`, optional)
+  - `reset` (`boolean`, optional)
+  - `truncate` (`boolean`, optional)
+
+#### `pg_ps`
+Active queries, resources
+- **Parameters:**
+  - `app` (`string`)
+  - `database` (`string`, optional)
+  - `verbose` (`boolean`, optional)
+
+#### `pg_psql`
+Run SQL, schema mgmt
+- **Parameters:**
+  - `app` (`string`)
+  - `command` (`string`, optional)
+  - `credential` (`string`, optional)
+  - `database` (`string`, optional)
+  - `file` (`string`, optional)
+
+#### `pg_upgrade`
+Upgrade database safely
+- **Parameters:**
+  - `app` (`string`)
+  - `confirm` (`string`, optional)
+  - `database` (`string`, optional)
+  - `version` (`string`, optional)
+
+#### `pipelines_create`
+Create deployment pipeline
+- **Parameters:**
+  - `name` (`string`)
+  - `stage` (`string`)
+  - `app` (`string`, optional)
+  - `team` (`string`, optional)
+
+#### `pipelines_info`
+Show pipeline config
+- **Parameters:**
+  - `pipeline` (`string`)
+  - `json` (`boolean`, optional)
+
+#### `pipelines_list`
+List pipelines
+- **Parameters:**
+  - `json` (`boolean`, optional)
+
+#### `pipelines_promote`
+Promote pipeline apps
+- **Parameters:**
+  - `app` (`string`)
+  - `to` (`string`, optional)
+
+#### `ps_list` / `ps_restart` / `ps_scale`
+Dyno mgmt: list, restart, scale
+- **Parameters:** Vary by command, typically `app` (`string`) + options
+
+#### `rename_app`
+Rename app
+- **Parameters:**
+  - `app` (`string`)
+  - `newName` (`string`)
+
+#### `transfer_app`
+Transfer to user/team
+- **Parameters:**
+  - `app` (`string`)
+  - `recipient` (`string`)
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Website:** [meshagent.com](https://www.meshagent.com/)
+- **Meshagent Documentation:** [docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Heroku Image:** [DockerHub: meshagent/mcp-heroku](https://hub.docker.com/r/meshagent/mcp-heroku)

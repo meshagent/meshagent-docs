@@ -1,0 +1,171 @@
+---
+title: OpenAPI Schema
+---
+
+
+These steps start both the OpenAPI Schema MCP agent and a chatbot toolkit inside a test Room for interactive cloud-based development.
+
+1. **Install Meshagent CLI:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up & authenticate:**
+   [Follow Quickstart Guide](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start a test MCP server as an agent in a Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-openapi-schema:latest \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-openapi-schema-service-test
+   ```
+   - ⚡ This starts a Meshagent Room with a test OpenAPI Schema MCP server as a callable tool. The Room auto-closes after inactivity.
+
+4. **Start a chatbot in the Room, linked to the MCP toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-openapi-schema \
+     --name=mcp-openapi-schema \
+     --toolkit=mcp-openapi-schema
+   ```
+   - The command output will include a link to the active Room.
+
+5. **Try it out:**
+   - Open the Room link in your browser.
+   - Send messages to the agent to interact directly with the OpenAPI Schema MCP tools!
+
+_Note: Both agent and chatbot shut down automatically when the Room is closed._
+
+
+---
+
+## 🏢 Project-Level Deployment (Production)
+
+For persistent production services that are available in **every Room** on your Meshagent project:
+
+1. **Deploy MCP Server service project-wide:**
+   ```sh
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-openapi-schema:latest \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-openapi-schema-service
+   ```
+
+2. **Deploy a project-level chatbot for the MCP toolkit:**
+   ```sh
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-openapi-schema-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-openapi-schema-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-openapi-schema-chatbot --toolkit=mcp-openapi-schema"
+   ```
+
+**Result**: The MCP OpenAPI Schema tools and chatbot will **automatically join every new Room** in your project—no manual startup required!
+
+
+---
+
+## 🛠️ Tools Available
+
+This MCP server exposes the following tools, accessible as callable Meshagent toolkit operations:
+
+| Tool                         | Short Description                                            |
+|------------------------------|-------------------------------------------------------------|
+| `get-component`              | Gets detailed definition for a specific component           |
+| `get-endpoint`               | Gets detailed information about a specific API endpoint     |
+| `get-examples`               | Gets examples for a specific component or endpoint          |
+| `get-path-parameters`        | Gets the parameters for a specific path                     |
+| `get-request-body`           | Gets the request body schema for a specific endpoint        |
+| `get-response-schema`        | Gets the response schema for an endpoint, method, status    |
+| `list-components`            | Lists all schema components (schemas, parameters, responses)|
+| `list-endpoints`             | Lists all API paths and methods with summaries              |
+| `list-security-schemes`      | Lists all available security schemes                        |
+| `search-schema`              | Searches across paths, operations, and schemas              |
+
+---
+
+### Tool Details
+
+#### **`get-component`**
+- **Description:** Gets detailed definition for a specific component
+- **Parameters:**
+  - `name` (string): Component name
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `type` (string): Component type (e.g., schemas, parameters, responses)
+
+#### **`get-endpoint`**
+- **Description:** Gets detailed information about a specific API endpoint
+- **Parameters:**
+  - `method` (string)
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `path` (string)
+
+#### **`get-examples`**
+- **Description:** Gets examples for a specific component or endpoint
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `type` (string): Type of example to retrieve
+  - `componentName` (string, optional): Component name (for component examples)
+  - `componentType` (string, optional): Component type (for component examples)
+  - `method` (string, optional): HTTP method (for request/response examples)
+  - `path` (string, optional): API path (for request/response examples)
+  - `statusCode` (string, optional): Status code (for response examples)
+
+#### **`get-path-parameters`**
+- **Description:** Gets the parameters for a specific path
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `path` (string)
+  - `method` (string, optional)
+
+#### **`get-request-body`**
+- **Description:** Gets the request body schema for a specific endpoint
+- **Parameters:**
+  - `method` (string)
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `path` (string)
+
+#### **`get-response-schema`**
+- **Description:** Gets the response schema for a specific endpoint, method, and status code
+- **Parameters:**
+  - `method` (string)
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `path` (string)
+  - `statusCode` (string, optional)
+
+#### **`list-components`**
+- **Description:** Lists all schema components (schemas, parameters, responses, etc.)
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+
+#### **`list-endpoints`**
+- **Description:** Lists all API paths and their HTTP methods with summaries, organized by path
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+
+#### **`list-security-schemes`**
+- **Description:** Lists all available security schemes
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+
+#### **`search-schema`**
+- **Description:** Searches across paths, operations, and schemas
+- **Parameters:**
+  - `openapiSchemaPath` (string): Path to the OpenAPI schema file
+  - `pattern` (string): Search pattern (case-insensitive)
+
+---
+
+## 🔗 Meshagent & Toolkit Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-openapi-schema](https://hub.docker.com/r/meshagent/mcp-openapi-schema)

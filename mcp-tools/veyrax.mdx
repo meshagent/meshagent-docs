@@ -1,0 +1,129 @@
+---
+title: Veyrax
+---
+
+
+Get up and running with a VeyraX MCP agent and chatbot in a Meshagent “Room” for fast, zero-infrastructure testing. When the room closes (e.g., inactivity), all services—including the agent, MCP server, and chatbot—are automatically removed.
+
+**Environment variables required:**
+- `VEYRAX_API_KEY` – your-veyrax-api-key-here
+
+### Steps:
+
+- **1. Install Meshagent CLI:**
+  ```bash
+  pip install "meshagent[all]"
+  ```
+
+- **2. Sign up and authenticate**
+  - Follow authentication at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+- **3. Start the MCP server agent inside the Room:**
+  ```bash
+  meshagent service test --room=test --role=agent \
+    --image=meshagent/mcp-veyrax:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env VEYRAX_API_KEY=your-veyrax-api-key-here \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-veyrax-service-test
+  ```
+  - _This launches an agent running the VeyraX MCP server in a disposable/test room. The room is closed automatically when it goes inactive._
+
+- **4. Add a chatbot to the Meshagent Room:**
+  ```bash
+  meshagent chatbot join --room=test --agent-name=mcp-veyrax --name=mcp-veyrax --toolkit=mcp-veyrax
+  ```
+  - _This starts a chatbot within the same room using the veyrax toolkit. Multiple toolkits can be loaded for richer capabilities._
+  - _Look for the room web link printed in the output._
+
+- **5. Try it out:**
+  - Visit the room URL in your browser and chat with the agent chatbot to execute MCP Server tools (e.g., ask it to run a workflow or list tools).
+
+---
+
+## Project Level Deployment (Persistent for All Rooms)
+
+To make the MCP server and chatbot persistently available (auto-joining every newly created Meshagent room in your project), deploy as follows:
+
+- **1. Create a persistent VeyraX MCP service:**
+  ```bash
+  meshagent service create --role=agent \
+    --image=meshagent/mcp-veyrax:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env VEYRAX_API_KEY=your-veyrax-api-key-here \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-veyrax-service
+  ```
+
+- **2. Create a persistent chatbot service:**
+  ```bash
+  meshagent service create --image="meshagent/cli:latest" \
+    --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-veyrax-chatbot" \
+    --env="MESHAGENT_PORT=9001" \
+    --name="mcp-veyrax-chatbot-service" \
+    --command="meshagent chatbot service --agent-name=mcp-veyrax-chatbot --toolkit=mcp-veyrax"
+  ```
+
+With these running, every new room in your project will have both the VeyraX MCP agent and chatbot available by default—no manual start required!
+
+---
+
+## Tools Available
+
+The following tools are provided by the VeyraX MCP Server and available in Meshagent Rooms when using this integration:
+
+### Tools Summary
+
+| Tool         | Short Description                                                                   |
+|--------------|-------------------------------------------------------------------------------------|
+| `get_flow`   | Use this tool to retrieve a specific workflow by its ID.                            |
+| `get_tools`  | Use this tool to retrieve a list of available tools from the Veyrax API.            |
+| `tool_call`  | Use this tool to execute a specific method of another tool with the provided parameters based on `get-tools` tool response. |
+
+
+### Tools Details
+
+#### **`get_flow`**
+Use this tool to retrieve a specific workflow by its ID.
+
+A workflow is a sequence of steps executed in order to get a result. Each flow includes the description, steps, and input schema for its methods.
+
+Parameters | Type    | Description
+-----------|---------|----------
+flowId     | string  | The ID of the workflow to retrieve.
+
+---
+
+#### **`get_tools`**
+Retrieve a list of available tools from the Veyrax API.  
+This includes dynamic tools the user can access, as well as all available flows (with name and ID). Use this to get method names and parameters, and pass to `tool_call` for invocation.
+
+Parameters | Type    | Description
+-----------|---------|----------
+question   | string  | Your query or reasoning for calling the tool—describe the user’s intent here.
+tool       | string  | Explicit tool name, or best guess based on the user's request.
+
+---
+
+#### **`tool_call`**
+Execute a method of another tool with specified parameters, as defined by the `get-tools` tool response.
+
+Parameters | Type              | Description
+-----------|-------------------|----------
+method     | string            | The method to call (e.g., 'get_messages', 'send_message', etc.)
+tool       | string            | Name of the target tool (e.g., 'gmail', 'google-calendar')
+parameters | object *(optional)*| The required parameters for this tool/method call.
+question   | string *(optional)*| The user’s reasoning or question for making this call.
+
+
+---
+
+## Meshagent & VeyraX MCP Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-veyrax)
+
+---
+
+For more details on how Meshagent Rooms work or how to deploy further toolkits, consult the documentation above. Start plugging your MCP tools into collaborative, cloud-native agent workspaces today!

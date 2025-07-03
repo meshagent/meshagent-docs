@@ -1,0 +1,178 @@
+---
+title: File System
+---
+
+
+Follow these steps to quickly spin up the MCP Filesystem server and bot at the room level in Meshagent's cloud environment. The agent and tools will be terminated when the room closes.
+
+1. **Install Meshagent CLI and dependencies**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate**
+   - Visit [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up, obtain credentials, and authenticate your CLI.
+
+3. **Start the MCP Filesystem server as a Meshagent service**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-filesystem:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-filesystem-service-test
+   ```
+   - This command launches a test MCP Filesystem agent in a temporary "test" room. The service is removed when the room goes inactive or closes.
+
+4. **Start the chatbot in the same room**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-filesystem --name=mcp-filesystem --toolkit=mcp-filesystem
+   ```
+   - This starts a chatbot in the Meshagent room with access to the Filesystem toolkit. Multiple toolkits can be provided, and new bots can join the same room.
+   - _A browser link to join the room will be displayed in the CLI output of this command._
+
+5. **Interact with the MCP server and tools!**
+   - Open the room link in your browser, then send a message to the agent to run filesystem tool commands and interact with the MCP server in real time.
+
+---
+
+## Project Level Deployment
+
+For persistent, automatic deployment of the MCP filesystem tools in all Meshagent project rooms:
+
+1. **Deploy MCP Filesystem Server as a persistent project service**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-filesystem:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-filesystem-service
+   ```
+
+2. **Deploy the chatbot as a persistent service**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-filesystem-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-filesystem-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-filesystem-chatbot --toolkit=mcp-filesystem"
+   ```
+
+After these services are created, every new room in your Meshagent project will have the MCP server tools and chatbot available automatically—no manual setup or local processes required.
+
+---
+
+## Tools Available
+
+### Filesystem (Reference) MCP Server
+
+Local filesystem access with configurable allowed paths.
+
+**Tools Provided** | **Short Description**
+-|-
+`create_directory` | Create a new directory or ensure a directory exists.
+`directory_tree` | Get a recursive tree view of files and directories as a JSON structure.
+`edit_file` | Make line-based edits to a text file.
+`get_file_info` | Retrieve detailed metadata about a file or directory.
+`list_allowed_directories` | Returns the list of directories that this server is allowed to access.
+`list_directory` | Get a detailed listing of all files and directories in a specified path.
+`move_file` | Move or rename files and directories.
+`read_file` | Read the complete contents of a file from the file system.
+`read_multiple_files` | Read the contents of multiple files simultaneously.
+`search_files` | Recursively search for files and directories matching a pattern.
+`write_file` | Create a new file or completely overwrite an existing file with new content.
+
+---
+
+#### Tool: `create_directory`
+Create a new directory or ensure a directory exists. Can create multiple nested directories in one operation. If the directory already exists, this operation will succeed silently. Perfect for setting up directory structures for projects or ensuring required paths exist. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| path      | string |             |
+
+---
+
+#### Tool: `directory_tree`
+Get a recursive tree view of files and directories as a JSON structure. Each entry includes 'name', 'type' (file/directory), and 'children' for directories. Files have no children array, while directories always have a children array (which may be empty). The output is formatted with 2-space indentation for readability. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| path      | string |             |
+
+---
+
+#### Tool: `edit_file`
+Make line-based edits to a text file. Each edit replaces exact line sequences with new content. Returns a git-style diff showing the changes made. Only works within allowed directories.
+
+| Parameter | Type        | Description                                           |
+|-----------|-------------|-------------------------------------------------------|
+| edits     | array       |                                                       |
+| path      | string      |                                                       |
+| dryRun    | boolean (optional) | Preview changes using git-style diff format     |
+
+---
+
+#### Tool: `get_file_info`
+Retrieve detailed metadata about a file or directory. Returns comprehensive information including size, creation time, last modified time, permissions, and type. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| path      | string |             |
+
+---
+
+#### Tool: `list_allowed_directories`
+Returns the list of directories that this server is allowed to access.
+
+---
+
+#### Tool: `list_directory`
+Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| path      | string |             |
+
+---
+
+#### Tool: `move_file`
+Move or rename files and directories. Can move files between directories and rename them in a single operation. If the destination exists, the operation will fail. Both source and destination must be within allowed directories.
+
+| Parameter   | Type   | Description |
+|-------------|--------|-------------|
+| destination | string |             |
+| source      | string |             |
+
+---
+
+#### Tool: `read_file`
+Read the complete contents of a file from the file system. Handles various text encodings and provides detailed error messages if the file cannot be read. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| path      | string |             |
+
+---
+
+#### Tool: `read_multiple_files`
+Read the contents of multiple files simultaneously. Each file's content is returned with its path as a reference. Failed reads for individual files won't stop the entire operation. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| paths     | array  |             |
+
+---
+
+#### Tool: `search_files`
+Recursively search for files and directories matching a pattern. Searches through all subdirectories from the starting path. The search is case-insensitive and matches partial names. Returns full paths to all matching items. Only searches within allowed directories.
+
+| Parameter      | Type        | Description                                  |
+|----------------|-------------|----------------------------------------------|
+| path           | string      |                                              |
+| pattern        | string      |                                              |
+| excludePatterns| array (optional) |                                         |
+
+---
+
+#### Tool: `write_file`
+Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Only works within allowed directories.
+
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| content   | string |             |
+| path      | string |             |
+
+---
+
+## Meshagent & MCP Resources
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Filesystem Docker Image**: [https://hub.docker.com/r/meshagent/mcp-filesystem](https://hub.docker.com/r/meshagent/mcp-filesystem)

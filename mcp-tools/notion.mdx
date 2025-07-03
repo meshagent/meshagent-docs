@@ -1,0 +1,267 @@
+---
+title: Notion
+---
+
+
+Get going with just a few commands to start a Notion MCP Server and chatbot inside a meshagent Room for fast, collaborative evaluation. These steps use ephemeral cloud resources—nothing remains when the Room closes.
+
+### Prerequisite: Environment Variables
+
+Set the environment variable(s) below. These will be injected into the MCP server container via `--env` in the `meshagent service` command.
+
+- `INTERNAL_INTEGRATION_TOKEN=ntn_****` (replace `ntn_****` with your real Notion integration token)
+
+### Quick Start Steps
+
+1. **Install Meshagent CLI and MCP plugin**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign In to Meshagent**
+   - Follow account setup and authentication here: [Meshagent CLI Guide](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the Notion MCP Server as a Meshagent Service in a Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-notion:latest --env=INTERNAL_INTEGRATION_TOKEN=ntn_**** --env=MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-notion-service-test
+   ```
+   - **What this does:** Launches a Room named `test` with an MCP server (`mcp-notion-service-test`) that exposes Notion tools. When the Room closes or goes inactive, the service shuts down automatically.
+
+4. **Start a Chatbot in the Room**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-notion --name=mcp-notion --toolkit=mcp-notion
+   ```
+   - **What this does:** Bootstraps a chatbot (`mcp-notion`) in the same Room, wired up to the Notion toolkits.
+   - Room link (for browser-based interaction) is printed after the command completes.
+
+5. **Test via Browser**
+   - Open the provided Room link.
+   - Interact with the agent by sending it commands or prompts to use the Notion MCP Server tools live!
+
+---
+
+## Project-level Deployment: Persistent MCP Server & Chatbot
+
+For production or permanent deployments, make services persistently available in all Rooms within a Meshagent Project. This ensures the Notion MCP Server tools and chatbot are present whenever new Rooms are created in your project.
+
+### Steps
+
+1. **Create a Persistent Notion MCP Service**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-notion:latest --env=INTERNAL_INTEGRATION_TOKEN=ntn_**** --env=MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-notion-service
+   ```
+
+2. **Create a Persistent Chatbot Service**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-notion-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-notion-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-notion-chatbot --toolkit=mcp-notion"
+   ```
+
+> **With this setup:** Every Room you create in your project will auto-join the MCP server and chatbot, so team members have instant access to Notion tools via chat—no manual launching required.
+
+---
+
+## Tools Available (Notion MCP Server)
+
+Below are the Notion tools available through this MCP Server:
+
+| Tool Name | Description |
+|-----------|-------------|
+| `API-create-a-comment` | Create comment |
+| `API-create-a-database` | Create a database |
+| `API-delete-a-block` | Delete a block |
+| `API-get-block-children` | Retrieve block children |
+| `API-get-self` | Retrieve your token's bot user |
+| `API-get-user` | Retrieve a user |
+| `API-get-users` | List all users |
+| `API-patch-block-children` | Append block children |
+| `API-patch-page` | Update page properties |
+| `API-post-database-query` | Query a database |
+| `API-post-page` | Create a page |
+| `API-post-search` | Search by title |
+| `API-retrieve-a-block` | Retrieve a block |
+| `API-retrieve-a-comment` | Retrieve comments |
+| `API-retrieve-a-database` | Retrieve a database |
+| `API-retrieve-a-page` | Retrieve a page |
+| `API-retrieve-a-page-property` | Retrieve a page property item |
+| `API-update-a-block` | Update a block |
+| `API-update-a-database` | Update a database |
+
+---
+
+### Tool Details
+
+#### Tool: **`API-create-a-comment`**
+Create comment  
+Parameters:
+- `parent` (object): The page that contains the comment
+- `rich_text` (array)
+
+---
+
+#### Tool: **`API-create-a-database`**
+Create a database  
+Parameters:
+- `parent` (object)
+- `properties` (object): Property schema of database. The keys are the names of properties as they appear in Notion and the values are [property schema objects](https://developers.notion.com/reference/property-schema-object).
+- `title` (array, optional)
+
+---
+
+#### Tool: **`API-delete-a-block`**
+Delete a block  
+Parameters:
+- `block_id` (string): Identifier for a Notion block
+
+---
+
+#### Tool: **`API-get-block-children`**
+Retrieve block children  
+Parameters:
+- `block_id` (string): Identifier for a [block](ref:block)
+- `page_size` (integer, optional): The number of items from the full list desired in the response. Maximum: 100
+- `start_cursor` (string, optional): Cursor for pagination
+
+---
+
+#### Tool: **`API-get-self`**
+Retrieve your token's bot user
+
+---
+
+#### Tool: **`API-get-user`**
+Retrieve a user  
+Parameters:
+- `user_id` (string)
+
+---
+
+#### Tool: **`API-get-users`**
+List all users  
+Parameters:
+- `page_size` (integer, optional): The number of items from the full list desired in the response. Maximum: 100
+- `start_cursor` (string, optional): Cursor for pagination
+
+---
+
+#### Tool: **`API-patch-block-children`**
+Append block children  
+Parameters:
+- `block_id` (string): Identifier for a block or page
+- `children` (array): Child content as block objects
+- `after` (string, optional): ID to append after
+
+---
+
+#### Tool: **`API-patch-page`**
+Update page properties  
+Parameters:
+- `page_id` (string): Page ID to update
+- `archived` (boolean, optional)
+- `cover` (object, optional): Cover image (external file objects)
+- `icon` (object, optional): Page icon
+- `in_trash` (boolean, optional): Delete or restore
+- `properties` (object, optional): Property values to update
+
+---
+
+#### Tool: **`API-post-database-query`**
+Query a database  
+Parameters:
+- `database_id` (string): Notion database identifier
+- `archived` (boolean, optional)
+- `filter` (object, optional)
+- `filter_properties` (array, optional)
+- `in_trash` (boolean, optional)
+- `page_size` (integer, optional): Maximum 100
+- `sorts` (array, optional)
+- `start_cursor` (string, optional): Cursor for pagination
+
+---
+
+#### Tool: **`API-post-page`**
+Create a page  
+Parameters:
+- `parent` (object)
+- `properties` (object)
+- `children` (array, optional): Page content as block objects
+- `cover` (string, optional)
+- `icon` (string, optional)
+
+---
+
+#### Tool: **`API-post-search`**
+Search by title  
+Parameters:
+- `filter` (object, optional)
+- `page_size` (integer, optional): Maximum 100
+- `query` (string, optional)
+- `sort` (object, optional)
+- `start_cursor` (string, optional)
+
+---
+
+#### Tool: **`API-retrieve-a-block`**
+Retrieve a block  
+Parameters:
+- `block_id` (string): Block ID
+
+---
+
+#### Tool: **`API-retrieve-a-comment`**
+Retrieve comments  
+Parameters:
+- `block_id` (string): Block or page ID
+- `page_size` (integer, optional): Maximum 100
+- `start_cursor` (string, optional)
+
+---
+
+#### Tool: **`API-retrieve-a-database`**
+Retrieve a database  
+Parameters:
+- `database_id` (string): Database identifier
+
+---
+
+#### Tool: **`API-retrieve-a-page`**
+Retrieve a page  
+Parameters:
+- `page_id` (string): Page identifier
+- `filter_properties` (string, optional): Property IDs
+
+---
+
+#### Tool: **`API-retrieve-a-page-property`**
+Retrieve a page property item  
+Parameters:
+- `page_id` (string): Page ID
+- `property_id` (string): Property ID
+- `page_size` (integer, optional)
+- `start_cursor` (string, optional)
+
+---
+
+#### Tool: **`API-update-a-block`**
+Update a block  
+Parameters:
+- `block_id` (string): Block ID
+- `archived` (boolean, optional)
+- `type` (object, optional): Block type properties (`text`, `checked` for `to_do`)
+
+---
+
+#### Tool: **`API-update-a-database`**
+Update a database  
+Parameters:
+- `database_id` (string): Database identifier
+- `description` (array, optional): Database description (rich text objects)
+- `properties` (object, optional): Property schema
+- `title` (array, optional): Database title (rich text objects)
+
+---
+
+## Meshagent Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Getting Started Guide (Read The Docs)](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-notion)

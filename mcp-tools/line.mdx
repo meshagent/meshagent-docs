@@ -1,0 +1,147 @@
+---
+title: Line
+---
+
+
+Set up a temporary Meshagent Room with MCP server tools and a chatbot, ideal for testing and quick demo environments. When the room closes, all related agents and tools are stopped automatically.
+
+### Required Environment Variables
+
+- `DESTINATION_USER_ID` – **(string)** LINE user ID or group to receive messages.
+- `CHANNEL_ACCESS_TOKEN` – **(string)** LINE Official Account channel access token.
+
+### Steps
+
+1. **Install Meshagent and dependencies:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate:**
+   Follow instructions at [Meshagent CLI: Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start an MCP server agent in the test room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-line:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env DESTINATION_USER_ID=FILL_HERE \
+     --env CHANNEL_ACCESS_TOKEN=FILL_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-line-service-test
+   ```
+   - This starts a Meshagent Room named `test` with a test MCP server running in it. Rooms auto-close if inactive.
+
+4. **Join a chatbot to the test room:**  
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-line --name=mcp-line --toolkit=mcp-line
+   ```
+   - Starts a chatbot that can use the LINE MCP server toolkit in the same room.
+   - The command output provides a link to the room UI.
+
+5. **Test the setup:**  
+   - Open the room link in your browser and send messages to the agent to interact with the MCP server tools.
+
+---
+
+## Project-Level Deployment (for Persistent Production Use)
+
+Make the MCP server tools and chatbot available automatically in every new Meshagent project room. This is ideal for production and removes the need to run extra MCP/chatbot processes locally—the services join on every room creation.
+
+1. **Create a persistent MCP server agent for the project:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-line:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env DESTINATION_USER_ID=FILL_HERE \
+     --env CHANNEL_ACCESS_TOKEN=FILL_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-line-service
+   ```
+
+2. **Create a persistent chatbot service:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-line-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-line-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-line-chatbot --toolkit=mcp-line"
+   ```
+
+---
+
+## Tools Available
+
+This MCP server provides the following tools to connect an AI agent to the LINE Official Account:
+
+### Tool: `broadcast_flex_message`
+Broadcast a highly customizable flex message via LINE to all users who have added your LINE Official Account. Supports both bubble (single container) and carousel (multiple swipeable bubbles) layouts. **Sends to all users.**  
+**Parameters:**  
+- `message` (`object`)
+
+---
+
+### Tool: `broadcast_text_message`
+Broadcast a simple text message via LINE to all users who have followed your LINE Official Account. Use for plain text messages. **Sends to all users.**  
+**Parameters:**  
+- `message` (`object`)
+
+---
+
+### Tool: `cancel_rich_menu_default`
+Cancel the default rich menu.
+
+---
+
+### Tool: `delete_rich_menu`
+Delete a rich menu from your LINE Official Account.  
+**Parameters:**  
+- `richMenuId` (`string`): The ID of the rich menu to delete.
+
+---
+
+### Tool: `get_message_quota`
+Get the message quota and consumption of the LINE Official Account. Shows monthly message limit and current usage.
+
+---
+
+### Tool: `get_profile`
+Get detailed profile information of a LINE user including display name, profile picture URL, status message, and language.  
+**Parameters:**  
+- `userId` (`string`, *optional*): The user ID to get a profile. Defaults to `DESTINATION_USER_ID`.
+
+---
+
+### Tool: `get_rich_menu_list`
+Get the list of rich menus associated with your LINE Official Account.
+
+---
+
+### Tool: `push_flex_message`
+Push a highly customizable flex message to a user via LINE.  
+**Parameters:**  
+- `message` (`object`)
+- `userId` (`string`, *optional*): The user ID to receive the message. Defaults to `DESTINATION_USER_ID`.
+
+---
+
+### Tool: `push_text_message`
+Push a simple text message to a user via LINE.  
+**Parameters:**  
+- `message` (`object`)
+- `userId` (`string`, *optional*): The user ID to receive the message. Defaults to `DESTINATION_USER_ID`.
+
+---
+
+### Tool: `set_rich_menu_default`
+Set a rich menu as the default rich menu.  
+**Parameters:**  
+- `richMenuId` (`string`): The ID of the rich menu to set as default.
+
+---
+
+## Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-line](https://hub.docker.com/r/meshagent/mcp-line)
+- **MCP Server (LINE) Repo:** [https://github.com/line/line-bot-mcp-server](https://github.com/line/line-bot-mcp-server)
+- **What is an MCP Server?** [https://www.anthropic.com/news/model-context-protocol](https://www.anthropic.com/news/model-context-protocol)
+- **Why use Docker for MCP Servers?** [https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

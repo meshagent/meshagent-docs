@@ -1,0 +1,288 @@
+---
+title: Azure
+---
+
+
+Follow these steps to test the Azure MCP Server and tools within a Meshagent Room:
+
+1. **Install Meshagent CLI and dependencies**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent**
+   - Go to [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) and follow the signup/auth steps.
+
+3. **Start a Meshagent Room with a test MCP agent**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-azure:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-azure-service-test
+   ```
+   - This launches a Meshagent Room named `test` with a demo MCP server.
+   - The room closes automatically if inactive; all attached tools and chatbots are then stopped and removed.
+
+4. **Join a chatbot to the Room that uses the MCP toolkit**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-azure --name=mcp-azure --toolkit=mcp-azure
+   ```
+   - This connects a chatbot agent with MCP Azure toolkit access to the same room.
+   - Multiple toolkits can be enabled for the same agent.
+   - The output will provide a browser link to the room UI.
+
+5. **Try it in your browser**
+   - Open the room link from step 4.
+   - Chat with the bot or invoke MCP server tools interactively.
+
+---
+
+## Project Level Deployment (Production/Always-Available)
+
+To automatically provide the MCP server tools and chatbot for all new rooms in a Meshagent project:
+
+1. **Create a persistent MCP server service**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-azure:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-azure-service
+   ```
+
+2. **Create a persistent chatbot service with the MCP Azure toolkit**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-azure-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-azure-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-azure-chatbot --toolkit=mcp-azure"
+   ```
+
+These services will automatically join all newly-created project rooms, ensuring a consistent and reliable chat/automation experience—no need for local or separate process management.
+
+---
+
+## Tools Available
+
+Below is a summary of the tools provided by this Azure MCP Server, with key parameters and capabilities. For each tool, see the **Tool Details** for usage and parameter options.
+
+| Tool Name | Description |
+|-----------|-------------|
+| **azmcp-appconfig-account-list** | List all App Configuration stores in a subscription. |
+| **azmcp-appconfig-kv-delete** | Delete a key-value pair from an App Configuration store. |
+| **azmcp-appconfig-kv-list** | List all key-values in an App Configuration store. |
+| **azmcp-appconfig-kv-lock** | Lock a key-value in an App Configuration store. |
+| **azmcp-appconfig-kv-set** | Set a key-value setting in an App Configuration store. |
+| **azmcp-appconfig-kv-show** | Show a specific key-value setting in an App Configuration store. |
+| **azmcp-appconfig-kv-unlock** | Unlock a key-value setting in an App Configuration store. |
+| **azmcp-cosmos-account-list** | List all Cosmos DB accounts in a subscription. |
+| **azmcp-cosmos-database-container-item-query** | Execute a SQL query against items in a Cosmos DB container. |
+| **azmcp-cosmos-database-container-list** | List all containers in a Cosmos DB database. |
+| **azmcp-cosmos-database-list** | List all databases in a Cosmos DB account. |
+| **azmcp-extension-az** | Answer questions about an Azure environment by executing Azure CLI commands. |
+| **azmcp-extension-azd** | Run Azure Developer CLI (azd) commands. |
+| **azmcp-group-list** | List all resource groups in a subscription. |
+| **azmcp-monitor-log-query** | Execute a KQL query against a Log Analytics workspace. |
+| **azmcp-monitor-table-list** | List all tables in a Log Analytics workspace. |
+| **azmcp-monitor-workspace-list** | List Log Analytics workspaces in a subscription. |
+| **azmcp-search-index-describe** | Get the full definition of an Azure AI Search index. |
+| **azmcp-search-index-list** | List all indexes in an Azure AI Search service. |
+| **azmcp-search-index-query** | Query an Azure AI Search index. |
+| **azmcp-search-service-list** | List all Azure AI Search services in a subscription. |
+| **azmcp-storage-account-list** | List all Storage accounts in a subscription. |
+| **azmcp-storage-blob-container-details** | Get properties of a storage container, including metadata, lease status, and access level. |
+| **azmcp-storage-blob-container-list** | List all containers in a Storage account. |
+| **azmcp-storage-blob-list** | List all blobs in a Storage container. |
+| **azmcp-storage-table-list** | List all tables in a Storage account. |
+| **azmcp-subscription-list** | List all Azure subscriptions accessible to your account. |
+
+---
+
+### Tools Details
+
+#### `azmcp-appconfig-account-list`
+**List all App Configuration stores in a subscription.**
+
+**Parameters:**
+- `subscription` (string): Azure subscription ID or name.
+- `auth-method`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional): Various auth and retry/network options.
+
+---
+
+#### `azmcp-appconfig-kv-delete`
+**Delete a key-value pair from an App Configuration store.**
+
+**Parameters:**
+- `account-name` (string): Store name.
+- `key` (string): Key to delete.
+- `subscription` (string): Azure subscription ID or name.
+- `auth-method`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-appconfig-kv-list`
+**List all key-values in an App Configuration store.**
+
+**Parameters:**
+- `account-name` (string): Store name.
+- `subscription` (string): Azure subscription ID or name.
+- `auth-method`, `key`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-appconfig-kv-lock`
+**Lock a key-value in an App Configuration store.**
+
+**Parameters:**
+- `account-name` (string): Store name.
+- `key` (string): Key to lock.
+- `subscription` (string): Azure subscription ID or name.
+- `auth-method`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-appconfig-kv-set`
+**Set a key-value setting in an App Configuration store.**
+
+**Parameters:**
+- `account-name`, `key`, `value`, `subscription` (all string, required).
+- `auth-method`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-appconfig-kv-show`
+**Show a specific key-value setting in an App Configuration store.**
+
+**Parameters:**
+- `account-name`, `key`, `subscription` (all string, required).
+- `auth-method`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-appconfig-kv-unlock`
+**Unlock a key-value setting in an App Configuration store.**
+
+**Parameters:**
+- `account-name`, `key`, `subscription` (all string, required).
+- `auth-method`, `label`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-cosmos-account-list`
+**List all Cosmos DB accounts in a subscription.**
+
+**Parameters:**
+- `subscription` (string): Required.
+- `auth-method`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-cosmos-database-container-item-query`
+**Execute a SQL query against items in a Cosmos DB container.**
+
+**Parameters:**
+- `account-name`, `container-name`, `database-name`, `subscription` (all string, required).
+- `auth-method`, `query`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-cosmos-database-container-list`
+**List all containers in a Cosmos DB database.**
+
+**Parameters:**
+- `account-name`, `database-name`, `subscription` (all string, required).
+- `auth-method`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-cosmos-database-list`
+**List all databases in a Cosmos DB account.**
+
+**Parameters:**
+- `account-name`, `subscription` (both string, required).
+- `auth-method`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-extension-az`
+**Answer questions about an Azure environment by executing Azure CLI commands.**
+
+**Parameters:**
+- `command` (string): Azure CLI command (without 'az').
+- `auth-method`, `retry-delay`, `retry-max-delay`, `retry-max-retries`, `retry-mode`, `retry-network-timeout`, `tenant` (optional).
+
+---
+
+#### `azmcp-extension-azd`
+**Run Azure Developer CLI (azd) commands.**
+
+**Parameters:**
+- See detailed [Azure Developer CLI docs](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/).
+
+---
+
+#### `azmcp-group-list`
+**List all resource groups in a subscription.**
+
+---
+
+#### `azmcp-monitor-log-query`
+**Execute a KQL query against a Log Analytics workspace.**
+
+---
+
+#### `azmcp-monitor-table-list`
+**List all tables in a Log Analytics workspace.**
+
+---
+
+#### `azmcp-monitor-workspace-list`
+**List Log Analytics workspaces in a subscription.**
+
+---
+
+#### `azmcp-search-index-describe`
+**Get the full definition of an Azure AI Search index.**
+
+---
+
+#### `azmcp-search-index-list`
+**List all indexes in an Azure AI Search service.**
+
+---
+
+#### `azmcp-search-index-query`
+**Query an Azure AI Search index.**
+
+---
+
+#### `azmcp-search-service-list`
+**List all Azure AI Search services in a subscription.**
+
+---
+
+#### `azmcp-storage-account-list`
+**List all Storage accounts in a subscription.**
+
+---
+
+#### `azmcp-storage-blob-container-details`
+**Get detailed properties of a storage container including metadata, lease status, and access level.**
+
+---
+
+#### `azmcp-storage-blob-container-list`
+**List all containers in a Storage account.**
+
+---
+
+#### `azmcp-storage-blob-list`
+**List all blobs in a Storage container.**
+
+---
+
+#### `azmcp-storage-table-list`
+**List all tables in a Storage account.**
+
+---
+
+#### `azmcp-subscription-list`
+**List all Azure subscriptions accessible to your account.**
+
+---
+
+## References & Links
+
+- [Meshagent Main Site](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-azure)

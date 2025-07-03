@@ -1,0 +1,152 @@
+---
+title: CircleCI
+---
+
+
+Here's how to quickly test the CircleCI MCP server and toolkit in a Meshagent Room—when the Room closes, all services (including the chatbot and MCP server) are terminated automatically.
+
+### Required Environment Variables
+
+Set these variables as appropriate for your CircleCI environment:
+- `CIRCLECI_BASE_URL` — _default: https://circleci.com_
+- `CIRCLECI_TOKEN` — _your CircleCI API token_
+
+### Steps
+
+1. **Install Meshagent CLI and plug-ins:**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+2. **Sign up & authenticate your Meshagent CLI:**  
+   Follow instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP server as a Room-level agent:**
+    ```bash
+    meshagent service test --room=test --role=agent \
+      --image=meshagent/mcp-circleci:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env CIRCLECI_BASE_URL=https://circleci.com \
+      --env CIRCLECI_TOKEN=your-circleci-token \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-circleci-service-test
+    ```
+    - Starts a Meshagent Room with a test MCP server instance. Rooms close if inactive—deleting the tool and chatbot.
+
+4. **Start the chatbot in the Room:**
+    ```bash
+    meshagent chatbot join --room=test \
+      --agent-name=mcp-circleci \
+      --name=mcp-circleci \
+      --toolkit=mcp-circleci
+    ```
+    - Launches a chatbot in the Room, empowered to use the CircleCI toolkit. You may use multiple toolkits in the Room.
+    - A link to your active Room will appear in the output.
+
+5. **Try it out:**
+    - Open the Room URL in your browser.
+    - Send messages to the agent to interact with the MCP Server tools!
+
+---
+
+## Project Level Deployment (Persistent/Production Service)
+
+For production or persistent needs, you may wish these tools and agents to join every new room in your Meshagent Project—no need to start things manually or run local extra processes. These Room-level services will always be available when a Project Room is created.
+
+### Deploy persistent MCP server and chatbot services:
+
+1. **Create the CircleCI MCP server agent service:**
+    ```bash
+    meshagent service create --role=agent \
+      --image=meshagent/mcp-circleci:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env CIRCLECI_BASE_URL=https://circleci.com \
+      --env CIRCLECI_TOKEN=your-circleci-token \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-circleci-service
+    ```
+
+2. **Create the persistent chatbot service:**
+    ```bash
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-circleci-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-circleci-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-circleci-chatbot --toolkit=mcp-circleci"
+    ```
+
+---
+
+## Tools Available
+
+The following set of CircleCI MCP Server tools are available to Meshagent and chatbots in your Rooms.
+
+### Tool Summaries
+
+| Tool                        | Short Description                                                                                                        |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `analyze_diff`              | Analyze a git diff against cursor rules to identify rule violations.                                                     |
+| `config_helper`             | Analyze, validate, and fix CircleCI configuration files.                                                                |
+| `create_prompt_template`    | Generate and provide test cases for a prompt template based on requirements or existing prompts.                         |
+| `find_flaky_tests`          | Retrieve information about flaky tests in a CircleCI project.                                                            |
+| `get_build_failure_logs`    | Retrieve log output to help debug CircleCI build failures.                                                               |
+| `get_job_test_results`      | Retrieve test metadata for a CircleCI job.                                                                               |
+| `get_latest_pipeline_status`| Get the status of the latest pipeline for a CircleCI project.                                                            |
+| `list_followed_projects`    | List all projects that the user is following on CircleCI.                                                                |
+| `recommend_prompt_template_tests` | Generate recommended tests for a given prompt template.                                                          |
+| `rerun_workflow`            | Rerun a workflow from start or from the failed job.                                                                      |
+| `run_evaluation_tests`      | Run evaluation tests (“Prompt Tests”) on a CircleCI pipeline.                                                            |
+| `run_pipeline`              | Trigger a new CircleCI pipeline and receive a monitor URL.                                                               |
+
+---
+
+### Tools Details
+
+#### **`analyze_diff`**
+Analyze a git diff (unstaged, staged, or all changes) against cursor rules for violations. Outputs a list of violations in the diff, configurable for speed and filter focus.
+
+#### **`config_helper`**
+Analyze and validate/fix CircleCI configuration files by providing the YAML file content. Returns errors and the original config if invalid.
+
+#### **`create_prompt_template`**
+Helps generate a testable, structured prompt template from either feature requirements or a pre-existing prompt, including a context schema and prompt origin.
+
+#### **`find_flaky_tests`**
+Retrieves information about flaky tests in a specified CircleCI project. Supports detection via project slug, direct URL, or project root and git remote.
+
+#### **`get_build_failure_logs`**
+Retrieves log output for CircleCI build failures. Input may be by project slug and branch, pipeline URL, or project detection.
+
+#### **`get_job_test_results`**
+Retrieves test metadata for a CircleCI job, filtered by status (failures/success). Input may be by project slug and branch, job URL, or detection.
+
+#### **`get_latest_pipeline_status`**
+Gets status of the latest pipeline—by project slug/branch, direct URLs, or project detection methods.
+
+#### **`list_followed_projects`**
+Lists all CircleCI projects followed by the user, including project name and slug.
+
+#### **`recommend_prompt_template_tests`**
+Generates an array of recommended tests for a given prompt template, using the provided context schema and prompt origin.
+
+#### **`rerun_workflow`**
+Reruns a specified workflow either from the start or failed jobs, by ID or URL.
+
+#### **`run_evaluation_tests`**
+Runs evaluation (prompt) tests on a CircleCI pipeline; can auto-generate temporary configs and returns monitoring URLs.
+
+#### **`run_pipeline`**
+Triggers a new CircleCI pipeline and returns the monitoring URL.
+
+---
+
+## Additional References
+
+- **Meshagent:**  
+  [https://www.meshagent.com/](https://www.meshagent.com/)
+
+- **Meshagent Docs:**  
+  [https://docs.meshagent.com](https://docs.meshagent.com)
+
+- **Meshagent MCP Tool Image:**  
+  [https://hub.docker.com/r/meshagent/mcp-circleci](https://hub.docker.com/r/meshagent/mcp-circleci)

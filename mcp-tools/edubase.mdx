@@ -1,0 +1,204 @@
+---
+title: EduBase
+---
+
+
+Try out the server and chatbot in an interactive, temporary Room for rapid testing and development. When the Room closes (goes inactive), all tools and chatbots are automatically removed.
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up / Authenticate
+
+Follow instructions at [docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started) to obtain an account and authenticate your CLI.
+
+### 3. Start the MCP Server Tool in a Test Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-edubase:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-edubase-service-test
+```
+- **What this does:** Opens a Meshagent Room named `test` and starts the EduBase MCP server as an agent. Tools are instantly available in the Room. The Room (and services) auto-close if left inactive.
+
+### 4. Join with a Chatbot Agent & EduBase Toolkit
+
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-edubase --name=mcp-edubase --toolkit=mcp-edubase
+```
+- **What this does:** Launches a Meshagent-powered chatbot agent in the Room with access to the EduBase toolkit.
+    - You can add multiple toolkits to the same agent or join with multiple agents in the same Room.
+    - The output provides a Room link, e.g.: `https://app.meshagent.com/rooms/...`
+
+### 5. Test in Your Browser
+
+Open the Room link (from the previous step) in your browser, send a message to the agent chatbot, and interact with the MCP Server tools in real time!
+
+---
+
+## Project Level Deployment: Persistent Services in All Rooms
+
+For production or always-on deployment, create persistent Meshagent services that automatically join every new Room in your Meshagent project. This ensures EduBase tools and the chatbot are always present, with no need to manage local servers/processes.
+
+### 1. Create a Persistent MCP Server Service
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-edubase:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-edubase-service
+```
+
+### 2. Create a Project-Level Chatbot Agent
+
+```bash
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-edubase-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-edubase-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-edubase-chatbot --toolkit=mcp-edubase"
+```
+
+**Result:**  
+Every time a Room is created in your Meshagent project, both the MCP server and a chatbot agent are automatically started inside that Room, with no extra work required.
+
+---
+
+## Tools Available
+
+Below is a summary of available tools and detailed parameter documentation. These tools let AI agents and chatbots interact with EduBase's platform to manage users, classes, quizzes, exams, SCORM materials, tags, and more.
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`edubase_delete_class_members`|Remove user(s) from a class.
+`edubase_delete_class_permission`|Remove a user permission from a class.
+`edubase_delete_class_tag`|Remove a tag attachment from a class.
+`edubase_delete_course_permission`|Remove a user permission from a course.
+`edubase_delete_course_tag`|Remove a tag attachment from a course.
+`edubase_delete_event_permission`|Remove a user permission from an event.
+`edubase_delete_event_tag`|Remove a tag attachment from an event.
+`edubase_delete_exam`|Remove/archive exam.
+`edubase_delete_exam_permission`|Remove a user permission from an exam.
+`edubase_delete_exam_tag`|Remove a tag attachment from an exam.
+`edubase_delete_exam_users`|Remove user(s) from an exam.
+`edubase_delete_integration_permission`|Remove a user permission from an integration.
+`edubase_delete_integration_tag`|Remove a tag attachment from an integration.
+`edubase_delete_organization_members`|Remove user(s) from an organization.
+`edubase_delete_organization_permission`|Remove a user permission from an organization.
+`edubase_delete_organization_tag`|Remove a tag attachment from an organization.
+`edubase_delete_question`|Permanently delete a Quiz question.
+`edubase_delete_quiz`|Remove/archive Quiz set.
+`edubase_delete_quiz_permission`|Remove a user permission from a quiz.
+`edubase_delete_quiz_questions`|Remove question(s) from a Quiz set, or one of its question group.
+`edubase_delete_quiz_tag`|Remove a tag attachment from a Quiz.
+`edubase_delete_scorm_permission`|Remove a user permission from a SCORM learning material.
+`edubase_delete_scorm_tag`|Remove a tag attachment from a SCORM learning material.
+`edubase_delete_tag_permission`|Remove a user permission from a tag.
+`edubase_delete_user`|Delete user.
+`edubase_delete_user_assume`|Revoke assume token.
+`edubase_delete_user_classes`|Remove user from class(es).
+`edubase_delete_user_login`|Delete a previously generated login link.
+`edubase_delete_user_organizations`|Remove user from organization(s).
+`edubase_delete_video_permission`|Remove a user permission from a video.
+`edubase_delete_video_tag`|Remove a tag attachment from a video.
+`edubase_get_class`|Get/check class.
+`edubase_get_class_assignments`|List all assignments in a class.
+`edubase_get_class_members`|List all members in a class.
+`edubase_get_class_permission`|Check if a user has permission on a class.
+`edubase_get_class_tag`|Check if tag is attached to a class.
+`edubase_get_class_tags`|List all attached tags of a class.
+`edubase_get_classes`|List owned and managed classes.
+`edubase_get_course_permission`|Check if a user has permission on a course.
+`edubase_get_course_tag`|Check if tag is attached to a course.
+`edubase_get_course_tags`|List all attached tags of a course.
+`edubase_get_event_permission`|Check if a user has permission on an event.
+`edubase_get_event_tag`|Check if tag is attached to an event.
+`edubase_get_event_tags`|List all attached tags of an event.
+`edubase_get_exam`|Get/check exam.
+`edubase_get_exam_permission`|Check if a user has permission on an exam.
+`edubase_get_exam_results_raw`|Get raw results for a specific exam.
+`edubase_get_exam_results_user`|Get user results for a specific exam.
+`edubase_get_exam_tag`|Check if tag is attached to an exam.
+`edubase_get_exam_tags`|List all attached tags of an exam.
+`edubase_get_exam_users`|List all users on an exam.
+`edubase_get_exams`|List owned and managed exams.
+`edubase_get_integration_permission`|Check if a user has permission on an integration.
+`edubase_get_integration_tag`|Check if tag is attached to an integration.
+`edubase_get_integration_tags`|List all attached tags of an integration.
+`edubase_get_organization`|Get/check organization.
+`edubase_get_organization_members`|List all members in an organization.
+`edubase_get_organization_permission`|Check if a user has permission on an organization.
+`edubase_get_organization_tag`|Check if tag is attached to an organization.
+`edubase_get_organization_tags`|List all attached tags of an organization.
+`edubase_get_organizations`|List owned and managed organizations.
+`edubase_get_question`|Check existing question.
+`edubase_get_quiz`|Get/check Quiz set.
+`edubase_get_quiz_permission`|Check if a user has permission on a quiz.
+`edubase_get_quiz_play_results`|Get detailed results for a specific Quiz play.
+`edubase_get_quiz_questions`|List all questions and question groups in a Quiz set.
+`edubase_get_quiz_results_user`|Get user results for a specific Quiz set.
+`edubase_get_quiz_tag`|Check if tag is attached to a Quiz.
+... *(and many more)*
+
+### Tools Details (Sample)
+
+#### `edubase_delete_class_members`
+Remove user(s) from a class.
+
+| Parameter | Type | Description                     |
+|-----------|------|---------------------------------|
+| class     | string | class identification string   |
+| users     | string | comma-separated user IDs      |
+
+---
+
+#### `edubase_delete_class_permission`
+Remove a user permission from a class.
+
+| Parameter  | Type   | Description                |
+|------------|--------|---------------------------|
+| class      | string | class identification      |
+| permission | string | permission level (view / report / control / modify / grant / admin) |
+| user       | string | user identification       |
+
+---
+
+#### `edubase_delete_class_tag`
+Remove a tag attachment from a class.
+
+| Parameter | Type   | Description              |
+|-----------|--------|-------------------------|
+| class     | string | class identification    |
+| tag       | string | tag identification      |
+
+---
+
+#### `edubase_get_class`
+Get/check class.
+
+| Parameter | Type   | Description                 |
+|-----------|--------|----------------------------|
+| class     | string | class identification string |
+
+---
+
+#### `edubase_post_quiz`
+Create a new Quiz set.
+
+| Parameter | Type   | Description                 |
+|-----------|--------|----------------------------|
+| quiz      | string | quiz identification string  |
+
+---
+
+_(For the full list and details, see the original tool descriptions or generated documentation.)_
+
+---
+
+## Meshagent & EduBase Links
+
+- Meshagent Website: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent EduBase MCP Tool Image: [https://hub.docker.com/r/meshagent/mcp-edubase](https://hub.docker.com/r/meshagent/mcp-edubase)
+- Get Started with the CLI: [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+- Learn More about MCP: [https://www.anthropic.com/news/model-context-protocol](https://www.anthropic.com/news/model-context-protocol)
+
+---
+
+Meshagent brings orchestration, scalability, and real-time LLM tools to your EduBase workflows. Enjoy cloud-managed rooms and easy integration—no local hosting required!

@@ -1,0 +1,205 @@
+---
+title: Bitrefill
+---
+
+
+Run the Bitrefill MCP Server and toolkit-enabled chatbot in a Meshagent Room for temporary collaborative testing (terminated when the Room closes).
+
+### Prerequisites
+- Python and pip installed.
+- Bitrefill API credentials.
+- Meshagent CLI [installed and authenticated](https://docs.meshagent.com/cli/getting_started).
+
+### Required Environment Variables
+- `BITREFILL_API_ID`: **your_api_id_here**
+- `BITREFILL_API_SECRET`: **your_api_key_here**
+
+### Steps
+
+- **1. Install Meshagent CLI**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+- **2. Authenticate Meshagent CLI**
+    - Sign up and authenticate: [Meshagent CLI: Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+- **3. Launch a Bitrefill MCP Agent in Room "test"**
+    ```sh
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-bitrefill:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env BITREFILL_API_ID=your_api_id_here \
+      --env BITREFILL_API_SECRET=your_api_key_here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-bitrefill-service-test
+    ```
+    - *This command starts a Meshagent Room with a test Bitrefill MCP server. Rooms close automatically if inactive.*
+
+- **4. Join the Room with a Chatbot using the Bitrefill Toolkit**
+    ```sh
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-bitrefill \
+      --name=mcp-bitrefill \
+      --toolkit=mcp-bitrefill
+    ```
+    - *Starts a chatbot in the Room that can use Bitrefill tools.*
+    - *Supports multiple toolkits and agents in a single Room.*
+    - *A link to the Room will appear in the CLI output.*
+
+- **5. Test Interactions in the Meshagent Room**
+    - Open the Room link in your browser.
+    - Send messages to the agent and interact with the available Bitrefill tools.
+
+---
+
+## Project Level Deployment (Production Best Practice)
+
+Deploy persistent Bitrefill MCP service(s) and chatbot at the project level so they join every Room automatically—ideal for production and collaboration at scale!
+
+### Steps
+
+- **1. Create Persistent Bitrefill MCP Service**
+    ```sh
+    meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-bitrefill:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env BITREFILL_API_ID=your_api_id_here \
+      --env BITREFILL_API_SECRET=your_api_key_here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-bitrefill-service
+    ```
+
+- **2. Create Persistent Chatbot Service**
+    ```sh
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-bitrefill-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-bitrefill-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-bitrefill-chatbot --toolkit=mcp-bitrefill"
+    ```
+
+Once created, these services automatically appear in every Meshagent project Room, delivering tool and chatbot access without any manual steps per session.
+
+---
+
+## Tools Available
+
+**12 tools are available from the Bitrefill MCP Server:**
+
+Tool | Short Description
+-|-  
+`categories` | Get the full product type/categories map.  
+`create_invoice` | Create a new invoice for purchasing products with various payment methods.  
+`detail` | Get detailed information about a product.  
+`get_account_balance` | Retrieve your account balance.  
+`get_invoice` | Retrieve details for a specific invoice by ID.  
+`get_invoices` | Retrieve a list of invoices with optional filtering.  
+`get_order` | Retrieve details for a specific order by ID.  
+`get_orders` | Retrieve a list of orders with optional filtering.  
+`pay_invoice` | Pay an unpaid invoice (only works with 'balance' payment method).  
+`ping` | Check if the Bitrefill API is available.  
+`search` | Search for gift cards, esims, mobile topups and more.  
+`unseal_order` | Reveal codes and PINs for a specific order by ID.
+
+---
+
+### Tool Details
+
+#### `categories`
+Get the full product type/categories map. Use this to explore categories before searching for products.
+
+#### `create_invoice`
+Create a new invoice for purchasing products with various payment methods  
+Parameters:
+
+- `payment_method` (`string`) - Required payment method. Available: balance, lightning, bitcoin, eth_base, usdc_base  
+- `products` (`array`) - Products to include in the invoice  
+- `auto_pay` (`boolean`, optional) - Automatically pay with balance  
+- `webhook_url` (`string`, optional) - Webhook notification URL
+
+#### `detail`
+Get detailed information about a product  
+Parameters:
+
+- `id` (`string`) - Product unique identifier
+
+#### `get_account_balance`
+Retrieve your Bitrefill account balance
+
+#### `get_invoice`
+Retrieve details for a specific invoice by ID  
+Parameters:
+
+- `id` (`string`) - Invoice identifier
+
+#### `get_invoices`
+Retrieve a list of invoices with optional filtering  
+Parameters:
+
+- `after` (`string`, optional) - Start date (YYYY-MM-DD HH:MM:SS)
+- `before` (`string`, optional) - End date (YYYY-MM-DD HH:MM:SS)
+- `limit` (`integer`, optional) - Max records (max/default: 50)
+- `start` (`integer`, optional) - Start index (default: 0)
+
+#### `get_order`
+Retrieve details for a specific order by ID  
+Parameters:
+
+- `id` (`string`) - Order identifier
+
+#### `get_orders`
+Retrieve a list of orders with optional filtering  
+Parameters:
+
+- `after` (`string`, optional)
+- `before` (`string`, optional)
+- `limit` (`integer`, optional)
+- `start` (`integer`, optional)
+
+#### `pay_invoice`
+Pay an unpaid invoice (**balance** payment method only)  
+Parameters:
+
+- `id` (`string`) - Invoice identifier
+
+#### `ping`
+Check Bitrefill API availability
+
+#### `search`
+Search for products (gift cards, esims, mobile topups, etc.). Use `categories` tool for pre-filtering.
+Parameters:
+
+- `query` (`string`) - Product or keyword (or use `*` for all)
+- `beta_flags` (`string`, optional)
+- `cart` (`string`, optional)
+- `category` (`string`, optional)
+- `col` (`number`, optional)
+- `country` (`string`, optional)
+- `do_recommend` (`number`, optional)
+- `language` (`string`, optional)
+- `limit` (`number`, optional)
+- `prefcc` (`number`, optional)
+- `rec` (`number`, optional)
+- `sec` (`number`, optional)
+- `skip` (`number`, optional)
+- `src` (`string`, optional)
+
+#### `unseal_order`
+Reveal codes and PINs for a specific order  
+Parameters:
+
+- `id` (`string`) - Order identifier
+
+---
+
+## Meshagent Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent Bitrefill MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-bitrefill](https://hub.docker.com/r/meshagent/mcp-bitrefill)

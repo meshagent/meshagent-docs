@@ -1,0 +1,221 @@
+---
+title: CData Connect Cloud
+---
+
+
+This quick start demonstrates how to launch the MCP server as an agent and start a chatbot with its tools inside a test Meshagent Room in the cloud. When the Room is closed, all services and bots are automatically removed.
+
+### Required Environment Variables
+
+- `CDATA_USERNAME`: Your CData Connect Cloud username
+- `CDATA_PAT`: Your CData Connect Cloud Personal Access Token
+
+### Steps
+
+1. **Install Meshagent CLI:**
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+
+   Follow instructions at [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate your CLI.
+
+3. **Start the MCP Server in a Room as an Agent:**
+
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-cdata-connectcloud:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env CDATA_USERNAME=<your-cdata-username> \
+     --env CDATA_PAT=<your-cdata-pat> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-cdata-connectcloud-service-test
+   ```
+
+   - This command creates a new Meshagent Room (`test`) and joins this MCP server as an agent. Rooms will be closed if they go inactive.
+
+4. **Start the Chatbot in the Room:**
+
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-cdata-connectcloud \
+     --name=mcp-cdata-connectcloud \
+     --toolkit=mcp-cdata-connectcloud
+   ```
+
+   - This launches a chatbot in your Room (referencing the MCP server agent and toolkit).
+   - The output of this command will provide a Room link you can open in your browser.
+
+5. **Try It Out:**
+
+   - Visit the Room link.
+   - Send a message to the agent in chat to interact with the MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+For production environments, you may want persistent agents and chatbots to join every Room in your Meshagent Project, without starting and stopping them manually. This is ideal for automatic, consistent data tool availability—no local hosting or repeated command runs required.
+
+### Deploy Persistent Services:
+
+1. **Create the MCP Server as a Project Service:**
+
+   ```bash
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-cdata-connectcloud:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env CDATA_USERNAME=<your-cdata-username> \
+     --env CDATA_PAT=<your-cdata-pat> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-cdata-connectcloud-service
+   ```
+
+2. **Create the Chatbot as a Project Service:**
+
+   ```bash
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-cdata-connectcloud-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-cdata-connectcloud-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-cdata-connectcloud-chatbot --toolkit=mcp-cdata-connectcloud"
+   ```
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`execData` | Execute stored procedures against connected data sources
+`getCatalogs` | Retrieve a list of available connections from CData Connect Cloud.
+`getColumns` | Retrieve a list of database columns for a specific catalog, schema, and table.
+`getExportedKeys` | Retrieve foreign key relationships for a specific catalog, schema, and table.
+`getImportedKeys` | Retrieve imported key relationships for a specific catalog, schema, and table.
+`getIndexes` | Retrieve a list of indexes for a specific catalog, schema, and table.
+`getPrimaryKeys` | Retrieve primary keys for a specific catalog, schema, and table.
+`getProcedureParameters` | Retrieve parameters for a specific stored procedure.
+`getProcedures` | Retrieve a list of stored procedures for a specific catalog and schema.
+`getSchemas` | Retrieve a list of available database schemas.
+`getTables` | Retrieve a list of available database tables for a specific catalog and schema.
+`queryData` | Execute SQL queries against connected data sources and retrieve results
+
+### Tools Details
+
+#### `execData`
+Execute stored procedures against connected data sources  
+**Parameters:**
+- `procedure` (`string`): Stored procedure name to execute
+- `defaultSchema` (`string`, optional): Default schema
+- `parameters` (`object`, optional): JSON object of parameters, all names must begin with `@`
+
+---
+
+#### `getCatalogs`
+Retrieve a list of available connections from CData Connect Cloud. Connection names are used as catalog names in other tools and queries.
+
+#### `getColumns`
+Retrieve a list of available columns from CData Connect Cloud for a specific catalog, schema, and table  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `columnName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `getExportedKeys`
+Retrieve foreign key relationships from CData Connect Cloud for a specific catalog, schema, and table  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `getImportedKeys`
+Retrieve imported key relationships from CData Connect Cloud for a specific catalog, schema, and table  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `getIndexes`
+Retrieve a list of indexes from CData Connect Cloud for a specific catalog, schema, and table  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `getPrimaryKeys`
+Retrieve a list of primary keys from CData Connect Cloud for a specific catalog, schema, and table  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `getProcedureParameters`
+Retrieve a list of stored procedure parameters from CData Connect Cloud for a specific catalog, schema, and procedure  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `parameterName` (`string`, optional)
+- `procedureName` (`string`, optional)
+- `schemaName` (`string`, optional)
+
+---
+
+#### `getProcedures`
+Retrieve a list of stored procedures from CData Connect Cloud for a specific catalog and schema  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `procedureName` (`string`, optional)
+- `schemaName` (`string`, optional)
+
+---
+
+#### `getSchemas`
+Retrieve a list of available database schemas from CData Connect Cloud for a specific catalog.  
+**Parameters:**
+- `catalogName` (`string`, optional)
+
+---
+
+#### `getTables`
+Retrieve a list of available database tables from CData Connect Cloud for a specific catalog and schema.  
+**Parameters:**
+- `catalogName` (`string`, optional)
+- `schemaName` (`string`, optional)
+- `tableName` (`string`, optional)
+
+---
+
+#### `queryData`
+Execute SQL queries against connected data sources and retrieve results  
+**Parameters:**
+- `query` (`string`): SQL statement(s) to execute (separated by `;`)
+- `defaultSchema` (`string`, optional): Default schema
+- `parameters` (`object`, optional): JSON object of query parameters
+- `schemaOnly` (`boolean`, optional): If true, return only column metadata
+
+---
+
+## Meshagent & Reference Links
+
+- Meshagent Home: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-cdata-connectcloud](https://hub.docker.com/r/meshagent/mcp-cdata-connectcloud)

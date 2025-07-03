@@ -1,0 +1,137 @@
+---
+title: Puppeteer
+---
+
+
+Follow these steps to quickly launch a test Meshagent Room running the Puppeteer MCP server and a chatbot. When the room closes, the tool and agent are automatically removed.
+
+### Environment Variables
+
+- `DOCKER_CONTAINER=true`
+
+### Steps
+
+1. **Install dependencies:**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent:**  
+   See: [Meshagent CLI Quickstart](https://docs.meshagent.com/cli/getting_started)
+
+3. **Run the Puppeteer MCP server as an agent in a Room:**
+    ```sh
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-puppeteer:latest --env MESHAGENT_PORT=8001 --env DOCKER_CONTAINER=true --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-puppeteer-service-test
+    ```
+    - This launches an MCP server in a temporary Room. Inactive rooms and agents are automatically shut down.
+
+4. **Join the Room with a chatbot using the Puppeteer toolkit:**
+    ```sh
+    meshagent chatbot join --room=test --agent-name=mcp-puppeteer --name=mcp-puppeteer --toolkit=mcp-puppeteer
+    ```
+    - This starts a chatbot agent in the same Room and connects it to the Puppeteer toolkit.
+    - Multiple toolkits can be attached to a Room/agent.
+    - A browser-accessible Room link will be provided in the command output.
+
+5. **Try it out!**  
+   Visit the provided Room link in your browser and send the agent a message to use Puppeteer tools via chat.
+
+---
+
+## Project Level Deployment
+
+For production, deploy persistent tool agents and chatbots at the project level. These services join *every* new Room automatically, so you don't need to start or join them each time.
+
+1. **Create the MCP Puppeteer server as a persistent service:**
+    ```sh
+    meshagent service create --role=agent --image=meshagent/mcp-puppeteer:latest --env MESHAGENT_PORT=8001 --env DOCKER_CONTAINER=true --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-puppeteer-service
+    ```
+
+2. **Create a persistent chatbot service using the Puppeteer toolkit:**
+    ```sh
+    meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-puppeteer-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-puppeteer-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-puppeteer-chatbot --toolkit=mcp-puppeteer"
+    ```
+
+No need to manage local servers—the agent and chatbot appear in every project Room!
+
+---
+
+## Tools Available
+
+### Summary
+
+| Tool                        | Short Description                                    |
+|-----------------------------|-----------------------------------------------------|
+| `puppeteer_click`           | Click an element on the page                        |
+| `puppeteer_evaluate`        | Execute JavaScript in the browser console           |
+| `puppeteer_fill`            | Fill out an input field                             |
+| `puppeteer_hover`           | Hover an element on the page                        |
+| `puppeteer_navigate`        | Navigate to a URL                                   |
+| `puppeteer_screenshot`      | Take a screenshot of the current page or an element |
+| `puppeteer_select`          | Select an element on the page with Select tag       |
+
+---
+
+### Tool Details
+
+#### `puppeteer_click`
+**Click an element on the page**  
+Parameters:
+- `selector` (`string`): CSS selector for element to click
+
+---
+
+#### `puppeteer_evaluate`
+**Execute JavaScript in the browser console**  
+Parameters:
+- `script` (`string`): JavaScript code to execute
+
+---
+
+#### `puppeteer_fill`
+**Fill out an input field**  
+Parameters:
+- `selector` (`string`): CSS selector for input field
+- `value` (`string`): Value to fill
+
+---
+
+#### `puppeteer_hover`
+**Hover an element on the page**  
+Parameters:
+- `selector` (`string`): CSS selector for element to hover
+
+---
+
+#### `puppeteer_navigate`
+**Navigate to a URL**  
+Parameters:
+- `url` (`string`): URL to navigate to
+- `allowDangerous` (`boolean`, optional): Allow dangerous LaunchOptions (default: false)
+- `launchOptions` (`object`, optional): PuppeteerJS LaunchOptions. If changed and not null, browser restarts. Example: `{ headless: true, args: ['--no-sandbox'] }`
+
+---
+
+#### `puppeteer_screenshot`
+**Take a screenshot of the current page or a specific element**  
+Parameters:
+- `name` (`string`): Name for the screenshot
+- `height` (`number`, optional): Height in pixels (default: 600)
+- `selector` (`string`, optional): CSS selector for element to screenshot
+- `width` (`number`, optional): Width in pixels (default: 800)
+
+---
+
+#### `puppeteer_select`
+**Select an element on the page with Select tag**  
+Parameters:
+- `selector` (`string`): CSS selector for element to select
+- `value` (`string`): Value to select
+
+---
+
+## Meshagent Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Puppeteer Tool Image](https://hub.docker.com/r/meshagent/mcp-puppeteer)
