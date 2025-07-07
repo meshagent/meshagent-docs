@@ -28,9 +28,9 @@ In this guide you will understand the relationships and core components for each
 Together these packages form a layered ecosystem: ``meshagent.api`` → ``tools`` and ``agents`` → integrations like ``openai``, ``livekit``, ``mcp``, ``computers`` → command line utilities via ``meshagent.cli``. This modular design lets developers build agents with custom tools, integrate OpenAI or LiveKit features, and run or deploy them via the CLI.
 
 ## MeshAgent API
-The ``meshagent.api`` is the foundation that all other packages build on. 
+The ``meshagent.api`` is the foundation that all other packages build on. It includes foundational protocols, JWT authentication, room management, document sync, and more. 
 
-#### JWT Authentication
+### JWT Authentication
  MeshAgent uses **JSON Web Tokens (JWTs)** to authenticate participants. A token encodes who you are (participant name) and what you’re allowed to access (project ID, room name, role). The token is signed, so the server can verify it without storing any state.
 
 <CodeGroup>
@@ -46,7 +46,7 @@ jwt = token.to_jwt(secret="your-api-secret")
 ```
 </CodeGroup>
 
-#### WebSocket Protocol
+### WebSocket Protocol
 A WebSocket keeps a two-way connection open between your Python code and the Meshagent server. This allows instant messaging, file transfers, and document updates. ``WebSocketClientProtocol`` manages the underlying connection:
 
 <CodeGroup>
@@ -60,7 +60,7 @@ async with protocol:
 
 Messages are encoded and decoded using a ``Protocol`` layer that is transport-agnostic.
 
-#### RoomClient
+### RoomClient
 ``RoomClient`` is the main entry point for interacting with a room. Once you pass in the protocol, the room becomes ready and you gain access to specialized sub-clients:
 
 - ``messaging``: send or broadcast text/files.
@@ -79,16 +79,16 @@ async with RoomClient(protocol=protocol) as room:
 ```
 </CodeGroup>
 
-#### Document Runtime and Schemas
+### Document Runtime and Schemas
 ``SyncClient`` and the document runtime allow multiple participants to edit structured documents (defined by a ``MeshSchema``) with real-time updates propagated via WebSocket messages.
 
-#### WebhookServer
+### WebhookServer
 ``WebhookServer`` can run in your own service to receive signed events (HTTP webhooks) from MeshAgent—such as room lifecycle events (e.g., room started/ended)—allowing you to trigger custom logic.
 
-#### AccountsClient
+### AccountsClient
 Separate from rooms, ``AccountsClient`` is a REST-based client for managing projects, API keys, and secrets. It is useful for administrative tasks.
 
-#### ServiceHost
+### ServiceHost
 ``ServiceHost`` allows you to expose agents or tools as an HTTP service. The MeshAgent Server or CLI can invoke the service via webhook calls. The ``Servicehost`` spins up the agent or tool, connects it to the specified room, and manages its lifecycle until the call completes or is dismissed. This is how examples like the ChatBot or VoiceBot can be run locally and also enables you to deploy an agent as a MeshAgent Service using the same applicable service path once your agent or tool is ready. 
 
 When a call to the agent or tool arrives through a webhook, the ``ServiceHost`` spawns that agent or tool and connects it to the requested room via the ``RoomClient`` and ``WebSocketClientProtocol``. The ``ServiceHost`` starts an HTTP servier and registers each path so that multiple agents or toolkits can be hosted.  
@@ -114,37 +114,37 @@ The ``meshagent.agents`` package provides higher-level agent classes that orches
 
 Note that agents use LLMAdapters and ToolResponseAdapters to translate between language model calls and tool executions. They also use the ServiceHost to run. 
 
-#### Agent
+### Agent
 The ``Agent`` base class handles static info such as the agent name, description, and requirements. This class is not used directly, but is the foundation for specialized agents. 
 
-#### SingleRoomAgent
+### SingleRoomAgent
 The ``SingleRoomAgent``extends the ``Agent`` class, connects to a ``RoomClient``, and installs any declared schemas or toolkits when the agent starts up. All other MeshAgent Agent types extend the ``SingleRoomAgent`` class with additional functionality.
 
-#### TaskRunner
+### TaskRunner
 The ``TaskRunner`` agent is useful when you want to invoke an agent with a well-defined JSON schemas for input and output. This is important for running agents-as-tools or running remote tasks. Often you will define a ``TaskRunner`` and pass it to a ``ChatBot`` or ``VoiceBot`` as a tool for that agent to use. 
 
-#### Worker
+### Worker
 The ``Worker`` is a queue-based ``SingleRoomAgent`` that processes queued messages with an LLM and optional tools. This is particularly helpful for running asynchronous jobs. With the ``Worker`` agent you can create a set of tasks that need to run in a Room and the ``Worker`` will execute all of the tasks in the queue. 
 
-#### ChatBot
+### ChatBot
 The ``ChatBot`` is a conversational agent derived from the ``SingleRoomAgent``. It wires an LLMAdapter, optoinal tools, and manages chat threads for each user. This means multiple users can be in the same room interacting with a chat agent, but each user will have private messages with the agent. Check out the [Build and Deploy a Chat Agent](../agents/standard/buildanddeploychatbot) example to learn how to create a simple Chat Agent without tools then add built-in MeshAgent tools and custom tools to the agent.
 
 ## MeshAgent LiveKit
 The ``meshagent.livekit`` package equips agents with real-time audio and voice capabilities via the LiveKit SDK. 
 
-#### VoiceBot
+### VoiceBot
 The ``VoiceBot`` agent handles two-way voice conversations allowing users to interact with the agent verbally. Agents based on the ``VoiceBot`` class can be given the same tools as ``ChatBot`` based agents. This means you only need to write a tool once and the same tool can be used across both text and voice based agents. Check out the [Build and Deploy a Voice Agent](../agents/standard/buildanddeployvoicebot) example to learn how to create a simple Voice Agent without tools then add built-in MeshAgent tools and custom tools to the agent.
 
 ## MeshAgent Tools
 The ``meshagent.tools`` package bundles reusable tool and toolkit abstractions plus a set of out of the box MeshAgent toolkits. 
 
-#### ToolContext and BaseTool
+### ToolContext and BaseTool
 The ``ToolContext`` tracks the room, caller, and optional "on-behalf-of" participant. The ``BaseTool`` defines metadata used by all tools such as name and description. 
 
-#### Tool and Toolkit
+### Tool and Toolkit
 A ``Tool`` encapsulates a single operation with an input JSON schema. Each tool implements an ``execute`` function where you define the logic for the tool. The ``Toolkit`` groups tools together and can enforce rules or descriptions.
 
-#### Response Types
+### Response Types
 Response types specify the output that a tool should return. This helps the tool and agent know how to handle the response appropriately. Response types include: ``JsonResponse``, ``TextResponse``, and ``FileResponse``.
 
 <CodeGroup>
@@ -181,7 +181,7 @@ class MyNewToolkit(Toolkit):
 ```
 </CodeGroup>
 
-#### Built-in Toolkits
+### Built-in Toolkits
 Some of the built-in MeshAgent toolkits include: 
 - ``StorageToolkit``: Provides file operations (read, write, list, etc.)
 - ``DocumentAuthoringToolkit``: Defines tools for manipulating Mesh documents (create document, add element, remove element, etc.)
@@ -190,10 +190,10 @@ Some of the built-in MeshAgent toolkits include:
 ## MeshAgent MCP
 The ``meshagent.mcp`` package allows you to use any MCP server as a MeshAgent tool. 
 
-#### MCPTool
+### MCPTool
 Wrap an MCP tool with ``MCPTool`` so it conforms to the MeshAgent Tool syntax. For more details on how to do this check out the [MeshAgent MCP docs](https://docs.meshagent.com/mcp-overview/overview).
 
-#### MCPToolkit
+### MCPToolkit
 The ``MCPToolkit`` bundles multiple ``MCPTool`` instances into a toolkit that agents can invoke just like built-in MeshAgent tools or custom tools.
 
 <CodeGroup>
@@ -213,7 +213,7 @@ toolkit = MCPToolkit(
 ## MeshAgent Computers
 The ``meshagent.computers`` package defines abstractions for controlling browsers and operating systems and providing these abilities to agents. 
 
-#### ComputerAgent
+### ComputerAgent
 The ComputerAgent in `meshagent-computers` extends the ``ChatBot`` with support for using browsers and computers. The computer agent will periodically send screenshots to participants on the thread using the MeshAgent messaging protocol, by sending a message of the type "computer_screen" and an attachment that contains a binary screenshot. 
 
 <CodeGroup>
@@ -249,7 +249,7 @@ asyncio.run(service.run())
 ## MeshAgent OpenAI
 The ``meshagent.openai`` package provides adapters to integrate OpenAI models with MeshAgent tools and agents. 
 
-#### Completions Adapter and Responses Adapter
+### Completions Adapter and Responses Adapter
 MeshAgent supports both the OpenAI Chat Completions API and Responses API. It is recommended to use the Responses adapter given the newer OpenAI models and functionality use the Responses adapter.
 
 - ``OpenAICompletionsAdapter``: wraps the OpenAI Chat Completions API. It turns Toolkit objects into OpenAI-style tool definitions and processes tool calls appropriately.
@@ -265,7 +265,7 @@ adapter = OpenAIResponsesAdapter(client=AsyncOpenAI(api_key="sk-..."))
 ```
 </CodeGroup>
 
-#### Tool Response Adapter
+### Tool Response Adapter
 The ``OpenAICompletionsToolResponseAdapter`` and ``OpenAIResponsesToolResponseAdapter``convert a tool's structured response into plain text or JSOn that can beinserted into an OpenAI chat context. 
 
 
