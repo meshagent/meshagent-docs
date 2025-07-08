@@ -102,7 +102,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                     if isinstance(child, Element):
                         append_children(child)
 
-            if self.wait_for_synchronize == False:
+            if not self.wait_for_synchronize:
                 change_queue.append([doc.root])
                 append_children(doc.root)
             else:
@@ -118,7 +118,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                     change_queue.append([e])
                     append_children(e)
 
-                if wait_for_changes.done() == False:
+                if not wait_for_changes.done():
                     wait_for_changes.set_result(True)
 
             @doc.on("updated")
@@ -128,7 +128,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                     #
                     # append_children(e)
 
-                if wait_for_changes.done() == False:
+                if not wait_for_changes.done():
                     wait_for_changes.set_result(True)
 
             waiting_for_end = True
@@ -183,12 +183,12 @@ class SampleVoiceAgentWithTools(VoiceBot):
                                 print(response.json)
 
                                 if data["accuracy"] == "inaccurate":
-                                    handle = session.say(data["response"])
+                                    session.say(data["response"])
 
                                     element.set_attribute(attr, data["correction"])
 
                                 elif data["accuracy"] == "subjective":
-                                    handle = session.say(data["response"])
+                                    session.say(data["response"])
 
                             done = await self.on_attribute_changed(
                                 listener_context, content, change[1]
