@@ -143,11 +143,11 @@ class SampleVoiceAgentWithTools(VoiceBot):
                         element: Element = change[0]
                         attr = "line"
                         text = element.get_attribute("line", None)
-                        if text == None:
+                        if text is None:
                             attr = "title"
                             text = element.get_attribute("title", None)
 
-                        if text != None:
+                        if text is not None:
                             print(f"checking change {text}")
 
                             response = await self.room.agents.ask(
