@@ -2,9 +2,9 @@ from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
+
 
 @service.path("/agent")
 class SampleVoiceAgent(VoiceBot):
@@ -13,11 +13,10 @@ class SampleVoiceAgent(VoiceBot):
             name="meshagent.livekit.agent",
             title="sample voice agent",
             description="sample agent that will respond to a query via voice",
-            labels=[ "voice" ],
+            labels=["voice"],
             auto_greet_prompt="hello",
-            rules=[
-                "You are a helpful assistant communicating through voice."
-            ]
+            rules=["You are a helpful assistant communicating through voice."],
         )
+
 
 asyncio.run(service.run())

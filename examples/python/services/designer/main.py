@@ -2,16 +2,20 @@ from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.tools import Toolkit
 from meshagent.agents.schemas.gallery import gallery_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.tools.document_tools import (
+    DocumentAuthoringToolkit,
+    DocumentTypeAuthoringToolkit,
+)
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
 import asyncio
-import os
 
 from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
+
+
 @service.path("/agent")
 class Designer(ChatBot):
     def __init__(self):
@@ -39,38 +43,36 @@ class Designer(ChatBot):
                 "blob URLs MUST not be added to galleries, they must be saved first",
                 "after opening a document, immediately display it to the user",
             ],
-            llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True),
-            requires = [
-                RequiredToolkit(name="meshagent.fal", tools=[
+            llm_adapter=OpenAIResponsesAdapter(parallel_tool_calls=True),
+            requires=[
+                RequiredToolkit(
+                    name="meshagent.fal",
+                    tools=[
                         "fal-ai/flux-pro/v1.1-ultra",
                         "fal-ai/flux/dev/image-to-image",
                         "fal-ai/veo2",
-                        "fal-ai/veo2/image-to-video"
-                    ]
+                        "fal-ai/veo2/image-to-video",
+                    ],
                 ),
-                RequiredToolkit(name="ui",
-                    tools=[
-                        "ask_user",
-                        "display_document",
-                        "show_toast"
-                    ]
+                RequiredToolkit(
+                    name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
                 RequiredSchema(name="gallery"),
-                RequiredToolkit(name="meshagent.markitdown", tools=[ "markitdown_from_user", "markitdown_from_file" ]),
+                RequiredToolkit(
+                    name="meshagent.markitdown",
+                    tools=["markitdown_from_user", "markitdown_from_file"],
+                ),
             ],
             toolkits=[
-                Toolkit(name="local", tools=[
-                    SaveFileFromUrlTool()
-                ]),
+                Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
-                    schema=gallery_schema,
-                    document_type="gallery"
-                )
-                
+                    schema=gallery_schema, document_type="gallery"
+                ),
             ],
             auto_greet_message="What images can I help you design?",
-            labels=[ "tasks", "images" ]
+            labels=["tasks", "images"],
         )
+
 
 asyncio.run(service.run())

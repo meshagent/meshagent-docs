@@ -1,6 +1,7 @@
 import asyncio
 from meshagent.api import RoomClient, websocket_protocol
 
+
 async def main():
     room_name = "examples"
     participant_name = "example-participant"
@@ -8,22 +9,21 @@ async def main():
     # connect to our room
     async with RoomClient(
         protocol=websocket_protocol(
-            participant_name=participant_name,
-            room_name=room_name, role="agent")) as room:
+            participant_name=participant_name, room_name=room_name, role="agent"
+        )
+    ) as room:
+        # open our document
+        document = await room.sync.open(path="hello-world.document")
 
-            # open our document
-            document = await room.sync.open(path="hello-world.document")
+        # wait for the document to sync from the server
+        await document.synchronized
 
-            # wait for the document to sync from the server
-            await document.synchronized
+        # our root element is automatically added to the document, let's construct the sample document by inserting
+        # a body with a paragraph element
+        document.root.append_child(tag_name="body", attributes={"text": "hello world!"})
 
-            # our root element is automatically added to the document, let's construct the sample document by inserting
-            # a body with a paragraph element
-            document.root.append_child(tag_name="body", attributes={ "text": "hello world!" })
-         
-            # wait before closing so the sync can finish
-            await asyncio.sleep(3) 
+        # wait before closing so the sync can finish
+        await asyncio.sleep(3)
 
 
 asyncio.run(main())
-

@@ -2,15 +2,18 @@ from meshagent.api import RequiredSchema, RequiredToolkit
 from meshagent.agents.schemas.presentation import presentation_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
 from meshagent.tools import Toolkit
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.tools.document_tools import (
+    DocumentAuthoringToolkit,
+    DocumentTypeAuthoringToolkit,
+)
 from meshagent.agents.planning import PlanningResponder
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
+
 
 @service.path("/agent")
 class PresentationAuthor(PlanningResponder):
@@ -19,11 +22,10 @@ class PresentationAuthor(PlanningResponder):
             name="meshagent.presentation-author",
             title="presentation task",
             output_schema={
-                "type" : "object",
-                "required" : [],
-                "additionalProperties" : False,
-                "properties" : {
-                }
+                "type": "object",
+                "required": [],
+                "additionalProperties": False,
+                "properties": {},
             },
             description="an task runner that author presentations and use tools",
             rules=[
@@ -38,34 +40,27 @@ class PresentationAuthor(PlanningResponder):
                 "for slide backgrounds, you MUST generate a dark abstract background to use as the background",
                 "for slides, you MUST generate a background image, save it, and reference its full path as the background",
                 "blob URLs MUST not be added to documents, they must be saved as files first",
-                "you MUST save images in the .images folder"
+                "you MUST save images in the .images folder",
             ],
-            llm_adapter = OpenAIResponsesAdapter(
-                parallel_tool_calls=False
-            ),
-            supports_tools = True,
+            llm_adapter=OpenAIResponsesAdapter(parallel_tool_calls=False),
+            supports_tools=True,
             requires=[
-                RequiredSchema(
-                    name="presentation"
-                ),
+                RequiredSchema(name="presentation"),
                 RequiredToolkit(
                     name="meshagent.fal",
                     tools=[
                         "fal-ai/flux-pro/v1.1-ultra",
-                    ]
-                )
+                    ],
+                ),
             ],
             toolkits=[
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
-                    schema=presentation_schema,
-                    document_type="presentation"
+                    schema=presentation_schema, document_type="presentation"
                 ),
-                Toolkit(name="local", tools=[
-                    SaveFileFromUrlTool()
-                ]),
+                Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
             ],
-            labels=[ "tasks", "presentations" ]
+            labels=["tasks", "presentations"],
         )
 
 

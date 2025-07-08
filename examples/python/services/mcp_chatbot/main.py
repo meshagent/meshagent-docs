@@ -3,7 +3,6 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import MCPServer, MCPTool
 
-from meshagent.agents.thread_schema import thread_schema
 
 import asyncio
 import os
@@ -12,21 +11,21 @@ from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
 
+
 @service.path("/agent")
 class MCPChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            
             name="meshagent.mcp-chatbot",
             title="image designer",
             description="an agent that can use MCP servers",
             empty_state_title="what can I do for you",
-            rules=[
-                "you are an assistant for trying out MCP servers"
-            ],
-            llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True, model="gpt-4o"),
+            rules=["you are an assistant for trying out MCP servers"],
+            llm_adapter=OpenAIResponsesAdapter(
+                parallel_tool_calls=True, model="gpt-4o"
+            ),
             auto_greet_message="What can I help you with?",
-            labels=[ "tasks", "mcp" ]
+            labels=["tasks", "mcp"],
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
@@ -40,13 +39,15 @@ class MCPChatbot(ChatBot):
                                 server_label="mcp",
                                 server_url="https://mcp.zapier.com/api/mcp/mcp",
                                 headers={
-                                    "Authorization" : "Bearer "+os.getenv("ZAPIER_API_KEY")
-                                }
+                                    "Authorization": "Bearer "
+                                    + os.getenv("ZAPIER_API_KEY")
+                                },
                             )
                         ]
                     )
-                ]
+                ],
             )
         ]
+
 
 asyncio.run(service.run())

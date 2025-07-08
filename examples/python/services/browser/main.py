@@ -4,13 +4,13 @@ from meshagent.computers import ComputerAgent, BrowserbaseBrowser, Operator
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
 
+
 @service.path("/agent")
 class BrowserbaseAgent(ComputerAgent):
-    def __init__(self): 
+    def __init__(self):
         super().__init__(
             name="meshagent.browser",
             title="browser agent",
@@ -19,25 +19,22 @@ class BrowserbaseAgent(ComputerAgent):
                 RequiredToolkit(
                     name="ui",
                     tools=[
-                        #"ask_user",
-                        #"display_document",
-                        #"show_toast"
-                    ]
+                        # "ask_user",
+                        # "display_document",
+                        # "show_toast"
+                    ],
                 ),
             ],
-            llm_adapter = OpenAIResponsesAdapter(
+            llm_adapter=OpenAIResponsesAdapter(
                 model="computer-use-preview",
                 response_options={
-                    "reasoning" : {
-                        "generate_summary" : "concise"
-                    },
-                    "truncation" : "auto"
-                }
+                    "reasoning": {"generate_summary": "concise"},
+                    "truncation": "auto",
+                },
             ),
-
-            labels=[ "tasks", "computers" ],
+            labels=["tasks", "computers"],
             computer_cls=BrowserbaseBrowser,
-            operator_cls=Operator
+            operator_cls=Operator,
         )
 
 
