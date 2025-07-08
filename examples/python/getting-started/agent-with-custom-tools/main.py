@@ -1,7 +1,7 @@
 import os
 import uuid
 import asyncio
-from datetime import datetime, date
+from datetime import date
 from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
@@ -13,7 +13,6 @@ from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
-from meshagent.api.room_server_client import TextDataType, TimestampDataType
 from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit, ToolContext
 

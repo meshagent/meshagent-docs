@@ -1,5 +1,5 @@
 import asyncio
-from meshagent.api import RoomClient, websocket_protocol, RequiredToolkit
+from meshagent.api import RequiredToolkit
 from meshagent.agents import TaskRunner, connect_development_agent
 from meshagent.agents.utils import generate_json
 from meshagent.api.schema_util import no_arguments_schema

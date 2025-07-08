@@ -7,7 +7,6 @@ from meshagent.agents.indexer import RagToolkit, SiteIndexer
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
 

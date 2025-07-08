@@ -3,7 +3,6 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import MCPServer, MCPTool
 
-from meshagent.agents.thread_schema import thread_schema
 
 import asyncio
 import os

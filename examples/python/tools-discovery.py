@@ -12,7 +12,7 @@ async def main():
         
         toolkits = await room.agents.list_toolkits()
 
-        print(f"The tools connected to our room are:")
+        print("The tools connected to our room are:")
         for toolkit in toolkits:
             print(f"\n{toolkit.name}: {toolkit.title} - {toolkit.description}")
             for tool in toolkit.tools:

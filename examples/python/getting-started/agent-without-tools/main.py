@@ -5,7 +5,6 @@ from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit
 from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
 from meshagent.livekit.agents.voice import VoiceBot

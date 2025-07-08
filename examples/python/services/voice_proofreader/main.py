@@ -5,12 +5,12 @@ from meshagent.tools import Toolkit
 import asyncio
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
-from meshagent.tools.storage import StorageToolkit, SaveFileFromUrlTool
+from meshagent.tools.storage import SaveFileFromUrlTool
 from meshagent.tools import ToolContext
 import livekit.agents.utils.http_context
 import livekit.agents.cli.log
 
-from meshagent.agents import Listener, ListenerContext
+from meshagent.agents import ListenerContext
 from typing import Optional
 from meshagent.api import Element, JsonResponse
 from meshagent.api.schema_document import Text
@@ -179,7 +179,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                     
                 
                 wait_for_changes = asyncio.Future()
-        except Exception as e:
+        except Exception:
             raise
 
         finally:
@@ -197,7 +197,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
         def watch_done(task: asyncio.Task):
             try:
                 task.result()
-            except Exception as e:
+            except Exception:
                 print("watch failed: {e}")
 
         asyncio.create_task(self.watch(session, "presentation.presentation"))

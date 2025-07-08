@@ -1,6 +1,6 @@
 import asyncio
 from typing import Optional
-from meshagent.api import RoomClient, Element
+from meshagent.api import Element
 from meshagent.agents import Listener, ListenerContext, connect_development_agent
 
 class SampleListener(Listener):

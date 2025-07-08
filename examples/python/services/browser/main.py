@@ -4,7 +4,6 @@ from meshagent.computers import ComputerAgent, BrowserbaseBrowser, Operator
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
 

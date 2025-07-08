@@ -3,7 +3,6 @@ from meshagent.tools.storage import SaveFileFromUrlTool
 from meshagent.agents.chat import ChatBot, ChatBotThreadOpenAIImageGenerationTool
 from meshagent.openai import OpenAIResponsesAdapter
 
-from meshagent.agents.thread_schema import thread_schema
 
 import asyncio
 

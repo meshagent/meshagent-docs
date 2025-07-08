@@ -5,7 +5,6 @@ from meshagent.agents.planning import PlanningResponder
 from meshagent.openai import OpenAIResponsesAdapter
 
 import asyncio
-import os
 
 from meshagent.api.services import ServiceHost
 

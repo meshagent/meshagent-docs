@@ -3,7 +3,7 @@ from meshagent.agents import RequiredToolkit, connect_development_agent
 from meshagent.openai import OpenAIToolResponseAdapter
 from meshagent.tools import BlobStorage
 from pydantic import BaseModel
-from pydantic_ai import Agent, Tool, RunContext
+from pydantic_ai import Agent, RunContext
 
 import asyncio
 

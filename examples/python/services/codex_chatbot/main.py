@@ -3,10 +3,8 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import LocalShellTool
 
-from meshagent.agents.thread_schema import thread_schema
 
 import asyncio
-import os
 
 from meshagent.api.services import ServiceHost
 

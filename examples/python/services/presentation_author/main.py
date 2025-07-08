@@ -8,7 +8,6 @@ from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
 
 import asyncio
-import os
 
 service = ServiceHost()
 
