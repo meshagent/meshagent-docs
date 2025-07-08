@@ -3,7 +3,10 @@ from meshagent.tools import Toolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.agents.schemas.presentation import presentation_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.tools.document_tools import (
+    DocumentAuthoringToolkit,
+    DocumentTypeAuthoringToolkit,
+)
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
@@ -12,6 +15,7 @@ import asyncio
 from meshagent.api.services import ServiceHost
 
 service = ServiceHost()
+
 
 @service.path("/agent")
 class DocumentAnalyzer(ChatBot):
@@ -35,30 +39,36 @@ class DocumentAnalyzer(ChatBot):
                 "you MUST save images in the .images folder",
                 "Unless asked otherwise, presentations should be created with 5 slides.",
                 "If asked to insert images or illustrations, you must use flux to create them",
-                "each paragraph should be inserted into the document with a seperate tool call"
+                "each paragraph should be inserted into the document with a seperate tool call",
             ],
-            llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=False),
+            llm_adapter=OpenAIResponsesAdapter(parallel_tool_calls=False),
             requires=[
                 RequiredToolkit(name="meshagent.perplexity"),
-                RequiredToolkit(name="meshagent.fal", tools=[ "fal-ai/flux-pro/v1.1-ultra" ]),
-                RequiredToolkit(name="ui", tools=[ "ask_user", "display_document", "show_toast" ]),
-                RequiredToolkit(name="meshagent.markitdown", tools=[ "markitdown_from_user", "markitdown_from_file" ]),
+                RequiredToolkit(
+                    name="meshagent.fal", tools=["fal-ai/flux-pro/v1.1-ultra"]
+                ),
+                RequiredToolkit(
+                    name="ui", tools=["ask_user", "display_document", "show_toast"]
+                ),
+                RequiredToolkit(
+                    name="meshagent.markitdown",
+                    tools=["markitdown_from_user", "markitdown_from_file"],
+                ),
                 RequiredSchema(name="document"),
-                RequiredSchema(name="presentation")               
+                RequiredSchema(name="presentation"),
             ],
             toolkits=[
-                Toolkit(name="local", tools=[ SaveFileFromUrlTool() ]),
+                Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
+                    schema=document_schema, document_type="document"
                 ),
                 DocumentTypeAuthoringToolkit(
-                    schema=presentation_schema,
-                    document_type="presentation"
-                )
+                    schema=presentation_schema, document_type="presentation"
+                ),
             ],
-            labels=[ "chatbot", "documents", "presentations" ]   
+            labels=["chatbot", "documents", "presentations"],
         )
+
 
 asyncio.run(service.run())

@@ -5,9 +5,11 @@ from meshagent.openai import OpenAIResponsesAdapter
 import asyncio
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 service = ServiceHost()
+
 
 @service.path("/agent")
 class SampleMailWorker(MailWorker):
@@ -22,5 +24,6 @@ class SampleMailWorker(MailWorker):
                 "You are a helpful assistant for responding to emails",
             ],
         )
+
 
 asyncio.run(service.run())

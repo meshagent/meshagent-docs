@@ -7,9 +7,11 @@ from pydantic_ai import Agent, RunContext
 
 import asyncio
 
+
 # define the structure of the input of our agent
 class Input(BaseModel):
     model_config = dict(extra="forbid")
+
 
 # define the structure of the output of our agent
 class Output(BaseModel):
@@ -17,18 +19,15 @@ class Output(BaseModel):
     result: float
 
 
-
 class CustomPydanticAgentHost(PydanicAgentHost):
-
     def create_agent(self, *, tools):
-
         agent = Agent(
-                    tools=[
-                        *tools,
-                    ],
-                    model="openai:gpt-4o",
-                    system_prompt="ask the user to provide an equation and then return the result of the equation"
-                )
+            tools=[
+                *tools,
+            ],
+            model="openai:gpt-4o",
+            system_prompt="ask the user to provide an equation and then return the result of the equation",
+        )
 
         @agent.tool
         def multiply(context: RunContext, x: float, y: float) -> float:
@@ -36,9 +35,8 @@ class CustomPydanticAgentHost(PydanicAgentHost):
 
         return agent
 
-async def main():    
-    
-    
+
+async def main():
     host = CustomPydanticAgentHost(
         response_adapter=OpenAIToolResponseAdapter(blob_storage=BlobStorage()),
         model="openai:gpt-4o",
@@ -48,16 +46,11 @@ async def main():
         description="Exposes a pydantic agent to MeshAgent",
         input_model=Input,
         output_model=Output,
-        requires=[
-            RequiredToolkit(
-                name="ui",
-                tools=["ask_user"]
-            )
-        ]
+        requires=[RequiredToolkit(name="ui", tools=["ask_user"])],
     )
 
-
-    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI    
+    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI
     await connect_development_agent(room_name="examples", agent=host)
-    
+
+
 asyncio.run(main())

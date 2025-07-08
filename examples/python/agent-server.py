@@ -4,16 +4,19 @@ import asyncio
 from meshagent.agents.pydantic import PydanticAgent, BaseModel
 from meshagent.agents import AgentCallContext, RemoteTaskRunnerServer
 
+
 # define the structure of the input of our agent
 class Input(BaseModel):
     model_config = dict(extra="forbid")
     a: int
     b: int
 
+
 # define the structure of the output of our agent
 class Output(BaseModel):
     model_config = dict(extra="forbid")
     result: int
+
 
 class Adder(PydanticAgent):
     def __init__(self):
@@ -26,13 +29,13 @@ class Adder(PydanticAgent):
         )
 
     # Our agent will receive content matching the input format, and must return content matching the output format
-    async def ask_model(self, context: AgentCallContext, arguments: Input) -> Output:        
+    async def ask_model(self, context: AgentCallContext, arguments: Input) -> Output:
         return Output(result=arguments.a + arguments.b)
 
 
-async def main():    
+async def main():
     server = RemoteTaskRunnerServer(cls=Adder)
     await server.run()
 
-asyncio.run(main())
 
+asyncio.run(main())

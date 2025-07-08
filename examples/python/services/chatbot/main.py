@@ -7,6 +7,7 @@ import asyncio
 
 service = ServiceHost()
 
+
 @service.path("/agent")
 class SimpleChatbot(ChatBot):
     def __init__(self):
@@ -14,15 +15,15 @@ class SimpleChatbot(ChatBot):
             name="meshagent.chatbot",
             title="chatbot",
             description="an simple chatbot",
-            rules=[
-            ],
-            llm_adapter = OpenAIResponsesAdapter(),
+            rules=[],
+            llm_adapter=OpenAIResponsesAdapter(),
             requires=[
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=[ "markitdown_from_user", "markitdown_from_file" ]
+                    tools=["markitdown_from_user", "markitdown_from_file"],
                 ),
-            ]
+            ],
         )
+
 
 asyncio.run(service.run())

@@ -12,9 +12,8 @@ from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.tools import ToolContext
 
 # MeshAgent Service, Tools, and Agent
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+
 
 @service.path("/chat")
 class SimpleChatbot(ChatBot):
@@ -26,8 +25,9 @@ class SimpleChatbot(ChatBot):
             rules=[
                 "Always respond to the user first then include a fun fact at the end of your response."
             ],
-            llm_adapter = OpenAIResponsesAdapter(),
+            llm_adapter=OpenAIResponsesAdapter(),
         )
+
 
 @service.path("/voice")
 class SimpleVoicebot(VoiceBot):
@@ -43,40 +43,29 @@ class SimpleVoicebot(VoiceBot):
         )
 
     def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
+        token: str = context.room.protocol.token
+        url: str = context.room.room_url
+
         room_proxy_url = f"{url}/v1"
-            
+
         oaiclient = AsyncOpenAI(
             api_key=token,
             base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
+            default_headers={"Meshagent-Session": context.room.session_id},
         )
 
         session = AgentSession(
             max_tool_steps=50,
             allow_interruptions=True,
             vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
+            stt=openai.STT(client=oaiclient),
+            tts=openai.TTS(client=oaiclient, voice="sage"),
+            llm=openai.LLM(client=oaiclient, model="gpt-4.1"),
         )
         return session
 
-
     async def create_agent(self, *, context, session):
-        ctx=ChatContext()
+        ctx = ChatContext()
         today_str = date.today().strftime("%A %B %-d")
         ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
 
@@ -90,11 +79,9 @@ class SimpleVoicebot(VoiceBot):
             chat_ctx=ctx,
             instructions="\n".join(self.rules),
             allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
+            tools=[*await self.make_function_tools(context=context), say],
         )
-    
+
+
 print(f"running on port {service.port}")
 asyncio.run(service.run())

@@ -12,4 +12,3 @@ print("Downloaded content:", response.data)
 
 # Delete it
 await room.storage.delete("example.txt")
-

@@ -15,28 +15,20 @@ service = ServiceHost()
 class CodexChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            
             name="meshagent.codex-chatbot",
             title="image designer",
             description="an agent that can use codex to execute commands against the local environment",
             empty_state_title="what can I do for you",
-            rules=[
-                "you are an assistant for running codex commands in the terminal"
-            ],
-            llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True, model="codex-mini-latest"),
+            rules=["you are an assistant for running codex commands in the terminal"],
+            llm_adapter=OpenAIResponsesAdapter(
+                parallel_tool_calls=True, model="codex-mini-latest"
+            ),
             auto_greet_message="What can I help you with?",
-            labels=[ "tasks", "codex" ]
+            labels=["tasks", "codex"],
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
-        return [
-            Toolkit(
-                name="builtin",
-                tools=[
-                    LocalShellTool()
-                ]
-            )
-        ]
-    
+        return [Toolkit(name="builtin", tools=[LocalShellTool()])]
+
 
 asyncio.run(service.run())

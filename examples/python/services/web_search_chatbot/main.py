@@ -21,31 +21,18 @@ class WebSearchChatbot(ChatBot):
             title="web search",
             description="an agent can search the web",
             empty_state_title="What can I do for you",
-            rules=[
-                "you are an assistant for searching the web"
-            ],
-            llm_adapter = OpenAIResponsesAdapter(parallel_tool_calls=True),
-            requires = [
-            ],
+            rules=["you are an assistant for searching the web"],
+            llm_adapter=OpenAIResponsesAdapter(parallel_tool_calls=True),
+            requires=[],
             toolkits=[
-                
-                Toolkit(name="local", tools=[
-                    SaveFileFromUrlTool()
-                ]),
+                Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
             ],
             auto_greet_message="What can I do for you?",
-            labels=[ "tasks", "websearch" ]
+            labels=["tasks", "websearch"],
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
-        return [
-            Toolkit(
-                name="builtin",
-                tools=[
-                    WebSearchTool()
-                ]
-            )
-        ]
-    
+        return [Toolkit(name="builtin", tools=[WebSearchTool()])]
+
 
 asyncio.run(service.run())

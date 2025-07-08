@@ -11,16 +11,18 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
+from meshagent.tools.document_tools import (
+    DocumentAuthoringToolkit,
+    DocumentTypeAuthoringToolkit,
+)
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit, ToolContext
 
 
 # MeshAgent Service, Tools, and Agent
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+
 
 class WriteTask(Tool):
     def __init__(self):
@@ -30,26 +32,22 @@ class WriteTask(Tool):
             description="A tool to add tasks to the database",
             input_schema={
                 "type": "object",
-                "additionalProperties" : False,
-                "required": [
-                    "taskdescription"
-                    ],
-                "properties": {
-                    "taskdescription": {"type": "string"}
-                    }
-            }
+                "additionalProperties": False,
+                "required": ["taskdescription"],
+                "properties": {"taskdescription": {"type": "string"}},
+            },
         )
 
     async def execute(self, context, taskdescription: str):
         await context.room.database.insert(
             table="tasks",
-            records=[{
-                "task_id": str(uuid.uuid4()),
-                "taskdescription": taskdescription
-            }]
+            records=[
+                {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
+            ],
         )
         return TextResponse(text="Task added!")
-    
+
+
 class GetTasks(Tool):
     def __init__(self):
         super().__init__(
@@ -58,14 +56,17 @@ class GetTasks(Tool):
             description="List tasks recorded today or this week",
             input_schema={
                 "type": "object",
-                "additionalProperties":False,
+                "additionalProperties": False,
                 "required": [],
-                "properties": {}
-            }
+                "properties": {},
+            },
         )
 
     async def execute(self, context):
-        return JsonResponse(json={"values": await context.room.database.search(table="tasks")})
+        return JsonResponse(
+            json={"values": await context.room.database.search(table="tasks")}
+        )
+
 
 @service.path("/chat")
 class SimpleChatbot(ChatBot):
@@ -83,28 +84,25 @@ class SimpleChatbot(ChatBot):
                 "before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
-            llm_adapter = OpenAIResponsesAdapter(),
+            llm_adapter=OpenAIResponsesAdapter(),
             requires=[
+                RequiredToolkit(name="ui"),
+                RequiredSchema(name="document"),
                 RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=[ "markitdown_from_user", "markitdown_from_file"]
+                    name="meshagent.markitdown",
+                    tools=["markitdown_from_user", "markitdown_from_file"],
                 ),
             ],
             toolkits=[
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
+                    schema=document_schema, document_type="document"
                 ),
-                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()])
+                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()]),
             ],
         )
+
+
 @service.path("/voice")
 class SimpleVoicebot(VoiceBot):
     def __init__(self):
@@ -123,61 +121,46 @@ class SimpleVoicebot(VoiceBot):
                 "Blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             requires=[
+                RequiredToolkit(name="ui"),
+                RequiredSchema(name="document"),
                 RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=["markitdown_from_user", "markitdown_from_file"]
+                    name="meshagent.markitdown",
+                    tools=["markitdown_from_user", "markitdown_from_file"],
                 ),
             ],
             toolkits=[
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
+                    schema=document_schema, document_type="document"
                 ),
-                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()])
+                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()]),
             ],
         )
 
     def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
+        token: str = context.room.protocol.token
+        url: str = context.room.room_url
+
         room_proxy_url = f"{url}/v1"
-            
+
         oaiclient = AsyncOpenAI(
             api_key=token,
             base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
+            default_headers={"Meshagent-Session": context.room.session_id},
         )
 
         session = AgentSession(
             max_tool_steps=50,
             allow_interruptions=True,
             vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
+            stt=openai.STT(client=oaiclient),
+            tts=openai.TTS(client=oaiclient, voice="sage"),
+            llm=openai.LLM(client=oaiclient, model="gpt-4.1"),
         )
         return session
 
     async def create_agent(self, *, context, session):
-        ctx=ChatContext()
+        ctx = ChatContext()
         today_str = date.today().strftime("%A %B %-d")
         ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
 
@@ -191,11 +174,9 @@ class SimpleVoicebot(VoiceBot):
             chat_ctx=ctx,
             instructions="\n".join(self.rules),
             allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
+            tools=[*await self.make_function_tools(context=context), say],
         )
+
 
 print(f"running on port {service.port}")
 asyncio.run(service.run())
