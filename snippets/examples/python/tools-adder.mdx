@@ -8,11 +8,11 @@ service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
 
-class Adder(Tool):
+class Add(Tool):
     def __init__(self):
         super().__init__(
-            name="adder",
-            title="sample adder",
+            name="add",
+            title="adding tool",
             description="a tool that adds two numbers",
             input_schema={
                 "type": "object",
@@ -28,19 +28,44 @@ class Adder(Tool):
             }
         )
 
-    async def execute(self, context: ToolContext, *, a: int, b: int): #context not used so can remove
+    async def execute(self, context: ToolContext, *, a: int, b: int):
         result = {"result": a + b}
         print(result)
         return result
-
-@service.path("/adder")
-class AdderToolkit(RemoteToolkit):
+    
+class Subtract(Tool):
     def __init__(self):
         super().__init__(
-            name="adder-tool",
-            title="adder-tool",
-            description="a tool that can add two numbers",
-            tools=[Adder()],
+            name="subtract",
+            title="subtracting tool",
+            description="a tool that subtracts two numbers",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "a",
+                    "b"
+                ],
+                "properties": {
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            }
+        )
+
+    async def execute(self, context: ToolContext, *, a: int, b: int):
+        result = {"result": a - b}
+        print(result)
+        return result
+
+@service.path("/math")
+class MathToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="math-toolkit",
+            title="math-toolkit",
+            description="a toolkit for adding and subtracting numbers",
+            tools=[Add(), Subtract()],
         )
 
 print(f"running on port {service.port}")

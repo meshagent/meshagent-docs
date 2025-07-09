@@ -6,38 +6,38 @@ import ToolsAdder from "/snippets/examples/python/tools-adder.mdx"
 import ToolsCalling from "/snippets/examples/python/tools-calling.mdx"
 import ToolsDiscovery from "/snippets/examples/python/tools-discovery.mdx"
 
-MeshAgent tools can be run either independently or within an agent. Tools are centrally managed like agents meaning they can be deployed as a MeshAgent service and used by people or agents that have access to your Room. 
+MeshAgent tools can be run either independently or within an agent. Tools are centrally managed like agents meaning they can be deployed as a MeshAgent service and used by people or agents that have access to your Room. Toolkits allow you to group related Tools together so that they can be used seamlessly by the agent. 
 
-## Creating our first custom tool
+## Creating a custom toolkit
 
-### Writing a custom tool 
-Let's create a simple tool that can add two numbers and connect it to our room. 
+### Writing custom tools
+Let's create a simple toolkit with two tools, one that can add two numbers, and one that can subtract two numbers. 
 
-First we'll write the logic for the tool itself then we will create a ``RemoteToolkit`` which allows us to run our tool as a MeshAgent Service.
+First we'll write the logic for the Add and Subtract tools. Next, we'll create a ``RemoteToolkit`` which allows us to run both of our tools as a MeshAgent Service.
 
 <CodeGroup>
     <ToolsAdder />
 </CodeGroup>
 
-### Connecting a custom tool to a MeshAgent Room
+### Connecting custom tools to a MeshAgent Room
 
 From the terminal inside our activated virtual environment we'll run our file. First run the file where your tool is written, for example, run ``python tools.py`` if your file is named tools.py. 
 
-In a separate tab in your terminal use the MeshAgent CLI to call the tool into the room. Pass in the room you want to run the tool in and the service path you've used for the tool. Be sure to authenticate and connect to meshagent before you call the tool into the room!
+In a separate tab in your terminal use the MeshAgent CLI to call the toolkit into the room. Pass in the room you want to run the toolkit in and the appropriate service path. 
 
-To connect to MeshAgent:
+Don't forget to authenticate and connect to MeshAgent before you call the toolkit into the room!
 
 <CodeGroup>
 ```bash bash
-meshagent setup
+meshagent setup # connect to MeshAgent
 ```
 </CodeGroup>
 
-To call the tool into the Room:
+Call the Toolkit into the Room:
 
 <CodeGroup>
 ```bash bash
-meshagent call tool --room=toolsroom --agent-name=agent --url=http://localhost:7777/adder
+meshagent call tool --room=toolsroom --agent-name=agent --url=http://localhost:7777/math
 ```
 </CodeGroup>
 
@@ -46,7 +46,7 @@ Now that our tool is running, let's go to [studio.meshagent.com](https://studio.
 
 1. Navigate to the ``toolsroom`` inside the Studio. 
 2. Select the menu button in the upper left and click "Run Task". This will allow you to run a TaskRunner and give it our custom tool.
-3. Click the "Add Tools" button and select the "adder" tool. Here you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool. The invoke button will invoke the tool directly and the add button will add the tool to a TaskRunner in the Room. Select either the "Invoke" or "Add Tool" option and an agent will launch and run your tool. 
+3. Click the "Add Tools" button. Now you'll see our math-toolkit with both the "add" and "subtract" tools. On both of the tools you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool, the invoke button will invoke the tool directly, and the add button will add the tool to a TaskRunner in the Room (if you want to use multiple tools at a time then select the add button, otherwise to test a single tool click invoke). Select either the "Invoke" or "Add Tool" option for either the "add" or "subtract" tool and an agent will launch and run your tool. 
 4. The agent will likely ask you for information so it can complete the task. In this case, it will ask you for the values of "a" and "b" so it can proceed with the adding task.
 
 If you want to watch the logs to see the status of the tool call you can click the menu button in the Room again and turn on the "Developer Console". This will allow you to see logs, traces, and metrics as they happen in the Room.
@@ -63,11 +63,11 @@ As an alternative to running the tool in the studio, you can also call the tool 
 </CodeGroup>
 
 
-# Discovering Tools
+## Discovering Tools
 
-At any time, a client can discover what tools have been connected to the room. This can be useful if you want to allow your users to be able to grant additional capabilities to your agents at runtime, or even if you just want to give users the ability to use the tools themselves. 
+At any time, you can use the RoomClient to discover what tools have been connected to a Room. This can be useful if you want to allow your users to grant additional capabilities to your agents at runtime, or if you just want to give users the ability to use the tools themselves. 
 
-Running this snippet will show any tool available as a MeshAgent service as well as tools that are temporarily connected to the Room.
+Running this snippet will show any tool available as a MeshAgent service as well as tools that are currently connected to the Room.
 
 <CodeGroup>
     <ToolsDiscovery />
