@@ -1,0 +1,170 @@
+```python Python
+import os
+import asyncio
+from typing import List
+from meshagent.api import RequiredToolkit
+from meshagent.api.services import ServiceHost
+from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
+from meshagent.agents import TaskRunner, AgentCallContext
+
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
+
+class Add(Tool):
+    def __init__(self):
+        super().__init__(
+            name="add",
+            title="adding tool",
+            description="a tool that adds two numbers",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "a",
+                    "b"
+                ],
+                "properties": {
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            }
+        )
+
+    async def execute(self, context: ToolContext, *, a: int, b: int):
+        result = {"result": a + b}
+        print(result)
+        return result
+    
+class Subtract(Tool):
+    def __init__(self):
+        super().__init__(
+            name="subtract",
+            title="subtracting tool",
+            description="a tool that subtracts two numbers",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "a",
+                    "b"
+                ],
+                "properties": {
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            }
+        )
+
+    async def execute(self, context: ToolContext, *, a: int, b: int):
+        result = {"result": a - b}
+        print(result)
+        return result
+
+@service.path("/mathagent")
+class MathAgent(TaskRunner):
+    def __init__(self):
+        super().__init__(
+            name="math-agent", 
+            title="Math Agent",
+            description="An agent with tools to perform basic addition and subtraction", 
+            supports_tools=True,
+            input_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["operation", "a", "b"],
+                "properties": {
+                    "operation": {"type": "string", "enum": ["add", "subtract"]},
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            },
+            output_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["result"],
+                "properties": {"result": {"type": "integer"}},
+            },
+            toolkits=[Toolkit(name="math", tools=[Add(), Subtract()])], 
+            requires=[RequiredToolkit(name="ui")]
+        )
+
+    async def ask(self, *, context:AgentCallContext, arguments:dict):
+        op = arguments.get("operation")   # "add" | "subtract" | None
+        a  = arguments.get("a")
+        b  = arguments.get("b")
+
+        # Build a form dynamically for whatever is missing
+        form_fields: List[dict] = []
+
+        if op is None:
+            form_fields.append(
+                {
+                    "radio_group": {
+                        "name": "operation",
+                        "description": "Choose the math operation",
+                        "default_value": "add",
+                        "options": [
+                            {"name": "Add",      "value": "add"},
+                            {"name": "Subtract", "value": "subtract"},
+                        ],
+                    }
+                }
+            )
+
+        def add_input(name: str) -> dict:
+            return {
+                "input": {
+                    "name": name,
+                    "description": f"Number {name}",
+                    "multiline": False,
+                    "default_value": "0",
+                }
+            }
+
+        if a is None:
+            form_fields.append(add_input("a"))
+        if b is None:
+            form_fields.append(add_input("b"))
+
+        # If we need anything, ask the user
+        if form_fields:
+            response = await context.room.agents.invoke_tool(
+                participant_id=context.caller.id,
+                toolkit="ui",
+                tool="ask_user",
+                arguments={
+                    "subject": "Need a, b, and operation",
+                    "help": (
+                        "I need two integers and an operation so I can "
+                        "perform the calculation for you."
+                    ),
+                    "form": form_fields,
+                },
+            )
+            # Fill in whatever came back
+            op = op or response.get("operation")
+            a  = a  if a is not None else int(response["a"])
+            b  = b  if b is not None else int(response["b"])
+
+        # Safety check: we now have everything
+        if op not in ("add", "subtract"):
+            raise ValueError(f"Unsupported operation {op!r}")
+        
+        math_toolkit = self._toolkits[0]
+        result = await math_toolkit.execute(
+            context=ToolContext(
+                room=context.room,
+                caller=context.caller,
+                on_behalf_of=context.on_behalf_of,
+                caller_context={"chat": context.chat.to_json()}
+            ),
+            name=op,
+            arguments={"a":a, "b":b}
+        )
+        
+        return result
+
+print(f"running on port {service.port}")
+asyncio.run(service.run())
+```
