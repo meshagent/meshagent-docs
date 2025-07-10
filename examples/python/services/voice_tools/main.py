@@ -47,7 +47,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                 ),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
                 RequiredSchema(name="document"),
             ],
@@ -87,7 +87,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                 RequiredToolkit(name="ui", tools=["display_document", "show_toast"]),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
                 RequiredSchema(name="document"),
             ],

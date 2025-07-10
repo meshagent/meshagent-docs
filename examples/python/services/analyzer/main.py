@@ -52,7 +52,7 @@ class DocumentAnalyzer(ChatBot):
                 ),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
                 RequiredSchema(name="document"),
                 RequiredSchema(name="presentation"),

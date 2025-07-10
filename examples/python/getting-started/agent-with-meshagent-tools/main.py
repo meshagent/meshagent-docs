@@ -44,7 +44,7 @@ class SimpleChatbot(ChatBot):
                 RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
             ],
             toolkits=[
@@ -78,7 +78,7 @@ class SimpleVoicebot(VoiceBot):
                 RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
             ],
             toolkits=[

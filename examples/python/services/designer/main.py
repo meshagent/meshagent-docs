@@ -60,7 +60,7 @@ class Designer(ChatBot):
                 RequiredSchema(name="gallery"),
                 RequiredToolkit(
                     name="meshagent.markitdown",
-                    tools=["markitdown_from_user", "markitdown_from_file"],
+                    tools=["markitdown_from_file"],
                 ),
             ],
             toolkits=[
