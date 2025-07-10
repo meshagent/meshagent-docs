@@ -1,47 +1,71 @@
+import os
 import asyncio
+from meshagent.api.services import ServiceHost
+from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
 
-# We'll use pydantic to automate the creation of our input schemas.
-from meshagent.tools.pydantic import BaseModel, PydanticTool
-from meshagent.tools import ToolContext, Toolkit, connect_remote_toolkit
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
 
-
-# define the structure of the input of our agent
-class Input(BaseModel):
-    # We are using "strict" mode in our LLM, so we need to forbid extra properties
-    model_config = dict(extra="forbid")
-    a: int
-    b: int
-
-
-class Adder(PydanticTool):
+class Add(Tool):
     def __init__(self):
         super().__init__(
-            name="adder",
-            title="sample adder",
-            description="an agent that adds two numbers",
-            input_model=Input,
+            name="add",
+            title="adding tool",
+            description="a tool that adds two numbers",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "a",
+                    "b"
+                ],
+                "properties": {
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            }
         )
 
-    # Our agent will receive content matching the input format, and must return content matching the output format
-    async def execute_model(self, context: ToolContext, arguments: Input):
-        result = {"result": arguments.a + arguments.b}
+    async def execute(self, context: ToolContext, *, a: int, b: int):
+        result = {"result": a + b}
+        print(result)
+        return result
+    
+class Subtract(Tool):
+    def __init__(self):
+        super().__init__(
+            name="subtract",
+            title="subtracting tool",
+            description="a tool that subtracts two numbers",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "a",
+                    "b"
+                ],
+                "properties": {
+                    "a": {"type": "integer"},
+                    "b": {"type": "integer"},
+                },
+            }
+        )
+
+    async def execute(self, context: ToolContext, *, a: int, b: int):
+        result = {"result": a - b}
         print(result)
         return result
 
+@service.path("/math")
+class MathToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="math-toolkit",
+            title="math-toolkit",
+            description="a toolkit for adding and subtracting numbers",
+            tools=[Add(), Subtract()],
+        )
 
-async def main():
-    room_name = "examples"
-
-    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI
-    await connect_remote_toolkit(
-        room_name=room_name,
-        toolkit=Toolkit(
-            name="samples.adder-tool",
-            title="adder",
-            description="a tool that can add two numbers",
-            tools=[Adder()],
-        ),
-    )
-
-
-asyncio.run(main())
+print(f"running on port {service.port}")
+asyncio.run(service.run())
