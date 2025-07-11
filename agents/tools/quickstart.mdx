@@ -1,0 +1,107 @@
+---
+title: "Quickstart"
+---
+
+import ToolsAdder from "/snippets/examples/python/tools-adder.mdx"
+import ToolsCalling from "/snippets/examples/python/tools-calling.mdx"
+import ToolsDiscovery from "/snippets/examples/python/tools-discovery.mdx"
+
+MeshAgent tools can be run either independently or within a custom agent. Tools are centrally managed like agents meaning they can be deployed as a MeshAgent service and used by people or agents that have access to your Room. Toolkits allow you to group related Tools together so that they can be used seamlessly by any person or agent in the Room. 
+
+In this quickstart we'll walk through how to: 
+- Write custom tools 
+- Create a toolkit to group your related tools 
+- Calling a toolkit and it's related tools into a MeshAgent Room
+- Running tools from the MeshAgent Studio UI
+- Running tools from code
+- Discovering available tools in a Room
+
+## Creating a custom toolkit
+
+### Writing custom tools
+Let's create a simple toolkit with two tools, one that can add two numbers, and one that can subtract two numbers. 
+
+First we'll write the logic for the Add and Subtract tools. Next, we'll create a ``RemoteToolkit`` which allows us to run both of our tools as a MeshAgent Service.
+
+<CodeGroup>
+    <ToolsAdder />
+</CodeGroup>
+
+### Calling custom tools into a MeshAgent Room
+
+From the terminal inside our activated virtual environment we'll run our file. First run the file where your tool is written, for example, run ``python tools.py`` if your file is named tools.py. 
+
+In a separate tab in your terminal use the MeshAgent CLI to call the toolkit into the room. Pass in the room you want to run the toolkit in and the appropriate service path. 
+
+Don't forget to authenticate and connect to MeshAgent before you call the toolkit into the room!
+
+<CodeGroup>
+```bash bash
+meshagent setup # connect to MeshAgent
+```
+</CodeGroup>
+
+Call the Toolkit into the Room:
+
+<CodeGroup>
+```bash bash
+meshagent call tool --room=toolsroom --agent-name=agent --url=http://localhost:7777/math
+```
+</CodeGroup>
+
+#### Running custom tools in the MeshAgent Studio
+Now that our tool is running, let's go to [studio.meshagent.com](https://studio.meshagent.com) to try it out!
+
+1. Navigate to the ``toolsroom`` inside the Studio. 
+2. Select the menu button in the upper left and click "Run Task". This will allow you to run a TaskRunner and give it our custom tool.
+3. Click the "Add Tools" button. Now you'll see our math-toolkit with both the "add" and "subtract" tools. On both of the tools you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool, the invoke button will invoke the tool directly, and the add button will add the tool to a TaskRunner in the Room (if you want to use multiple tools at a time then select the add button, otherwise to test a single tool click invoke). Select either the "Invoke" or "Add Tool" option for either the "add" or "subtract" tool and an agent will launch and run your tool. 
+4. The agent will likely ask you for information so it can complete the task. In this case, it will ask you for the values of "a" and "b" so it can proceed with the adding task.
+
+If you want to watch the logs to see the status of the tool call you can click the menu button in the Room again and turn on the "Developer Console". This will allow you to see logs, traces, and metrics as they happen in the Room.
+
+**Note**: Remember if you leave the Room and go back into it later you will need to call the tool back into the Room unless the tool is deployed as a MeshAgent service (meaning you will need to rerun python tools.py and the CLI command to call in the tool to the Room).
+
+
+#### Running custom tools from code
+
+As an alternative to running the tool in the studio, you can also call the tool directly from code. Assuming your room is still up and the tool is running in it, we can also invoke the tool using the MeshAgent ``RoomClient``. 
+
+<CodeGroup>
+    <ToolsCalling />
+</CodeGroup>
+
+Invoking the tools using the RoomClient will give you the following result: 
+
+<CodeGroup>
+```text Output
+The result from adding the numbers is: JsonResponse: json={"result": 3} usage=None
+The result from subtracting the numbers is: JsonResponse: json={"result": -1} usage=None
+```
+</CodeGroup>
+
+## Discovering tools
+
+At any time, you can use the RoomClient to discover what tools have been connected to a Room. This can be useful if you want to allow your users to grant additional capabilities to your agents at runtime, or if you just want to give users the ability to use the tools themselves. 
+
+Running this snippet will show any tool available as a MeshAgent service as well as tools that are currently connected to the Room.
+
+<CodeGroup>
+    <ToolsDiscovery />
+</CodeGroup>
+
+You should see that the math toolkit with both the add and subtract tools are available in the room.
+
+<CodeGroup>
+```text Output
+Toolkit: math-toolkit: math-toolkit - a toolkit for adding and subtracting numbers
+ Tool: add: adding tool - a tool that adds two numbers
+ Tool: subtract: subtracting tool - a tool that subtracts two numbers
+```
+</CodeGroup>
+
+## Next Steps
+
+If you want your tools to be available in all the Rooms inside your Project you will need to deploy the tool as a MeshAgent service. You can also define a tool while you define an agent and just deploy your agent as a MeshAgent service. This will make the agent available in all of the MeshAgent Rooms in your Project, but your tool won't be directly invokable by anyone other than the agent you defined the tool with. 
+
+- Learn how to deploy a Toolkit as a MeshAgent Service 
+- Learn how to use custom tools inside a [Chat Agent](../standard/buildanddeploychatbot) or [Voice Agent]((../standard/buildanddeployvoicebot))
