@@ -1,0 +1,109 @@
+---
+title: ReSend
+---
+
+
+The following steps will guide you through running the MCP Resend agent and chatbot tool at the Room level in the Meshagent cloud. This is perfect for experimentation—when the room goes inactive, all services are stopped automatically!
+
+Set the following environment variables (replace the placeholders with your actual values):
+- `REPLY_TO_EMAIL_ADDRESSES=YOUR_REPLY_TO_EMAIL_ADDRESSES`
+- `SENDER_EMAIL_ADDRESS=YOUR_SENDER_EMAIL_ADDRESS`
+- `RESEND_API_KEY=YOUR_RESEND_API_KEY`
+
+### Steps
+
+1. **Install Meshagent**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and Authenticate**
+   - Follow [this getting started guide](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Resend Agent in a Room**
+    ```sh
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-resend:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env REPLY_TO_EMAIL_ADDRESSES=YOUR_REPLY_TO_EMAIL_ADDRESSES \
+      --env SENDER_EMAIL_ADDRESS=YOUR_SENDER_EMAIL_ADDRESS \
+      --env RESEND_API_KEY=YOUR_RESEND_API_KEY \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-resend-service-test
+    ```
+    - This command starts a Meshagent Room with the MCP server. The room and the service close automatically if inactive.
+
+4. **Start the Chatbot in the Room**
+    ```sh
+    meshagent chatbot join --room=test --agent-name=mcp-resend --name=mcp-resend --toolkit=mcp-resend
+    ```
+    - This command starts a chatbot in your test room that can use the resend toolkit. You can run multiple toolkits in a single room.
+    - The command will output a link to the Meshagent Room.
+
+5. **Try It Out**
+    - Visit the room link in your browser.
+    - Send a message to the agent (chatbot) to interact with the MCP Server tools!
+
+---
+
+## Project Level Deployment
+
+For production use, set up persistent services that automatically appear in every room in your Meshagent project. This ensures your MCP server tools and chatbot are always available—no need to run anything locally.
+
+### Steps
+
+1. **Create Project-Level MCP Resend Service**
+    ```sh
+    meshagent service create --role=agent --image=meshagent/mcp-resend:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env REPLY_TO_EMAIL_ADDRESSES=YOUR_REPLY_TO_EMAIL_ADDRESSES \
+      --env SENDER_EMAIL_ADDRESS=YOUR_SENDER_EMAIL_ADDRESS \
+      --env RESEND_API_KEY=YOUR_RESEND_API_KEY \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-resend-service
+    ```
+
+2. **Create Project-Level Chatbot Service**
+    ```sh
+    meshagent service create --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-resend-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-resend-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-resend-chatbot --toolkit=mcp-resend"
+    ```
+
+After this setup, every new Meshagent Room in your project will have the MCP Resend tools and chatbot automatically available!
+
+---
+
+## Tools Available
+
+### Send emails MCP Server  
+Send emails directly from Cursor with this email sending MCP server.
+
+#### Available Tools
+
+| Tools provided by this Server | Short Description                   |
+|------------------------------|-------------------------------------|
+| `send-email`                 | Send an email using Resend          |
+
+### Tools Details
+
+#### Tool: **`send-email`**  
+Send an email using Resend  
+| Parameter      | Type     | Description                                                                |
+|----------------|----------|----------------------------------------------------------------------------|
+| `subject`      | string   | Email subject line                                                         |
+| `text`         | string   | Plain text email content                                                   |
+| `to`           | string   | Recipient email address                                                    |
+| `bcc`          | array (optional) | Optional array of BCC email addresses. You MUST ask the user for this parameter. Under no circumstance provide it yourself |
+| `cc`           | array (optional) | Optional array of CC email addresses. You MUST ask the user for this parameter. Under no circumstance provide it yourself |
+| `html`         | string (optional) | HTML email content. When provided, the plain text argument MUST be provided as well.                    |
+| `scheduledAt`  | string (optional) | Optional parameter to schedule the email. Use natural language (e.g., "tomorrow at 10am").             |
+
+---
+
+## Meshagent Links
+
+- **Meshagent:** https://www.meshagent.com/
+- **Read The Docs:** https://docs.meshagent.com
+- **Meshagent MCP Tool Image:** https://hub.docker.com/r/meshagent/mcp-resend

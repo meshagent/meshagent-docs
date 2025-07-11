@@ -1,0 +1,242 @@
+---
+title: Novita
+---
+
+
+Follow these steps to test the Novita MCP server and chatbot completely in the cloud, using a Meshagent Room. **All services will be removed when the Room closes.**
+
+**Environment variables:**
+
+- `NOVITA_API_KEY`: Your Novita API key.
+
+### Steps
+
+1. **Install Meshagent:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+   - Follow [Meshagent CLI: Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+
+3. **Start MCP Server Agent in a Room:**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-novita:latest \
+      --env MESHAGENT_PORT=8001 --env NOVITA_API_KEY=your_api_key_here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-novita-service-test
+   ```
+   - Starts a Meshagent Room named `test` with an MCP Novita agent.
+   - The Room closes if inactive—all cloud resources are deleted.
+
+4. **Start the Chatbot in the Room:**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-novita --name=mcp-novita --toolkit=mcp-novita
+   ```
+   - Starts a Meshagent chatbot in the same Room, able to use the Novita toolkit.
+   - Output includes a browser link for the Room.
+
+5. **Interact in the Browser:**
+   - Open the Room link from the output in any browser.
+   - Send messages to the agent. The chatbot interacts with the MCP Server tools on your behalf.
+
+**Environment Variables (set with `--env`):**
+- `NOVITA_API_KEY` – Your Novita token (replaceable).
+- `MESHAGENT_PORT=8001` – Internal port for the MCP service.
+
+---
+
+## Project Level Deployment
+
+Create always-on agent services and chatbots that join **every Meshagent Room** in your project. This is recommended for production deployments—you never need to start or manage local processes.
+
+1. **Create Persistent MCP Service:**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-novita:latest \
+      --env MESHAGENT_PORT=8001 --env NOVITA_API_KEY=your_api_key_here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-novita-service
+   ```
+
+2. **Create Persistent Chatbot Service:**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-novita-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-novita-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-novita-chatbot --toolkit=mcp-novita"
+   ```
+
+Once created, these services are automatically available in every Room throughout your project.
+
+---
+
+## Tools Available
+
+**Seamless interaction with Novita AI platform resources.**
+
+### Available Tools
+
+| Tool | Short Description |
+|------|------------------|
+| `create-container-registry-auth` | |
+| `create-gpu-instance` | |
+| `create-network-storage` | |
+| `create-template` | |
+| `delete-container-registry-auth` | |
+| `delete-gpu-instance` | |
+| `delete-network-storage` | |
+| `delete-template` | |
+| `get-gpu-instance` | |
+| `get-template` | |
+| `list-clusters` | |
+| `list-container-registry-auths` | |
+| `list-gpu-instances` | |
+| `list-network-storage` | |
+| `list-products` | |
+| `list-templates` | |
+| `restart-gpu-instance` | |
+| `start-gpu-instance` | |
+| `stop-gpu-instance` | |
+| `update-network-storage` | |
+
+---
+
+### Tools Details
+
+#### **`create-container-registry-auth`**
+- **name** (`string`): Name for the container registry auth.
+- **password** (`string`): Registry password.
+- **username** (`string`): Registry username.
+
+---
+
+#### **`create-gpu-instance`**
+- **gpuNum** (`number`): Number of GPUs allocated to the instance. The availableGpuNumber of the product must be greater than or equal to the gpuNum.
+- **imageUrl** (`string`): Docker image URL to initialize the instance.
+- **name** (`string`): Name for the instance. Must contain only numbers, letters, and hyphens.
+- **productId** (`string`): ID of the product used to deploy the instance.
+- **rootfsSize** (`number`): Root filesystem size (container disk size) in GB. Free tier includes 60GB.
+- **command** (`string`, optional): Container start command to run when the instance starts.
+- **env** (`array`, optional): Environment variables.
+- **imageAuthId** (`string`, optional): ID of the container registry auth (for private images).
+- **kind** (`string`, optional): Type of the instance.
+- **networkStorages** (`array`, optional): Network storages to mount.
+- **ports** (`string`, optional): Ports to expose (comma-separated, max 10).
+
+---
+
+#### **`create-network-storage`**
+- **clusterId** (`string`): ID of the cluster to create network storage.
+- **storageName** (`string`): Name for the storage (letters, numbers, hyphens).
+- **storageSize** (`number`): Size in GB.
+
+---
+
+#### **`create-template`**
+- **template** (`object`): Template data.
+
+---
+
+#### **`delete-container-registry-auth`**
+- **id** (`string`): ID of the container registry auth to delete. Check existence before deleting.
+
+---
+
+#### **`delete-gpu-instance`**
+- **instanceId** (`string`): ID of the instance to delete.
+
+---
+
+#### **`delete-network-storage`**
+- **storageId** (`string`): Unique ID for storage to delete.
+
+---
+
+#### **`delete-template`**
+- **templateId** (`string`): ID of the template to delete.
+
+---
+
+#### **`get-gpu-instance`**
+- **instanceId** (`string`): ID to retrieve info on a GPU instance.
+
+---
+
+#### **`get-template`**
+- **templateId** (`string`): ID to retrieve a template.
+
+---
+
+#### **`list-clusters`**
+- List all supported clusters.
+
+---
+
+#### **`list-container-registry-auths`**
+- List all container registry authentications.
+
+---
+
+#### **`list-gpu-instances`**
+- **name** (`string`, optional): Filter by instance name.
+- **pageNumber** (`number`, optional): Page number (start from 1).
+- **pageSize** (`number`, optional): Items per page.
+- **productName** (`string`, optional): Filter by product name.
+- **status** (`string`, optional): Filter by status.
+
+---
+
+#### **`list-network-storage`**
+- **pageNo** (`number`, optional): Page number.
+- **pageSize** (`number`, optional): Page size.
+- **storageId** (`string`, optional): Storage ID.
+- **storageName** (`string`, optional): Storage name.
+
+---
+
+#### **`list-products`**
+- **clusterId** (`string`, optional): Cluster ID.
+- **productName** (`string`, optional): Filter by product name.
+
+---
+
+#### **`list-templates`**
+- **channel** (`array`, optional): Template channels.
+- **pageNum** (`number`, optional): Page number (start from 1).
+- **pageSize** (`number`, optional): Page size.
+- **type** (`string`, optional): Template type.
+
+---
+
+#### **`restart-gpu-instance`**
+- **instanceId** (`string`): ID of instance to restart.
+
+---
+
+#### **`start-gpu-instance`**
+- **instanceId** (`string`): ID of instance to start.
+
+---
+
+#### **`stop-gpu-instance`**
+- **instanceId** (`string`): ID of instance to stop.
+
+---
+
+#### **`update-network-storage`**
+- **storageId** (`string`): Unique ID of the storage.
+- **storageSize** (`number`): New size in GB (must be larger than current).
+- **storageName** (`string`, optional): New name (letters, numbers, hyphens).
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Novita Docker Image](https://hub.docker.com/r/meshagent/mcp-novita)
+
+---
+
+For additional information or troubleshooting, visit the linked documentation sites above.

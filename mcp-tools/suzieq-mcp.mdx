@@ -1,0 +1,125 @@
+---
+title: SuzieQ-MCP
+---
+
+
+Here’s how to get running in a temporary Room for Cloud-based testing:
+
+### Prerequisites
+- Python, Docker, and [Meshagent CLI](https://docs.meshagent.com/cli/getting_started) installed
+- Sign up and authenticate with Meshagent
+
+### Environment Variables
+- `SUZIEQ_API_ENDPOINT=<replace-with-your-endpoint>`
+- `SUZIEQ_API_KEY=<replace-with-your-api-key>`
+
+### Steps
+
+1. **Install Meshagent (with all features):**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Authenticate with Meshagent:**
+   Follow instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start MCP Server as an Agent in a Meshagent Room:**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-suzieq-mcp:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SUZIEQ_API_ENDPOINT=<your-endpoint> \
+     --env SUZIEQ_API_KEY=<your-api-key> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-suzieq-mcp-service-test
+   ```
+   *This starts a Room called `test` with your MCP Server running inside. If inactive, the Room and its agents will be deleted automatically.*
+
+4. **Start a Chatbot in the Same Room with the Suzieq MCP Toolkit:**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-suzieq-mcp \
+     --name=mcp-suzieq-mcp \
+     --toolkit=mcp-suzieq-mcp
+   ```
+   - The CLI outputs a link to the Room when the chatbot joins. 
+   - Multiple toolkits can be attached to the same agent.
+
+5. **Use the Room:**
+   - Visit the output link in your browser.
+   - Send a message to the agent to interact with Suzieq MCP server tools.
+
+---
+
+## Project Level Deployment
+
+Deploy the MCP Server and Chatbot as persistent project-level services—making them automatically available in every Room created in your Meshagent project (perfect for production).
+
+1. **Create MCP Server Agent Service:**
+   ```sh
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-suzieq-mcp:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SUZIEQ_API_ENDPOINT=<your-endpoint> \
+     --env SUZIEQ_API_KEY=<your-api-key> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-suzieq-mcp-service
+   ```
+
+2. **Create Chatbot Service with MCP Toolkit:**
+   ```sh
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-suzieq-mcp-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-suzieq-mcp-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-suzieq-mcp-chatbot --toolkit=mcp-suzieq-mcp"
+   ```
+- Now, each time a Room is created in your project, both the MCP server and toolkit chatbot join automatically. No need to run them locally or launch them separately.
+
+---
+
+## Tools Available
+
+> **MCP Server to interact with a SuzieQ network observability instance via its REST API.**
+
+### Tools Provided
+
+| Tool Name               | Short Description                                       |
+|-------------------------|--------------------------------------------------------|
+| `run_suzieq_show`       | Runs a SuzieQ 'show' query via its REST API.           |
+| `run_suzieq_summarize`  | Runs a SuzieQ 'summarize' query via its REST API.      |
+
+
+### Tool Details
+
+#### `run_suzieq_show`
+**Description**: Runs a SuzieQ 'show' query via its REST API.
+
+| Parameter   | Type    | Description                                                                |
+|-------------|---------|----------------------------------------------------------------------------|
+| `table`     | string  | The name of the SuzieQ table to query (e.g., 'device', 'bgp', 'interface', 'route'). |
+| `filters`   | string (optional) | An optional dictionary of filter parameters for the SuzieQ query.       |
+
+---
+
+#### `run_suzieq_summarize`
+**Description**: Runs a SuzieQ 'summarize' query via its REST API.
+
+| Parameter   | Type    | Description                                                                |
+|-------------|---------|----------------------------------------------------------------------------|
+| `table`     | string  | The name of the SuzieQ table to summarize (e.g., 'device', 'bgp', 'interface', 'route'). |
+| `filters`   | string (optional) | An optional dictionary of filter parameters for the SuzieQ query.       |
+
+---
+
+## Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Meshagent Documentation:** https://docs.meshagent.com
+- **MCP Tool Docker Image:** https://hub.docker.com/r/meshagent/mcp-suzieq-mcp
+
+**Happy networking!**

@@ -1,0 +1,126 @@
+---
+title: API Gateway
+---
+
+
+Try out the MCP API Gateway inside a Meshagent Room for quick, cloud-based testing. The MCP server, tool, and chatbot will be cleaned up automatically when the Room closes.
+
+**Environment variables needed:**
+- `API_1_NAME=<name>`  
+  (Name of your source API, e.g. "github")
+- `API_1_SWAGGER_URL=<swagger.json-url>`  
+  (API Swagger/OpenAPI specification URL, e.g. "https://api.github.com/swagger.json")
+- `API_1_HEADER_AUTHORIZATION=<token>`  
+  (API authorization header value, e.g. "github_token")
+
+### Steps
+
+1. **Install Meshagent CLI:**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up & authenticate:**  
+   Follow [Meshagent CLI setup docs](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP server in a Meshagent Room:**  
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-api-gateway:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_1_NAME=<name> \
+     --env API_1_SWAGGER_URL=<swagger.json-url> \
+     --env API_1_HEADER_AUTHORIZATION=<token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-api-gateway-service-test
+   ```
+   *This launches the MCP API Gateway in the cloud, available only in your Meshagent Room. Room/agent shutdown cleans up automatically.*
+
+4. **Start the chatbot in the same Room:**  
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-api-gateway \
+     --name=mcp-api-gateway \
+     --toolkit=mcp-api-gateway
+   ```
+   - This chatbot runs the MCP API Gateway tools. You can add more toolkits if needed.
+   - When you run this, you'll get a link to the Meshagent Room.
+
+5. **Try it out:**  
+   Visit the Room link in your browser. Send messages to the agent to interact with the MCP Server tools.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production, deploy MCP server tools as persistent Meshagent Project Services—your agents and chatbots *automatically join every new Room* in the project with zero manual steps.
+
+1. **Create the MCP server project service:**  
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-api-gateway:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_1_NAME=<name> \
+     --env API_1_SWAGGER_URL=<swagger.json-url> \
+     --env API_1_HEADER_AUTHORIZATION=<token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-api-gateway-service
+   ```
+
+2. **Create the Project-level chatbot service:**  
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-api-gateway-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-api-gateway-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-api-gateway-chatbot --toolkit=mcp-api-gateway"
+   ```
+
+---
+
+## Tools Available
+
+These tools are provided by the integrated MCP API Gateway server:
+
+| Tool            | Short Description                                |
+|-----------------|--------------------------------------------------|
+| `execute_api`   | Execute any API endpoint with custom parameters   |
+| `get_api_info`  | Get information about available APIs and endpoints|
+
+### Tool Details
+
+#### `execute_api`
+Execute any API endpoint with custom parameters.
+
+| Parameter | Type      | Description                           |
+|-----------|-----------|---------------------------------------|
+| api_name  | string    | Name of the API                       |
+| method    | string    | HTTP method (GET, POST, etc.)         |
+| path      | string    | API endpoint path                     |
+| data      | object    | *(optional)* Request body data        |
+| headers   | object    | *(optional)* Additional headers       |
+| params    | object    | *(optional)* Query parameters         |
+
+---
+
+#### `get_api_info`
+Get information about available APIs and their endpoints.
+
+| Parameter | Type      | Description                                  |
+|-----------|-----------|----------------------------------------------|
+| api_name  | string    | *(optional)* Name of the API (to filter)     |
+
+---
+
+## Meshagent & MCP Gateway Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-api-gateway)
+
+---

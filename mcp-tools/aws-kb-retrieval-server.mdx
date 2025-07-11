@@ -1,0 +1,106 @@
+---
+title: AWS KB Retrieval Server
+---
+
+
+Follow these steps to run the MCP server agent and chatbot toolkit inside a cloud Room for quick testing. When the Room closes (e.g., is inactive), the tools and bots are also automatically removed.
+
+**Required Environment Variables:**
+
+- `AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_HERE`
+- `AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY_HERE`
+
+### Steps
+
+1. **Install Meshagent CLI**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Visit [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started) to register and authenticate.
+
+3. **Start the MCP Server Agent in the Room**
+   ```bash
+   meshagent service test --room=test --role=agent \
+     --image=meshagent/mcp-aws-kb-retrieval-server:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_HERE \
+     --env AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-aws-kb-retrieval-server-service-test
+   ```
+   - This command launches a temporary Meshagent Room with the MCP server available as an agent. The Room closes if it goes inactive.
+
+4. **Start the Chatbot with the Tool in the Same Room**
+   ```bash
+   meshagent chatbot join --room=test \
+     --agent-name=mcp-aws-kb-retrieval-server \
+     --name=mcp-aws-kb-retrieval-server \
+     --toolkit=mcp-aws-kb-retrieval-server
+   ```
+   - This command launches a chatbot in the Room, making the `aws-kb-retrieval-server` tools available to participants.
+   - Multiple toolkits can be enabled in the same Room.
+
+5. **Visit the Room to Interact**
+   - The output from the previous command will provide a Room link. Open it in your browser, and send messages to the chatbot agent to interact with the MCP server tools.
+
+---
+
+## Project-Level Deployment (Persistent, for Production)
+
+To have the MCP server and chatbot automatically available in all new Rooms created in a Meshagent project (no need to run/attach them each time), set up project-level services.
+
+1. **Create Persisting MCP Server Agent:**
+   ```bash
+   meshagent service create --role=agent \
+     --image=meshagent/mcp-aws-kb-retrieval-server:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY_HERE \
+     --env AWS_SECRET_ACCESS_KEY=YOUR_SECRET_ACCESS_KEY_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-aws-kb-retrieval-server-service
+   ```
+
+2. **Create Persisting Chatbot Service:**
+   ```bash
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-aws-kb-retrieval-server-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-aws-kb-retrieval-server-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-aws-kb-retrieval-server-chatbot --toolkit=mcp-aws-kb-retrieval-server"
+   ```
+   - Whenever a Room is created in your project, the MCP server and chatbot/toolkit will auto-join, providing seamless capability for all project Rooms.
+
+---
+
+## Tools Available
+
+### Tools Provided by this Server
+
+| Tool                       | Short Description                                                                    |
+|----------------------------|--------------------------------------------------------------------------------------|
+| `retrieve_from_aws_kb`     | Performs retrieval from the AWS Knowledge Base using the provided query and Knowledge Base ID.|
+
+---
+
+### Tool Details
+
+#### Tool: **`retrieve_from_aws_kb`**
+
+Performs retrieval from the AWS Knowledge Base using the provided query and Knowledge Base ID.
+
+| Parameter         | Type      | Description                                   |
+|-------------------|-----------|-----------------------------------------------|
+| `knowledgeBaseId` | `string`  | The ID of the AWS Knowledge Base              |
+| `query`           | `string`  | The query to perform retrieval on             |
+| `n`               | `number`*optional* | Number of results to retrieve        |
+
+---
+
+## Meshagent & Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-aws-kb-retrieval-server](https://hub.docker.com/r/meshagent/mcp-aws-kb-retrieval-server)

@@ -1,0 +1,92 @@
+---
+title: YouTube Transcript
+---
+
+
+1. **Install Meshagent CLI and dependencies**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate ([instructions](https://docs.meshagent.com/cli/getting_started)):**
+   ```sh
+   meshagent auth login
+   ```
+
+3. **Launch the MCP Server as a Room Service**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-youtube-transcript:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-youtube-transcript-service-test
+   ```
+   - This starts a Meshagent Room named `test` with the MCP YouTube Transcript server running. The service and room are ephemeral and will close if inactive.
+
+4. **Run a Chatbot in the Same Room**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-youtube-transcript --name=mcp-youtube-transcript --toolkit=mcp-youtube-transcript
+   ```
+   - This starts a chatbot (named `mcp-youtube-transcript`) in the room, connected to the YouTube transcript toolkit.
+   - Multiple toolkits are supported per agent and room.
+   - A link to access the room will be shown in the command output.
+
+5. **Try it out**
+   - Open the room link in your browser (from step 4).
+   - Send a message to the agent to interact with the MCP Server’s tools.
+
+When the room is closed (either manually or automatically if idle), the service and chatbot are automatically cleaned up.
+
+---
+
+## Project Level Deployment (Persistent Service & Chatbot in All Project Rooms)
+
+For production scenarios, deploy services and chatbots project-wide, so they’re available in every room:
+
+1. **Create a Persistent MCP Server Service**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-youtube-transcript:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-youtube-transcript-service
+   ```
+
+2. **Create a Persistent Chatbot Service**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-youtube-transcript-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-youtube-transcript-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-youtube-transcript-chatbot --toolkit=mcp-youtube-transcript"
+   ```
+
+After these commands, every new room in your Meshagent project will automatically include the MCP YouTube Transcript server and chatbot, removing the need for manual joining or local process management.
+
+---
+
+## Tools Available
+
+### YouTube Transcripts MCP Server
+
+Retrieves transcripts for given YouTube video URLs.
+
+[What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+#### Tools Provided
+
+Tools provided by this Server | Short Description
+-|-
+`get_transcript` | Retrieves the transcript of a YouTube video.
+
+#### Tools Details
+
+##### Tool: `get_transcript`
+
+Retrieves the transcript of a YouTube video.
+
+Parameters | Type | Description
+-|-|-
+`url` | `string` | The URL of the YouTube video
+`lang` | `string` *(optional)* | The preferred language for the transcript
+
+---
+
+## Further Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Getting Started CLI:** [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-youtube-transcript](https://hub.docker.com/r/meshagent/mcp-youtube-transcript)
+
+---
+
+*Why is it safer to run MCP Servers with Docker? Read more [here](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/).*

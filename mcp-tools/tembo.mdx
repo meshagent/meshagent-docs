@@ -1,0 +1,180 @@
+---
+title: Tembo
+---
+
+
+### Prerequisites
+
+- Python & pip installed
+- Meshagent account ([sign up](https://docs.meshagent.com/cli/getting_started))
+- Your Tembo Cloud API Key
+
+### Required Environment Variables
+
+- `TEMBO_API_KEY`: Your Tembo API key
+
+Example:
+```bash
+export TEMBO_API_KEY="your-tembo-apikey-here"
+```
+
+#### Step-by-step Quick Start
+
+1. **Install Meshagent CLI and dependencies**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Authenticate with Meshagent**
+    - Follow the steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to login.
+
+3. **Start the Tembo MCP server in a Meshagent Room as a test agent**
+    ```bash
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-tembo:latest --env MESHAGENT_PORT=8001 --env TEMBO_API_KEY=your-tembo-apikey-here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-tembo-service-test
+    ```
+   - This starts a Meshagent Room named `test` with the Tembo MCP server running.
+   - The room will automatically close if there is no activity.
+
+4. **Join the Room with a chatbot that can use the Tembo tools**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=mcp-tembo --name=mcp-tembo --toolkit=mcp-tembo
+    ```
+   - This starts a chatbot in the same Meshagent Room using the Tembo toolkit.
+   - You may use multiple toolkits per Room and agent.
+   - The command output provides a link to access the Room in your browser.
+
+5. **Interact with the MCP Server**
+    - Visit the room link from the previous step.
+    - Send a message to the agent chatbot to use Tembo Cloud platform tools in real time.
+
+---
+
+## Project Level Deployment (Persistent Project-Wide Services)
+
+For production environments and persistent availability, deploy the MCP server and chatbot as project-level services. This ensures the tools are always present in every Meshagent Room created under your project, removing the need to start them per room or locally.
+
+1. **Create the Tembo MCP server as a persistent agent service**
+    ```bash
+    meshagent service create --role=agent --image=meshagent/mcp-tembo:latest --env MESHAGENT_PORT=8001 --env TEMBO_API_KEY=your-tembo-apikey-here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-tembo-service
+    ```
+
+2. **Create the chatbot service that uses the Tembo toolkit**
+    ```bash
+    meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-tembo-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-tembo-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-tembo-chatbot --toolkit=mcp-tembo"
+    ```
+---
+
+## Tools Available
+
+> Tools provided by this MCP Server for Tembo Cloud's platform API.
+
+Tool | Short Description
+-|-
+`ask_tembo` | Ask a question to Tembo Docs
+`create_instance` | Create a new Tembo instance
+`delete_instance` | Delete an existing Tembo instance
+`get_all_apps` | Get attributes for all apps
+`get_all_instances` | Get all Tembo instances in an organization
+`get_app` | Get the attributes of a single App
+`get_instance` | Get an existing Tembo instance
+`get_instance_schema` | Get the json-schema for an instance
+`patch_instance` | Update attributes on an existing Tembo instance
+`restore_instance` | Restore a Tembo instance
+
+### Tool Details
+
+#### `ask_tembo`
+Ask a question to Tembo Docs  
+**Parameters:**
+- `query` (`string`): The ask query. E.g., "how to create a Tembo instance"
+
+---
+
+#### `create_instance`
+Create a new Tembo instance  
+**Parameters:**
+- `cpu` (`string`)
+- `environment` (`string`)
+- `instance_name` (`string`)
+- `memory` (`string`)
+- `org_id` (`string`): Organization ID that owns the Tembo instance
+- `stack_type` (`string`)
+- `storage` (`string`)
+- `replicas` (`integer`, *optional*)
+- `spot` (`boolean`, *optional*)
+
+---
+
+#### `delete_instance`
+Delete an existing Tembo instance  
+**Parameters:**
+- `instance_id` (`string`): Delete this instance id
+- `org_id` (`string`): Organization ID of the instance to delete
+
+---
+
+#### `get_all_apps`
+Get attributes for all apps
+
+#### `get_all_instances`
+Get all Tembo instances in an organization  
+**Parameters:**
+- `org_id` (`string`): Organization ID for the request
+
+---
+
+#### `get_app`
+Get the attributes of a single App  
+**Parameters:**
+- `type` (`string`): The app type to get details for
+
+---
+
+#### `get_instance`
+Get an existing Tembo instance  
+**Parameters:**
+- `instance_id` (`string`)
+- `org_id` (`string`): Organization ID that owns the instance
+
+---
+
+#### `get_instance_schema`
+Get the json-schema for an instance
+
+#### `patch_instance`
+Update attributes on an existing Tembo instance  
+**Parameters:**
+- `instance_id` (`string`)
+- `org_id` (`string`): Organization ID that owns the instance
+- `cpu` (`string`, *optional*)
+- `environment` (`string`, *optional*)
+- `instance_name` (`string`, *optional*)
+- `memory` (`string`, *optional*)
+- `replicas` (`integer`, *optional*)
+- `spot` (`boolean`, *optional*)
+- `storage` (`string`, *optional*)
+
+---
+
+#### `restore_instance`
+Restore a Tembo instance  
+**Parameters:**
+- `instance_name` (`string`)
+- `org_id` (`string`): Organization ID that owns the Tembo instance
+- `restore` (`object`)
+
+---
+
+## References & Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-tembo)
+- [Tembo MCP Server Docker Image](https://hub.docker.com/repository/docker/mcp/tembo)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+---
+
+**License:** MIT License  
+**Author:** [tembo-io](https://github.com/tembo-io) | [Source Repository](https://github.com/tembo-io/mcp-server-tembo)  
+**Docker Scout Health Score Badge:** ![Docker Scout Health Score](https://api.scout.docker.com/v1/policy/insights/org-image-score/badge/mcp/tembo)

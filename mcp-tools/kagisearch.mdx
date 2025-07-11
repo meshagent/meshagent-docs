@@ -1,0 +1,117 @@
+---
+title: Kagi Search
+---
+
+
+Follow these steps to launch and test the MCP KagiSearch server and chatbot in a temporary Meshagent Room.
+
+### 1. Prepare Your Environment
+- **Install the Meshagent CLI and dependencies:**
+  ```
+  pip install "meshagent[all]"
+  ```
+
+- **Sign up and authenticate**
+  - Visit: [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started)
+  - Follow instructions to sign up and authenticate via CLI.
+
+
+### 2. Required Environment Variables
+
+Provide these on the CLI using `--env`:
+- `KAGI_SUMMARIZER_ENGINE` — Set to `cecil`
+- `KAGI_API_KEY` — Your Kagi API Key (`YOUR_API_KEY_HERE`)
+
+Example:
+```bash
+--env KAGI_SUMMARIZER_ENGINE=cecil --env KAGI_API_KEY=YOUR_API_KEY_HERE
+```
+
+### 3. Start MCP Server Service in a Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-kagisearch:latest \
+  --env MESHAGENT_PORT=8001 --env KAGI_SUMMARIZER_ENGINE=cecil --env KAGI_API_KEY=YOUR_API_KEY_HERE \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-kagisearch-service-test
+```
+- This starts a MCP KagiSearch server as a Meshagent agent in the specified Room (`test`). If the room is closed or idle, the tool and agent are also automatically removed.
+
+### 4. Start the Chatbot With Access to KagiSearch
+
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-kagisearch --name=mcp-kagisearch --toolkit=mcp-kagisearch
+```
+- Starts a chatbot agent in the same Room connected to the MCP KagiSearch toolkit.
+- A link to the room will be displayed in the terminal output.
+
+### 5. Interact in the Room
+
+Visit the room link in your browser and send a message to the agent to interact with the KagiSearch tools via the chatbot.
+
+---
+
+## Project Level Deployment
+
+For production or always-on availability, you can deploy both the MCP KagiSearch server and chatbot as persistent project-level Meshagent services. These services will automatically join every newly created Room in your project.
+
+### 1. Create the MCP KagiSearch Service
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-kagisearch:latest \
+  --env MESHAGENT_PORT=8001 --env KAGI_SUMMARIZER_ENGINE=cecil --env KAGI_API_KEY=YOUR_API_KEY_HERE \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-kagisearch-service
+```
+
+### 2. Create the Chatbot Service
+
+```bash
+meshagent service create --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-kagisearch-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-kagisearch-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-kagisearch-chatbot --toolkit=mcp-kagisearch"
+```
+Now, every Room created in that project will automatically have access to the KagiSearch MCP tools and chatbot, with no additional setup.
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+Tool | Short Description
+-|-  
+`kagi_search_fetch` | Fetch web results based on one or more queries using the Kagi Search API.  
+`kagi_summarizer` | Summarize content from a URL using the Kagi Summarizer API.  
+
+---
+
+### Tool Details
+
+#### **`kagi_search_fetch`**
+Fetch web results based on one or more queries using the Kagi Search API. Use for general search and when the user explicitly tells you to 'fetch' results/information. Results are from all queries given. They are numbered continuously, so that a user may be able to refer to a result by a specific number.
+
+| Parameter | Type    | Description                                                                                     |
+|-----------|---------|-------------------------------------------------------------------------------------------------|
+| queries   | array   | One or more concise, keyword-focused search queries. Include essential context within each query for standalone use. |
+
+---
+
+#### **`kagi_summarizer`**
+Summarize content from a URL using the Kagi Summarizer API. The Summarizer can summarize any document type (text webpage, video, audio, etc.).
+
+| Parameter        | Type    | Description                                                                                      |
+|------------------|---------|--------------------------------------------------------------------------------------------------|
+| url              | string  | A URL to a document to summarize.                                                                |
+| summary_type     | string *optional* | Type of summary to produce. Options are 'summary' for paragraph prose and 'takeaway' for a bulleted list of key points. |
+| target_language  | string *optional* | Desired output language using language codes (e.g., 'EN' for English). If not specified, the document's original language influences the output. |
+
+---
+
+## References and Links
+
+- [Meshagent: Home](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP KagiSearch Docker Image](https://hub.docker.com/r/meshagent/mcp-kagisearch)

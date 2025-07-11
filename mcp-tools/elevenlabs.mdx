@@ -1,0 +1,224 @@
+---
+title: ElevenLabs
+---
+
+
+Test ElevenLabs tools instantly in a Meshagent Room! Services and the chatbot are automatically removed when the Room closes.
+
+**Environment Variables Needed:**
+- `ELEVENLABS_API_KEY`: Your ElevenLabs API key.
+
+### Steps:
+
+1. **Install Meshagent with all dependencies:**
+   ```
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate:**  
+   See: [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start ElevenLabs MCP server in a test Room:**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-elevenlabs:latest --env MESHAGENT_PORT=8001 --env ELEVENLABS_API_KEY=<insert-your-api-key-here> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-elevenlabs-service-test
+   ```
+   - This command launches a Meshagent Room with the ElevenLabs MCP server. The room and all associated services will shut down if they become inactive.
+
+4. **Start the chatbot in the same Room:**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-elevenlabs --name=mcp-elevenlabs --toolkit=mcp-elevenlabs
+   ```
+   - This starts a chatbot in the Room that can access the ElevenLabs toolkit. You can use multiple toolkits per agent in one room.
+   - The CLI output will provide a link to the Room.
+
+5. **Visit the Room link in your browser:**  
+   Send messages to the agent to interact with the ElevenLabs MCP server tools live.
+
+---
+
+## Project Level Deployment: Persistent MCP Services in All Project Rooms
+
+Deploy ElevenLabs MCP server and chatbot as persistent services at the Meshagent project level. This ensures the MCP tools and chatbot appear automatically in every new Room created for your project—perfect for production or multiuser environments. There’s no need to manually run servers or chatbots locally.
+
+1. **Create a persistent MCP server service:**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-elevenlabs:latest --env MESHAGENT_PORT=8001 --env ELEVENLABS_API_KEY=<insert-your-api-key-here> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-elevenlabs-service
+   ```
+
+2. **Create a persistent chatbot service:**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-elevenlabs-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-elevenlabs-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-elevenlabs-chatbot --toolkit=mcp-elevenlabs"
+   ```
+
+---
+
+## Tools Available
+
+Below are the ElevenLabs tools available when using this MCP Server:
+
+### Tools Summary
+
+| Tool | Description |
+| - | - |
+| `add_knowledge_base_to_agent` | Add a knowledge base to ElevenLabs workspace. |
+| `check_subscription` | Check the current subscription status. |
+| `create_agent` | Create a conversational AI agent with custom configuration. |
+| `create_voice_from_preview` | Add a generated voice to the voice library. |
+| `get_agent` | Get details about a specific conversational AI agent |
+| `get_voice` | Get details of a specific voice |
+| `isolate_audio` | Isolate audio from a file and save the output audio file to a given directory. |
+| `list_agents` | List all available conversational AI agents |
+| `list_phone_numbers` | List all phone numbers associated with the ElevenLabs account |
+| `make_outbound_call` | Make an outbound call via Twilio using an ElevenLabs agent. |
+| `play_audio` | Play an audio file. |
+| `search_voice_library` | Search for a voice across the entire ElevenLabs voice library. |
+| `search_voices` | Search for existing voices in the user's voice library. |
+| `speech_to_speech` | Transform audio from one voice to another using provided audio files. |
+| `speech_to_text` | Transcribe speech from an audio file and save or return the text. |
+| `text_to_sound_effects` | Convert text description of a sound effect to audio and save it. |
+| `text_to_speech` | Convert text to speech and save it as an audio file. |
+| `text_to_voice` | Create voice previews from a text prompt. |
+| `voice_clone` | Clone a voice using provided audio files. |
+
+---
+
+### Tools Details
+
+#### **add_knowledge_base_to_agent**
+*Add a knowledge base to ElevenLabs workspace. Allowed types: epub, pdf, docx, txt, html.*
+
+- **Parameters:**
+  - `agent_id` (`string`): ID of the agent to add the knowledge base to.
+  - `knowledge_base_name` (`string`): Name of the knowledge base.
+  - `input_file_path` (`string`, optional)
+  - `text` (`string`, optional)
+  - `url` (`string`, optional)
+
+#### **check_subscription**
+*Check the current subscription status. Could be used to measure API usage.*
+
+#### **create_agent**
+*Create a conversational AI agent with custom configuration.*
+
+- **Parameters (selected):**
+  - `first_message` (`string`)
+  - `name` (`string`)
+  - `system_prompt` (`string`)
+  - Other optional fields for model, language, retention, etc.
+
+#### **create_voice_from_preview**
+*Add a generated voice to the voice library using the ID from `text_to_voice`.*
+
+- **Parameters:**
+  - `generated_voice_id` (`string`)
+  - `voice_description` (`string`)
+  - `voice_name` (`string`)
+
+#### **get_agent**
+*Get details about a specific conversational AI agent.*
+
+- **Parameters:**
+  - `agent_id` (`string`)
+
+#### **get_voice**
+*Get details of a specific voice.*
+
+- **Parameters:**
+  - `voice_id` (`string`)
+
+#### **isolate_audio**
+*Isolate audio from a file and save the output audio file to a given directory.*
+
+- **Parameters:**
+  - `input_file_path` (`string`)
+  - `output_directory` (`string`, optional)
+
+#### **list_agents**
+*List all available conversational AI agents.*
+
+#### **list_phone_numbers**
+*List all phone numbers associated with the ElevenLabs account.*
+
+#### **make_outbound_call**
+*Make an outbound call via Twilio using an ElevenLabs agent.*
+
+- **Parameters:**
+  - `agent_id` (`string`)
+  - `agent_phone_number_id` (`string`)
+  - `to_number` (`string`)
+
+#### **play_audio**
+*Play an audio file (WAV/MP3).*
+
+- **Parameters:**
+  - `input_file_path` (`string`)
+
+#### **search_voice_library**
+*Search for a voice across the entire ElevenLabs voice library.*
+
+- **Parameters:**
+  - `page` (`integer`, optional)
+  - `page_size` (`integer`, optional)
+  - `search` (`string`, optional)
+
+#### **search_voices**
+*Search for existing voices in the user’s voice library. Searches name, description, labels, and category.*
+
+- **Parameters:**
+  - `search` (`string`, optional)
+  - `sort` (`string`, optional)
+  - `sort_direction` (`string`, optional)
+
+#### **speech_to_speech**
+*Transform audio from one voice to another using provided audio files.*
+
+- **Parameters:**
+  - `input_file_path` (`string`)
+  - `output_directory` (`string`, optional)
+  - `voice_name` (`string`, optional)
+
+#### **speech_to_text**
+*Transcribe speech from an audio file. Output as file or direct text.*
+
+- **Parameters (selected):**
+  - `input_file_path` (`string`)
+  - Optional: diarize, language_code, output_directory, etc.
+
+#### **text_to_sound_effects**
+*Convert a text description into a sound effect and save as audio. Duration: 0.5-5s.*
+
+- **Parameters:**
+  - `text` (`string`)
+  - `duration_seconds` (`number`, optional)
+  - `output_directory` (`string`, optional)
+
+#### **text_to_speech**
+*Convert text to speech with a given voice and save it.*
+
+- **Parameters (selected):**
+  - `text` (`string`)
+  - `output_directory` (`string`, optional)
+  - `voice_id`, `voice_name`, and other voice param fields.
+
+#### **text_to_voice**
+*Create voice previews from a text prompt. Produces 3 variations, saves as files.*
+
+- **Parameters:**
+  - `voice_description` (`string`)
+  - `output_directory` (`string`, optional)
+  - `text` (`string`, optional)
+
+#### **voice_clone**
+*Clone a voice using provided audio files.*
+
+- **Parameters:**
+  - `files` (`array`)
+  - `name` (`string`)
+  - `description` (`string`, optional)
+
+---
+
+## Meshagent Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Tool Image: [https://hub.docker.com/r/meshagent/mcp-elevenlabs](https://hub.docker.com/r/meshagent/mcp-elevenlabs)

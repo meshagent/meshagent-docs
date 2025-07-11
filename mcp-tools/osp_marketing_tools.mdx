@@ -1,0 +1,110 @@
+---
+title: OSP Marketing Tools
+---
+
+
+The following steps set up a Meshagent Room running the OSP MCP server for test or dev usage. When the Room is closed, all resources (server and chatbot) are cleaned up automatically.
+
+1. **Install Meshagent:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up / Authenticate:**
+   Follow the steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create or log into your account.
+
+3. **Start the OSP Tools Agent in a Room:**
+   ```bash
+   meshagent service test --room=test --role=agent \
+       --image=meshagent/mcp-osp_marketing_tools:latest \
+       --env MESHAGENT_PORT=8001 \
+       --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+       --name=mcp-osp_marketing_tools-service-test
+   ```
+   - This command creates a new Meshagent Room (`test`) and starts an MCP server agent inside it.
+   - The Room and agent will be shut down automatically if inactive.
+
+4. **Start a Chatbot in the Room with Tools Access:**
+   ```bash
+   meshagent chatbot join --room=test \
+       --agent-name=mcp-osp_marketing_tools \
+       --name=mcp-osp_marketing_tools \
+       --toolkit=mcp-osp_marketing_tools
+   ```
+   - This launches a chatbot in the same Room that can use the OSP tools directly.
+   - You can specify multiple toolkits if needed.
+   - The command output will include a link to your Room.
+
+5. **Open the Room and Interact:**
+   - Visit the Room link from the previous step in your browser.
+   - Send a message to the agent to access OSP MCP Server tools interactively.
+
+---
+
+## Project Level Deployment: Persistent Services for Production
+
+For production or persistent environments, you can register services at the Meshagent project level. These services will join all new Rooms in your project automatically, without manual setup.
+
+1. **Create the OSP Tools Agent as a Persistent Service:**
+   ```bash
+   meshagent service create --role=agent \
+       --image=meshagent/mcp-osp_marketing_tools:latest \
+       --env MESHAGENT_PORT=8001 \
+       --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+       --name=mcp-osp_marketing_tools-service
+   ```
+
+2. **Create a Persistent Chatbot Service:**
+   ```bash
+   meshagent service create \
+       --image="meshagent/cli:latest" \
+       --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-osp_marketing_tools-chatbot" \
+       --env="MESHAGENT_PORT=9001" \
+       --name="mcp-osp_marketing_tools-chatbot-service" \
+       --command="meshagent chatbot service --agent-name=mcp-osp_marketing_tools-chatbot --toolkit=mcp-osp_marketing_tools"
+   ```
+
+- With these registrations, each new Room on your Meshagent project will automatically include both the OSP MCP agent and the chatbot with tool access, every time.
+
+---
+
+## Tools Available
+
+This Meshagent-wrapped MCP Server provides several specialized tools designed by Open Strategy Partners to support structured writing and product marketing workflows:
+
+| Tool Name | Short Description |
+| --------- | ---------------- |
+| `get_editing_codes`            | Get the Open Strategy Partners (OSP) editing codes documentation and usage protocol for editing texts. |
+| `get_meta_guide`               | Get the OSP Web Content Meta Information Generation System (titles, meta-titles, slugs). |
+| `get_on_page_seo_guide`        | Get the OSP On-Page SEO Optimization Guide. |
+| `get_value_map_positioning_guide` | Get the OSP Product Communications Value Map Generation System for Product Positioning (value cases, feature extraction, taglines). |
+| `get_writing_guide`            | Get the OSP writing guide and usage protocol for editing texts. |
+| `health_check`                 | Check if the server is running and can access its resources. |
+
+### Tools Details
+
+#### `get_editing_codes`
+Get the Open Strategy Partners (OSP) editing codes documentation and usage protocol for editing texts.
+
+#### `get_meta_guide`
+Get the Open Strategy Partners (OSP) Web Content Meta Information Generation System (titles, meta-titles, slugs).
+
+#### `get_on_page_seo_guide`
+Get the Open Strategy Partners (OSP) On-Page SEO Optimization Guide.
+
+#### `get_value_map_positioning_guide`
+Get the OSP Product Communications Value Map Generation System for Product Positioning (value cases, feature extraction, taglines).
+
+#### `get_writing_guide`
+Get the Open Strategy Partners (OSP) writing guide and usage protocol for editing texts.
+
+#### `health_check`
+Check if the server is running and can access its resources.
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-osp_marketing_tools](https://hub.docker.com/r/meshagent/mcp-osp_marketing_tools)

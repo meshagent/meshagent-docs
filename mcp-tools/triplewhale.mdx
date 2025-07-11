@@ -1,0 +1,137 @@
+---
+title: Triple Whale
+---
+
+
+You can quickly test the Triplewhale MCP server and tools in a dedicated Meshagent Room using the steps below:
+
+### Environment Variables
+
+You’ll need to provide the following environment variable:
+- **TRIPLEWHALE_API_KEY**: your-triplewhale-api-key-here
+
+### Steps
+
+1. **Install Meshagent CLI**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and Authenticate**
+   - Follow the [Meshagent Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to create an account and log in via CLI.
+
+3. **Start MCP Server in a Test Room**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-triplewhale:latest \
+     --env MESHAGENT_PORT=8001 --env TRIPLEWHALE_API_KEY=your-triplewhale-api-key-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-triplewhale-service-test
+   ```
+   - *This starts a Meshagent Room named `test` and runs the Triplewhale MCP server tool in it.*
+   - *Room and services automatically close when inactive.*
+
+4. **Start Chatbot Agent in the Room**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-triplewhale \
+     --name=mcp-triplewhale --toolkit=mcp-triplewhale
+   ```
+   - *This launches a chatbot in the same room, empowered with the Triplewhale toolkit. Multiple toolkits can be active simultaneously in a room.*
+   - *A room link will appear in the CLI output.*
+
+5. **Test in Your Browser**
+   - Open the room URL in your browser to interact with the agent and MCP tools by sending messages.
+
+---
+
+## Project Level Deployment
+
+For production setups, you may wish to create persistent MCP tools and chatbot agents at the project level. These services will *automatically join every new room created in your Meshagent project*, with no need for manual startup.
+
+### Steps
+
+1. **Deploy the MCP Server Agent (persistent)**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-triplewhale:latest \
+     --env MESHAGENT_PORT=8001 --env TRIPLEWHALE_API_KEY=your-triplewhale-api-key-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-triplewhale-service
+   ```
+2. **Deploy the Chatbot Agent (persistent)**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-triplewhale-chatbot" \
+     --env="MESHAGENT_PORT=9001" --name="mcp-triplewhale-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-triplewhale-chatbot --toolkit=mcp-triplewhale"
+   ```
+   - *Both the MCP server tools and the chatbot will show up on *every* room creation inside your Meshagent project.*
+   - *No need to run the MCP server or chatbot locally!*
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+| Tool      | Short Description                                     |
+|-----------|------------------------------------------------------|
+| `moby`    | moby tool helps users access e-commerce performance data.|
+
+---
+
+### Tools Details
+
+#### Tool: **`moby`**
+- The `moby` tool is designed to help users access e-commerce performance data from Triplewhale.
+- To use the tool, the user must provide their **shopId** (an identifier for their e-commerce store).
+- The user can ask questions related to their store’s performance, such as “What is my ROAS for Facebook campaigns in the last 60 days?”
+
+**API Interaction:**
+- The tool will send a request to the Triple Whale Moby API including the question, your shopId, and your API key.
+- The response will include an array of answers, provided in a structured format, along with an assistant-generated summary.
+- If data visualization or similar reports are available, links or format suggestions are included in the response.
+- If errors occur (invalid key, unauthorized, missing shopId, etc.), clear error messages are provided:
+  - Invalid credentials: "Invalid credentials. Please check your settings."
+  - Missing shopId: The user is prompted to enter it.
+  - API key expired or no shop access: "API key is expired or doesn't have access to the shop."
+  - Generic errors: "Something went wrong. Please try again later."
+
+**Response Structure:**
+
+```ts
+export type SimplifiedResponse = {
+  isError: boolean;
+  errorMsg?: string;
+  question: string;
+  answer: Record<string, string | number | null>[];
+  assistant: string;
+};
+
+export type SimplifiedMobyResponse = {
+  isError: boolean;
+  error?: string;
+  responses: SimplifiedResponse[];
+  assistantConclusion: string;
+};
+```
+
+Each valid response displays:
+- The question asked.
+- Answers in a structured, clear format.
+- Data visualization suggestions (if any).
+- Related report links (if provided).
+- The assistant’s concluding summary, with follow-up prompts for further assistance.
+
+---
+
+## Meshagent & Related Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Getting Started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+- [Full Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image (Triplewhale)](https://hub.docker.com/r/meshagent/mcp-triplewhale)
+
+---
+
+> *Why use Docker and Meshagent?*  
+> Docker provides an isolated environment to run the MCP server securely; Meshagent manages the services, toolkits, and conversational bots, giving you instant, ephemeral, or persistent cloud deployments with collaboration and easy cleanup, all from the CLI.  
+>  
+> Learn more about [the Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol) and [why Docker is recommended for MCP Servers](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/).

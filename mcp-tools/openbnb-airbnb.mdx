@@ -1,0 +1,115 @@
+---
+title: Openbnb-Airbnb
+---
+
+
+Here’s how to launch the openbnb-airbnb MCP Server and its tools within a Meshagent Room in the cloud for quick testing. When the Meshagent Room closes, the tool and chatbot are also removed.
+
+**1. Install Meshagent:**
+```sh
+pip install "meshagent[all]"
+```
+
+**2. Sign up and authenticate:**
+Follow instructions here: https://docs.meshagent.com/cli/getting_started
+
+**3. Start an MCP Server as an agent within a Meshagent Room:**
+```sh
+meshagent service test --room=test --role=agent --image=meshagent/mcp-openbnb-airbnb:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-openbnb-airbnb-service-test
+```
+- *Starts a Meshagent Room (`test`) with the openbnb-airbnb MCP server available inside. Rooms close when inactive.*
+
+**4. Start a chatbot in the Room, with access to the MCP tools:**
+```sh
+meshagent chatbot join --room=test --agent-name=mcp-openbnb-airbnb --name=mcp-openbnb-airbnb --toolkit=mcp-openbnb-airbnb
+```
+- *Links a chatbot to the room that can use openbnb-airbnb tools. You can attach multiple toolkits and use them in the same room/agent.*
+- *A link to the room will be provided in the command output.*
+
+**5. Test the setup:**
+- Open the room link in your browser, send a message to the agent, and interact with the MCP server toolset live.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production or persistent use, you can deploy services at the project level. These services automatically join every Meshagent Room in your project upon room creation, making MCP tools and chatbots consistently available without local deployment.
+
+**1. Create the openbnb-airbnb MCP server service:**
+```sh
+meshagent service create --role=agent --image=meshagent/mcp-openbnb-airbnb:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-openbnb-airbnb-service
+```
+
+**2. Create a persistent chatbot connected to the tool:**
+```sh
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-openbnb-airbnb-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-openbnb-airbnb-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-openbnb-airbnb-chatbot --toolkit=mcp-openbnb-airbnb"
+```
+- *After this setup, every time a room is created in this Meshagent project, the openbnb-airbnb MCP server and chatbot join instantly—no manual launching required.*
+
+---
+
+## Tools Available
+
+### `airbnb_listing_details`
+Get detailed information about a specific Airbnb listing. Provide direct links to the user.
+
+Parameters|Type|Description
+-|-|-
+`id`|`string`|The Airbnb listing ID
+`adults`|`number` *(optional)*|Number of adults
+`checkin`|`string` *(optional)*|Check-in date (YYYY-MM-DD)
+`checkout`|`string` *(optional)*|Check-out date (YYYY-MM-DD)
+`children`|`number` *(optional)*|Number of children
+`ignoreRobotsText`|`boolean` *(optional)*|Ignore robots.txt rules for this request
+`infants`|`number` *(optional)*|Number of infants
+`pets`|`number` *(optional)*|Number of pets
+
+---
+
+### `airbnb_search`
+Search for Airbnb listings with various filters and pagination. Provide direct links to the user.
+
+Parameters|Type|Description
+-|-|-
+`location`|`string`|Location to search for (city, state, etc.)
+`adults`|`number` *(optional)*|Number of adults
+`checkin`|`string` *(optional)*|Check-in date (YYYY-MM-DD)
+`checkout`|`string` *(optional)*|Check-out date (YYYY-MM-DD)
+`children`|`number` *(optional)*|Number of children
+`cursor`|`string` *(optional)*|Base64-encoded string used for Pagination
+`ignoreRobotsText`|`boolean` *(optional)*|Ignore robots.txt rules for this request
+`infants`|`number` *(optional)*|Number of infants
+`maxPrice`|`number` *(optional)*|Maximum price for the stay
+`minPrice`|`number` *(optional)*|Minimum price for the stay
+`pets`|`number` *(optional)*|Number of pets
+`placeId`|`string` *(optional)*|Google Maps Place ID (overrides the location parameter)
+
+---
+
+## Use This MCP Server Directly
+
+```json
+{
+  "mcpServers": {
+    "openbnb-airbnb": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/openbnb-airbnb"
+      ]
+    }
+  }
+}
+```
+
+[Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)
+
+---
+
+## Further References
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-openbnb-airbnb](https://hub.docker.com/r/meshagent/mcp-openbnb-airbnb)

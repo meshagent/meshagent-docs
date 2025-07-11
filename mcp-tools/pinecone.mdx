@@ -1,0 +1,113 @@
+---
+title: Pinecone
+---
+
+
+Follow these steps to run the MCP Pinecone tool and chatbot inside a Meshagent Room in the cloud for quick testing. When the room closes (e.g., due to inactivity), the MCP server and chatbot are removed automatically.
+
+### Environment Variables
+
+- `PINECONE_ASSISTANT_HOST`: Your Pinecone Assistant host.
+- `PINECONE_API_KEY`: Your Pinecone API key.
+
+### Steps
+
+1. **Install Meshagent:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+   [Follow the Meshagent CLI getting started guide.](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start Pinecone MCP Service in a Room:**
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-pinecone:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env PINECONE_ASSISTANT_HOST=<YOUR_PINECONE_ASSISTANT_HOST_HERE> \
+     --env PINECONE_API_KEY=<YOUR_PINECONE_API_KEY_HERE> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-pinecone-service-test
+   ```
+   *This command will start a Meshagent Room named "test", running the Pinecone MCP server. The room and its services will close if inactive.*
+
+4. **Join a Chatbot with the Toolkit in the Room:**
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-pinecone \
+     --name=mcp-pinecone \
+     --toolkit=mcp-pinecone
+   ```
+   - The chatbot will be able to use Pinecone tools in the room.
+   - Room link will be printed in the output for browser-based chat.
+
+5. **Test the Integration:**
+   - Open the room link from the chatbot join command.
+   - Send a message to the agent to interact live with the MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+To make the MCP server tools and a chatbot persistently available in *every* room of a Meshagent project (ideal for production), deploy as project-level services:
+
+1. **Create Persistent MCP Pinecone Service:**
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-pinecone:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env PINECONE_ASSISTANT_HOST=<YOUR_PINECONE_ASSISTANT_HOST_HERE> \
+     --env PINECONE_API_KEY=<YOUR_PINECONE_API_KEY_HERE> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-pinecone-service
+   ```
+
+2. **Create Persistent Chatbot Service with Toolkit:**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-pinecone-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-pinecone-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-pinecone-chatbot --toolkit=mcp-pinecone"
+   ```
+
+*These services will join every new room created within your Meshagent project, so your tools and chatbot are always available—no need to run them manually!*
+
+---
+
+## Tools Available
+
+### `assistant_context`
+Retrieves relevant document snippets from your Pinecone Assistant knowledge base.
+
+**Short Description:**  
+`assistant_context` | Retrieves relevant document snippets from your Pinecone Assistant knowledge base.
+
+#### Tool Details
+
+**`assistant_context`**  
+Retrieves relevant document snippets from your Pinecone Assistant knowledge base.  
+Returns an array of text snippets from the most relevant documents.
+
+- `assistant_name` (`string`): Name of an existing Pinecone assistant
+- `query` (`string`): The query to retrieve context for.
+- `top_k` (`integer`, optional): Number of context snippets to retrieve. Defaults to 15. Recommended: 5-8 for simple/narrow queries, 10-20 for complex/broad topics.
+
+---
+
+## Meshagent & MCP Resources
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+- [Meshagent MCP Tool Image (Docker Hub)](https://hub.docker.com/r/meshagent/mcp-pinecone)
+
+---
+
+For more details about MCP servers and Pinecone’s Assistant integration, see [Pinecone Assistant MCP Server Repository](https://github.com/pinecone-io/assistant-mcp) and this [Docker image](https://hub.docker.com/repository/docker/mcp/pinecone).

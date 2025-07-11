@@ -1,0 +1,134 @@
+---
+title: EverArt
+---
+
+
+Spin up the EverArt MCP server and enable chat-based tool access **at the Room level** for testing. Services and chatbots will be automatically removed when the Room is closed.
+
+### 1. Set Required Environment Variables
+
+Add your API key(s) as environment variables.
+
+- `EVERART_API_KEY`: `your_key_here`
+
+### 2. Install Meshagent CLI
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 3. Sign Up and Authenticate with Meshagent
+
+Review the authentication process at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+### 4. Start the EverArt MCP Server as a Room Service
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-everart:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env EVERART_API_KEY=your_key_here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-everart-service-test
+```
+- Starts a Meshagent Room called `test` with the MCP EverArt server available.
+- Room will close (and services shut down) after a period of inactivity.
+
+### 5. Start a Chatbot Connected to the EverArt Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=mcp-everart \
+  --name=mcp-everart \
+  --toolkit=mcp-everart
+```
+- Launches a chatbot instance in the specified room.
+- Enables chat users to access the EverArt tool via conversation.
+- Output includes a room link.
+
+### 6. Interact with the Tools
+
+Visit the provided room link in your browser and send a message to the agent to use the MCP EverArt tools.
+
+---
+
+## Environment Variables
+
+- `EVERART_API_KEY`: Your EverArt API access key (required).
+
+---
+
+## Project-Level Deployment
+
+For production, create persistent, auto-joining services and chatbots available in **all project rooms**.
+
+### 1. Deploy the MCP Server as a Persistent Project Service
+
+```bash
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-everart:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env EVERART_API_KEY=your_key_here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-everart-service
+```
+
+### 2. Deploy a Persistent Chatbot Service
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-everart-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-everart-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-everart-chatbot --toolkit=mcp-everart"
+```
+
+This ensures the EverArt MCP server and toolkit-enabled chatbot are automatically available every time a room is created in this Meshagent project, removing the need for any local or manual process management.
+
+---
+
+## Tools Available
+
+### Tool Summary
+
+| Tools provided by this Server | Short Description |
+|-------------------------------|-------------------|
+| `generate_image`              | Generate images using EverArt Models and returns a clickable link to view the generated image. |
+
+---
+
+### Tools Details
+
+#### Tool: **`generate_image`**
+
+Generate images using EverArt Models and returns a clickable link to view the generated image. The tool will return a URL that can be clicked to view the image in a browser. Available models:
+- `5000:FLUX1.1`: Standard quality
+- `9000:FLUX1.1-ultra`: Ultra high quality
+- `6000:SD3.5`: Stable Diffusion 3.5
+- `7000:Recraft-Real`: Photorealistic style
+- `8000:Recraft-Vector`: Vector art style
+
+**Response**: Direct URL to generated image.
+
+| Parameter      | Type      | Description    |
+|----------------|-----------|---------------|
+| prompt         | string    | Text description of desired image |
+| image_count    | number ⭑optional⭑ | Number of images to generate |
+| model          | string ⭑optional⭑ | Model ID (`5000:FLUX1.1`, `9000:FLUX1.1-ultra`, `6000:SD3.5`, `7000:Recraft-Real`, `8000:Recraft-Vector`) |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [MCP EverArt Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-everart)
+
+---
+
+Questions? See [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) for help with authentication, room, and service management.

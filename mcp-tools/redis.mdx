@@ -1,0 +1,476 @@
+---
+title: Redis
+---
+
+
+1. **Install Meshagent Python Package**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate Meshagent**
+   - Visit: [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)  
+   - Authenticate with `meshagent login`
+
+3. **Start an MCP Redis Service in a Meshagent Room**
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-redis:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env REDIS_HOST=<your_redis_host> \
+     --env REDIS_PORT=<your_redis_port> \
+     --env REDIS_USERNAME=<your_redis_username> \
+     --env REDIS_SSL=<your_redis_ssl> \
+     --env REDIS_CA_PATH=<your_redis_ca_path> \
+     --env REDIS_SSL_KEYFILE=<your_redis_ssl_keyfile> \
+     --env REDIS_SSL_CERTFILE=<your_redis_ssl_certfile> \
+     --env REDIS_CERT_REQS=<your_redis_cert_reqs> \
+     --env REDIS_CA_CERTS=<your_redis_ca_certs> \
+     --env REDIS_CLUSTER_MODE=<your_redis_cluster_mode> \
+     --env REDIS_PWD=<your_redis_pwd> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-redis-service-test
+   ```
+   - This will start a Meshagent Room (`test`) with a test MCP Redis server running in the room.  
+   - **Note:** Rooms close automatically if inactive, removing the tool and chatbot.
+
+   **Environment Variables:**
+   - `REDIS_HOST`
+   - `REDIS_PORT`
+   - `REDIS_USERNAME`
+   - `REDIS_SSL`
+   - `REDIS_CA_PATH`
+   - `REDIS_SSL_KEYFILE`
+   - `REDIS_SSL_CERTFILE`
+   - `REDIS_CERT_REQS`
+   - `REDIS_CA_CERTS`
+   - `REDIS_CLUSTER_MODE`
+   - `REDIS_PWD`
+
+4. **Start a Chatbot in the Meshagent Room Using the Redis Toolkit**
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-redis \
+     --name=mcp-redis \
+     --toolkit=mcp-redis
+   ```
+   - This starts a chatbot in the same Room, enabled with the Redis toolkit.
+   - The output will provide a link to the Room.
+
+5. **Try it Out**
+   - Visit the Room URL in your browser.
+   - Interact with the agent and test any supported Redis tool via chat or API!
+
+---
+
+## Project Level Deployment: Persistent Redis MCP Tools & Chatbot in All Rooms
+
+For production use, deploy services at the project level so the MCP server tools and chatbot join every new Room automatically. This removes the need to start/stop MCP servers and chatbots manually.
+
+1. **Create Project-Level MCP Redis Agent Service**
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-redis:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env REDIS_HOST=<your_redis_host> \
+     --env REDIS_PORT=<your_redis_port> \
+     --env REDIS_USERNAME=<your_redis_username> \
+     --env REDIS_SSL=<your_redis_ssl> \
+     --env REDIS_CA_PATH=<your_redis_ca_path> \
+     --env REDIS_SSL_KEYFILE=<your_redis_ssl_keyfile> \
+     --env REDIS_SSL_CERTFILE=<your_redis_ssl_certfile> \
+     --env REDIS_CERT_REQS=<your_redis_cert_reqs> \
+     --env REDIS_CA_CERTS=<your_redis_ca_certs> \
+     --env REDIS_CLUSTER_MODE=<your_redis_cluster_mode> \
+     --env REDIS_PWD=<your_redis_pwd> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-redis-service
+   ```
+
+2. **Create Project-Level Meshagent Chatbot Service**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-redis-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-redis-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-redis-chatbot --toolkit=mcp-redis"
+   ```
+
+- Now, every new Room in your Meshagent project will automatically have access to the Redis tools and chatbot.
+
+---
+
+## Tools Available
+
+**Access to Redis database operations.**
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`client_list` | Get a list of connected clients to the Redis server.
+`create_vector_index_hash` | Create a Redis 8 vector similarity index using HNSW on a Redis hash.
+`dbsize` | Get the number of keys stored in the Redis database.
+`delete` | Delete a Redis key.
+`expire` | Set an expiration time for a Redis key.
+`get` | Get a Redis string value.
+`get_index_info` | Retrieve schema and information about a specific Redis index using FT.INFO.
+`get_indexed_keys_number` | Retrieve the number of indexed keys by the index.
+`get_indexes` | List of indexes in the Redis database.
+`get_vector_from_hash` | Retrieve a vector from a Redis hash and convert it back from binary blob.
+`hdel` | Delete a field from a Redis hash.
+`hexists` | Check if a field exists in a Redis hash.
+`hget` | Get the value of a field in a Redis hash.
+`hgetall` | Get all fields and values from a Redis hash.
+`hset` | Set a field in a hash stored at key with an optional expiration time.
+`info` | Get Redis server information and statistics.
+`json_del` | Delete a JSON value from Redis at a given path.
+`json_get` | Retrieve a JSON value from Redis at a given path.
+`json_set` | Set a JSON value in Redis at a given path with an optional expiration time.
+`llen` | Get the length of a Redis list.
+`lpop` | Remove and return the first element from a Redis list.
+`lpush` | Push a value onto the left of a Redis list and optionally set an expiration time.
+`lrange` | Get elements from a Redis list within a specific range.
+`publish` | Publish a message to a Redis channel.
+`rename` | Renames a Redis key from old_key to new_key.
+`rpop` | Remove and return the last element from a Redis list.
+`rpush` | Push a value onto the right of a Redis list and optionally set an expiration time.
+`sadd` | Add a value to a Redis set with an optional expiration time.
+`scan_all_keys` | Scan and return ALL keys matching a pattern using multiple SCAN iterations.
+`scan_keys` | Scan keys in the Redis database using the SCAN command (non-blocking, production-safe).
+`set` | Set a Redis string value with an optional expiration time.
+`set_vector_in_hash` | Store a vector as a field in a Redis hash.
+`smembers` | Get all members of a Redis set.
+`srem` | Remove a value from a Redis set.
+`subscribe` | Subscribe to a Redis channel.
+`type` | Returns the string representation of the type of the value stored at key.
+`unsubscribe` | Unsubscribe from a Redis channel.
+`vector_search_hash` | Perform a KNN vector similarity search using Redis 8 or later version on vectors stored in hash data structures.
+`xadd` | Add an entry to a Redis stream with an optional expiration time.
+`xdel` | Delete an entry from a Redis stream.
+`xrange` | Read entries from a Redis stream.
+`zadd` | Add a member to a Redis sorted set with an optional expiration time.
+`zrange` | Retrieve a range of members from a Redis sorted set.
+`zrem` | Remove a member from a Redis sorted set.
+
+---
+
+### Tool Details
+
+#### `client_list`
+Get a list of connected clients to the Redis server.
+
+#### `create_vector_index_hash`
+Create a Redis 8 vector similarity index using HNSW on a Redis hash.
+
+Parameters:  
+- `dim` (`integer`, optional) — The dimensionality of the vectors stored under the vector_field.  
+- `distance_metric` (`string`, optional) — The distance function to use (e.g., 'COSINE', 'L2', 'IP').  
+- `index_name` (`string`, optional) — The name of the Redis index to create.  
+- `prefix` (`string`, optional) — The key prefix used to identify documents to index (e.g., 'doc:').  
+- `vector_field` (`string`, optional) — The name of the vector field to be indexed for similarity search.
+
+#### `dbsize`
+Get the number of keys stored in the Redis database.
+
+#### `delete`
+Delete a Redis key.
+
+Parameters:  
+- `key` (`string`)
+
+#### `expire`
+Set an expiration time for a Redis key.
+
+Parameters:  
+- `expire_seconds` (`integer`)  
+- `name` (`string`)
+
+#### `get`
+Get a Redis string value.
+
+Parameters:  
+- `key` (`string`)
+
+#### `get_index_info`
+Retrieve schema and information about a specific Redis index using FT.INFO.
+
+Parameters:  
+- `index_name` (`string`)
+
+#### `get_indexed_keys_number`
+Retrieve the number of indexed keys by the index.
+
+Parameters:  
+- `index_name` (`string`)
+
+#### `get_indexes`
+List of indexes in the Redis database.
+
+#### `get_vector_from_hash`
+Retrieve a vector from a Redis hash and convert it back from binary blob.
+
+Parameters:  
+- `name` (`string`)  
+- `vector_field` (`string`, optional)
+
+#### `hdel`
+Delete a field from a Redis hash.
+
+Parameters:  
+- `key` (`string`)  
+- `name` (`string`)
+
+#### `hexists`
+Check if a field exists in a Redis hash.
+
+Parameters:  
+- `key` (`string`)  
+- `name` (`string`)
+
+#### `hget`
+Get the value of a field in a Redis hash.
+
+Parameters:  
+- `key` (`string`)  
+- `name` (`string`)
+
+#### `hgetall`
+Get all fields and values from a Redis hash.
+
+Parameters:  
+- `name` (`string`)
+
+#### `hset`
+Set a field in a hash stored at key with an optional expiration time.
+
+Parameters:  
+- `key` (`string`)  
+- `name` (`string`)  
+- `value` (`string`)  
+- `expire_seconds` (`integer`, optional)
+
+#### `info`
+Get Redis server information and statistics.
+
+Parameters:  
+- `section` (`string`, optional)
+
+#### `json_del`
+Delete a JSON value from Redis at a given path.
+
+Parameters:  
+- `name` (`string`)  
+- `path` (`string`, optional)
+
+#### `json_get`
+Retrieve a JSON value from Redis at a given path.
+
+Parameters:  
+- `name` (`string`)  
+- `path` (`string`, optional)
+
+#### `json_set`
+Set a JSON value in Redis at a given path with an optional expiration time.
+
+Parameters:  
+- `name` (`string`)  
+- `path` (`string`)  
+- `value` (`string`)  
+- `expire_seconds` (`integer`, optional)
+
+#### `llen`
+Get the length of a Redis list.
+
+Parameters:  
+- `name` (`string`)
+
+#### `lpop`
+Remove and return the first element from a Redis list.
+
+Parameters:  
+- `name` (`string`)
+
+#### `lpush`
+Push a value onto the left of a Redis list and optionally set an expiration time.
+
+Parameters:  
+- `name` (`string`)  
+- `value` (`string`)  
+- `expire` (`integer`, optional)
+
+#### `lrange`
+Get elements from a Redis list within a specific range.
+
+Parameters:  
+- `name` (`string`)  
+- `start` (`integer`)  
+- `stop` (`integer`)
+
+#### `publish`
+Publish a message to a Redis channel.
+
+Parameters:  
+- `channel` (`string`)  
+- `message` (`string`)
+
+#### `rename`
+Renames a Redis key from old_key to new_key.
+
+Parameters:  
+- `new_key` (`string`)  
+- `old_key` (`string`)
+
+#### `rpop`
+Remove and return the last element from a Redis list.
+
+Parameters:  
+- `name` (`string`)
+
+#### `rpush`
+Push a value onto the right of a Redis list and optionally set an expiration time.
+
+Parameters:  
+- `name` (`string`)  
+- `value` (`string`)  
+- `expire` (`integer`, optional)
+
+#### `sadd`
+Add a value to a Redis set with an optional expiration time.
+
+Parameters:  
+- `name` (`string`)  
+- `value` (`string`)  
+- `expire_seconds` (`integer`, optional)
+
+#### `scan_all_keys`
+Scan and return ALL keys matching a pattern using multiple SCAN iterations.
+
+Parameters:  
+- `batch_size` (`integer`, optional)  
+- `pattern` (`string`, optional)
+
+#### `scan_keys`
+Scan keys in the Redis database using the SCAN command (non-blocking, production-safe).
+
+Parameters:  
+- `count` (`integer`, optional)  
+- `cursor` (`integer`, optional)  
+- `pattern` (`string`, optional)
+
+#### `set`
+Set a Redis string value with an optional expiration time.
+
+Parameters:  
+- `key` (`string`)  
+- `value` (`string`)  
+- `expiration` (`integer`, optional)
+
+#### `set_vector_in_hash`
+Store a vector as a field in a Redis hash.
+
+Parameters:  
+- `name` (`string`)  
+- `vector` (`array`)  
+- `vector_field` (`string`, optional)
+
+#### `smembers`
+Get all members of a Redis set.
+
+Parameters:  
+- `name` (`string`)
+
+#### `srem`
+Remove a value from a Redis set.
+
+Parameters:  
+- `name` (`string`)  
+- `value` (`string`)
+
+#### `subscribe`
+Subscribe to a Redis channel.
+
+Parameters:  
+- `channel` (`string`)
+
+#### `type`
+Returns the string representation of the type of the value stored at key.
+
+Parameters:  
+- `key` (`string`)
+
+#### `unsubscribe`
+Unsubscribe from a Redis channel.
+
+Parameters:  
+- `channel` (`string`)
+
+#### `vector_search_hash`
+Perform a KNN vector similarity search using Redis 8 or later version on vectors stored in hash data structures.
+
+Parameters:  
+- `query_vector` (`array`)  
+- `index_name` (`string`, optional)  
+- `k` (`integer`, optional)  
+- `return_fields` (`array`, optional)  
+- `vector_field` (`string`, optional)
+
+#### `xadd`
+Add an entry to a Redis stream with an optional expiration time.
+
+Parameters:  
+- `fields` (`object`)  
+- `key` (`string`)  
+- `expiration` (`integer`, optional)
+
+#### `xdel`
+Delete an entry from a Redis stream.
+
+Parameters:  
+- `entry_id` (`string`)  
+- `key` (`string`)
+
+#### `xrange`
+Read entries from a Redis stream.
+
+Parameters:  
+- `key` (`string`)  
+- `count` (`integer`, optional)
+
+#### `zadd`
+Add a member to a Redis sorted set with an optional expiration time.
+
+Parameters:  
+- `key` (`string`)  
+- `member` (`string`)  
+- `score` (`number`)  
+- `expiration` (`integer`, optional)
+
+#### `zrange`
+Retrieve a range of members from a Redis sorted set.
+
+Parameters:  
+- `end` (`integer`)  
+- `key` (`string`)  
+- `start` (`integer`)  
+- `with_scores` (`boolean`, optional)
+
+#### `zrem`
+Remove a member from a Redis sorted set.
+
+Parameters:  
+- `key` (`string`)  
+- `member` (`string`)
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Redis Docker Image:** [https://hub.docker.com/r/meshagent/mcp-redis](https://hub.docker.com/r/meshagent/mcp-redis)

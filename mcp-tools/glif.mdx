@@ -1,0 +1,164 @@
+---
+title: Glif
+---
+
+
+Run a Glif MCP agent and toolkit-enabled chatbot inside a Meshagent Room for fast cloud-based testing and interaction. When the Meshagent Room is closed, the spawned MCP server and chatbot are also removed, ensuring no lingering cloud resources or processes.
+
+### Environment Variables
+
+For secure and flexible operation, provide the following environment variables:
+
+- `GLIF_IDS`: *(optional)* List of specific Glif IDs to expose. Leave blank to allow all.
+- `IGNORE_SAVED_GLIFS`: *(default "false")* Set to "true" to ignore saved Glif tools on start.
+- `GLIF_API_TOKEN`: *required* – Your [Glif API token](https://glif.app/) for access.
+
+### Start Guide
+
+1. **Install Meshagent (with all plugins):**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign Up and Authenticate:**
+   - Follow onboarding at [docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Server in a Room:**
+    ```bash
+    meshagent service test --room=test --role=agent \
+      --image=meshagent/mcp-glif:latest \
+      --env=MESHAGENT_PORT=8001 \
+      --env=GLIF_API_TOKEN=your-token-here \
+      --env=GLIF_IDS= \
+      --env=IGNORE_SAVED_GLIFS=false \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-glif-service-test
+    ```
+   - Runs the MCP server agent in the `test` Room. Services are auto-removed when Room closes.
+
+4. **Start the Chatbot in the Room:**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=mcp-glif --name=mcp-glif --toolkit=mcp-glif
+    ```
+   - Joins a toolkit-enabled chatbot to the Room. Multiple toolkits can be provided.
+
+   - *A Room link is displayed in the command output.*
+
+5. **Test in Browser:**
+   - Visit your Room link, send a message to the agent/chatbot, and interact live with the Glif MCP Server tools!
+
+---
+
+## Project Level Deployment
+
+Deploy persistent Glif MCP servers and chatbots *globally* at the project level: they will join every Meshagent Room at creation, ideal for production deployments and seamless multi-room ops.
+
+No more manual starts—servers and agents join each Room automatically.
+
+### Create a Persistent MCP Server Service
+
+```bash
+meshagent service create --role=agent \
+  --image=meshagent/mcp-glif:latest \
+  --env=MESHAGENT_PORT=8001 \
+  --env=GLIF_API_TOKEN=your-token-here \
+  --env=GLIF_IDS= \
+  --env=IGNORE_SAVED_GLIFS=false \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-glif-service
+```
+
+### Create a Persistent Chatbot Service
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-glif-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-glif-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-glif-chatbot --toolkit=mcp-glif"
+```
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+| Tool | Short Description |
+| - | - |
+| `glif_info` | Get detailed information about a glif including input fields |
+| `list_featured_glifs` | Get a curated list of featured glifs |
+| `list_saved_glif_tools` | List all saved glif tools |
+| `my_glif_user_info` | Get detailed information about your user account, recent glifs, and recent runs |
+| `my_glifs` | Get a list of your glifs |
+| `remove_all_glif_tools` | Remove all saved glif tools and return to a pristine state |
+| `remove_glif_tool` | Remove a saved glif tool |
+| `run_glif` | Run a glif with the specified ID and inputs |
+| `save_glif_as_tool` | Save a glif as a custom tool |
+| `search_glifs` | Search for glifs by query string |
+
+---
+
+### Tools Details
+
+#### **glif_info**
+Get detailed information about a glif including input fields  
+**Parameters:**
+- `id` (*string*): The ID of the glif to show details for
+
+---
+
+#### **list_featured_glifs**
+Get a curated list of featured glifs
+
+#### **list_saved_glif_tools**
+List all saved glif tools
+
+#### **my_glif_user_info**
+Get detailed information about your user account, recent glifs, and recent runs
+
+#### **my_glifs**
+Get a list of your glifs
+
+#### **remove_all_glif_tools**
+Remove all saved glif tools and return to a pristine state
+
+#### **remove_glif_tool**
+Remove a saved glif tool  
+**Parameters:**
+- `toolName` (*string*): The tool name of the saved glif to remove
+
+---
+
+#### **run_glif**
+Run a glif with the specified ID and inputs  
+**Parameters:**
+- `id` (*string*): The ID of the glif to run
+- `inputs` (*array*): Array of input values for the glif
+
+---
+
+#### **save_glif_as_tool**
+Save a glif as a custom tool  
+**Parameters:**
+- `id` (*string*): The ID of the glif to save
+- `toolName` (*string*): The name to use for the tool (must be unique)
+- `description` (*string*, optional): Optional custom description (defaults to glif description)
+- `name` (*string*, optional): Optional custom name for the tool (defaults to glif name)
+
+---
+
+#### **search_glifs**
+Search for glifs by query string  
+**Parameters:**
+- `query` (*string*): Search query string
+
+---
+
+## Useful Links
+
+- **Meshagent:** https://www.meshagent.com/
+- **Meshagent Docs:** https://docs.meshagent.com
+- **Meshagent Getting Started:** https://docs.meshagent.com/cli/getting_started
+- **Docker Hub (mcp-glif Tool Image):** https://hub.docker.com/r/meshagent/mcp-glif

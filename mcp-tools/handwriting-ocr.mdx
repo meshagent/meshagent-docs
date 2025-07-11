@@ -1,0 +1,124 @@
+---
+title: Handwriting OCR
+---
+
+
+1. **Set Environment Variables**
+   - Required environment variables:
+     - `API_TOKEN`: your-api-token
+
+2. **Install Meshagent CLI**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+3. **Authenticate with Meshagent**
+   - Sign up and authenticate by following the guide at: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+4. **Start the Test Handwriting OCR MCP Server in a Meshagent Room**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-handwriting-ocr:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=API_TOKEN=your-api-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-handwriting-ocr-service-test
+   ```
+   - This command starts a Meshagent Room with the test MCP server running as an agent.
+   - Note: Rooms will automatically close if they go inactive; tools and the chatbot are removed.
+
+5. **Start a Chatbot in the Room**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-handwriting-ocr \
+     --name=mcp-handwriting-ocr \
+     --toolkit=mcp-handwriting-ocr
+   ```
+   - This launches a chatbot in the same room, using the Handwriting OCR toolkit.
+   - Multiple toolkits can be added to the same agent or room.
+   - The room URL will be displayed in the output.
+
+6. **Interact**
+   - Visit the room link in your browser and send a message to the agent to access the MCP server tools.
+
+---
+
+## Project-Level Deployment (Persistent Services)
+
+For production or recurring use, deploy the MCP server and chatbot as project-level services. These will be automatically available in every new Meshagent room within your project, removing the need to start/stop agents manually.
+
+1. **Create Persistent MCP Server Service**
+   ```sh
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-handwriting-ocr:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=API_TOKEN=your-api-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-handwriting-ocr-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```sh
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-handwriting-ocr-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-handwriting-ocr-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-handwriting-ocr-chatbot --toolkit=mcp-handwriting-ocr"
+   ```
+
+These services will always join each new room created in your project, with the required tools available for instant use.
+
+---
+
+## Tools Available
+
+**This MCP Server provides the following tools:**
+
+| Tool                | Short Description                                      |
+|---------------------|-------------------------------------------------------|
+| `check_status`      | Check the status of a document                        |
+| `get_text`          | Retrieve the transcribed text from a document         |
+| `upload_document`   | Upload a document to Handwriting OCR API for transcription |
+
+### Tool Details
+
+#### **`check_status`**
+*Check the status of a document*
+
+| Parameter | Type   | Description     |
+|-----------|--------|----------------|
+| `id`      | string | Document ID    |
+
+---
+
+#### **`get_text`**
+*Retrieve the transcribed text from a document*
+
+| Parameter | Type   | Description     |
+|-----------|--------|----------------|
+| `id`      | string | Document ID    |
+
+---
+
+#### **`upload_document`**
+*Upload a document to Handwriting OCR API for transcription*
+
+| Parameter      | Type     | Description                                                                              |
+|----------------|----------|------------------------------------------------------------------------------------------|
+| `file`         | string   | Path to the document (PDF, JPG, PNG, etc.)                                               |
+| `delete_after` | integer *(optional)* | Seconds until auto-deletion (optional)                                  |
+| `extractor_id` | string *(optional)*  | Extractor ID (required if action is extractor, will be ignored)          |
+| `prompt_id`    | string *(optional)*  | Prompt ID (requires Enterprise subscription, will be ignored)            |
+
+---
+
+## Useful Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Read The Docs: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Handwriting OCR Tool Image: [https://hub.docker.com/r/meshagent/mcp-handwriting-ocr](https://hub.docker.com/r/meshagent/mcp-handwriting-ocr)

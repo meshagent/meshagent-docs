@@ -1,0 +1,157 @@
+---
+title: Atlas Docs
+---
+
+
+Test out the MCP server and toolkit in a temporary cloud Room using Meshagent. When the Meshagent Room closes (by inactivity or manually), the associated MCP server tool and chatbot are automatically removed.
+
+**Required Environment Variables:**
+
+- `ATLAS_API_URL` — The HTTP endpoint that the MCP server will use to source documentation.
+  - Default: `https://atlas.cartograph.app/api`
+
+### Steps
+
+1. **Install Meshagent CLI and dependencies:**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and Authenticate:**  
+   Follow setup steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Run the Atlas Docs MCP agent inside a test Room:**  
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-atlas-docs:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env ATLAS_API_URL=<YOUR_ATLAS_API_URL> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-atlas-docs-service-test
+   ```
+   - This starts an MCP agent (server) in a Meshagent Room called `test`.
+   - Replace `<YOUR_ATLAS_API_URL>` as needed (default is already set).
+   - When the Room closes, the services are shut down.
+
+4. **Join with a chatbot in the same Room (enabling LLM tool access):**  
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-atlas-docs \
+     --name=mcp-atlas-docs \
+     --toolkit=mcp-atlas-docs
+   ```
+   - The chatbot is now in the Room and can use MCP tools via toolkit!
+   - Output will provide a link to open/join the Room.
+
+5. **Test interactive access in your browser:**  
+   Open the provided Room link, send a message to the agent, and interact with the Atlas Docs MCP server tools through conversation.
+
+
+**Environment Variables (with example values)**
+
+- `ATLAS_API_URL`: URL of the Atlas Docs backend endpoint (default: `https://atlas.cartograph.app/api`)
+- `MESHAGENT_PORT`: Internal port for the service (typically `8001` for Atlas Docs MCP agent, `9001` for the chatbot service)
+
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production and continuous Room coverage:  
+Deploy MCP server and chatbot as persistent project-level Meshagent services. This ensures that every Room created in your Meshagent project automatically has the MCP tools and chatbot available—no manual intervention needed after setup!
+
+### Steps
+
+1. **Create persistent MCP Atlas Docs agent:**
+   ```bash
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-atlas-docs:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env ATLAS_API_URL=<YOUR_ATLAS_API_URL> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-atlas-docs-service
+   ```
+
+2. **Create persistent chatbot service (tool access always available):**
+   ```bash
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-atlas-docs-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-atlas-docs-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-atlas-docs-chatbot --toolkit=mcp-atlas-docs"
+   ```
+
+- Now, **every new project Room** gets the MCP agent and chatbot automatically!
+- No need to run agents or chatbots on your machine — they are managed by Meshagent.
+
+---
+
+## Tools Available
+
+### Atlas Docs MCP Server
+
+The Atlas Docs MCP Server provides LLMs with hosted, clean markdown documentation of libraries and frameworks.
+
+#### Tools Provided
+
+Tool | Short Description
+-|-
+`get_docs_full` | Retrieves the complete documentation content in a single consolidated file.
+`get_docs_index` | Retrieves a condensed, LLM-friendly index of the pages in a documentation set.
+`get_docs_page` | Retrieves a specific documentation page’s content using its relative path.
+`list_docs` | Lists all available documentation libraries and frameworks.
+`search_docs` | Searches a documentation set for specific content.
+
+---
+
+### Tools Details
+
+#### `get_docs_full`
+Retrieve the complete documentation content in a single consolidated file. Use this for full context.  
+Parameters:  
+- `docName` (`string`): Name of the documentation set
+
+---
+
+#### `get_docs_index`
+Retrieve a condensed, LLM-friendly index of the pages in a doc set. Great for initial exploration.  
+Parameters:  
+- `docName` (`string`): Name of the documentation set
+
+---
+
+#### `get_docs_page`
+Get the complete content of a specific documentation page by its path.  
+Parameters:  
+- `docName` (`string`): Name of the documentation set  
+- `pagePath` (`string`): Root-relative documentation page path (e.g., `/guides/getting-started`)
+
+---
+
+#### `list_docs`
+List all available documentation libraries and frameworks — name, description, and source URL for each.
+
+---
+
+#### `search_docs`
+Search for specific keywords or topics in a documentation set. Returns ranked matching pages.  
+Parameters:  
+- `docName` (`string`): Name of the documentation set  
+- `query` (`string`): Search query for the documentation set
+
+---
+
+## Meshagent Links
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Atlas Docs MCP Server Meshagent Image**: [https://hub.docker.com/r/meshagent/mcp-atlas-docs](https://hub.docker.com/r/meshagent/mcp-atlas-docs)
+
+---
+
+For more information, see the [Atlas Docs MCP Server repository](https://github.com/CartographAI/atlas-docs-mcp) and [Meshagent documentation](https://docs.meshagent.com).

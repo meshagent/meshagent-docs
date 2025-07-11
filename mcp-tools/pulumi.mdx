@@ -1,0 +1,171 @@
+---
+title: Pulumi
+---
+
+
+The following steps show how to launch a Pulumi MCP server and a Meshagent-connected chatbot into a shared "Room" for collaborative, cloud-hosted testing.
+
+### 1. Install Meshagent Python Package
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+Create an account and link your Meshagent CLI as described [here](https://docs.meshagent.com/cli/getting_started).
+
+### 3. Start the MCP Server in a Meshagent Room
+
+```sh
+meshagent service test --room=test --role=agent \
+  --image=meshagent/mcp-pulumi:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-pulumi-service-test
+```
+- This will start a Pulumi MCP server inside the `test` Room.
+- Rooms auto-close on inactivity, tearing down the server/tooling.
+
+### 4. Start a Chatbot Connected to Pulumi in the Same Room
+
+```sh
+meshagent chatbot join --room=test --agent-name=mcp-pulumi --name=mcp-pulumi --toolkit=mcp-pulumi
+```
+- This launches a chatbot with Pulumi toolkit access inside the Room.
+- Multiple toolkits may be attached as needed.
+- The CLI output provides a direct room link.
+
+### 5. Try It Out
+
+Visit the provided Room link in your browser. Interact with the `mcp-pulumi` agent via chat to access MCP server tools in real time!
+
+---
+
+## Project Level Deployment (Persistent, Auto-Join Services)
+
+For production use, deploy persistent MCP services and chatbots at the project level. Every new Room in the project will have these services available automatically.
+
+- No need to manually launch servers/agents for each Room.
+- Recommended for teams and ongoing workflows.
+
+### 1. Create Persistent MCP Server Service
+
+```sh
+meshagent service create --role=agent \
+  --image=meshagent/mcp-pulumi:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-pulumi-service
+```
+
+### 2. Create Persistent Chatbot Service
+
+```sh
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-pulumi-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-pulumi-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-pulumi-chatbot --toolkit=mcp-pulumi"
+```
+
+---
+
+## Tools Available
+
+Below are the tools provided by the Pulumi MCP Server.
+
+### Tool Summary
+
+| Tool                                 | Short Description                                                         |
+|-------------------------------------- |-------------------------------------------------------------------------- |
+| `deploy-to-aws`                      | Deploy application code to AWS by generating Pulumi infrastructure.       |
+| `pulumi-cli-preview`                 | Run pulumi preview for a given project and stack                         |
+| `pulumi-cli-refresh`                 | Run pulumi refresh for a given project and stack                         |
+| `pulumi-cli-stack-output`            | Get the output value(s) of a given stack                                 |
+| `pulumi-cli-up`                      | Run pulumi up for a given project and stack                              |
+| `pulumi-registry-get-function`       | Returns information about a Pulumi Registry function                     |
+| `pulumi-registry-get-resource`       | Returns information about a Pulumi Registry resource                     |
+| `pulumi-registry-get-type`           | Get the JSON schema for a specific JSON schema type reference            |
+| `pulumi-registry-list-functions`     | List all function types for a given provider and module                  |
+| `pulumi-registry-list-resources`     | List all resource types for a given provider and module                  |
+
+
+### Tool Details
+
+#### **`deploy-to-aws`**
+Deploy application code to AWS by generating Pulumi infrastructure. This tool automatically analyzes your application files and provisions the appropriate AWS resources (S3, Lambda, EC2, etc.) based on what it finds. No prior analysis needed - just invoke directly.
+
+#### **`pulumi-cli-preview`**
+Run pulumi preview for a given project and stack  
+**Parameters:**  
+- `workDir` (string): The working directory of the program.  
+- `stackName` (string, optional): The associated stack name. Defaults to 'dev'.
+
+#### **`pulumi-cli-refresh`**
+Run pulumi refresh for a given project and stack  
+**Parameters:**  
+- `workDir` (string): The working directory of the program.  
+- `stackName` (string, optional): The associated stack name. Defaults to 'dev'.
+
+#### **`pulumi-cli-stack-output`**
+Get the output value(s) of a given stack  
+**Parameters:**  
+- `workDir` (string): The working directory of the program.  
+- `outputName` (string, optional): The specific stack output name to retrieve.  
+- `stackName` (string, optional): The associated stack name. Defaults to 'dev'.
+
+#### **`pulumi-cli-up`**
+Run pulumi up for a given project and stack  
+**Parameters:**  
+- `workDir` (string): The working directory of the program.  
+- `stackName` (string, optional): The associated stack name. Defaults to 'dev'.
+
+#### **`pulumi-registry-get-function`**
+Returns information about a Pulumi Registry function  
+**Parameters:**  
+- `function` (string): The function type to query (e.g., 'getBucket', 'getFunction', 'getInstance')  
+- `provider` (string): The cloud provider (e.g., 'aws', 'azure', 'gcp', 'random') or github.com/org/repo for Git-hosted components  
+- `module` (string, optional): The module to query (e.g. 's3', 'ec2', 'lambda'). Optional.  
+- `version` (string, optional): Provider version (e.g. '6.0.0'). Optional.
+
+#### **`pulumi-registry-get-resource`**
+Returns information about a Pulumi Registry resource  
+**Parameters:**  
+- `provider` (string): The cloud provider (e.g., 'aws', 'azure', 'gcp', 'random') or github.com/org/repo for Git-hosted components  
+- `resource` (string): The resource type to query (e.g., 'Bucket', 'Function', 'Instance')  
+- `module` (string, optional): The module to query (e.g. 's3', 'ec2'). Optional.  
+- `version` (string, optional): Provider version. Optional.
+
+#### **`pulumi-registry-get-type`**
+Get the JSON schema for a specific JSON schema type reference  
+**Parameters:**  
+- `name` (string): The name of the type (e.g., 'BucketGrant', 'FunctionEnvironment')  
+- `provider` (string): The cloud provider  
+- `module` (string, optional): Module to query. Defaults to 'index'.  
+- `version` (string, optional): Provider version. Optional.
+
+#### **`pulumi-registry-list-functions`**
+List all function types for a given provider and module  
+**Parameters:**  
+- `provider` (string): The cloud provider  
+- `module` (string, optional): Optional module filter  
+- `version` (string, optional): Provider version. Optional.
+
+#### **`pulumi-registry-list-resources`**
+List all resource types for a given provider and module  
+**Parameters:**  
+- `provider` (string): The cloud provider  
+- `module` (string, optional): Optional module filter  
+- `version` (string, optional): Provider version. Optional.
+
+---
+
+## Meshagent, MCP Server, and References
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Docs: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Pulumi Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-pulumi](https://hub.docker.com/r/meshagent/mcp-pulumi)
+- What is an MCP Server? [Anthropic Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
+- Pulumi MCP Server on GitHub: [https://github.com/pulumi/mcp-server](https://github.com/pulumi/mcp-server)

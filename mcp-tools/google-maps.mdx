@@ -1,0 +1,163 @@
+---
+title: Google Maps
+---
+
+
+1. **Set the required environment variable:**
+   - `GOOGLE_MAPS_API_KEY`: Your Google Maps API key.
+
+2. **Install Meshagent Python package:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign up and authenticate with Meshagent:**
+   - Follow the guide at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+4. **Run the MCP server as a transient agent in a test room:**
+   ```bash
+   meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-google-maps:latest \
+      --env=GOOGLE_MAPS_API_KEY=<YOUR_API_KEY> \
+      --env=MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-google-maps-service-test
+   ```
+   - Launches a Google Maps MCP server in a Meshagent Room named `test`.
+   - The service and room are ephemeral—they will close when inactive.
+
+5. **Start a chatbot in the same test room, linked to the Google Maps tools:**
+   ```bash
+   meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-google-maps \
+      --name=mcp-google-maps \
+      --toolkit=mcp-google-maps
+   ```
+   - This joins a chatbot that can use the Google Maps toolkit.
+   - Multiple toolkits can be loaded into the same agent.
+   - A direct room link is provided after running this command.
+
+6. **Try it out:**
+   - Visit the room link in your browser.
+   - Interact with the MCP Server tools by chatting with the agent.
+
+### Environment Variables
+
+- `GOOGLE_MAPS_API_KEY` – *[required]* Your Google Maps API Key
+- `MESHAGENT_PORT` – *[required]* Port for MCP server communications (e.g., `8001`)
+
+---
+
+## Project Level Deployment: Persistent MCP Server and Chatbot
+
+For production or all-room availability, deploy as persistent project-level services:
+
+1. **Create a persistent MCP server service:**
+   ```bash
+   meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-google-maps:latest \
+      --env=GOOGLE_MAPS_API_KEY=<YOUR_API_KEY> \
+      --env=MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-google-maps-service
+   ```
+
+2. **Create a persistent chatbot service using the MCP Google Maps toolkit:**
+   ```bash
+   meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-google-maps-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-google-maps-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-google-maps-chatbot --toolkit=mcp-google-maps"
+   ```
+
+Every new room created in your Meshagent project will now automatically include these services, making the MCP server tools and chatbot consistently available for all sessions without manual intervention.
+
+---
+
+## Tools Available
+
+### Provided by MCP Google Maps Server
+
+| Tool                        | Description                                                 |
+|-----------------------------|-------------------------------------------------------------|
+| **maps_directions**         | Get directions between two points                           |
+| **maps_distance_matrix**    | Calculate travel distance and time for multiple origins and destinations |
+| **maps_elevation**          | Get elevation data for locations on the earth               |
+| **maps_geocode**            | Convert an address into geographic coordinates              |
+| **maps_place_details**      | Get detailed information about a specific place             |
+| **maps_reverse_geocode**    | Convert coordinates into an address                         |
+| **maps_search_places**      | Search for places using Google Places API                   |
+
+---
+
+### Tool Details
+
+#### `maps_directions`
+- **Purpose:** Get directions between two points
+- **Parameters:**
+  - `destination` *(string)* – Ending point address or coordinates
+  - `origin` *(string)* – Starting point address or coordinates
+  - `mode` *(string, optional)* – Travel mode (driving, walking, bicycling, transit)
+
+---
+
+#### `maps_distance_matrix`
+- **Purpose:** Calculate travel distance and time for multiple origins and destinations
+- **Parameters:**
+  - `destinations` *(array)* – Array of destination addresses or coordinates
+  - `origins` *(array)* – Array of origin addresses or coordinates
+  - `mode` *(string, optional)* – Travel mode (driving, walking, bicycling, transit)
+
+---
+
+#### `maps_elevation`
+- **Purpose:** Get elevation data for locations on the earth
+- **Parameters:**
+  - `locations` *(array)* – Array of locations to get elevation for
+
+---
+
+#### `maps_geocode`
+- **Purpose:** Convert an address into geographic coordinates
+- **Parameters:**
+  - `address` *(string)* – The address to geocode
+
+---
+
+#### `maps_place_details`
+- **Purpose:** Get detailed information about a specific place
+- **Parameters:**
+  - `place_id` *(string)* – The place ID to get details for
+
+---
+
+#### `maps_reverse_geocode`
+- **Purpose:** Convert coordinates into an address
+- **Parameters:**
+  - `latitude` *(number)* – Latitude coordinate
+  - `longitude` *(number)* – Longitude coordinate
+
+---
+
+#### `maps_search_places`
+- **Purpose:** Search for places using Google Places API
+- **Parameters:**
+  - `query` *(string)* – Search query
+  - `location` *(object, optional)* – Optional center point for the search
+  - `radius` *(number, optional)* – Search radius in meters (max 50000)
+
+---
+
+## Additional Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Google Maps Tool (Docker):** [https://hub.docker.com/r/meshagent/mcp-google-maps](https://hub.docker.com/r/meshagent/mcp-google-maps)
+
+For questions, issues, or contribution guidelines, see the official Meshagent documentation and resources.

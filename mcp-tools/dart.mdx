@@ -1,0 +1,230 @@
+---
+title: Dart
+---
+
+
+Use the following guide to quickly run a Dart MCP tool and chatbot in a disposable cloud Room for testing.
+
+### **Required Environment Variables**
+
+- `DART_HOST`: (e.g. `https://app.itsdart.com`)
+- `DART_TOKEN`: (e.g. `dsa_...` — your Dart API token)
+
+### **Steps**
+
+1. **Install Meshagent CLI and dependencies**
+    - `pip install "meshagent[all]"`
+
+2. **Sign Up & Authenticate to Meshagent Cloud**
+    - See [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)  
+      *(First-time users must create an account and log in)*
+
+3. **Start a Test MCP Agent Service in a Temporary Room**
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-dart:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env DART_HOST=https://app.itsdart.com \
+      --env DART_TOKEN=dsa_... \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-dart-service-test
+    ```
+    - *Starts a Meshagent Room named `test` with the Dart MCP agent available.*
+
+    - **Note:** Rooms automatically close (removing all services/chatbots) if inactive.
+
+4. **Start a Chatbot Using the Dart Toolkit in the Same Room**
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-dart \
+      --name=mcp-dart \
+      --toolkit=mcp-dart
+    ```
+    - *A chatbot using the Dart toolkit will appear in the Room and be able to call the above agent/services.*
+    - *Multiple toolkits can join the same Room with the same agent.*
+
+    - **A direct Room link will appear in the command output.**
+
+5. **Try It Out in the Browser**
+    - Visit the Room link provided and send a message to the agent/chatbot to interact with Dart MCP tools.
+
+**Environment Variables Used:**
+- `DART_HOST=https://app.itsdart.com`
+- `DART_TOKEN=dsa_...`
+
+---
+
+## Project-Level Deployment (Persistent MCP Tools in All Rooms)
+
+For production or always-on scenarios, deploy MCP tools and chatbots as **persistent services** at the project level. This ensures they appear instantly every time a Room is created in the project, with no need for local startup or manual Room joins.
+
+### **Persistent Deployments**
+
+1. **Deploy MCP Agent Service Project-Wide**
+    ```bash
+    meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-dart:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env DART_HOST=https://app.itsdart.com \
+      --env DART_TOKEN=dsa_... \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-dart-service
+    ```
+
+2. **Deploy Dart-Toolkit Chatbot Service Project-Wide**
+    ```bash
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-dart-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-dart-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-dart-chatbot --toolkit=mcp-dart"
+    ```
+
+ - **Result:** Each time a Room is created in this project, both the MCP server tools and the Dart chatbot will auto-join—ensuring a consistent, managed workspace.
+
+- **Environment Variables Used:**
+  - `DART_HOST=https://app.itsdart.com`
+  - `DART_TOKEN=dsa_...`
+
+---
+
+## Tools Available
+
+Dart MCP Server exposes the following tools, available automatically when running in Meshagent Rooms:
+
+| Tool                          | Short Description                                                                                           |
+|-------------------------------|------------------------------------------------------------------------------------------------------------|
+| `add_task_comment`            | Add a comment to an existing task without modifying the task description.                                   |
+| `create_doc`                  | Create a new doc in Dart.                                                                                   |
+| `create_task`                 | Create a new task in Dart.                                                                                  |
+| `delete_doc`                  | Move an existing doc to the trash, where it can be recovered if needed.                                     |
+| `delete_task`                 | Move an existing task to the trash, where it can be recovered if needed.                                    |
+| `get_config`                  | Get information about the user's space, including available endpoint values.                                |
+| `get_dartboard`               | Retrieve a dartboard by its ID.                                                                             |
+| `get_doc`                     | Retrieve a doc by its ID.                                                                                   |
+| `get_folder`                  | Retrieve a folder by its ID.                                                                                |
+| `get_task`                    | Retrieve a task by its ID.                                                                                  |
+| `get_view`                    | Retrieve a view by its ID.                                                                                  |
+| `list_docs`                   | List docs from Dart with optional filtering.                                                                |
+| `list_task_comments`          | List comments from Dart with optional filtering.                                                            |
+| `list_tasks`                  | List tasks from Dart with optional filtering.                                                               |
+| `update_doc`                  | Update an existing doc.                                                                                     |
+| `update_task`                 | Update an existing task.                                                                                    |
+
+
+### Tool Details
+
+#### **add_task_comment**
+Add a comment to an existing task without modifying the description. Supports markdown.
+- `taskId` (`string`): The 12-character alphanumeric ID of the task
+- `text` (`string`): Comment content (markdown allowed)
+
+---
+
+#### **create_doc**
+Create a new Dart doc.
+- `title` (`string`): The doc title (required)
+- `folder` (`string`, optional): Folder title
+- `text` (`string`, optional): doc content (markdown allowed)
+
+---
+
+#### **create_task**
+Create a new task with rich metadata.
+- Parameters: `title`, `assignee[s]`, `customProperties`, `dartboard`, `description`, `dueAt`, `parentId`, `priority`, `size`, `startAt`, `status`, `tags`, `type`
+
+---
+
+#### **delete_doc**
+Move a doc to trash (recoverable).
+- `id` (`string`): Doc ID
+
+---
+
+#### **delete_task**
+Move a task to trash (recoverable).
+- `id` (`string`): Task ID
+
+---
+
+#### **get_config**
+Retrieve all available values for assignees, dartboards, statuses, tags, custom properties, etc.
+
+---
+
+#### **get_dartboard**
+Retrieve a dartboard by ID.
+- `id` (`string`): Dartboard ID
+
+---
+
+#### **get_doc**
+Retrieve a doc by ID.
+- `id` (`string`): Doc ID
+
+---
+
+#### **get_folder**
+Retrieve a folder by ID.
+- `id` (`string`): Folder ID
+
+---
+
+#### **get_task**
+Retrieve a task by ID.
+- `id` (`string`): Task ID
+
+---
+
+#### **get_view**
+Retrieve a view by ID.
+- `id` (`string`): View ID
+
+---
+
+#### **list_docs**
+List docs with filters: folder, title, text, etc.
+
+---
+
+#### **list_task_comments**
+List comments with filters: author, task, text, date, etc.
+
+---
+
+#### **list_tasks**
+List tasks with filters: assignee, status, dartboard, priority, dates, tags, etc.
+
+---
+
+#### **update_doc**
+Update a doc's title, content, or folder.
+- `id` (`string`): Doc ID
+
+---
+
+#### **update_task**
+Update all properties of a task.
+- `id` (`string`): Task ID
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Home:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-dart](https://hub.docker.com/r/meshagent/mcp-dart)
+
+---
+
+For more details about Dart MCP Server see:  
+- [its-dart GitHub Repository](https://github.com/its-dart/dart-mcp-server)
+- [Docker Image](https://hub.docker.com/repository/docker/mcp/dart)  
+- [What is an MCP Server? (Anthropic blog)](https://www.anthropic.com/news/model-context-protocol)
+
+Run securely: [Why use Docker for MCP?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

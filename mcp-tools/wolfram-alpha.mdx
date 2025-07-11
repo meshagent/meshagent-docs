@@ -1,0 +1,137 @@
+---
+title: Wolfram Alpha
+---
+
+
+This quick start will guide you through running the Wolfram Alpha MCP server and chatbot in a temporary Meshagent room for testing. When the Meshagent Room closes, both the tool and chatbot are automatically removed.
+
+### Required Environment Variables
+
+- `WOLFRAM_API_KEY`: your-app-id (You will need a [Wolfram Alpha API key](https://developer.wolframalpha.com/portal/myapps/).)
+
+### Steps
+
+1. **Install Meshagent CLI:**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent:**
+    - Follow the auth steps at: [CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start MCP Wolfram Alpha Service in a Room:**
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-wolfram-alpha:latest \
+      --env="MESHAGENT_PORT=8001" \
+      --env="WOLFRAM_API_KEY=your-app-id" \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-wolfram-alpha-service-test
+    ```
+    - **Note:** This command creates a Meshagent Room with the MCP server available as a callable tool. The room closes when inactive.
+
+4. **Join a Chatbot to the Room:**
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-wolfram-alpha \
+      --name=mcp-wolfram-alpha \
+      --toolkit=mcp-wolfram-alpha
+    ```
+    - This starts a chatbot in the same room, able to use the Wolfram Alpha toolkit.
+    - Multiple toolkits can be loaded in the same room.
+    - The link to the room will be provided in the CLI output.
+
+5. **Test the Setup:**
+    - Open the room link in your browser and send a message to the agent. You can interact with the MCP Wolfram Alpha tool directly from the chat.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production use, create persistent services at the project level so the MCP server tools and chatbot appear in every Meshagent project room automatically. This eliminates the need for local/server-side MCP and simplifies onboarding.
+
+### Steps
+
+1. **Create a Persistent MCP Wolfram Alpha Service:**
+    ```bash
+    meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-wolfram-alpha:latest \
+      --env="MESHAGENT_PORT=8001" \
+      --env="WOLFRAM_API_KEY=your-app-id" \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-wolfram-alpha-service
+    ```
+
+2. **Create a Persistent Chatbot Service:**
+    ```bash
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-wolfram-alpha-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-wolfram-alpha-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-wolfram-alpha-chatbot --toolkit=mcp-wolfram-alpha"
+    ```
+
+---
+
+## Tools Available
+
+Connect your chat repl to Wolfram Alpha computational intelligence.
+
+### Available Tools
+
+| Tools provided by this Server | Short Description                         |
+|------------------------------|-------------------------------------------|
+| `query-wolfram-alpha`        | Use Wolfram Alpha to answer a question.   |
+
+---
+
+### Tool Details
+
+#### Tool: **`query-wolfram-alpha`**
+Use Wolfram Alpha to answer a question. This tool should be used when you need complex math or symbolic intelligence.
+
+| Parameters | Type    | Description |
+|------------|---------|-------------|
+| `query`    | string  |             |
+
+---
+
+### Use this MCP Server
+
+```json
+{
+  "mcpServers": {
+    "wolfram-alpha": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "WOLFRAM_API_KEY",
+        "mcp/wolfram-alpha"
+      ],
+      "env": {
+        "WOLFRAM_API_KEY": "your-app-id"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Further Reading and Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [Docker Hub: meshagent/mcp-wolfram-alpha](https://hub.docker.com/r/meshagent/mcp-wolfram-alpha)
+
+---
+
+Meshagent and the MCP Wolfram Alpha toolkit make it easy to add advanced computation and symbolic math to any multi-agent room or workflow, securely and at scale, with minimal setup.

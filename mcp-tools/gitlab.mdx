@@ -1,0 +1,178 @@
+---
+title: GitLab
+---
+
+
+The following Quick Start will walk you through running the GitLab MCP Server and chatbot at the Room level for fast cloud-based testing. **Room-level services are temporary** and will shut down automatically when the room closes.
+
+### Required Environment Variables
+
+- **GITLAB_API_URL**: The base URL for the GitLab API (default: `https://gitlab.com/api/v4`)
+- **GITLAB_PERSONAL_ACCESS_TOKEN**: Your GitLab personal access token
+
+### Steps
+
+1. **Install Meshagent**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent**
+   - Sign up and authenticate using the instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP GitLab Server in a Meshagent Room**
+   ```bash
+   meshagent service test --room=test --role=agent \
+      --image=meshagent/mcp-gitlab:latest \
+      --env GITLAB_API_URL=https://gitlab.com/api/v4 \
+      --env GITLAB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-gitlab-service-test
+   ```
+   - This command launches a Meshagent Room with a cloud-hosted test MCP GitLab server. The room will remain open while actively used, and all services (server, chatbot, etc.) are cleaned up when the room closes.
+
+4. **Join the Room with a Chatbot Connected to the GitLab Toolkit**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-gitlab --name=mcp-gitlab --toolkit=mcp-gitlab
+   ```
+   - This starts a chatbot in the Meshagent Room, giving you a conversational interface to the GitLab tools.
+   - Multiple chatbots or toolkits can be used simultaneously within the same room.
+   - Meshagent will provide a link to access the room.
+
+5. **Interact via the Room Link**
+   - Open the room link in your browser and chat with the agent to run MCP GitLab tools directly!
+
+---
+
+## Project Level Deployment
+
+For production, configure persistent services so the GitLab MCP tools and chatbot **automatically join every room in your project**. This ensures the MCP server and chatbot are always available, without manual steps or running local processes.
+
+### Steps
+
+1. **Create the MCP GitLab Service (Persistent Agent)**
+   ```bash
+   meshagent service create --role=agent \
+      --image=meshagent/mcp-gitlab:latest \
+      --env GITLAB_API_URL=https://gitlab.com/api/v4 \
+      --env GITLAB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-gitlab-service
+   ```
+
+2. **Create the Persistent Chatbot Service**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-gitlab-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-gitlab-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-gitlab-chatbot --toolkit=mcp-gitlab"
+   ```
+
+Now, any room created in your Meshagent project will auto-include both the GitLab MCP Server and chatbot, streamlining automation, collaboration, and AI-powered development workflows.
+
+---
+
+## Tools Available
+
+#### Summary of Tools
+
+| Tool                     | Short Description                                             |
+|--------------------------|--------------------------------------------------------------|
+| `create_branch`          | Create a new branch in a GitLab project                      |
+| `create_issue`           | Create a new issue in a GitLab project                       |
+| `create_merge_request`   | Create a new merge request in a GitLab project               |
+| `create_or_update_file`  | Create or update a single file in a GitLab project           |
+| `create_repository`      | Create a new GitLab project                                  |
+| `fork_repository`        | Fork a GitLab project to your account or specified namespace |
+| `get_file_contents`      | Get the contents of a file or directory from a project       |
+| `push_files`             | Push multiple files to a project in a single commit          |
+| `search_repositories`    | Search for GitLab projects                                   |
+
+### Tool Details
+
+#### `create_branch`
+Create a new branch in a GitLab project  
+**Parameters**:
+- `branch` (`string`): Name for the new branch
+- `project_id` (`string`): Project ID or URL-encoded path
+- `ref` (`string`, optional): Source branch/commit for new branch
+
+#### `create_issue`
+Create a new issue in a GitLab project  
+**Parameters**:
+- `project_id` (`string`): Project ID or URL-encoded path
+- `title` (`string`): Issue title
+- `assignee_ids` (`array`, optional): Array of user IDs to assign
+- `description` (`string`, optional): Issue description
+- `labels` (`array`, optional): Array of label names
+- `milestone_id` (`number`, optional): Milestone ID to assign
+
+#### `create_merge_request`
+Create a new merge request in a GitLab project  
+**Parameters**:
+- `project_id` (`string`): Project ID or URL-encoded path
+- `source_branch` (`string`): Branch with changes
+- `target_branch` (`string`): Branch to merge into
+- `title` (`string`): Merge request title
+- `allow_collaboration` (`boolean`, optional): Allow commits from upstream members
+- `description` (`string`, optional): Merge request description
+- `draft` (`boolean`, optional): Create as draft merge request
+
+#### `create_or_update_file`
+Create or update a single file in a GitLab project  
+**Parameters**:
+- `branch` (`string`): Branch to create/update the file in
+- `commit_message` (`string`): Commit message
+- `content` (`string`): File content
+- `file_path` (`string`): Path to create/update the file
+- `project_id` (`string`): Project ID or URL-encoded path
+- `previous_path` (`string`, optional): Path of the file to move/rename
+
+#### `create_repository`
+Create a new GitLab project  
+**Parameters**:
+- `name` (`string`): Repository name
+- `description` (`string`, optional): Repository description
+- `initialize_with_readme` (`boolean`, optional): Initialize with README.md
+- `visibility` (`string`, optional): Repository visibility level
+
+#### `fork_repository`
+Fork a GitLab project  
+**Parameters**:
+- `project_id` (`string`): Project ID or URL-encoded path
+- `namespace` (`string`, optional): Namespace to fork to (full path)
+
+#### `get_file_contents`
+Get contents of a file or directory from a GitLab project  
+**Parameters**:
+- `file_path` (`string`): Path to the file/directory
+- `project_id` (`string`): Project ID or URL-encoded path
+- `ref` (`string`, optional): Branch/tag/commit
+
+#### `push_files`
+Push multiple files to a GitLab project in a single commit  
+**Parameters**:
+- `branch` (`string`): Branch to push to
+- `commit_message` (`string`): Commit message
+- `files` (`array`): Array of files to push
+- `project_id` (`string`): Project ID or URL-encoded path
+
+#### `search_repositories`
+Search for GitLab projects  
+**Parameters**:
+- `search` (`string`): Search query
+- `page` (`number`, optional): Page number (default: 1)
+- `per_page` (`number`, optional): Results per page (default: 20)
+
+---
+
+## Further Information
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP GitLab Image:** [https://hub.docker.com/r/meshagent/mcp-gitlab](https://hub.docker.com/r/meshagent/mcp-gitlab)
+
+For more details on running, extending, or integrating Meshagent with other services, check out the resources above!

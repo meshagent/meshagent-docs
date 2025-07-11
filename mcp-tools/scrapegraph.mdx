@@ -1,0 +1,115 @@
+---
+title: ScrapeGraph
+---
+
+
+Run the MCP server and chatbot as ephemeral services in a Meshagent Room for quick experimentation or collaborative debugging. When the Room closes, both the tool and chatbot are automatically stopped.
+
+**Environment Variable Needed:**
+- `SGAI_API_KEY`: *Your ScrapeGraphAI API Key*
+
+### Steps
+
+1. **Install Meshagent Python Package:**
+
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and Authenticate:**
+
+   Follow the authentication flow documented at  
+   [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start ScrapeGraph as a Room Service:**
+
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-scrapegraph:latest --env MESHAGENT_PORT=8001 --env SGAI_API_KEY=YOUR_SGAI_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-scrapegraph-service-test
+   ```
+   - This command launches a Meshagent Room "test" with the ScrapeGraph MCP server.
+   - The Room and service auto-shutdown if inactive.
+
+4. **Launch a Chatbot with Access to ScrapeGraph Tools:**
+
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-scrapegraph --name=mcp-scrapegraph --toolkit=mcp-scrapegraph
+   ```
+   - Starts a chatbot inside the room, ready to use the ScrapeGraph tools.
+   - Multiple toolkits can be made available to the same agent if desired.
+   - The room link is shown in the command output.
+
+5. **Try It Out:**
+
+   - Open the room link in your browser and interact (chat) with the MCP Server tools via the agent!
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production use, register services at the Meshagent project level so the ScrapeGraph server and chatbot are automatically available whenever any room is created in your project. No need for manual or local startup per room.
+
+### Steps
+
+1. **Create Persistent ScrapeGraph MCP Service:**
+
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-scrapegraph:latest --env MESHAGENT_PORT=8001 --env SGAI_API_KEY=YOUR_SGAI_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-scrapegraph-service
+   ```
+
+2. **Create Persistent Chatbot Service (Accessing ScrapeGraph Tools):**
+
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-scrapegraph-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-scrapegraph-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-scrapegraph-chatbot --toolkit=mcp-scrapegraph"
+   ```
+
+Each new room within the project will now have instant access to the ScrapeGraph MCP server and chatbot toolkit—no need to deploy ad hoc.
+
+---
+
+## Tools Available
+
+### Tools Provided by ScrapeGraph MCP Server
+
+| Tool Name          | Short Description                                               |
+|--------------------|----------------------------------------------------------------|
+| `markdownify`      | Convert a webpage into clean, formatted markdown.              |
+| `searchscraper`    | Perform AI-powered web searches with structured results.        |
+| `smartscraper`     | Extract structured data from a webpage using AI.               |
+
+---
+
+### Tool Details
+
+#### **`markdownify`**
+Convert a webpage into clean, formatted markdown.  
+**Parameters:**
+| Name         | Type     | Description                      |
+|--------------|----------|----------------------------------|
+| website_url  | string   | URL of the webpage to convert    |
+
+---
+
+#### **`searchscraper`**
+Perform AI-powered web searches with structured results.  
+**Parameters:**
+| Name        | Type     | Description                      |
+|-------------|----------|----------------------------------|
+| user_prompt | string   | Search query or instructions     |
+
+---
+
+#### **`smartscraper`**
+Extract structured data from a webpage using AI.  
+**Parameters:**
+| Name         | Type     | Description                          |
+|--------------|----------|--------------------------------------|
+| user_prompt  | string   | Instructions for what data to extract|
+| website_url  | string   | URL of the webpage to scrape         |
+
+---
+
+## Meshagent and Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-scrapegraph)
