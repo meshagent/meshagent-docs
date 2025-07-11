@@ -59,12 +59,13 @@ from livekit.plugins import openai, silero
 from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.tools import ToolContext
+from meshagent.otel import otel_config
 
-
-# MeshAgent Service, Tools, and Agent
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 @service.path("/voice")
 class SimpleVoicebot(VoiceBot):
@@ -150,13 +151,15 @@ python main.py
 In the second tab run the call agent command to bring our agent into the room: 
 
 ```sh
-meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --participant-name=voiceagent
 ```
 
 **Note**: This will bring in the agent named ``voiceagent`` into the ``gettingstarted`` room and run it on port ``7777`` using the service path ``voice``. If you want to rename the agent, room, port, or service path simply update the variables in the command.
 
 
 Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, ``voiceagent`` show up under the participants tab! We can talk to the agent now and make sure that it responds with a fun fact like we instructed it to.
+
+We can also click on the menu inside the room and turn on the "Developer console" this will allow us to see live logs, traces, and metrics as we interact with the agent.
 
 ## Phase 2: Adding Built-in MeshAgent Tools to our VoiceBot
 Next, let's add the same built-in MeshAgent tools to our VoiceBot that we gave to our ChatBot in the previous example. These tools will give the voice agent the ability to interact with the user, convert documents to markdown, and write documents to the room. 
@@ -180,10 +183,13 @@ from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.otel import otel_config
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 @service.path("/voice")
 class SimpleVoicebot(VoiceBot):
@@ -287,7 +293,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --participant-name=voiceagent
 ```
 
 ## Phase 3: Adding Custom Tools to our VoiceBot
@@ -314,12 +320,13 @@ from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType, TimestampDataType
 from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.otel import otel_config
 
-
-# MeshAgent Service, Tools, and Agent
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 class WriteTask(Tool):
     def __init__(self):
@@ -483,7 +490,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --agent-name=voiceagent --name=voiceagent
+meshagent call agent --url=http://localhost:7777/voice --room=gettingstarted --participant-name=voiceagent
 ```
 
 Once we're satisfied with how the agent is performing we can deploy and share it. 

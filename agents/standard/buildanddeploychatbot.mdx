@@ -54,10 +54,13 @@ from meshagent.api import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
+from meshagent.otel import otel_config
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 @service.path("/chat")
 class SimpleChatbot(ChatBot):
@@ -89,12 +92,14 @@ python main.py
 In the second tab run the call agent command to bring our agent into the room: 
 
 ```sh
-meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --agent-name=chatagent --name=chatagent
+meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --participant-name=chatagent
 ```
 
 **Note**: This will bring in the agent named ``chatagent`` into the ``gettingstarted`` room and run it on port ``7777`` using the service path ``chat``. If you want to rename the agent, room, port, or service path simply update the variables in the command.
 
 Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, "mychatagent" show up under the messaging tab! We can chat back and forth with the agent, asking it questions and making sure that it responds with a fun fact like we told it to.
+
+We can also click on the menu inside the room and turn on the "Developer console" this will allow us to see live logs, traces, and metrics as we interact with the agent.
 
 ## Phase 2: Adding Built-in MeshAgent Tools to our ChatBot
 Next, let's give our agent the ability to interact with the user, convert documents to markdown, and write documents to the room. We can do this by adding toolkits to our agent. Toolkits represent a group of tools that are used for a particular purpose. 
@@ -111,10 +116,13 @@ from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
+from meshagent.otel import otel_config
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 @service.path("/chat")
 class SimpleChatbot(ChatBot):
@@ -164,7 +172,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --agent-name=chatagent --name=chatagent
+meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --participant-name=chatagent
 ```
 
 ## Phase 3: Adding Custom Tools to our ChatBot
@@ -189,10 +197,13 @@ from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType, TimestampDataType
 from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit
+from meshagent.otel import otel_config
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
+
+otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
 class WriteTask(Tool):
     def __init__(self):
@@ -303,7 +314,7 @@ python main.py
 ```
 
 ```sh
-meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --agent-name=chatagent --name=chatagent
+meshagent call agent --url=http://localhost:7777/chat --room=gettingstarted --participant-name=chatagent
 ```
 
 Once we're satisfied with how the agent is performing we can deploy and share it. 
