@@ -114,6 +114,31 @@ meshagent service create --image=meshagent/cli:latest --port "num=9001 path=/age
 
 The chatbot is now deployed. In a web browser, go back to [studio.meshagent.com](https://studio.meshagent.com/), click the Services tab and you will see the information about your deployed agent. To test the agent go to the Sessions tab, create a session, and you will see the deployed agent appear in the participants list. To interact with the agent simply select it from the participants list and begin talking to the agent.
 
+Deploying the chatbot as a service using the base MeshAgent CLI image automatically supports tracing and telemetry. You can see this inside the MeshAgent Studio by clicking on the menu tab and turning on "Developer console". Now, when you select the deployed chatbot, "chatbot-9001", you will see real time traces as you interact with the agent. Traces give insight into information like what messages were sent by the user and agent, how long the agent took to reply, which tools were invoked, etc. 
+
+## Start an interactive terminal session inside a Room
+
+There may be instances where you want to open an interactive terminal so that you can test things inside the MeshAgent server. For example, running python code or listing files inside a Room. 
+
+You can do this by running ``meshagent tty connect`` which creates a live shell inside the Room's container over a secure WebSocket connection.
+
+<CodeGroup>
+```bash bash
+meshagent tty connect --room=my-room
+```
+</CodeGroup>
+
+This will start or connect to a room called ``my-room`` and allow you to run commands from your terminal that are executed inside the room. For example, running ``ls /data`` will list any of the files that currently exist in the room, ``my-room``. 
+
+From the interactive terminal session you can also launch an agent with tracing enabled. Do this by running: 
+
+<CodeGroup>
+```bash bash
+meshagent chatbot service --agent-name=test
+```
+</CodeGroup>
+
+From the [MeshAgent Studio UI](https://studio.meshagent.com) click into the "my-room" session and call the agent into the room. You can do this by clicking the menu then "Call Agent" and passing a name, and the url ``http://localhost:8081/agent``. This will add your agent to the participants list and you'll be able to chat with it and see the logs, traces, and metrics from your chat. 
 
 ## Create MeshAgent Secrets
 
