@@ -1,0 +1,59 @@
+---
+title: Room Connection
+description: Learn how to set up a room connection for your MeshAgent.
+---
+
+## Description
+
+`RoomConnectionScope` is a widget that manages the connection lifecycle for a MeshAgent `RoomClient`. 
+
+- **Parameters**:
+  - `authorize` (function): A callback that returns a `Future<RoomConnectionInfo>` for authorization.
+  - `builder` (function): A callback that takes the current context and the new instance of `RoomClient`.
+  - `authorizingBuilder` (optional function): A callback for rendering while authorizing.
+  - `doneBuilder` (optional function): A callback for rendering when the connection is done or encounters an error.
+- **Returns**: `Widget`: A widget that builds based on the state of the room connection.
+
+## Example
+
+```dart
+import 'package:flutter/widgets.dart';
+import 'package:meshagent/meshagent.dart';
+import 'package:meshagent_flutter/meshagent_flutter.dart';
+
+class SampleWidget extends StatelessWidget {
+  const SampleWidget({
+    super.key,
+    required this.room,
+    required this.path,
+  });
+
+  final RoomClient room;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return RoomConnectionScope(
+      authorization: (context) async {
+        // Perform your authorization logic here
+        // For example, you might want to fetch a JWT token from your server
+        final response = await fetchJwtToken();
+
+        return RoomConnectionInfo(
+          url: response['url'],
+          jwt: response['jwt'],
+        );
+      },
+      authorizingBuilder: (context) {
+        return Center(child: CircularProgressIndicator());
+      },
+      builder: (context, client) {
+        return Text('Connection established');
+      },
+      doneBuilder: (context, error) {
+        return Text('Connection ended with error: $error');
+      });
+  }
+}
+
+```

@@ -1,0 +1,70 @@
+```dart Dart
+import 'dart:async';
+import 'dart:convert';
+import 'package:dotenv/dotenv.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+
+Future<void> main() async {
+  // Load environment variables (if you have a .env file)
+  // Otherwise, you can rely on `Platform.environment` or pass them directly.
+
+  final secret = env['MESHAGENT_SECRET'] ?? '';
+  final projectId = env['MESHAGENT_PROJECT_ID'] ?? '';
+  final apiKeyId = env['MESHAGENT_KEY_ID'] ?? '';
+
+  if (secret.isEmpty || projectId.isEmpty || apiKeyId.isEmpty) {
+    print('Missing environment variables. Please set:');
+    print('  MESHAGENT_SECRET, MESHAGENT_PROJECT_ID, MESHAGENT_KEY_ID');
+    return;
+  }
+
+  final roomName = 'quickstart';
+
+  // Create a participant token
+  final token = ParticipantToken(
+    name: 'my user',
+    projectId: projectId,
+    apiKeyId: apiKeyId,
+  );
+
+  // Grant this token access to the target room
+  token.addRoomGrant(roomName);
+
+  // Generate a signed JWT
+  final jwt = token.toJWT(secret);
+
+  // Build the WebSocket URL
+  final wsUrl = websocketRoomUrl(roomName);
+
+  // Create and connect the room client
+  final roomClient = RoomClient(url: wsUrl, token: jwt);
+  await roomClient.connect();
+
+  try {
+    // In your original Python code, you wrote to "sample-agent.document"
+    final path = 'sample-agent.document';
+
+    // Ask the "meshagent.document-writer" agent to create/write content
+    await roomClient.ask(
+      agent: 'meshagent.document-writer',
+      arguments: {
+        'path': path,
+        'prompt': 'write a paragraph about AI and how agents are shaping the future',
+      },
+    );
+
+    print(
+      'Take a look at it at '
+      'https://studio.meshagent.com/projects/$projectId/rooms/$roomName?p=$path',
+    );
+  } catch (e) {
+    print('Error: $e');
+  } finally {
+    // Ensure we close the connection
+    await roomClient.disconnect();
+  }
+}
+
+```
+
