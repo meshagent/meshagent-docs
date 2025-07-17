@@ -1,0 +1,175 @@
+---
+title: Armor Crypto
+---
+
+
+Run an agent and toolkit in a temporary Meshagent Room. The MCP Server and chatbot will automatically shut down when the Room is closed.
+
+### Required Environment Variables
+
+- `ARMOR_API_URL` (e.g. `https://app.armorwallet.ai/api/v1`)
+- `ARMOR_API_KEY` (`<PUT-YOUR-KEY-HERE>`)
+
+### Steps
+
+1. **Install Meshagent**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate**  
+   Follow the guide at:  
+   https://docs.meshagent.com/cli/getting_started
+
+3. **Launch the MCP Server in a Meshagent Room**  
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-armor-crypto:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env ARMOR_API_URL=https://app.armorwallet.ai/api/v1 \
+     --env ARMOR_API_KEY=<PUT-YOUR-KEY-HERE> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-armor-crypto-service-test
+   ```
+   - This command starts a Meshagent Room called `test` with the MCP Armor Crypto server running as a cloud agent.  
+   - **Note:** The Room and all running services will be auto-removed when inactive.
+
+4. **Join a Chatbot to the Room with the MCP Toolkit**  
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-armor-crypto --name=mcp-armor-crypto --toolkit=mcp-armor-crypto
+   ```
+   - Launches a chatbot within the same Room, capable of using the Armor Crypto MCP tools.
+   - Multiple toolkits can be loaded into the same Room for multi-tool conversations.
+   - You’ll receive a Room link in the output.
+
+5. **Try Out the Tools**  
+   Open the provided Room link in your browser and message the agent to interact with MCP server tools.
+
+---
+
+## Project-Level Deployment (Persistent Tooling in All Rooms)
+
+For production or group onboarding, deploy services at the Meshagent project level. These agents will automatically join *all* Rooms created under your Meshagent project—no need for repeated local launches.
+
+### Deploy the MCP Server Agent
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-armor-crypto:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env ARMOR_API_URL=https://app.armorwallet.ai/api/v1 \
+  --env ARMOR_API_KEY=<PUT-YOUR-KEY-HERE> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-armor-crypto-service
+```
+
+### Deploy a Persistent Chatbot Using the MCP Toolkit
+
+```bash
+meshagent service create --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-armor-crypto-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-armor-crypto-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-armor-crypto-chatbot --toolkit=mcp-armor-crypto"
+```
+
+- On any new Room creation, the MCP Server and its bot will automatically appear, ready to use.
+
+---
+
+## Tools Available
+
+The MCP server provides a rich set of blockchain, wallet, and trading tools directly to agents and chatbots in Meshagent Rooms.
+
+### Summary of Tools
+
+| Tool | Description |
+|------|-------------|
+| `add_wallets_to_group` | Add wallets to a specified group. |
+| `archive_wallet_group` | Archive wallet groups. |
+| `archive_wallets` | Archive wallets. |
+| `calculate_token_conversion` | Perform token conversion quote between two tokens. |
+| `calculator` | Safely evaluates a mathematical/statistical expression using Python syntax. |
+| `cancel_dca_order` | Cancel a DCA order. |
+| `cancel_order` | Cancel a limit or stop loss order. |
+| `create_dca_order` | Create a DCA order. |
+| `create_groups` | Create new wallet groups. |
+| `create_order` | Create an order. |
+| `create_wallet` | Create new wallets. |
+| `get_all_orders` | Retrieve all limit and stop loss orders. |
+| `get_all_wallets` | Retrieve all wallets with balances. |
+| `get_armor_mcp_version` | Get the current Armor Wallet version. |
+| `get_current_time` | Gets the current time and date. |
+| `get_stake_balances` | Get the balance of staked SOL (jupSOL). |
+| `get_token_candle_data` | Get candle data about any token for analysis. |
+| `get_top_trending_tokens` | Get the top trending tokens in a timeframe. |
+| `get_wallet_token_balance` | Get the balance for a list of wallet/token pairs. |
+| `list_dca_orders` | List all DCA orders. |
+| `list_groups` | List all wallet groups. |
+| `list_single_group` | Retrieve details for a single wallet group. |
+| `remove_wallets_from_group` | Remove wallets from a specified group. |
+| `rename_wallets` | Rename wallets. |
+| `search_official_token_address` | Get official token address/symbol for given token. |
+| `search_token_details` | Search and retrieve token details. |
+| `send_key_to_telegram` | Send the mnemonic or private key to telegram. |
+| `stake_quote` | Retrieve a stake quote. |
+| `stake_transaction` | Execute a stake transaction. |
+| `swap_quote` | Retrieve a swap quote. |
+| `swap_transaction` | Execute a swap transaction. |
+| `transfer_tokens` | Transfer tokens from one wallet to another. |
+| `unarchive_wallet_group` | Unarchive wallet groups. |
+| `unarchive_wallets` | Unarchive wallets. |
+| `unstake_quote` | Retrieve an unstake quote. |
+| `unstake_transaction` | Execute an unstake transaction. |
+| `wait_a_moment` | Wait for a short amount of time (up to 10 seconds). |
+
+### Tools Details
+
+<details>
+<summary>Expand for full parameter details…</summary>
+
+- See the [full tool reference above](#tools-available) for parameter details for each command.
+- Most tools expect JSON or basic string-type parameters representing wallets, orders, tokens, groups, or expressions.
+- Many tools are batch-friendly (accept comma-separated or array-style requests).
+
+</details>
+
+---
+
+## MCP Armor Crypto Docker Usage
+
+To run the server standalone via Docker:
+
+```json
+{
+  "mcpServers": {
+    "armor-crypto": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "ARMOR_API_URL",
+        "-e",
+        "ARMOR_API_KEY",
+        "mcp/armor-crypto"
+      ],
+      "env": {
+        "ARMOR_API_URL": "https://app.armorwallet.ai/api/v1",
+        "ARMOR_API_KEY": "<PUT-YOUR-KEY-HERE>"
+      }
+    }
+  }
+}
+```
+
+[Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)
+
+---
+
+## Meshagent Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent CLI Docs](https://docs.meshagent.com)
+- [Meshagent MCP Armor Crypto Docker Image](https://hub.docker.com/r/meshagent/mcp-armor-crypto)
+
+---

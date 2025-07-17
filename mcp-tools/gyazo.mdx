@@ -1,0 +1,143 @@
+---
+title: Gyazo
+---
+
+
+Follow these steps to test the Gyazo MCP server and tools within a Meshagent Room in the cloud (ephemeral, cleans up when Room closes):
+
+### 1. Set Required Environment Variables
+
+- `GYAZO_ACCESS_TOKEN`: Your Gyazo account API token (required).
+
+```sh
+export GYAZO_ACCESS_TOKEN=your-access-token-here
+```
+
+### 2. Install Meshagent Python SDK
+
+```sh
+pip install "meshagent[all]"
+```
+
+### 3. Sign Up & Authenticate with Meshagent
+
+Follow the [official getting started guide](https://docs.meshagent.com/cli/getting_started) to log in and connect your CLI.
+
+### 4. Start the MCP Gyazo Server as a Room-level Agent
+
+```sh
+meshagent service test --room=test --role=agent --image=meshagent/mcp-gyazo:latest \
+  --env GYAZO_ACCESS_TOKEN=your-access-token-here \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-gyazo-service-test
+```
+
+- This starts the Gyazo MCP server agent in a test Room. It will auto-clean when Room is inactive.
+
+### 5. Start a Chatbot with Tool Access in the Same Room
+
+```sh
+meshagent chatbot join --room=test --agent-name=mcp-gyazo --name=mcp-gyazo --toolkit=mcp-gyazo
+```
+
+- This launches a chatbot in the Room that can use the Gyazo toolkit. Multiple toolkits can be attached to one agent.
+- A link to the Room will be output in the terminal.
+
+### 6. Try Out the Room
+
+- Open the Room link in your browser.
+- Send a message to the agent to run Gyazo MCP Server tools!
+
+---
+
+## Project Level Deployment
+
+Deploy persistent services so the Gyazo MCP server and chatbot are ready in every new Room (for production):
+
+### 1. Create the MCP Service
+
+```sh
+meshagent service create --role=agent --image=meshagent/mcp-gyazo:latest \
+  --env GYAZO_ACCESS_TOKEN=your-access-token-here \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-gyazo-service
+```
+
+### 2. Create the Persistent Chatbot Service
+
+```sh
+meshagent service create --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-gyazo-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-gyazo-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-gyazo-chatbot --toolkit=mcp-gyazo"
+```
+
+- These services will always join any Room created in the project—no need to manually start MCP server/chatbot each time!
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+Tool | Short Description
+-|- 
+`gyazo_image` | Fetch image content and metadata from Gyazo
+`gyazo_latest_image` | Fetch latest uploaded image content and metadata from Gyazo
+`gyazo_search` | Full-text search for captures uploaded by users on Gyazo
+`gyazo_upload` | Upload an image to Gyazo
+
+---
+
+### Tools Details
+
+#### Tool: **`gyazo_image`**
+Fetch image content and metadata from Gyazo
+
+Parameters       | Type          | Description
+-----------------|--------------|-------------
+`id_or_url`      | `string`     | ID or URL of the image on Gyazo
+
+---
+
+#### Tool: **`gyazo_latest_image`**
+Fetch latest uploaded image content and metadata from Gyazo
+
+Parameters       | Type          | Description
+-----------------|--------------|-------------
+`name`           | `string`     | 
+
+---
+
+#### Tool: **`gyazo_search`**
+Full-text search for captures uploaded by users on Gyazo
+
+Parameters       | Type          | Description
+-----------------|--------------|-------------
+`query`          | `string`     | Search keyword (max length: 200 characters). example: 'cat', 'title:cat', 'app:"Google Chrome"', 'url:google.com', 'cat since:2024-01-01 until:2024-12-31' NOTE: If you cannot find an appropriate capture, try rephrasing the search query to capture the user's intent and repeat the search several times
+`page`           | `integer` *optional* | Page number for pagination
+`per`            | `integer` *optional* | Number of results per page (max: 100)
+
+---
+
+#### Tool: **`gyazo_upload`**
+Upload an image to Gyazo
+
+Parameters       | Type          | Description
+-----------------|--------------|-------------
+`imageData`      | `string`     | Base64 encoded image data
+`app`            | `string` *optional* | Application name for the image (optional).
+`description`    | `string` *optional* | Description for the image (optional)
+`refererUrl`     | `string` *optional* | Source URL for the image (optional).
+`title`          | `string` *optional* | Title for the image (optional)
+
+---
+
+## Meshagent and Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Documentation (Read The Docs)](https://docs.meshagent.com)
+- [Meshagent MCP Gyazo Docker Image](https://hub.docker.com/r/meshagent/mcp-gyazo)

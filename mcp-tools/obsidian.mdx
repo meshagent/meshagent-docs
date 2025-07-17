@@ -1,0 +1,231 @@
+---
+title: Obsidian
+---
+
+
+Spin up the Obsidian MCP server and chatbot in a Meshagent Room for interactive testing.  
+**All processes are automatically cleaned up when the Room closes.**
+
+**Environment Variables Needed:**
+- `OBSIDIAN_HOST`: `host.docker.internal`
+- `OBSIDIAN_API_KEY`: `YOUR_OBSIDIAN_API_KEY`
+
+#### Steps
+
+1. **Install Meshagent CLI**
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up & Authenticate**
+
+   Follow onboarding at [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Obsidian Service in a Room**
+
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-obsidian:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env OBSIDIAN_HOST=host.docker.internal \
+     --env OBSIDIAN_API_KEY=YOUR_OBSIDIAN_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-obsidian-service-test
+   ```
+   - This will start a Meshagent Room (named `test`) containing a functional MCP server instance.
+
+4. **Join the Room with a Chatbot and Toolkit**
+
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-obsidian \
+     --name=mcp-obsidian \
+     --toolkit=mcp-obsidian
+   ```
+   - Chatbot runs in the Room and can use Obsidian MCP tools.
+   - The command output gives you a link to the Room.
+
+5. **Test in the Browser**
+
+   - Visit the Room link and send a message to the agent to interact with the Obsidian MCP server.
+
+---
+
+## Project-Level Deployment (Persistent)
+
+For production-grade setups!  
+Deploy persistent services at the project level so that whenever you (or collaborators) open a Room in your Meshagent Project, the MCP server tools and chatbot are instantly available—*no manual launch needed*.
+
+**Create Obsidian MCP Server as a Persistent Project Service:**
+
+```bash
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-obsidian:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env OBSIDIAN_HOST=host.docker.internal \
+  --env OBSIDIAN_API_KEY=YOUR_OBSIDIAN_API_KEY \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-obsidian-service
+```
+
+**Create Persistent Chatbot Service:**
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-obsidian-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-obsidian-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-obsidian-chatbot --toolkit=mcp-obsidian"
+```
+
+**Result:**  
+Every new Room in the project will automatically include the Obsidian MCP server and chatbot agent.  
+No need to run servers locally or re-join rooms by hand.
+
+---
+
+## Tools Available
+
+This Meshagent-wrapped Obsidian MCP Server provides the following tools:
+
+| Tool | Short Description |
+|------|------------------|
+| `obsidian_append_content` | Append content to a new or existing file in the vault. |
+| `obsidian_batch_get_file_contents` | Return the contents of multiple files in your vault, concatenated with headers. |
+| `obsidian_complex_search` | Complex search for documents using a JsonLogic query. |
+| `obsidian_delete_file` | Delete a file or directory from the vault. |
+| `obsidian_get_file_contents` | Return the content of a single file in your vault. |
+| `obsidian_get_periodic_note` | Get current periodic note for the specified period. |
+| `obsidian_get_recent_changes` | Get recently modified files in the vault. |
+| `obsidian_get_recent_periodic_notes` | Get most recent periodic notes for the specified period type. |
+| `obsidian_list_files_in_dir` | Lists all files and directories that exist in a specific Obsidian directory. |
+| `obsidian_list_files_in_vault` | Lists all files and directories in the root directory of your Obsidian vault. |
+| `obsidian_patch_content` | Insert content into an existing note relative to a heading, block reference, or frontmatter field. |
+| `obsidian_simple_search` | Simple search for documents matching a specified text query across all files in the vault. |
+
+---
+
+### Tool Details
+
+<details>
+  <summary><strong>obsidian_append_content</strong></summary>
+  Append content to a new or existing file in the vault.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>content</code> (<i>string</i>): Content to append to the file
+  - <code>filepath</code> (<i>string</i>): Path to the file (relative to vault root)
+</details>
+
+<details>
+  <summary><strong>obsidian_batch_get_file_contents</strong></summary>
+  Return the contents of multiple files in your vault, concatenated with headers.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>filepaths</code> (<i>array</i>): List of file paths to read
+</details>
+
+<details>
+  <summary><strong>obsidian_complex_search</strong></summary>
+  Complex search for documents using a JsonLogic query.<br/>
+  Supports standard JsonLogic operators plus <code>glob</code> and <code>regexp</code> for pattern matching. Results must be non-falsy.<br/>
+  Use for searching, e.g., all documents with certain tags.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>query</code> (<i>object</i>): JsonLogic query object. Example: `{"glob": ["*.md", {"var": "path"}]}` matches all markdown files
+</details>
+
+<details>
+  <summary><strong>obsidian_delete_file</strong></summary>
+  Delete a file or directory from the vault.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>confirm</code> (<i>boolean</i>): Confirmation to delete the file (must be true)
+  - <code>filepath</code> (<i>string</i>): Path to the file or directory to delete (relative to vault root)
+</details>
+
+<details>
+  <summary><strong>obsidian_get_file_contents</strong></summary>
+  Return the content of a single file in your vault.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>filepath</code> (<i>string</i>): Path to the relevant file (relative to your vault root).
+</details>
+
+<details>
+  <summary><strong>obsidian_get_periodic_note</strong></summary>
+  Get current periodic note for the specified period.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>period</code> (<i>string</i>): The period type (daily, weekly, monthly, quarterly, yearly)
+</details>
+
+<details>
+  <summary><strong>obsidian_get_recent_changes</strong></summary>
+  Get recently modified files in the vault.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>days</code> (<i>integer, optional</i>): Only include files modified within this many days (default: 90)
+  - <code>limit</code> (<i>integer, optional</i>): Maximum number of files to return (default: 10)
+</details>
+
+<details>
+  <summary><strong>obsidian_get_recent_periodic_notes</strong></summary>
+  Get most recent periodic notes for the specified period type.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>period</code> (<i>string</i>): The period type (daily, weekly, monthly, quarterly, yearly)
+  - <code>include_content</code> (<i>boolean, optional</i>): Whether to include note content (default: false)
+  - <code>limit</code> (<i>integer, optional</i>): Maximum number of notes to return (default: 5)
+</details>
+
+<details>
+  <summary><strong>obsidian_list_files_in_dir</strong></summary>
+  Lists all files and directories that exist in a specific Obsidian directory.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>dirpath</code> (<i>string</i>): Path to list files from (relative to your vault root). Note that empty directories will not be returned.
+</details>
+
+<details>
+  <summary><strong>obsidian_list_files_in_vault</strong></summary>
+  Lists all files and directories in the root directory of your Obsidian vault.
+</details>
+
+<details>
+  <summary><strong>obsidian_patch_content</strong></summary>
+  Insert content into an existing note relative to a heading, block reference, or frontmatter field.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>content</code> (<i>string</i>): Content to insert
+  - <code>filepath</code> (<i>string</i>): Path to the file (relative to vault root)
+  - <code>operation</code> (<i>string</i>): Operation to perform (append, prepend, or replace)
+  - <code>target</code> (<i>string</i>): Target identifier (heading path, block reference, or frontmatter field)
+  - <code>target_type</code> (<i>string</i>): Type of target to patch
+</details>
+
+<details>
+  <summary><strong>obsidian_simple_search</strong></summary>
+  Simple search for documents matching a specified text query across all files in the vault.<br/>
+  Use for basic vault-wide search.
+  <br/><br/>
+  <strong>Parameters:</strong>
+  - <code>query</code> (<i>string</i>): Text to search for in the vault.
+  - <code>context_length</code> (<i>integer, optional</i>): How much context to return around the matching string (default: 100)
+</details>
+
+---
+
+## Helpful Links
+
+- **Meshagent Website:** https://www.meshagent.com/
+- **Meshagent Documentation:** https://docs.meshagent.com
+- **Meshagent MCP Tool Docker Image:** https://hub.docker.com/r/meshagent/mcp-obsidian
+- **Obsidian MCP Server:** https://github.com/MarkusPfundstein/mcp-obsidian
+
+For more about Model Context Protocol (MCP): [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

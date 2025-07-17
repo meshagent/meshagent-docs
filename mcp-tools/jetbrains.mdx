@@ -1,0 +1,278 @@
+---
+title: JetBrains
+---
+
+
+You can quickly spin up an MCP JetBrains server for a test Room environment and interact with it via a Meshagent-powered chatbot.
+
+**Environment Variables Needed**:
+
+- `IDE_PORT=8090`
+
+### Steps
+
+1. **Install Meshagent CLI**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   See [CLI Getting Started](https://docs.meshagent.com/cli/getting_started) for account creation and login.
+
+3. **Start the MCP Server as an Agent in a Meshagent Room**  
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-jetbrains:latest --env MESHAGENT_PORT=8001 --env IDE_PORT=8090 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-jetbrains-service-test
+   ```
+   - This command starts a Meshagent Room named `test` and attaches a JetBrains MCP server as a tool agent.  
+   - The `Room` and all its services are automatically closed when inactive, removing all related tools and chatbots.
+
+4. **Join with a Chatbot That Can Use the JetBrains Toolkit**  
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-jetbrains --name=mcp-jetbrains --toolkit=mcp-jetbrains
+   ```
+   - This launches a chatbot in the same Room, making the MCP JetBrains tools accessible via chat.
+   - Multiple toolkits can be linked to the same agent concurrently.
+   - A Room link will be displayed in the output.
+
+5. **Try It Out**  
+   - Open the Room link in your browser provided by Step 4.
+   - Send a message to the agent chatbot to interact with JetBrains tools.
+
+---
+
+## Project Level Deployment: Persistent Services for Every Room
+
+For production scenarios and persistent tool access, you can deploy MCP server tools and a chatbot once per project—making them available in all Rooms under that project, without managing local processes.
+
+### Steps
+
+1. **Create the MCP JetBrains Service (Agent)**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-jetbrains:latest --env MESHAGENT_PORT=8001 --env IDE_PORT=8090 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-jetbrains-service
+   ```
+   - This ensures the JetBrains MCP server container is brought up automatically in any new Room.
+
+2. **Create the Chatbot Service Linked to the MCP Tool**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-jetbrains-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-jetbrains-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-jetbrains-chatbot --toolkit=mcp-jetbrains"
+   ```
+   - This launches an AI chatbot service able to leverage the exposed JetBrains tools.
+   - Both services are auto-provisioned for every new Room in your Meshagent project.
+
+---
+
+## Tools Available
+
+The JetBrains MCP Server provides an extensive suite of automation tools for JetBrains IDEs (IntelliJ, PyCharm, WebStorm, Android Studio, and more):
+
+| Tool | Short Description |
+|------|------------------|
+| `create_new_file_with_text` | Creates a new file at the specified path within the project directory and populates it with the provided text |
+| `execute_action_by_id` | Executes an action by its ID in JetBrains IDE editor |
+| `execute_terminal_command` | Executes a specified shell command in the IDE's integrated terminal |
+| `find_commit_by_message` | Searches for a commit based on the provided text or keywords in the project history |
+| `find_files_by_name_substring` | Searches for all files in the project whose names contain the specified substring |
+| `get_all_open_file_paths` | Lists full path relative paths to project root of all currently open files |
+| `get_all_open_file_texts` | Returns text of all currently open files in the JetBrains IDE editor |
+| `get_debugger_breakpoints` | Retrieves a list of all line breakpoints currently set in the project |
+| `get_file_text_by_path` | Retrieves the text content of a file using its path relative to project root |
+| `get_open_in_editor_file_path` | Retrieves the absolute path of the currently active file |
+| `get_open_in_editor_file_text` | Retrieves the complete text content of the currently active file |
+| `get_progress_indicators` | Retrieves the status of all running progress indicators |
+| `get_project_dependencies` | Get list of all dependencies defined in the project |
+| `get_project_modules` | Get list of all modules in the project with their dependencies |
+| `get_project_vcs_status` | Retrieves the current version control status of files in the project |
+| `get_run_configurations` | Returns a list of run configurations for the current project |
+| `get_selected_in_editor_text` | Retrieves the currently selected text from the active editor |
+| `get_terminal_text` | Retrieves the current text content from the first active terminal |
+| `list_available_actions` | Lists all available actions in JetBrains IDE editor |
+| `list_directory_tree_in_folder` | Provides a hierarchical tree view of the project directory structure |
+| `list_files_in_folder` | Lists all files and directories in the specified project folder |
+| `open_file_in_editor` | Opens the specified file in the JetBrains IDE editor |
+| `replace_current_file_text` | Replaces the entire content of the currently active file |
+| `replace_file_text_by_path` | Replaces the entire content of a specified file with new text |
+| `replace_selected_text` | Replaces the currently selected text in the active editor |
+| `replace_specific_text` | Replaces specific text occurrences in a file with new text |
+| `run_configuration` | Run a specific run configuration in the current project |
+| `search_in_files_content` | Searches for a text substring within all files in the project |
+| `toggle_debugger_breakpoint` | Toggles a debugger breakpoint at the specified line in a project file |
+| `wait` | Waits for a specified number of milliseconds |
+
+---
+
+### Tools Details
+
+<details>
+<summary><strong>Click to expand tools details</strong></summary>
+
+#### **create_new_file_with_text**
+*Creates a new file at the specified path within the project directory and populates it with the provided text*
+
+| Parameter       | Type    | Description                                  |
+|-----------------|---------|----------------------------------------------|
+| pathInProject   | string  | The relative path where the file should be created |
+| text            | string  | The content to write into the new file       |
+
+---
+
+#### **execute_action_by_id**
+*Executes an action by its ID in JetBrains IDE editor*
+
+| Parameter | Type    | Description                 |
+|-----------|---------|-----------------------------|
+| actionId  | string  | The ID of the action to execute |
+
+---
+
+#### **execute_terminal_command**
+*Executes a specified shell command in the IDE's integrated terminal*
+
+| Parameter | Type    | Description         |
+|-----------|---------|---------------------|
+| command   | string  | The shell command to execute |
+
+---
+
+#### **find_commit_by_message**
+*Searches for a commit based on the provided text or keywords in the project history*
+
+| Parameter | Type    | Description           |
+|-----------|---------|-----------------------|
+| query     | string  | Text/keywords to search for in commit messages |
+
+---
+
+#### **find_files_by_name_substring**
+*Searches for all files in the project whose names contain the specified substring*
+
+| Parameter     | Type    | Description                           |
+|---------------|---------|---------------------------------------|
+| nameSubstring | string  | Substring to search for in file names |
+
+---
+
+#### **get_file_text_by_path**
+*Retrieves the text content of a file using its path relative to project root*
+
+| Parameter    | Type    | Description                          |
+|--------------|---------|--------------------------------------|
+| pathInProject| string  | File location from project root      |
+
+---
+
+#### **list_directory_tree_in_folder**
+*Provides a hierarchical tree view of the project directory structure*
+
+| Parameter     | Type      | Description                               |
+|---------------|-----------|-------------------------------------------|
+| pathInProject | string    | The starting folder path ('/' for root)   |
+| maxDepth      | integer   | Maximum recursion depth (default: 5)      |
+
+---
+
+#### **list_files_in_folder**
+*Lists all files and directories in the specified project folder*
+
+| Parameter     | Type    | Description                               |
+|---------------|---------|-------------------------------------------|
+| pathInProject | string  | The folder path ('/' for project root)    |
+
+---
+
+#### **open_file_in_editor**
+*Opens the specified file in the JetBrains IDE editor*
+
+| Parameter | Type    | Description            |
+|-----------|---------|------------------------|
+| filePath  | string  | Path of file to open   |
+
+---
+
+#### **replace_current_file_text**
+*Replaces the entire content of the currently active file*
+
+| Parameter | Type    | Description            |
+|-----------|---------|------------------------|
+| text      | string  | The new content to write |
+
+---
+
+#### **replace_file_text_by_path**
+*Replaces the entire content of a specified file with new text*
+
+| Parameter    | Type    | Description                         |
+|--------------|---------|-------------------------------------|
+| pathInProject| string  | Path to the target file, relative   |
+| text         | string  | New content to write                |
+
+---
+
+#### **replace_selected_text**
+*Replaces the currently selected text in the active editor*
+
+| Parameter | Type    | Description            |
+|-----------|---------|------------------------|
+| text      | string  | The replacement content|
+
+---
+
+#### **replace_specific_text**
+*Replaces specific text occurrences in a file with new text*
+
+| Parameter     | Type    | Description                                |
+|---------------|---------|--------------------------------------------|
+| newText       | string  | The replacement text                       |
+| oldText       | string  | The text to be replaced                    |
+| pathInProject | string  | Path to the target file, relative          |
+
+---
+
+#### **run_configuration**
+*Run a specific run configuration in the current project*
+
+| Parameter | Type    | Description                                |
+|-----------|---------|--------------------------------------------|
+| name      | string  | Name of the run configuration to execute   |
+
+---
+
+#### **search_in_files_content**
+*Searches for a text substring within all files in the project*
+
+| Parameter  | Type    | Description           |
+|------------|---------|-----------------------|
+| searchText | string  | The text to find      |
+
+---
+
+#### **toggle_debugger_breakpoint**
+*Toggles a debugger breakpoint at the specified line in a project file*
+
+| Parameter         | Type    | Description                                       |
+|-------------------|---------|---------------------------------------------------|
+| filePathInProject | string  | The relative path to the file within the project  |
+| line              | integer | Line number where to toggle the breakpoint (1-based) |
+
+---
+
+#### **wait**
+*Waits for a specified number of milliseconds*
+
+| Parameter   | Type    | Description               |
+|-------------|---------|---------------------------|
+| milliseconds| integer | Duration to wait (default: 5000) |
+
+</details>
+
+---
+
+## Reference Links
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP JetBrains Docker Image**: [https://hub.docker.com/r/meshagent/mcp-jetbrains](https://hub.docker.com/r/meshagent/mcp-jetbrains)
+
+For further configuration and advanced usage, please consult the [Meshagent CLI Documentation](https://docs.meshagent.com/cli/getting_started).  
+Learn more about the [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) and its secure management using Docker [here](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/).
+
+---

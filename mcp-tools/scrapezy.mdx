@@ -1,0 +1,92 @@
+---
+title: Scrapezy
+---
+
+
+Try Scrapezy tools interactively with Meshagent Rooms in the cloud. When the Room closes, the tool and chatbot are automatically stopped, making this ideal for on-demand testing.
+
+### Prerequisites
+
+- Python: Install Meshagent CLI  
+  `pip install 'meshagent[all]'`
+- [Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) with Meshagent CLI.
+  
+### Required Environment Variables
+
+- `SCRAPEZY_API_KEY`: Your Scrapezy API key.
+
+### Steps
+
+1. **Start the MCP server in a Meshagent Room as an agent:**
+
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-scrapezy:latest --env MESHAGENT_PORT=8001 --env SCRAPEZY_API_KEY=your_api_key --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-scrapezy-service-test
+   ```
+   - This command creates a Meshagent Room named `test` and adds a Scrapezy MCP server agent. The service, tools, and chatbot are cleaned up once the room is closed or becomes inactive.
+
+2. **Start the chatbot with Scrapezy tool access in the same room:**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-scrapezy --name=mcp-scrapezy --toolkit=mcp-scrapezy
+   ```
+   - This launches a chatbot in the `test` room, using the Scrapezy toolkit. Multiple toolkits can be specified if desired.
+   - A Room link will be provided in the output.
+
+3. **Interact with the MCP tools:**
+   - Visit the Room link in your browser and send a message to the agent to use the Scrapezy MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+For production deployments, create persistent MCP server and chatbot services at the Meshagent project level. These services will automatically join every new Room created in the project, making setup seamless and eliminating the need for local servers or chatbots.
+
+### Steps
+
+1. **Deploy the Scrapezy MCP server as a project-level agent:**
+
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-scrapezy:latest --env MESHAGENT_PORT=8001 --env SCRAPEZY_API_KEY=your_api_key --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-scrapezy-service
+   ```
+
+2. **Deploy the chatbot (with toolkit) as a project-level service:**
+
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-scrapezy-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-scrapezy-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-scrapezy-chatbot --toolkit=mcp-scrapezy"
+   ```
+
+With these persistent project-level services, every new room in the project will automatically have access to the Scrapezy tools through both open APIs and chatbot interactions.
+
+---
+
+## Tools Available
+
+### **Tools Provided by this Server**
+
+| Tools                     | Short Description                             |
+|---------------------------|-----------------------------------------------|
+| `extract-structured-data` | Extract structured data from a website.       |
+
+---
+
+### **Tools Details**
+
+#### Tool: `extract-structured-data`
+
+- **Description:** Extract structured data from a website.
+- **Parameters:**
+
+  | Parameter | Type   | Description                                |
+  |-----------|--------|--------------------------------------------|
+  | `prompt`  | string | Prompt to extract data from the website    |
+  | `url`     | string | URL of the website to extract data from    |
+
+---
+
+## Meshagent & Scrapezy Resources
+
+- [Meshagent Official Site](https://www.meshagent.com/)
+- [Meshagent Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image](https://hub.docker.com/r/meshagent/mcp-scrapezy)
+- [Scrapezy GitHub](https://github.com/Scrapezy/mcp)
+- [Getting Started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

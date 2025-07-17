@@ -1,0 +1,202 @@
+---
+title: Git
+---
+
+
+The following steps show how to run the MCP Git agent and connect a chatbot in a Meshagent room for quick testing. All resources are spun up *in the cloud* and are destroyed when the room closes.
+
+### 1. Install Meshagent Client
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Authenticate and Set Up Meshagent
+
+Follow [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+
+### 3. Launch the MCP Git Agent in a Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-git:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-git-service-test
+```
+
+- This spins up an MCP Git server in a temporary Meshagent room (`test`). The service is auto-cleaned up with the room.
+
+### 4. Join the Room with a Chatbot using the Git Toolkit
+
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-git --name=mcp-git --toolkit=mcp-git
+```
+
+- This starts a chatbot in the room, enabled to use the Git tool suite. 
+- **Tip:** You can use multiple toolkits and agents in the same room.
+- **Note:** The command output will provide a **URL** to open the room in your browser.
+
+### 5. Test the Setup
+
+Visit the provided room link in your browser.  
+Send a message to the `mcp-git` agent to interact with the Git MCP tools in real time (e.g., `"Show me the git log"`).
+
+---
+
+## Project Level Deployment (Persistent MCP Git Service)
+
+For production or shared team usage, deploy MCP Git as persistent project-level Meshagent services:
+- Makes the MCP Git tools and chatbots *auto-appear in all future rooms* under the project.
+- Eliminates the need for local processes—services and agents auto-join every room!
+
+### 1. Create the MCP Git Agent as a Project Service
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-git:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-git-service
+```
+
+### 2. Create a Project-Level Chatbot Service with Git Toolkit
+
+```bash
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-git-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-git-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-git-chatbot --toolkit=mcp-git"
+```
+
+From now on, every time a room is created in your Meshagent project, the Git MCP server and chatbot will be available for immediate use.
+
+---
+
+## Tools Available
+
+### Server: MCP Git (Reference)
+
+Git repository interaction and automation server.
+
+**Docker Image:** [meshagent/mcp-git](https://hub.docker.com/r/meshagent/mcp-git)
+
+### Tools Provided
+
+| Tool | Short Description |
+|------|------------------|
+| `git_add` | Adds file contents to the staging area |
+| `git_checkout` | Switches branches |
+| `git_commit` | Records changes to the repository |
+| `git_create_branch` | Creates a new branch from an optional base branch |
+| `git_diff` | Shows differences between branches or commits |
+| `git_diff_staged` | Shows changes that are staged for commit |
+| `git_diff_unstaged` | Shows changes in the working directory that are not yet staged |
+| `git_init` | Initialize a new Git repository |
+| `git_log` | Shows the commit logs |
+| `git_reset` | Unstages all staged changes |
+| `git_show` | Shows the contents of a commit |
+| `git_status` | Shows the working tree status |
+
+---
+
+### Tool Details
+
+#### **`git_add`**
+Adds file contents to the staging area  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| files | array |  |
+| repo_path | string |  |
+
+---
+
+#### **`git_checkout`**
+Switches branches  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| branch_name | string |  |
+| repo_path | string |  |
+
+---
+
+#### **`git_commit`**
+Records changes to the repository  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| message | string |  |
+| repo_path | string |  |
+
+---
+
+#### **`git_create_branch`**
+Creates a new branch from an optional base branch  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| branch_name | string |  |
+| repo_path | string |  |
+| base_branch | string (*optional*) |  |
+
+---
+
+#### **`git_diff`**
+Shows differences between branches or commits  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+| target | string |  |
+
+---
+
+#### **`git_diff_staged`**
+Shows changes that are staged for commit  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+
+---
+
+#### **`git_diff_unstaged`**
+Shows changes in the working directory that are not yet staged  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+
+---
+
+#### **`git_init`**
+Initialize a new Git repository  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+
+---
+
+#### **`git_log`**
+Shows the commit logs  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+| max_count | integer (*optional*) |  |
+
+---
+
+#### **`git_reset`**
+Unstages all staged changes  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+
+---
+
+#### **`git_show`**
+Shows the contents of a commit  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+| revision | string |  |
+
+---
+
+#### **`git_status`**
+Shows the working tree status  
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| repo_path | string |  |
+
+---
+
+## Learn More
+
+- **Meshagent website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Git Docker Image:** [https://hub.docker.com/r/meshagent/mcp-git](https://hub.docker.com/r/meshagent/mcp-git)

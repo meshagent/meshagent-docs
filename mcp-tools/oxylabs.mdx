@@ -1,0 +1,194 @@
+---
+title: Oxylabs
+---
+
+
+#### Prerequisites
+
+- Python installed
+- Docker installed
+- An [Oxylabs](https://oxylabs.io/) account (for credentials)
+- [Meshagent account](https://docs.meshagent.com/cli/getting_started) and CLI login
+
+#### Required Environment Variables
+
+- `OXYLABS_USERNAME`: Your Oxylabs account username.
+- `OXYLABS_PASSWORD`: Your Oxylabs account password.
+
+#### Steps
+
+1. **Install Meshagent:**
+   ```shell
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - [Follow the Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started)
+   - Authenticate via the CLI (usually `meshagent login` will walk you through OAuth auth).
+
+3. **Start the MCP Oxylabs Server in a Temporary Room**
+   ```shell
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-oxylabs:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env OXYLABS_USERNAME=YOUR_USERNAME_HERE \
+     --env OXYLABS_PASSWORD=YOUR_PASSWORD_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-oxylabs-service-test
+   ```
+   - *This command launches a temporary Room with the Oxylabs MCP server live as a callable service. When the Room closes or is inactive, the service and resources are auto-removed.*
+
+4. **Start a Chatbot with the MCP Oxylabs Toolkit in the Room**
+   ```shell
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-oxylabs \
+     --name=mcp-oxylabs \
+     --toolkit=mcp-oxylabs
+   ```
+   - *This chatbot can use all the MCP tools provided in the room. The output will include a link to join the Room.*
+
+5. **Test in the Browser**
+   - Visit the Room link provided in the previous step.
+   - Send a message to the agent (e.g., ask it to scrape a page, Google something, or scrape Amazon) to interact live with the MCP Server tools.
+
+---
+
+## Project Level Deployment: Persistent Services
+
+For production and always-available tools in all project Rooms, deploy persistent MCP agent and chatbot services at the project level. These agents automatically join every new Room in the project, so users never have to manage manual tool starts.
+
+1. **Create Persistent MCP Oxylabs Agent**
+   ```shell
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-oxylabs:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env OXYLABS_USERNAME=YOUR_USERNAME_HERE \
+     --env OXYLABS_PASSWORD=YOUR_PASSWORD_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-oxylabs-service
+   ```
+
+2. **Create Persistent Chatbot Agent with Toolkit**
+   ```shell
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-oxylabs-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-oxylabs-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-oxylabs-chatbot --toolkit=mcp-oxylabs"
+   ```
+
+*Now, every new Meshagent Room in your project will have instant access to the MCP server tools—no local deployment required.*
+
+---
+
+## Tools Available
+
+The MCP Oxylabs server provides the following tools for chatbots and agents in Meshagent Rooms:
+
+| Tool | Short Description |
+|------|------------------|
+| `amazon_product_scraper` | Scrape Amazon products. |
+| `amazon_search_scraper`  | Scrape Amazon search results. |
+| `google_search_scraper`  | Scrape Google Search results. |
+| `universal_scraper`      | Get content of any webpage. |
+
+### Tool Details
+
+#### **`amazon_product_scraper`**
+Scrape Amazon products.
+
+Supports content parsing, user agent types, domain, geolocation, locale parameters, output formats, Amazon-specific parameters like currency, and more accurate pricing via auto-select variant.
+
+**Parameters:**
+- `query` (`string`): Keyword to search for.
+- `autoselect_variant` (`boolean` *optional*): Accurate pricing; set to true.
+- `currency` (`string` *optional*): Display currency.
+- `domain` (`string` *optional*): Domain localization (e.g., `co.uk`, `us`, `fr`).
+- `geo_location` (`string` *optional*): Target location (ISO-3166/region).
+- `locale` (`string` *optional*): Language header (e.g., `en-US`, `de-AT`).
+- `output_format` (`string` *optional*): Output: `links`, `md`, `html`.
+- `parse` (`boolean` *optional*): If false, uses `output_format`.
+- `render` (`string` *optional*): Headless browser option (`html`).
+- `user_agent_type` (`string` *optional*): Alters User-Agent header.
+
+*This tool is read-only.*
+
+---
+
+#### **`amazon_search_scraper`**
+Scrape Amazon search results.
+
+Supports parsing, user agent types, pagination, domain, geolocation, locale, Amazon-specific parameters, output formats.
+
+**Parameters:**
+- `query` (`string`): Keyword to search for.
+- `category_id` (`string` *optional*): Search in category.
+- `currency` (`string` *optional*): Display currency.
+- `domain` (`string` *optional*): Domain (e.g., `co.uk`, `us`, `fr`).
+- `geo_location` (`string` *optional*): Target location.
+- `locale` (`string` *optional*): Language header.
+- `merchant_id` (`string` *optional*): Specific seller.
+- `output_format` (`string` *optional*): `links`, `md`, `html`.
+- `pages` (`integer` *optional*): Number of pages.
+- `parse` (`boolean` *optional*): If false, uses `output_format`.
+- `render` (`string` *optional*): Headless browser.
+- `start_page` (`integer` *optional*): Starting page.
+- `user_agent_type` (`string` *optional*): User-Agent header.
+
+*This tool is read-only.*
+
+---
+
+#### **`google_search_scraper`**
+Scrape Google Search results.
+
+Content parsing, user agent types, pagination, domain, geolocation, locale, output formats.
+
+**Parameters:**
+- `query` (`string`): URL-encoded keyword.
+- `ad_mode` (`boolean` *optional*): Use Google Ads source if true.
+- `domain` (`string` *optional*): Localization (e.g., `co.uk`).
+- `geo_location` (`string` *optional*): Target location.
+- `limit` (`integer` *optional*): Results per page.
+- `locale` (`string` *optional*): Language header.
+- `output_format` (`string` *optional*): `links`, `md`, `html`.
+- `pages` (`integer` *optional*): Number of pages.
+- `parse` (`boolean` *optional*): If false, uses `output_format`.
+- `render` (`string` *optional*): Headless browser.
+- `start_page` (`integer` *optional*): Starting page.
+- `user_agent_type` (`string` *optional*): User-Agent header.
+
+*This tool is read-only.*
+
+---
+
+#### **`universal_scraper`**
+Get content of any webpage.
+
+Browser rendering, parsing, output formats.
+
+**Parameters:**
+- `url` (`string`): Target website URL.
+- `geo_location` (`string` *optional*): Target location.
+- `output_format` (`string` *optional*): `links`, `md`, `html`.
+- `render` (`string` *optional*): Headless browser.
+- `user_agent_type` (`string` *optional*): User-Agent header.
+
+*This tool is read-only.*
+
+---
+
+## Meshagent & Resources
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Oxylabs Docker Image](https://hub.docker.com/r/meshagent/mcp-oxylabs)
+
+---
+
+Deploy Oxylabs MCP tools instantly in Meshagent chatrooms—cloud-native, persistent, and secured by Room or Project. Meshagent makes AI collaboration and scraping easy, scalable, and production ready!

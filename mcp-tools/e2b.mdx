@@ -1,0 +1,133 @@
+---
+title: E2B
+---
+
+
+Easily try the MCP server and its tools in a temporary Meshagent Room in the cloud:
+
+### Prerequisites
+- Get an E2B API Key: [Sign up at E2B](https://e2b.dev/)
+- Install the Meshagent CLI:  
+  ```sh
+  pip install "meshagent[all]"
+  ```
+- Authenticate with Meshagent:
+  ```sh
+  meshagent login
+  ```
+  *[See detailed auth instructions](https://docs.meshagent.com/cli/getting_started).*
+
+---
+
+### 1. Environment Variables
+
+Set your environment variables (replace the token as needed):
+
+- `E2B_API_KEY` – Your E2B API key
+
+---
+
+### 2. Start the MCP Server as a Meshagent Room Service
+
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-e2b:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env E2B_API_KEY=YOUR_API_KEY_HERE \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-e2b-service-test
+```
+- Starts a Meshagent Room with the MCP server running as a test agent.
+- Service and chatbot clean up automatically when the Room closes or goes inactive.
+
+---
+
+### 3. Join with a Chatbot Agent
+
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=mcp-e2b \
+  --name=mcp-e2b \
+  --toolkit=mcp-e2b
+```
+- Launches a chatbot in the same Room, provisioned with the e2b toolkit.
+- You will receive a browser link to the Room—multiple toolkits can be used in the same Room.
+
+---
+
+### 4. Interact with the MCP Server Tools
+
+- Open the Room link in your browser.
+- Send a message to the agent and interact with the MCP server tool, e.g., ask it to run Python code!
+
+---
+
+### Environment Variables (Summary)
+
+- `E2B_API_KEY` – *Your E2B API Key (required)*
+- `MESHAGENT_PORT` – *Set to 8001 for the MCP server*
+
+
+---
+
+## 🔒 Project-Level Deployment (Persistent Integration)
+
+Set up always-available MCP server and chatbot services in all Meshagent Rooms for your project—great for production or consistent workflows (no separate hosting needed):
+
+### 1. Create Persistent MCP Service
+
+```sh
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-e2b:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env E2B_API_KEY=YOUR_API_KEY_HERE \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-e2b-service
+```
+
+### 2. Create Persistent Chatbot Service
+
+```sh
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-e2b-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-e2b-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-e2b-chatbot --toolkit=mcp-e2b"
+```
+
+- Both services will start in every Room created in the project, allowing all users instant access to the MCP tools and chatbot.
+
+---
+
+## 🛠️ Tools Available
+
+### `run_code`
+Run python code in a secure sandbox by E2B. 
+
+**Short Description:**  
+Run python code in a secure sandbox by E2B.
+
+**Details:**  
+- **Parameters:**
+    - `code` (*string*): Python code to be executed.  
+- **Syntax:** Jupyter Notebook style.
+
+---
+
+## MCP Server Info
+
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+- Docker Image: [meshagent/mcp-e2b](https://hub.docker.com/r/meshagent/mcp-e2b)
+
+---
+
+## 🔗 Useful Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-e2b](https://hub.docker.com/r/meshagent/mcp-e2b)

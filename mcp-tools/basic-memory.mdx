@@ -1,0 +1,198 @@
+---
+title: Basic Memory
+---
+
+
+Follow these steps to launch the MCP Server and use its tools with a chatbot in a temporary Meshagent Room for testing:
+
+1. **Install Meshagent**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Visit [Getting Started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started) to create your account and authenticate your CLI.
+
+3. **Start an MCP Server in a Room**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-basic-memory:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-basic-memory-service-test
+   ```
+   - This creates a Meshagent Room named `test` and launches an MCP server in it. The room and all services will shut down automatically when inactive.
+
+4. **Add a Chatbot Connected to the MCP Toolkit**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-basic-memory --name=mcp-basic-memory --toolkit=mcp-basic-memory
+   ```
+   - This command launches a chatbot in the same Room, connected to the MCP Basic Memory toolkit.
+   - The console output will include a link to the Room.
+
+5. **Interact via Browser**
+   - Visit the provided Room link to chat with the agent and use MCP Server tools directly!
+
+---
+
+## Project Level Deployment (Production Setup)
+
+You can configure services to start automatically in every new Room created under your Meshagent project—ideal for persistent, always-available AI and tool access.
+
+1. **Create a Persistent MCP Server Service**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-basic-memory:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-basic-memory-service
+   ```
+
+2. **Create a Persistent Chatbot Service with MCP Toolkit**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-basic-memory-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-basic-memory-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-basic-memory-chatbot --toolkit=mcp-basic-memory"
+   ```
+
+Now, every Room created in your project will automatically load both the MCP server and a chatbot connected to its toolkit. No need to run processes manually; they join every Room on creation.
+
+---
+
+## Tools Available
+
+### Tools Provided by MCP Basic Memory Server
+
+| Tool                | Short Description                                                                 |
+|---------------------|----------------------------------------------------------------------------------|
+| `build_context`     | Build context from a memory:// URI to continue conversations naturally.           |
+| `canvas`            | Create an Obsidian canvas file to visualize concepts and connections.             |
+| `delete_note`       | Delete a note by title or permalink.                                             |
+| `project_info`      | Get information and statistics about the current Basic Memory project.            |
+| `read_content`      | Read a file's raw content by path or permalink.                                  |
+| `read_note`         | Read a markdown note by title or permalink.                                      |
+| `recent_activity`   | Get recent activity from across the knowledge base.                              |
+| `search_notes`      | Search across all content in the knowledge base.                                 |
+| `write_note`        | Create or update a markdown note.                                                |
+
+---
+
+### Tools Details
+
+#### `build_context`
+Build context from a memory:// URI to continue conversations naturally.
+
+- Use this to follow up on previous discussions or explore related topics.
+- Timeframes support natural language (e.g., `"2 days ago"`, `"last week"`, `"today"`, `"3 months ago"`) or standard formats (`"7d"`, `"24h"`).
+
+Parameters:
+
+| Name         | Type     | Description              |
+|--------------|----------|--------------------------|
+| url          | string   |                          |
+| depth        | string   | optional                 |
+| max_related  | integer  | optional                 |
+| page         | integer  | optional                 |
+| page_size    | integer  | optional                 |
+| timeframe    | string   | optional                 |
+
+---
+
+#### `canvas`
+Create an Obsidian canvas file to visualize concepts and connections.
+
+Parameters:
+
+| Name   | Type   | Description |
+|--------|--------|-------------|
+| edges  | array  |             |
+| folder | string |             |
+| nodes  | array  |             |
+| title  | string |             |
+
+---
+
+#### `delete_note`
+Delete a note by title or permalink.
+
+Parameters:
+
+| Name       | Type   | Description |
+|------------|--------|-------------|
+| identifier | string |             |
+
+---
+
+#### `project_info`
+Get information and statistics about the current Basic Memory project.
+
+---
+
+#### `read_content`
+Read a file's raw content by path or permalink.
+
+Parameters:
+
+| Name | Type   | Description |
+|------|--------|-------------|
+| path | string |             |
+
+---
+
+#### `read_note`
+Read a markdown note by title or permalink.
+
+Parameters:
+
+| Name       | Type    | Description |
+|------------|---------|-------------|
+| identifier | string  |             |
+| page       | integer | optional    |
+| page_size  | integer | optional    |
+
+---
+
+#### `recent_activity`
+Get recent activity from across the knowledge base.
+
+- Timeframe supports natural language formats (e.g., `"2 days ago"`, `"last week"`, `"yesterday"`, `"today"`) or standard formats (`"7d"`).
+
+Parameters:
+
+| Name        | Type    | Description |
+|-------------|---------|-------------|
+| depth       | integer | optional    |
+| max_related | integer | optional    |
+| page        | integer | optional    |
+| page_size   | integer | optional    |
+| timeframe   | string  | optional    |
+| type        | string  | optional    |
+
+---
+
+#### `search_notes`
+Search across all content in the knowledge base.
+
+Parameters:
+
+| Name        | Type    | Description |
+|-------------|---------|-------------|
+| query       | string  |             |
+| after_date  | string  | optional    |
+| entity_types| string  | optional    |
+| page        | integer | optional    |
+| page_size   | integer | optional    |
+| search_type | string  | optional    |
+| types       | string  | optional    |
+
+---
+
+#### `write_note`
+Create or update a markdown note. Returns a markdown formatted summary of semantic content.
+
+Parameters:
+
+| Name   | Type   | Description |
+|--------|--------|-------------|
+| content| string |             |
+| folder | string |             |
+| title  | string |             |
+| tags   | string | optional    |
+
+---
+
+## Useful Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- MCP Basic Memory Docker Image: [https://hub.docker.com/r/meshagent/mcp-basic-memory](https://hub.docker.com/r/meshagent/mcp-basic-memory)

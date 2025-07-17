@@ -1,0 +1,178 @@
+---
+title: Tweet Binder
+---
+
+
+Try out the TweetBinder MCP Server and toolkit in a Meshagent Room for quick experimentation or testing, with automatic cleanup when the room closes.
+
+### Required Environment Variables
+
+- **TWEETBINDER_API_TOKEN**: Your TweetBinder API bearer token (`your-bearer-token-here`)
+
+### Steps
+
+1. **Install Meshagent**
+   ```shell
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate**
+   - Follow instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate.
+
+3. **Start Test MCP Agent Service in a Room**
+   ```shell
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-tweetbinder:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env TWEETBINDER_API_TOKEN=your-bearer-token-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-tweetbinder-service-test
+   ```
+   - Starts a Meshagent Room (`test`) with your TweetBinder agent accessible. Room will close if it goes inactive and all tools/chatbots are removed automatically.
+
+4. **Start a Chatbot with TweetBinder Toolkit**
+   ```shell
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-tweetbinder \
+     --name=mcp-tweetbinder \
+     --toolkit=mcp-tweetbinder
+   ```
+   - Starts a chatbot in the room able to use TweetBinder tools.
+   - Multiple toolkits can be enabled per room/agent.
+   - A link to the room will be provided in the CLI output.
+
+5. **Interact in the Room**
+   - Visit the provided room link in your browser.
+   - Send a message to the agent to interact with MCP Server tools.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+Deploy your MCP TweetBinder server as a persistent service at the Meshagent **project** level. This way, all rooms created within that project will automatically have the TweetBinder server and chatbot available—no need for local/server processes per room.
+
+### Example Commands
+
+1. **Create Persistent MCP Agent Service**
+   ```shell
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-tweetbinder:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env TWEETBINDER_API_TOKEN=your-bearer-token-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-tweetbinder-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```shell
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-tweetbinder-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-tweetbinder-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-tweetbinder-chatbot --toolkit=mcp-tweetbinder"
+   ```
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+| Tool                        | Short Description                                                                              |
+|-----------------------------|-----------------------------------------------------------------------------------------------|
+| `create-twitter-count`      | Creates a new report that counts tweets matching a search query.                              |
+| `create-twitter-report`     | Creates a new report that analyzes Twitter/X data based on a search query.                    |
+| `get-account-balances`      | Retrieves information about your account's credit balance, usage, and remaining quota.        |
+| `get-report-content`        | Retrieves the content (tweets or users) of a TweetBinder report.                              |
+| `get-report-stats`          | Retrieves comprehensive statistics and analytics for a TweetBinder report.                    |
+| `get-report-status`         | Checks the current status of a TweetBinder report.                                            |
+| `list-reports`              | Retrieves a list of all your TweetBinder reports.                                             |
+
+---
+
+### Tools Details
+
+#### `create-twitter-count`
+Creates a new report that counts tweets matching a search query. Returns raw JSON response.
+
+| Parameter    | Type     | Description                                                                          |
+|--------------|----------|--------------------------------------------------------------------------------------|
+| query        | string   | The search query for Twitter data. Can include operators like AND, OR, hashtags, etc.|
+| reportType   | string   | (optional) '7-day' for last week or 'historical' for all time.                      |
+
+---
+
+#### `create-twitter-report`
+Creates a new report analyzing Twitter/X data based on a search query. The report includes statistics and tweet data. Returns raw JSON response.
+
+| Parameter   | Type     | Description                                                                             |
+|-------------|----------|-----------------------------------------------------------------------------------------|
+| query       | string   | The search query for Twitter data.                                                      |
+| endDate     | number   | (optional) End date as Unix timestamp (seconds).                                        |
+| limit       | number   | (optional) Max tweets to retrieve (up to 50,000).                                       |
+| reportType  | string   | (optional) '7-day' or 'historical'.                                                     |
+| startDate   | number   | (optional) Start date as Unix timestamp.                                                |
+
+---
+
+#### `get-account-balances`
+Retrieves your account's credit balance, usage, and remaining quota. Returns raw JSON.
+
+---
+
+#### `get-report-content`
+Retrieves the content (tweets or users) of a TweetBinder report (report must be in 'Generated' status). Returns raw JSON.
+
+| Parameter     | Type     | Description                                                                       |
+|---------------|----------|-----------------------------------------------------------------------------------|
+| contentType   | string   | 'tweets' for tweet IDs or 'users' for user IDs.                                   |
+| reportId      | string   | The ID of the report.                                                             |
+| filter        | string   | (optional) JSON filter, e.g., `'{"counts.favorites":{"$gt":10}}'`                   |
+| page          | number   | (optional) Page number (starts at 1).                                             |
+| perPage       | number   | (optional) Items per page.                                                        |
+| sortBy        | string   | (optional) Sort field (e.g., 'createdAt').                                        |
+| sortDirection | string   | (optional) '1' for ascending, '-1' for descending.                                |
+
+---
+
+#### `get-report-stats`
+Retrieves analytics and statistics for a TweetBinder report (must be in 'Generated' status). Returns raw JSON.
+
+| Parameter | Type   | Description                         |
+|-----------|--------|-------------------------------------|
+| reportId  | string | The ID of the report.               |
+
+---
+
+#### `get-report-status`
+Checks the current status of a TweetBinder report. Returns raw JSON.
+
+| Parameter | Type   | Description           |
+|-----------|--------|----------------------|
+| reportId  | string | The ID of the report.|
+
+---
+
+#### `list-reports`
+Retrieves a list of all your TweetBinder reports. Returns raw JSON.
+
+| Parameter | Type   | Description                                                                       |
+|-----------|--------|-----------------------------------------------------------------------------------|
+| order     | string | (optional) Sort in format 'field|direction'. E.g. 'createdAt|-1' (newest first).  |
+
+---
+
+## Meshagent & Resources
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- MCP Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-tweetbinder](https://hub.docker.com/r/meshagent/mcp-tweetbinder)
+
+---
+
+Enjoy powerful, persistent, on-demand toolkits in every Meshagent Room—backed by the full flexibility of the Meshagent and TweetBinder APIs.

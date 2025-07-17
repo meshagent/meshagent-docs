@@ -1,0 +1,229 @@
+---
+title: MongoDB
+---
+
+
+**You can easily launch a temporary MCP server and chatbot inside a Meshagent Room for testing. When the Room closes, everything shuts down.**
+
+1. **Install Meshagent**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate**  
+   Follow [this guide](https://docs.meshagent.com/cli/getting_started) to sign up and run `meshagent auth login` if needed.
+
+3. **Run the MCP Server in a Meshagent Room**  
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-mongodb:latest --env MESHAGENT_PORT=8001 --env MDB_MCP_CONNECTION_STRING=<your-connection-string> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-mongodb-service-test
+   ```
+   - Starts a Meshagent Room called `test` and runs a test instance of the MCP server.  
+   - The Room (and MCP instance) will close if inactive.
+
+   **Environment Variables Needed:**
+   - `MDB_MCP_CONNECTION_STRING`  
+     *Your MongoDB connection string*  
+     Example: `mongodb+srv://username:password@cluster.mongodb.net/myDatabase`
+   - `MESHAGENT_PORT`  
+     *Agent port inside the room (set to 8001 for MCP server)*
+
+4. **Launch a Chatbot in the Room**  
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-mongodb --name=mcp-mongodb --toolkit=mcp-mongodb
+   ```
+   - Brings in a chatbot that can interact with the MCP tools (and any future compatible toolkits).
+   - Multiple toolkits or chatbots can be added to the same Room.
+   - The console will output a browser link to your Room.
+
+5. **Test Interaction**  
+   - Open the provided Room link in your browser.
+   - Send a message to the `mcp-mongodb` agent and interact with your live MongoDB MCP Server tools!
+
+---
+
+## 🏗️ Project Level Deployment (Persistent Automatic Services)
+
+**Set up persistent Meshagent services—one for the MCP server, one for the chatbot—so that they join any new Room created in your Meshagent project. Perfect for production or team environments!**
+
+1. **Create a Persistent MCP Service**  
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-mongodb:latest --env MESHAGENT_PORT=8001 --env MDB_MCP_CONNECTION_STRING=<your-connection-string> --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-mongodb-service
+   ```
+
+2. **Create a Persistent Chatbot Service**  
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-mongodb-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-mongodb-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-mongodb-chatbot --toolkit=mcp-mongodb"
+   ```
+
+- All Meshagent project Rooms will now automatically include your MCP MongoDB server and chatbot—no manual launching required.
+
+---
+
+## 🛠️ Tools Available
+
+The MongoDB MCP server (via Meshagent) gives you a wide range of database tools:
+
+| Tool                         | Short Description          |
+|------------------------------|---------------------------|
+| `aggregate`                  | aggregate                 |
+| `collection-indexes`         | collection-indexes        |
+| `collection-schema`          | collection-schema         |
+| `collection-storage-size`    | collection-storage-size   |
+| `count`                      | count                     |
+| `create-collection`          | create-collection         |
+| `create-index`               | create-index              |
+| `db-stats`                   | db-stats                  |
+| `delete-many`                | delete-many               |
+| `drop-collection`            | drop-collection           |
+| `drop-database`              | drop-database             |
+| `explain`                    | explain                   |
+| `find`                       | find                      |
+| `insert-many`                | insert-many               |
+| `list-collections`           | list-collections          |
+| `list-databases`             | list-databases            |
+| `mongodb-logs`               | mongodb-logs              |
+| `rename-collection`          | rename-collection         |
+| `switch-connection`          | switch-connection         |
+| `update-many`                | update-many               |
+
+### Tool Details
+
+#### **`aggregate`**
+Run an aggregation against a MongoDB collection  
+**Parameters:** `collection` (string), `database` (string), `pipeline` (array)  
+_Read-only._
+
+---
+
+#### **`collection-indexes`**
+Describe the indexes for a collection  
+**Parameters:** `collection`, `database`  
+_Read-only._
+
+---
+
+#### **`collection-schema`**
+Describe the schema for a collection  
+**Parameters:** `collection`, `database`  
+_Read-only._
+
+---
+
+#### **`collection-storage-size`**
+Gets the size of the collection  
+**Parameters:** `collection`, `database`  
+_Read-only._
+
+---
+
+#### **`count`**
+Gets the number of documents in a collection (with optional filter)  
+**Parameters:** `collection`, `database`, `query` (object, optional)  
+_Read-only._
+
+---
+
+#### **`create-collection`**
+Creates a new collection in a database (database auto-creates if missing)  
+**Parameters:** `collection`, `database`
+
+---
+
+#### **`create-index`**
+Create an index for a collection  
+**Parameters:** `collection`, `database`, `keys` (object), `name` (optional string)
+
+---
+
+#### **`db-stats`**
+Returns statistics about a single database  
+**Parameters:** `database`  
+_Read-only._
+
+---
+
+#### **`delete-many`**
+Removes all documents that match the filter from a MongoDB collection  
+**Parameters:** `collection`, `database`, `filter` (object, optional)  
+_Destructive operation._
+
+---
+
+#### **`drop-collection`**
+Removes a collection or view from the database  
+**Parameters:** `collection`, `database`  
+_Destructive operation._
+
+---
+
+#### **`drop-database`**
+Removes the specified database  
+**Parameters:** `database`  
+_Destructive operation._
+
+---
+
+#### **`explain`**
+Returns statistics describing the execution of a query plan  
+**Parameters:** `collection`, `database`, `method` (array)  
+_Read-only._
+
+---
+
+#### **`find`**
+Run a find query (with optional filter, projection, etc.)  
+**Parameters:** `collection`, `database`, `filter` (optional object), `limit` (optional number), `projection` (optional object), `sort` (optional object)  
+_Read-only._
+
+---
+
+#### **`insert-many`**
+Insert an array of documents into a MongoDB collection  
+**Parameters:** `collection`, `database`, `documents` (array)
+
+---
+
+#### **`list-collections`**
+List all collections for a given database  
+**Parameters:** `database`  
+_Read-only._
+
+---
+
+#### **`list-databases`**
+List all databases for a MongoDB connection  
+_Read-only._
+
+---
+
+#### **`mongodb-logs`**
+Return the most recent MongoDB log events  
+**Parameters:** `limit` (optional integer), `type` (optional string: global/startupWarnings)  
+_Read-only._
+
+---
+
+#### **`rename-collection`**
+Renames a collection in a MongoDB database  
+**Parameters:** `collection`, `database`, `newName` (string), `dropTarget` (optional boolean)
+
+---
+
+#### **`switch-connection`**
+Switch to a different MongoDB connection (with optional connection string)  
+**Parameters:** `connectionString` (optional string)  
+_Read-only._
+
+---
+
+#### **`update-many`**
+Updates all documents that match the filter in a collection  
+**Parameters:** `collection`, `database`, `update` (object), `filter` (optional object), `upsert` (optional boolean)
+
+---
+
+## ℹ️ Meshagent Resources
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP MongoDB Docker Image](https://hub.docker.com/r/meshagent/mcp-mongodb)

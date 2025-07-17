@@ -1,0 +1,105 @@
+---
+title: Sequential Thinking
+---
+
+
+The following quickstart guide demonstrates how to launch the Sequential Thinking MCP server and a chatbot, scoped to a Meshagent Room in the cloud. When the Room closes, all associated tools and agents are automatically removed.
+
+1. **Install Meshagent CLI and dependencies**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate**  
+   See [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) for signup and authentication steps.
+
+3. **Spin up the Sequential Thinking MCP server agent inside a test room**  
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-sequentialthinking:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-sequentialthinking-service-test
+   ```
+   > This starts a Meshagent Room and launches a test MCP server available for tools usage inside that room. Note: Meshagent Rooms will close if they go inactive.
+
+4. **Start a chatbot in the Meshagent room that can access the Sequential Thinking toolkit**  
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-sequentialthinking --name=mcp-sequentialthinking --toolkit=mcp-sequentialthinking
+   ```
+   - This starts a chatbot in the `test` room; the chatbot can now use the Sequential Thinking MCP toolkit.
+   - Multiple toolkits can be attached to a single agent if needed.
+   - A room link will be shown in the output of this command.
+
+5. **Use and test**  
+   - Visit the provided room link in your browser.
+   - Send a message to the agent to interact and experiment with the MCP server tools live.
+
+---
+
+## Project Level Deployment (Persistent Services for Production)
+
+To make MCP server tools and chatbots consistently available in all new rooms created within a Meshagent project (ideal for production use-cases), deploy the following persistent services:
+
+1. **Create a persistent MCP server service**  
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-sequentialthinking:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-sequentialthinking-service
+   ```
+
+2. **Create a persistent chatbot agent service**  
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-sequentialthinking-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-sequentialthinking-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-sequentialthinking-chatbot --toolkit=mcp-sequentialthinking"
+   ```
+- These services will now auto-join every time a room is created in the project—users no longer need to run or maintain local servers, agents, or chatbots.
+
+---
+
+## Tools Available
+
+### Sequential Thinking Toolkit
+
+**Tools provided by this Server**
+| Tool               | Short Description                                                           |
+|--------------------|----------------------------------------------------------------------------|
+| `sequentialthinking` | A detailed tool for dynamic and reflective problem-solving through thoughts.|
+
+### Tool Details
+
+#### Tool: **`sequentialthinking`**
+A tool for dynamic and reflective problem-solving through thoughts. This tool analyzes problems through a flexible, iterative sequence, where each thought can build on, revise, or question previous steps. Adaptivity and revision are core features.
+
+**When to use:**
+- Breaking down complex/multi-step problems
+- Planning or analysis requiring revision or deep context
+- Tasks requiring branching, course correction, or evolving understanding
+
+**Key Features:**
+- Dynamically adjust the required number of thinking steps (`total_thoughts`)
+- Question or revise earlier thoughts
+- Add more thoughts even after reaching an apparent conclusion
+- Express uncertainty and explore alternative solutions
+- Branch or backtrack as necessary
+- Generates and verifies a solution hypothesis
+- Repeats the process until reaching a satisfactory solution
+
+**Parameters:**
+| Parameter           | Type       | Description                                              |
+|---------------------|------------|----------------------------------------------------------|
+| `nextThoughtNeeded` | `boolean`  | Whether another thought step is needed                   |
+| `thought`           | `string`   | Current thinking step                                    |
+| `thoughtNumber`     | `integer`  | Current thought number                                   |
+| `totalThoughts`     | `integer`  | Estimated total thoughts needed                          |
+| `branchFromThought` | `integer` (optional) | Branching point (step number)                 |
+| `branchId`          | `string` (optional)  | Branch identifier                               |
+| `isRevision`        | `boolean` (optional) | Revises earlier thinking?                         |
+| `needsMoreThoughts` | `boolean` (optional) | Whether more thoughts are needed                  |
+| `revisesThought`    | `integer` (optional) | Which thought is being reconsidered               |
+
+**Usage guidance:**
+- Adjust your approach or step count as you learn more
+- Mark and manage revisions and branches clearly
+- Aim for clarity, correctness, and the ability to revise incomplete solutions
+
+---
+
+## Meshagent and MCP Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image](https://hub.docker.com/r/meshagent/mcp-sequentialthinking)

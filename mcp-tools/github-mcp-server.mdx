@@ -1,0 +1,737 @@
+---
+title: GitHub MCP Server
+---
+
+
+Follow these steps to run the MCP server and its tools in a temporary Meshagent Room. When the Room closes, the MCP server and chatbot are automatically removed.
+
+**Prerequisite:**  
+- [Sign up and authenticate with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)  
+- A valid GitHub personal access token
+
+### Environment Variables (Required)
+- `GITHUB_PERSONAL_ACCESS_TOKEN` — your GitHub personal access token
+
+### Steps
+
+1. **Install Meshagent CLI**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent**  
+   - Sign up and authenticate: [docs here](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Server in a Meshagent Room**  
+   ```
+   meshagent service test --room=test --role=agent \
+     --image=meshagent/mcp-github-mcp-server:latest \
+     --env="MESHAGENT_PORT=8001" \
+     --env="GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>" \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-github-mcp-server-service-test
+   ```
+   - This command creates a Room `test` with the MCP server running as a callable service inside it. The Room will close and clean up services if it becomes inactive.
+
+4. **Join a Chatbot to the Room**  
+   ```
+   meshagent chatbot join --room=test \
+     --agent-name=mcp-github-mcp-server \
+     --name=mcp-github-mcp-server \
+     --toolkit=mcp-github-mcp-server
+   ```
+   - The chatbot uses the MCP server's toolkit in the Room and can use other toolkits simultaneously.
+
+   - **You will receive a link to the Room in the output of this command.**
+
+5. **Try it Out!**  
+   - Open the provided Room link in your browser.  
+   - Send a message to the agent to interact with GitHub MCP server tools.
+
+---
+
+## Project Level Deployment (Production)
+
+Deploy persistent services at the Meshagent Project level, making the MCP server tools and chatbot always available in every Room for your project (no local processes required).
+
+### Steps
+
+1. **Deploy MCP Server as a Persistent Agent Service:**
+   ```
+   meshagent service create --role=agent \
+     --image=meshagent/mcp-github-mcp-server:latest \
+     --env="MESHAGENT_PORT=8001" \
+     --env="GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN>" \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-github-mcp-server-service
+   ```
+
+2. **Deploy Persistent Chatbot Service:**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-github-mcp-server-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-github-mcp-server-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-github-mcp-server-chatbot --toolkit=mcp-github-mcp-server"
+   ```
+
+After setup, every new Room in your project will include the MCP server agent and chatbot automatically.
+
+---
+
+## Tools Available: GitHub MCP Server
+
+The MCP server provides deep, actionable GitHub API access through 51 event-driven tools:
+
+| Tool | Short Description |
+| ---- | ---------------- |
+| `add_issue_comment`                 | Add comment to issue |
+| `add_pull_request_review_comment_to_pending_review` | Add comment to the requester's latest pending pull request review |
+| `assign_copilot_to_issue`           | Assign Copilot to issue |
+| `create_and_submit_pull_request_review` | Create and submit a pull request review without comments |
+| `create_branch`                     | Create branch |
+| `create_issue`                      | Open new issue |
+| `create_or_update_file`             | Create or update file |
+| `create_pending_pull_request_review`| Create pending pull request review |
+| `create_pull_request`               | Open new pull request |
+| `create_repository`                 | Create repository |
+| `delete_file`                       | Delete file |
+| `delete_pending_pull_request_review`| Delete the requester's latest pending pull request review |
+| `dismiss_notification`              | Dismiss notification |
+| `fork_repository`                   | Fork repository |
+| `get_code_scanning_alert`           | Get code scanning alert |
+| `get_commit`                        | Get commit details |
+| `get_file_contents`                 | Get file or directory contents |
+| `get_issue`                         | Get issue details |
+| `get_issue_comments`                | Get issue comments |
+| `get_me`                            | Get my user profile |
+| `get_notification_details`          | Get notification details |
+| `get_pull_request`                  | Get pull request details |
+| `get_pull_request_comments`         | Get pull request comments |
+| `get_pull_request_diff`             | Get pull request diff |
+| `get_pull_request_files`            | Get pull request files |
+| `get_pull_request_reviews`          | Get pull request reviews |
+| `get_pull_request_status`           | Get pull request status checks |
+| `get_secret_scanning_alert`         | Get secret scanning alert |
+| `get_tag`                           | Get tag details |
+| `list_branches`                     | List branches |
+| `list_code_scanning_alerts`         | List code scanning alerts |
+| `list_commits`                      | List commits |
+| `list_issues`                       | List issues |
+| `list_notifications`                | List notifications |
+| `list_pull_requests`                | List pull requests |
+| `list_secret_scanning_alerts`       | List secret scanning alerts |
+| `list_tags`                         | List tags |
+| `manage_notification_subscription`  | Manage notification subscription |
+| `manage_repository_notification_subscription` | Manage repository notification subscription |
+| `mark_all_notifications_read`       | Mark all notifications as read |
+| `merge_pull_request`                | Merge pull request |
+| `push_files`                        | Push files to repository |
+| `request_copilot_review`            | Request Copilot review |
+| `search_code`                       | Search code |
+| `search_issues`                     | Search issues |
+| `search_repositories`               | Search repositories |
+| `search_users`                      | Search users |
+| `submit_pending_pull_request_review`| Submit the requester's latest pending pull request review |
+| `update_issue`                      | Edit issue |
+| `update_pull_request`               | Edit pull request |
+| `update_pull_request_branch`        | Update pull request branch |
+
+### Detailed Tool Descriptions
+
+#### `add_issue_comment`
+Add a comment to a specific issue in a GitHub repository.  
+**Parameters:**  
+- `body` (`string`): Comment content  
+- `issue_number` (`number`): Issue number to comment on  
+- `owner` (`string`): Repository owner  
+- `repo` (`string`): Repository name  
+
+---
+
+#### `add_pull_request_review_comment_to_pending_review`
+Add a comment to the requester's latest pending pull request review.  
+**Parameters:**  
+- `body` (`string`): The text of the review comment  
+- `owner` (`string`): Repository owner  
+- `path` (`string`): The relative path to the file  
+- `pullNumber` (`number`): Pull request number  
+- `repo` (`string`): Repository name  
+- `subjectType` (`string`): Comment level  
+- `line` (`number`, optional): Line in diff  
+- `side` (`string`, optional): LEFT or RIGHT  
+- `startLine` (`number`, optional): Start line for multi-line comments  
+- `startSide` (`string`, optional): Starting side in diff  
+
+---
+
+#### `assign_copilot_to_issue`
+Assign Copilot to an issue for automated PR/draft resolution.  
+**Parameters:**  
+- `issueNumber` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+For more info, see: https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent-to-work-on-tasks/about-assigning-tasks-to-copilot
+
+---
+
+#### `create_and_submit_pull_request_review`
+Create and immediately submit a review for a pull request (without comments).  
+**Parameters:**  
+- `body` (`string`): Review comment text  
+- `event` (`string`): Review action  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+- `commitID` (`string`, optional): Commit SHA  
+
+---
+
+#### `create_branch`
+Create a new branch in the repo.  
+**Parameters:**  
+- `branch` (`string`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `from_branch` (`string`, optional)  
+
+---
+
+#### `create_issue`
+Open a new GitHub issue.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `title` (`string`)  
+- `assignees` (`array`, optional)  
+- `body` (`string`, optional)  
+- `labels` (`array`, optional)  
+- `milestone` (`number`, optional)  
+
+---
+
+#### `create_or_update_file`
+Create or update a file in the repository.  
+**Parameters:**  
+- `branch` (`string`)  
+- `content` (`string`)  
+- `message` (`string`)  
+- `owner` (`string`)  
+- `path` (`string`)  
+- `repo` (`string`)  
+- `sha` (`string`, optional)  
+
+---
+
+#### `create_pending_pull_request_review`
+Create a pending PR review (for adding review comments before submission).  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+- `commitID` (`string`, optional)  
+
+---
+
+#### `create_pull_request`
+Create a new pull request.  
+**Parameters:**  
+- `base` (`string`)  
+- `head` (`string`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `title` (`string`)  
+- `body` (`string`, optional)  
+- `draft` (`boolean`, optional)  
+- `maintainer_can_modify` (`boolean`, optional)  
+
+---
+
+#### `create_repository`
+Create a new repository.  
+**Parameters:**  
+- `name` (`string`)  
+- `autoInit` (`boolean`, optional)  
+- `description` (`string`, optional)  
+- `private` (`boolean`, optional)  
+
+---
+
+#### `delete_file`
+Delete a file from a repository.  
+**Parameters:**  
+- `branch` (`string`)  
+- `message` (`string`)  
+- `owner` (`string`)  
+- `path` (`string`)  
+- `repo` (`string`)  
+
+*This may perform destructive updates.*
+
+---
+
+#### `delete_pending_pull_request_review`
+Delete latest pending pull request review.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+---
+
+#### `dismiss_notification`
+Mark a notification read or done.  
+**Parameters:**  
+- `threadID` (`string`)  
+- `state` (`string`, optional)  
+
+---
+
+#### `fork_repository`
+Fork a GitHub repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `organization` (`string`, optional)  
+
+---
+
+#### `get_code_scanning_alert`
+Get code scanning alert details.  
+**Parameters:**  
+- `alertNumber` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_commit`
+Get details on a specific commit.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `sha` (`string`)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+
+*Read-only.*
+
+---
+
+#### `get_file_contents`
+Get file or directory contents.  
+**Parameters:**  
+- `owner` (`string`)  
+- `path` (`string`)  
+- `repo` (`string`)  
+- `branch` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `get_issue`
+Get details of a specific issue.  
+**Parameters:**  
+- `issue_number` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_issue_comments`
+Get all comments for an issue.  
+**Parameters:**  
+- `issue_number` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `page` (`number`, optional)  
+- `per_page` (`number`, optional)  
+
+*Read-only.*
+
+---
+
+#### `get_me`
+Get details of authenticated user.  
+**Parameters:**  
+- `reason` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `get_notification_details`
+Get details for a specific notification.  
+**Parameters:**  
+- `notificationID` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request`
+Get details of a specific pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request_comments`
+Get comments for a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request_diff`
+Get pull request diff.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request_files`
+Get files changed in a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request_reviews`
+Get reviews for a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_pull_request_status`
+Get status checks for a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_secret_scanning_alert`
+Get secret scanning alert details.  
+**Parameters:**  
+- `alertNumber` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `get_tag`
+Get details about a git tag.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `tag` (`string`)  
+
+*Read-only.*
+
+---
+
+#### `list_branches`
+List branches in a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_code_scanning_alerts`
+List code scanning alerts for a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `ref` (`string`, optional)  
+- `severity` (`string`, optional)  
+- `state` (`string`, optional)  
+- `tool_name` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_commits`
+List commits for a branch.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `sha` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_issues`
+List issues in a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `direction` (`string`, optional)  
+- `labels` (`array`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `since` (`string`, optional)  
+- `sort` (`string`, optional)  
+- `state` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_notifications`
+List all notifications.  
+**Parameters:**  
+- `before` (`string`, optional)  
+- `filter` (`string`, optional)  
+- `owner` (`string`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `repo` (`string`, optional)  
+- `since` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_pull_requests`
+List pull requests in a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `base` (`string`, optional)  
+- `direction` (`string`, optional)  
+- `head` (`string`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `sort` (`string`, optional)  
+- `state` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_secret_scanning_alerts`
+List secret scanning alerts for a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `resolution` (`string`, optional)  
+- `secret_type` (`string`, optional)  
+- `state` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `list_tags`
+List git tags in a repository.  
+**Parameters:**  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+
+*Read-only.*
+
+---
+
+#### `manage_notification_subscription`
+Manage (ignore, watch, delete) a notification thread.  
+**Parameters:**  
+- `action` (`string`)  
+- `notificationID` (`string`)  
+
+---
+
+#### `manage_repository_notification_subscription`
+Manage a repository's notification subscription.  
+**Parameters:**  
+- `action` (`string`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+---
+
+#### `mark_all_notifications_read`
+Mark all notifications or those in a repo as read.  
+**Parameters:**  
+- `lastReadAt` (`string`, optional)  
+- `owner` (`string`, optional)  
+- `repo` (`string`, optional)  
+
+---
+
+#### `merge_pull_request`
+Merge a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+- `commit_message` (`string`, optional)  
+- `commit_title` (`string`, optional)  
+- `merge_method` (`string`, optional)  
+
+---
+
+#### `push_files`
+Push multiple files in a single commit.  
+**Parameters:**  
+- `branch` (`string`)  
+- `files` (`array`)  
+- `message` (`string`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+
+---
+
+#### `request_copilot_review`
+Request a Copilot review for a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+---
+
+#### `search_code`
+Search for code across GitHub.  
+**Parameters:**  
+- `q` (`string`)  
+- `order` (`string`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `sort` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `search_issues`
+Search for issues in GitHub.  
+**Parameters:**  
+- `q` (`string`)  
+- `order` (`string`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `sort` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `search_repositories`
+Search GitHub repositories.  
+**Parameters:**  
+- `query` (`string`)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+
+*Read-only.*
+
+---
+
+#### `search_users`
+Search for users on GitHub.  
+**Parameters:**  
+- `q` (`string`)  
+- `order` (`string`, optional)  
+- `page` (`number`, optional)  
+- `perPage` (`number`, optional)  
+- `sort` (`string`, optional)  
+
+*Read-only.*
+
+---
+
+#### `submit_pending_pull_request_review`
+Submit the latest pending pull request review.  
+**Parameters:**  
+- `event` (`string`)  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+- `body` (`string`, optional)  
+
+---
+
+#### `update_issue`
+Edit an issue.  
+**Parameters:**  
+- `issue_number` (`number`)  
+- `owner` (`string`)  
+- `repo` (`string`)  
+- ... (other editable fields)
+
+---
+
+#### `update_pull_request`
+Edit a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+- ... (other editable fields)
+
+---
+
+#### `update_pull_request_branch`
+Update the base branch of a pull request.  
+**Parameters:**  
+- `owner` (`string`)  
+- `pullNumber` (`number`)  
+- `repo` (`string`)  
+
+---
+
+## References
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Server Docker Image:** [https://hub.docker.com/r/meshagent/mcp-github-mcp-server](https://hub.docker.com/r/meshagent/mcp-github-mcp-server)
+- **Get Started (Docs):** [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+
+---
+
+**For more information, see the [official GitHub MCP Server project](https://github.com/github/github-mcp-server).**

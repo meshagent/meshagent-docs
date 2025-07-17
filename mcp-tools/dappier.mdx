@@ -1,0 +1,132 @@
+---
+title: Dappier
+---
+
+
+Run a Dappier MCP server and toolkit-enabled chatbot inside a temporary, cloud-hosted Meshagent Room for testing or development. When the Room closes (period of inactivity), the server and chatbot automatically shut down — no local process needed.
+
+**Required Environment Variables:**
+- `DAPPIER_API_KEY` — Your Dappier API Key (from [Dappier](https://github.com/DappierAI/dappier-mcp#api-key-signup))
+
+**Steps:**
+
+- `pip install "meshagent[all]"`
+- [Sign up and authenticate with Meshagent](https://docs.meshagent.com/cli/getting_started)
+- Start the MCP server agent in a new test Room:
+  ```bash
+  meshagent service test \
+    --room=test \
+    --role=agent \
+    --image=meshagent/mcp-dappier:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env DAPPIER_API_KEY=YOUR_API_KEY_HERE \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-dappier-service-test
+  ```
+    - Starts a Meshagent Room with a test MCP server. Room will auto-close when no activity is detected.
+- Join the Room with a toolkit-enabled chatbot:
+  ```bash
+  meshagent chatbot join \
+    --room=test \
+    --agent-name=mcp-dappier \
+    --name=mcp-dappier \
+    --toolkit=mcp-dappier
+  ```
+    - Enables a chatbot in the Room that can use the Dappier toolkit. (Multiple toolkits per agent supported.)
+    - The output of this command will include a browser-accessible link to your Room.
+- Visit the Room link in your browser and send a message to interact with the MCP Server tools!
+
+---
+
+## Project Level Deployment (Persistent for Production)
+
+Deploy MCP server and chatbot services at the Meshagent project level. Services auto-join any new Room created in your Meshagent project, ensuring continuous and consistent access to Dappier's features in every workspace (no need to start/stop per Room).
+
+**Steps:**
+
+- Deploy the MCP server as a persistent agent:
+  ```bash
+  meshagent service create \
+    --role=agent \
+    --image=meshagent/mcp-dappier:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env DAPPIER_API_KEY=YOUR_API_KEY_HERE \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-dappier-service
+  ```
+- Deploy the persistent chatbot agent:
+  ```bash
+  meshagent service create \
+    --image="meshagent/cli:latest" \
+    --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-dappier-chatbot" \
+    --env="MESHAGENT_PORT=9001" \
+    --name="mcp-dappier-chatbot-service" \
+    --command="meshagent chatbot service --agent-name=mcp-dappier-chatbot --toolkit=mcp-dappier"
+  ```
+
+Now, every time a Room is created in your Meshagent project, the Dappier MCP server tools and chatbot are instantly available.
+
+---
+
+## Tools Available
+
+### Dappier MCP Server
+
+Enable fast, free real-time web search and access premium data from trusted media brands—news, financial markets, sports, entertainment, weather, and more. Build powerful AI agents with Dappier.
+
+### Available Tools
+
+| Tool Name                    | Short Description |
+|------------------------------|------------------|
+| `dappier_ai_recommendations` | Fetch AI-powered recommendations from Dappier by processing the provided query with a selected data model that tailors results to specific interests. |
+| `dappier_real_time_search`   | Retrieve real-time search data from Dappier by processing an AI model that supports two key capabilities: - Real-Time Web Search: Access the latest news, stock market data, weather, travel information, deals, and more using model `am_01j06ytn18ejftedz6dyhz2b15`.|
+
+---
+
+#### Tool: `dappier_ai_recommendations`
+
+Fetch AI-powered recommendations from Dappier by processing the provided query with a selected data model that tailors results to specific interests.
+
+- **Sports News (dm_01j0pb465keqmatq9k83dthx34):** Get real-time news, updates, and personalized content from top sports sources.
+- **Lifestyle News (dm_01j0q82s4bfjmsqkhs3ywm3x6y):** Current lifestyle updates, analysis, and insights.
+- **iHeartDogs AI (dm_01j1sz8t3qe6v9g8ad102kvmqn):** Dog care and health info from iHeartDogs.
+- **iHeartCats AI (dm_01j1sza0h7ekhaecys2p3y0vmj):** Cat care expert info from iHeartCats.
+- **GreenMonster (dm_01j5xy9w5sf49bm6b1prm80m27):** Conscious and compassionate living.
+- **WISH-TV AI (dm_01jagy9nqaeer9hxx8z1sk1jx6):** Sports, breaking news, politics, multicultural news, and more.
+
+**Parameters:**
+
+| Name                | Type      | Description                                                                                      |
+|---------------------|-----------|--------------------------------------------------------------------------------------------------|
+| `data_model_id`     | string    | The data model ID to use for recommendations (see above for options).                            |
+| `query`             | string    | The user’s question or search phrase.                                                            |
+| `num_articles_ref`  | integer   | *(Optional)* Minimum number of articles to return from the reference domain.                     |
+| `ref`               | string    | *(Optional)* Site domain to prioritize recommendations.                                          |
+| `search_algorithm`  | string    | *(Optional)* Search algorithm for retrieving articles.                                           |
+| `similarity_top_k`  | integer   | *(Optional)* Number of top semantic-similarity matches to retrieve.                              |
+
+---
+
+#### Tool: `dappier_real_time_search`
+
+Retrieve real-time search data from Dappier by processing an AI model that supports two key capabilities:
+
+- **Real-Time Web Search:** Access the latest news, stock market data, weather, travel, deals, and more. *Use model* `am_01j06ytn18ejftedz6dyhz2b15`.
+- **Stock Market Data:** Real-time news and prices from financial APIs like Polygon.io; only when a stock ticker symbol is present. *Use model* `am_01j749h8pbf7ns8r1bq9s2evrh`.
+
+**Parameters:**
+
+| Name          | Type    | Description                                                           |
+|---------------|---------|-----------------------------------------------------------------------|
+| `ai_model_id` | string  | The AI model ID to use (`am_01j06ytn18ejftedz6dyhz2b15` for general, `am_01j749h8pbf7ns8r1bq9s2evrh` for stocks). |
+| `query`       | string  | Search query for real-time information.                               |
+
+---
+
+## Additional Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Meshagent Documentation:** https://docs.meshagent.com
+- **Meshagent Dappier MCP Tool Image:** https://hub.docker.com/r/meshagent/mcp-dappier
+
+Get started with powerful, real-time AI tools in collaborative rooms — with just one command!

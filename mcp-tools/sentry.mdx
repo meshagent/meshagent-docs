@@ -1,0 +1,139 @@
+---
+title: Sentry
+---
+
+
+Follow these steps to quickly spin up a cloud-connected Meshagent Room with the Sentry MCP server and chatbot fully integrated for testing:
+
+### Prerequisites
+
+- You need a [Sentry Auth Token](https://docs.sentry.io/api/auth/)
+- Install Python 3.8+  
+- Create a Meshagent account & authenticate ([docs](https://docs.meshagent.com/cli/getting_started))
+
+### Required Environment Variables
+
+- `SENTRY_AUTH_TOKEN`: Your Sentry API token
+
+### 1. Install Meshagent with Room and tool support
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and authenticate with Meshagent
+
+See: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+```bash
+meshagent login
+```
+
+### 3. Launch the Sentry MCP Agent in a Room
+
+Replace the token in `<YOUR_SENTRY_TOKEN>` as required.
+
+```bash
+meshagent service test \
+    --room=test \
+    --role=agent \
+    --image=meshagent/mcp-sentry:latest \
+    --env SENTRY_AUTH_TOKEN=<YOUR_SENTRY_TOKEN> \
+    --env MESHAGENT_PORT=8001 \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-sentry-service-test
+```
+
+- **What this does:**  
+  Launches a Meshagent Room named `test`, running the Sentry MCP agent as a callable tool.
+- **Lifecycle note:**  
+  The MCP Sentry server and chatbot are cleaned up automatically when the Room is closed or goes inactive.
+
+### 4. Start a Chatbot Connected to the Room
+
+```bash
+meshagent chatbot join \
+    --room=test \
+    --agent-name=mcp-sentry \
+    --name=mcp-sentry \
+    --toolkit=mcp-sentry
+```
+
+- **What this does:**  
+  Joins the Room with a chatbot that can use the Sentry MCP toolkit.  
+- **Multiple Toolkits:**  
+  You can use multiple toolkits in the same Room with the same agent.
+- **Output:**  
+  A link to the Room will be provided for browser access.
+
+### 5. Try It!
+
+- Visit the Room link from the command output.
+- Start a chat with the agent; use plain English requests (e.g., “Retrieve details for Sentry issue 12345”).
+- The chatbot will invoke the MCP Sentry tools running in the Room, retrieving live results from your Sentry account.
+
+---
+
+## Project Level Deployment (Persistent, Auto-Joint Services)
+
+For production or always-on availability, you can deploy services at the Meshagent project level. Whenever a Room is created in your Meshagent project, both the Sentry MCP server and its chatbot are instantly available—no manual setup needed and no need to run components locally.
+
+### 1. Create a Persistent Sentry MCP Server Service
+
+```bash
+meshagent service create \
+    --role=agent \
+    --image=meshagent/mcp-sentry:latest \
+    --env SENTRY_AUTH_TOKEN=<YOUR_SENTRY_TOKEN> \
+    --env MESHAGENT_PORT=8001 \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-sentry-service
+```
+
+- This service is now available in all Rooms in your Meshagent project.
+
+### 2. Create a Persistent Sentry Chatbot Service
+
+```bash
+meshagent service create \
+    --image="meshagent/cli:latest" \
+    --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-sentry-chatbot" \
+    --env="MESHAGENT_PORT=9001" \
+    --name="mcp-sentry-chatbot-service" \
+    --command="meshagent chatbot service --agent-name=mcp-sentry-chatbot --toolkit=mcp-sentry"
+```
+
+- Every new Room in your project will auto-join this chatbot, capable of using the Sentry MCP tools.
+- You no longer need to run the MCP server or chatbot locally, or set them up each time a Room is launched.
+
+---
+
+## Tools Available
+
+### Summary
+
+| Tool                | Short Description                                         |
+|---------------------|----------------------------------------------------------|
+| `get_sentry_issue`  | Retrieve and analyze a Sentry issue by ID or URL.        |
+
+### Tool Details
+
+#### Tool: **`get_sentry_issue`**
+Retrieve and analyze a Sentry issue by ID or URL. Use this tool when you need to:
+- Investigate production errors and crashes
+- Access detailed stacktraces from Sentry
+- Analyze error patterns and frequencies
+- Get information about when issues first/last occurred
+- Review error counts and status
+
+| Parameter           | Type     | Description                              |
+|---------------------|----------|------------------------------------------|
+| `issue_id_or_url`   | string   | Sentry issue ID or URL to analyze        |
+
+---
+
+## Learn More
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent Sentry MCP Tool Image: [https://hub.docker.com/r/meshagent/mcp-sentry](https://hub.docker.com/r/meshagent/mcp-sentry)

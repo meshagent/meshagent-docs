@@ -1,0 +1,142 @@
+---
+title: Risken
+---
+
+
+Follow these instructions to quickly spin up the RISKEN MCP Server as a Meshagent Room service and pair it with a chatbot that can use its tools. When the Room closes, all services (including the tools and chatbot) are automatically removed.
+
+### Environment Variables (Required)
+
+- `RISKEN_URL`: The RISKEN server URL (e.g., `http://localhost:8000`)
+- `RISKEN_ACCESS_TOKEN`: Your RISKEN access token
+
+### Steps
+
+1. **Install Meshagent and dependencies**
+
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate**
+   - See: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the RISKEN MCP Server in a Meshagent test room**
+
+   ```bash
+   meshagent service test \
+       --room=test \
+       --role=agent \
+       --image=meshagent/mcp-risken:latest \
+       --env=MESHAGENT_PORT=8001 \
+       --env=RISKEN_URL=http://localhost:8000 \
+       --env=RISKEN_ACCESS_TOKEN=your_access_token \
+       --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+       --name=mcp-risken-service-test
+   ```
+
+   - This command starts the RISKEN MCP server inside a Meshagent Room. When the Room closes, the MCP server and its tools are removed.
+
+4. **Start the chatbot in the Meshagent Room**
+
+   ```bash
+   meshagent chatbot join \
+       --room=test \
+       --agent-name=mcp-risken \
+       --name=mcp-risken \
+       --toolkit=mcp-risken
+   ```
+
+   - This launches a chatbot in the Room that can use the RISKEN toolkit.
+   - The CLI will provide a link to the Room after starting the chatbot.
+
+5. **Try it out**
+   - Open the Room link in your browser and send messages to the chatbot to interact with RISKEN MCP tools.
+
+---
+
+## Project Level Deployment
+
+To run MCP server tools and a chatbot automatically in every Meshagent project room (persistent service for all new rooms):
+
+1. **Create the RISKEN MCP agent service (persistent)**
+
+   ```bash
+   meshagent service create \
+       --role=agent \
+       --image=meshagent/mcp-risken:latest \
+       --env=MESHAGENT_PORT=8001 \
+       --env=RISKEN_URL=http://localhost:8000 \
+       --env=RISKEN_ACCESS_TOKEN=your_access_token \
+       --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+       --name=mcp-risken-service
+   ```
+
+2. **Create a persistent chatbot service for the project**
+
+   ```bash
+   meshagent service create \
+       --image="meshagent/cli:latest" \
+       --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-risken-chatbot" \
+       --env="MESHAGENT_PORT=9001" \
+       --name="mcp-risken-chatbot-service" \
+       --command="meshagent chatbot service --agent-name=mcp-risken-chatbot --toolkit=mcp-risken"
+   ```
+
+- With these services, every time a new room is created in your Meshagent project, both the RISKEN MCP Server tools and chat agent will automatically appear—removing the need for local servers or manual management.
+
+---
+
+## Tools Available
+
+Tools provided by the RISKEN MCP Server and their usage summaries:
+
+| Tool Name         | Short Description                      |
+|-------------------|----------------------------------------|
+| `archive_finding` | Archive RISKEN finding.                |
+| `get_project`     | Get details of the authenticated RISKEN project. |
+| `search_alert`    | Search RISKEN alert.                   |
+| `search_finding`  | Search RISKEN findings.                |
+
+---
+
+### Tools Details
+
+#### **archive_finding**
+- **Purpose:** Archive RISKEN finding. Use this when a request includes "archive", "アーカイブ", "ペンディング", etc.
+- **Parameters:**
+  - `finding_id` (number): Finding ID.
+  - `note` (string, optional): Note. Example: "This is no risk finding."
+- *This tool may perform destructive updates and interacts with external entities.*
+
+#### **get_project**
+- **Purpose:** Get details of the authenticated RISKEN project. Use this when a request includes "project", "my project", "プロジェクト", etc.
+
+#### **search_alert**
+- **Purpose:** Search RISKEN alert. Use this when a request includes "alert", "アラート", etc.
+- **Parameters:**
+  - `status` (number, optional): Status of alert. 1: active (有効なアラート), 2: pending (保留中), 3: deactive (解決済みアラート)
+- *This tool may perform destructive updates and interacts with external entities.*
+
+#### **search_finding**
+- **Purpose:** Search RISKEN findings. Use this when a request includes "finding", "issue", "ファインディング", "問題", etc.
+- **Parameters:**
+  - `alert_id` (number, optional): Alert ID.
+  - `data_source` (array, optional): RISKEN DataSource (e.g., aws, google, code, osint, diagnosis, azure, etc.)
+  - `finding_id` (number, optional): Finding ID.
+  - `from_score` (number, optional): Minimum score of the findings.
+  - `limit` (number, optional): Limit of the findings.
+  - `offset` (number, optional): Offset of the findings.
+  - `resource_name` (array, optional): RISKEN ResourceName (e.g., "arn:aws:iam::123456789012:user/test-user")
+  - `status` (number, optional): Status of the findings (0: all, 1: active, 2: pending)
+- *This tool may perform destructive updates and interacts with external entities.*
+
+---
+
+## Meshagent and MCP RISKEN References
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP RISKEN Docker Image: [https://hub.docker.com/r/meshagent/mcp-risken](https://hub.docker.com/r/meshagent/mcp-risken)
+
+For more details on configuration or feature usage, see the Meshagent [documentation](https://docs.meshagent.com/) or the [RISKEN MCP Server repository](https://github.com/ca-risken/risken-mcp-server).

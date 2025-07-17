@@ -1,0 +1,245 @@
+---
+title: Chroma
+---
+
+
+Use the following steps to quickly deploy the Chroma MCP server and toolkit inside a Meshagent Room for cloud-based testing. When the room closes, all services and chatbots are automatically cleaned up.
+
+**Environment Variables Needed:**
+- `CHROMA_API_KEY`: `your-api-key` (replace with your own key)
+
+### 1. Install the Meshagent CLI
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up & Authenticate
+
+Follow the [Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to sign up and log in.
+
+### 3. Start the Chroma MCP Server as a Meshagent Service in a Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-chroma:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env CHROMA_API_KEY=your-api-key \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-chroma-service-test
+```
+- This command will start a temporary Meshagent Room (`test`) with the MCP server agent available. The room (and the agent) are auto-removed when idle.
+
+### 4. Join the Room with a Chatbot Linked to the Chroma Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=mcp-chroma \
+  --name=mcp-chroma \
+  --toolkit=mcp-chroma
+```
+- This chatbot can invoke the Chroma MCP tools in the same room.
+- Supports multiple toolkits/agents in the same room.
+- The command output provides a link to the live room.
+
+### 5. Interact in the Room
+
+Open the provided room link in your browser. Send a message to the agent to interact with the MCP tools live.
+
+---
+
+## Project Level Deployment: Persistent Project-Wide Services
+
+For production use, you may want MCP tools and a chatbot always available whenever a Meshagent project room is created. This approach creates persistent services that auto-join new project rooms, removing the need to start agents manually or run anything locally.
+
+### 1. Create the Persistent Chroma MCP Agent Service
+
+```bash
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-chroma:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env CHROMA_API_KEY=your-api-key \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-chroma-service
+```
+
+### 2. Create the Persistent Chatbot Service
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-chroma-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-chroma-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-chroma-chatbot --toolkit=mcp-chroma"
+```
+
+With these, both the MCP API tools and the chatbot automatically join every new project room with no further setup.
+
+---
+
+## Tools Available
+
+### **Tools Summary**
+
+| Tool Name | Description |
+|-----------|-------------|
+| `chroma_add_documents` | Add documents to a Chroma collection. |
+| `chroma_create_collection` | Create a new Chroma collection with configurable HNSW parameters. |
+| `chroma_delete_collection` | Delete a Chroma collection. |
+| `chroma_delete_documents` | Delete documents from a Chroma collection. |
+| `chroma_get_collection_count` | Get the number of documents in a Chroma collection. |
+| `chroma_get_collection_info` | Get information about a Chroma collection. |
+| `chroma_get_documents` | Get documents from a Chroma collection with optional filtering. |
+| `chroma_list_collections` | List all collection names in the Chroma database with pagination support. |
+| `chroma_modify_collection` | Modify a Chroma collection's name or metadata. |
+| `chroma_peek_collection` | Peek at documents in a Chroma collection. |
+| `chroma_query_documents` | Query documents from a Chroma collection with advanced filtering. |
+| `chroma_update_documents` | Update documents in a Chroma collection. |
+
+---
+
+### **Tools Details**
+
+#### `chroma_add_documents`
+_Add documents to a Chroma collection._
+
+| Parameter | Type    | Description                                       |
+|-----------|---------|---------------------------------------------------|
+| collection_name | string  | Name of the collection to add documents to          |
+| documents       | array   | List of text documents to add                      |
+| ids             | array   | List of IDs for the documents (required)           |
+| metadatas       | string (optional) | Optional list of metadata dictionaries for each document |
+
+---
+
+#### `chroma_create_collection`
+_Create a new Chroma collection with configurable HNSW parameters._
+
+| Parameter | Type    | Description                                       |
+|-----------|---------|---------------------------------------------------|
+| collection_name         | string  | Name of the collection to create               |
+| embedding_function_name | string (optional) | Name of the embedding function to use (options: 'default', 'cohere', 'openai', etc.) |
+| metadata                | string (optional) | Optional metadata dict to add to the collection |
+
+---
+
+#### `chroma_delete_collection`
+_Delete a Chroma collection._
+
+| Parameter      | Type   | Description                  |
+|----------------|--------|-----------------------------|
+| collection_name| string | Name of the collection to delete |
+
+---
+
+#### `chroma_delete_documents`
+_Delete documents from a Chroma collection._
+
+| Parameter      | Type   | Description                        |
+|----------------|--------|------------------------------------|
+| collection_name| string | Name of the collection to delete documents from |
+| ids            | array  | List of document IDs to delete               |
+
+---
+
+#### `chroma_get_collection_count`
+_Get the number of documents in a Chroma collection._
+
+| Parameter      | Type   | Description                  |
+|----------------|--------|-----------------------------|
+| collection_name| string | Name of the collection to count |
+
+---
+
+#### `chroma_get_collection_info`
+_Get information about a Chroma collection._
+
+| Parameter      | Type   | Description                     |
+|----------------|--------|---------------------------------|
+| collection_name| string | Name of the collection to get info about |
+
+---
+
+#### `chroma_get_documents`
+_Get documents from a Chroma collection with optional filtering._
+
+| Parameter      | Type         | Description                                             |
+|----------------|--------------|---------------------------------------------------------|
+| collection_name| string       | Name of the collection to get documents from           |
+| ids            | string (optional) | Optional list of document IDs to retrieve         |
+| include        | array (optional)  | List of what to include in response               |
+| limit          | string (optional) | Optional maximum number of documents to return    |
+| offset         | string (optional) | Optional number of documents to skip             |
+| where          | string (optional) | Optional metadata filters                        |
+| where_document | string (optional) | Optional document content filters                |
+
+---
+
+#### `chroma_list_collections`
+_List all collection names in the Chroma database with pagination support._
+
+| Parameter | Type             | Description                              |
+|-----------|------------------|------------------------------------------|
+| limit     | string (optional)| Maximum number of collections to return  |
+| offset    | string (optional)| Number of collections to skip            |
+
+---
+
+#### `chroma_modify_collection`
+_Modify a Chroma collection's name or metadata._
+
+| Parameter   | Type             | Description                             |
+|-------------|------------------|-----------------------------------------|
+| collection_name | string       | Name of the collection to modify        |
+| new_metadata   | string (optional) | New metadata for the collection    |
+| new_name      | string (optional) | New name for the collection         |
+
+---
+
+#### `chroma_peek_collection`
+_Peek at documents in a Chroma collection._
+
+| Parameter      | Type              | Description                   |
+|----------------|-------------------|-------------------------------|
+| collection_name| string            | Name of the collection to peek|
+| limit          | integer (optional)| Number of documents to peek at|
+
+---
+
+#### `chroma_query_documents`
+_Query documents from a Chroma collection with advanced filtering._
+
+| Parameter      | Type              | Description                        |
+|----------------|-------------------|------------------------------------|
+| collection_name| string            | Name of the collection to query    |
+| query_texts    | array             | List of query texts to search for  |
+| include        | array (optional)  | What to include in the response    |
+| n_results      | integer (optional)| Number of results per query        |
+| where          | string (optional) | Metadata filters                   |
+| where_document | string (optional) | Document content filters           |
+
+---
+
+#### `chroma_update_documents`
+_Update documents in a Chroma collection._
+
+| Parameter      | Type              | Description                              |
+|----------------|-------------------|------------------------------------------|
+| collection_name| string            | Name of the collection to update         |
+| ids            | array             | List of document IDs to update (required)|
+| documents      | string (optional) | List of new text documents               |
+| embeddings     | string (optional) | List of new embeddings                   |
+| metadatas      | string (optional) | List of new metadata dictionaries        |
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **MCP Tool Image on Docker Hub:** [https://hub.docker.com/r/meshagent/mcp-chroma](https://hub.docker.com/r/meshagent/mcp-chroma)

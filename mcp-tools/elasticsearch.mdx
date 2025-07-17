@@ -1,0 +1,123 @@
+---
+title: Elasticsearch
+---
+
+
+Test and prototype in the cloud by launching the MCP server agent and chatbot ad-hoc into any Meshagent Room. Tools and chatbots are *removed automatically* when the Room closes.
+
+**Environment Variables Required:**
+- `ES_URL`: Endpoint for your Elasticsearch instance (e.g., `http://localhost:9200`)
+- `ES_API_KEY`: Your Elasticsearch API key (e.g., `your-api-key`)
+
+**Steps:**
+
+1. **Install Meshagent CLI:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+   - Follow [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) for auth setup.
+
+3. **Start MCP Server Agent in a Room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-elasticsearch:latest \
+   --env MESHAGENT_PORT=8001 --env ES_URL=http://localhost:9200 --env ES_API_KEY=your-api-key \
+   --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-elasticsearch-service-test
+   ```
+   - This starts a Meshagent Room with MCP server tools available. Rooms are temporary and close if inactive.
+
+4. **Launch a Chatbot with Elasticsearch Toolkit:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-elasticsearch --name=mcp-elasticsearch --toolkit=mcp-elasticsearch
+   ```
+   - This creates a chatbot in the Room that can access all MCP Elasticsearch tools.  
+   - Room join link is provided in the command output.
+
+5. **Try It Out:**
+   - Open the Room link in your browser and chat to interact with Elasticsearch using the agent’s tools.
+
+---
+
+## Project Level Deployment (Persistent Tools & Bot)
+
+For production, register agents and chatbots at the *project* level. This ensures tools and the chatbot *automatically join every Room* in the project—no need for local or manual processes.
+
+1. **Register MCP Server as Persistent Project Service:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-elasticsearch:latest \
+   --env MESHAGENT_PORT=8001 --env ES_URL=http://localhost:9200 --env ES_API_KEY=your-api-key \
+   --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-elasticsearch-service
+   ```
+
+2. **Register Persistent Chatbot for Project:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+   --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-elasticsearch-chatbot" \
+   --env="MESHAGENT_PORT=9001" --name="mcp-elasticsearch-chatbot-service" \
+   --command="meshagent chatbot service --agent-name=mcp-elasticsearch-chatbot --toolkit=mcp-elasticsearch"
+   ```
+
+---
+
+## Tools Available
+
+Interact with your Elasticsearch indices through natural language conversations.
+
+### Summary
+
+Tools provided by this Server | Short Description
+-|-
+`get_mappings` | Get field mappings for a specific Elasticsearch index
+`get_shards` | Get shard information for all or specific indices
+`list_indices` | List all available Elasticsearch indices
+`search` | Perform an Elasticsearch search with the provided query DSL.
+
+---
+
+### Tools Details
+
+#### Tool: **`get_mappings`**
+*Get field mappings for a specific Elasticsearch index.*
+
+| Parameter | Type    | Description                                           |
+|-----------|---------|-------------------------------------------------------|
+| `index`   | string  | Name of the Elasticsearch index to get mappings for   |
+
+
+#### Tool: **`get_shards`**
+*Get shard information for all or specific indices.*
+
+| Parameter | Type    | Description                                   |
+|-----------|---------|-----------------------------------------------|
+| `index`   | string  | *optional* Optional index name to get shard information for |
+
+
+#### Tool: **`list_indices`**
+*List all available Elasticsearch indices.*
+
+| Parameter     | Type    | Description                           |
+|---------------|---------|---------------------------------------|
+| `indexPattern`| string  | Index pattern of Elasticsearch indices to list |
+
+
+#### Tool: **`search`**
+*Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.*
+
+| Parameter    | Type    | Description                               |
+|--------------|---------|-------------------------------------------|
+| `index`      | string  | Name of the Elasticsearch index to search |
+| `queryBody`  | object  | Complete Elasticsearch query DSL object (can include query, size, from, sort, etc.) |
+
+
+---
+
+## Additional Resources
+
+- **Meshagent**: https://www.meshagent.com/
+- **Read The Docs**: https://docs.meshagent.com
+- **Meshagent MCP Elasticsearch Tool Image**: https://hub.docker.com/r/meshagent/mcp-elasticsearch
+
+For more information about the Model Context Protocol (MCP): [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+Looking for insights on running MCP servers safely? [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)
