@@ -44,13 +44,6 @@ if [ -z $SKIP_INSTALL ]; then
       ;;
   esac
 fi
-# detect sed -i syntax for macOS vs Linux
-if [[ "$OSTYPE" == darwin* ]]; then
-  SED_BACKUP_OPTION=(-i '')
-  echo "Running on macOS"
-else
-  SED_BACKUP_OPTION=(-i)
-fi
 
 if ! $SKIP_INSTALL; then
     # ensure cleanup on exit
@@ -83,8 +76,14 @@ echo "Generating the docs and saving to $OUTPUT_LOCATION"
 # generate markdown with Typer
 python3 -m typer meshagent.cli.cli utils docs --name meshagent > $OUTPUT_LOCATION
 
-sed "${SED_BACKUP_OPTION[@]}" '1i\
----\
-title: Meshagent CLI Commands\
----\
-' $OUTPUT_LOCATION
+(
+  printf '%s\n' '---' 'title: Meshagent CLI Commands' '---' ''
+  cat $OUTPUT_LOCATION
+) > /tmp/$$.md && mv /tmp/$$.md $OUTPUT_LOCATION
+
+#
+#sed "${SED_BACKUP_OPTION[@]}" '1i\
+#---\
+#title: Meshagent CLI Commands\
+#---\
+#' $OUTPUT_LOCATION
