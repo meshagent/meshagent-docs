@@ -1,0 +1,191 @@
+---
+title: Stripe
+---
+
+
+Test the Stripe MCP tools with a chatbot in a Meshagent room! These services run cloud-only and are cleaned up automatically when the room is closed.
+
+### Required Environment Variables
+
+- `STRIPE_SECRET_KEY` – Your Stripe API secret key (format: `sk_...`)
+
+### Steps
+
+1. **Install Meshagent**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent**
+   - Sign up and authenticate as described at [docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Start the MCP Stripe Service in a Meshagent Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-stripe:latest \
+     --env MESHAGENT_PORT=8001 --env STRIPE_SECRET_KEY=sk_STRIPE_SECRET_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-stripe-service-test
+   ```
+   - This will start a Meshagent Room with an MCP server, ready for tool calls.
+   - The room and all services are cleaned up automatically if inactive.
+
+4. **Start the Chatbot (with Stripe Toolkit) in the Room**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-stripe --name=mcp-stripe --toolkit=mcp-stripe
+   ```
+   - Joins the same room and enables tool usage by the chatbot.
+   - Output will include a link to the room in your browser.
+
+5. **Interact via the Browser**
+   - Visit the room link from the chatbot command output.
+   - Send a message to the agent to interact with Stripe tools live.
+
+---
+
+## Project Level Deployment
+
+For production use, deploy persistent MCP servers and tool-enabled chatbots at the project level. These services join all new rooms upon creation within your project, ensuring MCP tools are always available without local setup.
+
+### Steps
+
+1. **Deploy the MCP Stripe Service for All Project Rooms**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-stripe:latest \
+     --env MESHAGENT_PORT=8001 --env STRIPE_SECRET_KEY=sk_STRIPE_SECRET_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-stripe-service
+   ```
+
+2. **Deploy the Project-level Chatbot with Stripe Toolkit**
+   ```
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-stripe-chatbot" \
+     --env="MESHAGENT_PORT=9001" --name="mcp-stripe-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-stripe-chatbot --toolkit=mcp-stripe"
+   ```
+
+Result: Every time a Meshagent room is created in your project, both the Stripe MCP server and Stripe-enabled chatbot join automatically!
+
+---
+
+## Tools Available
+
+Interact with Stripe services over the Stripe API using the following tools:
+
+| Tool | Description |
+|------|-------------|
+| **cancel_subscription**      | Cancel a subscription in Stripe. |
+| **create_coupon**           | Create a coupon in Stripe. |
+| **create_customer**         | Create a customer in Stripe. |
+| **create_invoice**          | Create an invoice in Stripe. |
+| **create_invoice_item**     | Create an invoice item in Stripe. |
+| **create_payment_link**     | Create a payment link in Stripe. |
+| **create_price**            | Create a price in Stripe. |
+| **create_product**          | Create a product in Stripe. |
+| **create_refund**           | Refund a payment intent in Stripe. |
+| **finalize_invoice**        | Finalize an invoice in Stripe. |
+| **list_coupons**            | Fetch a list of coupons from Stripe. |
+| **list_customers**          | Fetch a list of customers from Stripe. |
+| **list_disputes**           | Fetch a list of disputes in Stripe. |
+| **list_payment_intents**    | List payment intents in Stripe. |
+| **list_prices**             | Fetch a list of prices from Stripe. |
+| **list_products**           | Fetch a list of products from Stripe. |
+| **list_subscriptions**      | List all subscriptions in Stripe. |
+| **retrieve_balance**        | Retrieve the balance from Stripe. |
+| **search_stripe_documentation** | Search and retrieve relevant Stripe documentation to answer a user question about integration. |
+| **update_dispute**          | Upload evidence and manage dispute responses in Stripe. |
+| **update_subscription**     | Update an existing subscription in Stripe. |
+
+---
+
+### Tool Details
+
+#### `cancel_subscription`
+- **Purpose:** Cancel a Stripe subscription.
+- **Params:** `subscription` (string, required) – ID of the subscription.
+
+#### `create_coupon`
+- **Purpose:** Create a coupon (use either `percent_off` or `amount_off`, not both).
+- **Params:** `amount_off`, `name` (string), `currency` (optional), `duration` (optional), `duration_in_months` (optional), `percent_off` (optional).
+
+#### `create_customer`
+- **Purpose:** Create a customer in Stripe.
+- **Params:** `name` (string), `email` (optional).
+
+#### `create_invoice`
+- **Purpose:** Create an invoice for a customer.
+- **Params:** `customer` (string), `days_until_due` (optional).
+
+#### `create_invoice_item`
+- **Purpose:** Create an invoice item for a customer.
+- **Params:** `customer` (string), `invoice` (string), `price` (string).
+
+#### `create_payment_link`
+- **Purpose:** Create a payment link.
+- **Params:** `price` (string), `quantity` (int).
+
+#### `create_price`
+- **Purpose:** Create a price for a product.
+- **Params:** `currency` (string), `product` (string), `unit_amount` (int).
+
+#### `create_product`
+- **Purpose:** Create a product.
+- **Params:** `name` (string), `description` (optional).
+
+#### `create_refund`
+- **Purpose:** Refund a payment intent.
+- **Params:** `payment_intent` (string), `amount` (optional), `reason` (optional).
+
+#### `finalize_invoice`
+- **Purpose:** Finalize an invoice.
+- **Params:** `invoice` (string).
+
+#### `list_coupons`
+- **Purpose:** Fetch coupons.
+- **Params:** `limit` (int, optional).
+
+#### `list_customers`
+- **Purpose:** Fetch customers.
+- **Params:** `email` (optional), `limit` (optional).
+
+#### `list_disputes`
+- **Purpose:** Fetch disputes.
+- **Params:** `charge` (optional), `payment_intent` (optional), `limit` (optional).
+
+#### `list_payment_intents`
+- **Purpose:** List payment intents.
+- **Params:** `customer` (optional), `limit` (optional).
+
+#### `list_prices`
+- **Purpose:** Fetch prices for a product.
+- **Params:** `product` (optional), `limit` (optional).
+
+#### `list_products`
+- **Purpose:** Fetch products.
+- **Params:** `limit` (optional).
+
+#### `list_subscriptions`
+- **Purpose:** List subscriptions.
+- **Params:** `customer`, `price`, `status`, `limit` (all optional).
+
+#### `retrieve_balance`
+- **Purpose:** Retrieve balance from Stripe.
+- **Params:** None.
+
+#### `search_stripe_documentation`
+- **Purpose:** Answer integration questions by searching Stripe docs.
+- **Params:** `question` (string), `language` (optional).
+
+#### `update_dispute`
+- **Purpose:** Upload evidence/manage dispute responses.
+- **Params:** `dispute` (string), `evidence` (object, optional), `submit` (boolean, optional).
+
+#### `update_subscription`
+- **Purpose:** Update a subscription or its items.
+- **Params:** `subscription` (string), `proration_behavior` (optional), `items` (array, optional).
+
+---
+
+## Meshagent Resources
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Read The Docs: [https://docs.meshagent.com](https://docs.meshagent.com)
+- MCP Stripe Tool Image: [https://hub.docker.com/r/meshagent/mcp-stripe](https://hub.docker.com/r/meshagent/mcp-stripe)

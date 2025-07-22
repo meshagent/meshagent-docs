@@ -1,0 +1,157 @@
+---
+title: Slack
+---
+
+
+This guide shows how to quickly test the MCP Slack server and its tools inside a Meshagent Room. When the Room closes, agents and chatbots shut down automatically.
+
+### Required Environment Variables
+
+Set these Slack-related variables for your deployment:
+
+- `SLACK_TEAM_ID`: _(e.g. T01234567)_  
+  Slack Team ID for your workspace.
+- `SLACK_CHANNEL_IDS`: _(e.g. C01234567, C76543210)_  
+  Comma-separated list of Slack Channel IDs to enable for the tools.
+- `SLACK_BOT_TOKEN`: _(e.g. xoxb-your-bot-token)_  
+  Slack Bot token with suitable permissions.
+
+### Steps
+
+1. **Install Meshagent CLI**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate**
+   - Go to the [Meshagent CLI Getting Started Guide](https://docs.meshagent.com/cli/getting_started) and follow the login/auth instructions.
+
+3. **Start the MCP Slack Service Agent**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-slack:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SLACK_TEAM_ID=T01234567 \
+     --env SLACK_CHANNEL_IDS=C01234567,C76543210 \
+     --env SLACK_BOT_TOKEN=xoxb-your-bot-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-slack-service-test
+   ```
+   - This command creates a Meshagent Room named `test` containing the Slack MCP server.
+
+4. **Start the Chatbot in the Room**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-slack \
+     --name=mcp-slack \
+     --toolkit=mcp-slack
+   ```
+   - This launches a chatbot inside the same Room, using the Slack toolkit.
+   - A browser link to the Room will be output by this command.
+
+5. **Interact with the Agent in the Room**
+   - Visit the Room link and use the chatbot to send messages and interact with the MCP Server tools live from your browser.
+
+---
+
+## Project-Level Deployment
+
+For continuous, production-ready access in all Rooms of a Meshagent Project, create persistent services and chatbots. These automatically join every new Room within the project scope.
+
+1. **Create Persistent MCP Slack Service Agent**
+   ```sh
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-slack:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SLACK_TEAM_ID=T01234567 \
+     --env SLACK_CHANNEL_IDS=C01234567,C76543210 \
+     --env SLACK_BOT_TOKEN=xoxb-your-bot-token \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-slack-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```sh
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-slack-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-slack-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-slack-chatbot --toolkit=mcp-slack"
+   ```
+
+Now, whenever a Room is created in your project, both the MCP Slack agent and chatbot automatically join—no need to launch processes yourself.
+
+---
+
+## Tools Available
+
+Interact with Slack Workspaces using these tools (invoked by the agent or chatbot):
+
+| Tool | Short Description |
+|------|------------------|
+| `slack_add_reaction` | Add a reaction emoji to a message |
+| `slack_get_channel_history` | Get recent messages from a channel |
+| `slack_get_thread_replies` | Get all replies in a message thread |
+| `slack_get_user_profile` | Get detailed profile information for a specific user |
+| `slack_get_users` | Get a list of all users in the workspace with their basic profile information |
+| `slack_list_channels` | List public or pre-defined channels in the workspace with pagination |
+| `slack_post_message` | Post a new message to a Slack channel |
+| `slack_reply_to_thread` | Reply to a specific message thread in Slack |
+
+### Tool Details
+
+**slack_add_reaction**  
+_Add a reaction emoji to a message_  
+- `channel_id` (`string`): ID of the channel with the message  
+- `reaction` (`string`): Name of the emoji reaction (no colons)  
+- `timestamp` (`string`): Timestamp of the message
+
+**slack_get_channel_history**  
+_Get recent messages from a channel_  
+- `channel_id` (`string`): ID of the channel  
+- `limit` (`number`, optional): Number of messages (default 10)
+
+**slack_get_thread_replies**  
+_Get all replies in a message thread_  
+- `channel_id` (`string`): ID of channel containing the thread  
+- `thread_ts` (`string`): Timestamp of the parent message (e.g. `1234567890.123456`)
+
+**slack_get_user_profile**  
+_Get detailed profile information for a user_  
+- `user_id` (`string`): The user's Slack ID
+
+**slack_get_users**  
+_Get a list of all users in the workspace_  
+- `cursor` (`string`, optional): Pagination cursor
+- `limit` (`number`, optional): Maximum users (default 100, max 200)
+
+**slack_list_channels**  
+_List channels with pagination_  
+- `cursor` (`string`, optional): Pagination cursor
+- `limit` (`number`, optional): Maximum channels (default 100, max 200)
+
+**slack_post_message**  
+_Post a message to a channel_  
+- `channel_id` (`string`): ID of the channel
+- `text` (`string`): Message text
+
+**slack_reply_to_thread**  
+_Reply to a thread in Slack_  
+- `channel_id` (`string`): ID of the channel
+- `text` (`string`): Reply text
+- `thread_ts` (`string`): Timestamp of parent message
+
+---
+
+## Additional Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Read The Docs:** https://docs.meshagent.com
+- **Meshagent MCP Slack Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-slack](https://hub.docker.com/r/meshagent/mcp-slack)
+
+For troubleshooting or advanced usage, see the official [Meshagent documentation](https://docs.meshagent.com).

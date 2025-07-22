@@ -1,0 +1,95 @@
+---
+title: DataButton
+---
+
+
+Test the Databutton MCP Server and its tools right away in a Meshagent Room. These resources are ephemeral—when the Room closes, the environment and all running bots/tools are removed.
+
+1. **Install Meshagent:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Register and Authenticate:**
+
+    [Follow these steps to sign up and log in.](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start MCP Server as a Service in a Room:**
+
+    ```bash
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-databutton:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-databutton-service-test
+    ```
+   - *This command starts a Meshagent Room with a test MCP server. The Room will close if it goes inactive.*
+
+4. **Join a Chatbot with Databutton Toolkit:**
+
+    ```bash
+    meshagent chatbot join --room=test --agent-name=mcp-databutton --name=mcp-databutton --toolkit=mcp-databutton
+    ```
+   - *This starts a chatbot in the Meshagent Room that can use the Databutton toolkit. You can use multiple toolkits in the same room with the same agent.*
+   - *A link to the Room will be provided in the output of this command.*
+
+5. **Connect & Explore:**
+
+   Visit the room link in your browser and send a message to the agent to interact with the MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+Persistent (production) deployment starts services at the project level, making the MCP Server and chatbot available in every Meshagent Room that is created under your project. No need to run additional local or separate processes—they auto-join every new room.
+
+1. **Deploy MCP Server Service:**
+
+    ```bash
+    meshagent service create --role=agent --image=meshagent/mcp-databutton:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-databutton-service
+    ```
+
+2. **Deploy Chatbot Service:**
+
+    ```bash
+    meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-databutton-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-databutton-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-databutton-chatbot --toolkit=mcp-databutton"
+    ```
+
+*With these services deployed, any new Room in your project will have immediate access to the MCP tools and chatbot agent.*
+
+---
+
+## Tools Available
+
+### **Tools provided by this Server**
+
+| Tool                       | Short Description            |
+|----------------------------|-----------------------------|
+| `submit_app_requirements`  | Submit app requirements     |
+
+---
+
+### **Tools Details**
+
+#### Tool: **`submit_app_requirements`**
+Submit app requirements
+
+| Parameter   | Type     | Description                 |
+|-------------|----------|-----------------------------|
+| `name`      | string   | The name of the app         |
+| `pitch`     | string   | The pitch for the app       |
+| `spec`      | object   | (app specification details) |
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Read The Docs:** https://docs.meshagent.com
+- **Meshagent MCP Tool Image:** https://hub.docker.com/r/meshagent/mcp-databutton
+
+---
+
+For security, scalability, and ease-of-use, we recommend running MCP Servers and toolkit integrations with Docker.  
+[Learn why here.](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)
+
+---
+
+Start building collaborative AI tools with Meshagent and MCP Servers—secure, scalable, and fast from prototype to production.

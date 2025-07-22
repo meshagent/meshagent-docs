@@ -1,0 +1,103 @@
+---
+title: GitHub Chat
+---
+
+
+### Run the MCP GitHub Chat Agent and Tool in a Test Room
+
+Follow these steps to quickly deploy and interact with the MCP GitHub Chat tool in a Meshagent Room. When the room is closed, the tool and chatbot will also be automatically cleaned up.
+
+#### Environment Variables
+
+- `GITHUB_API_KEY`: **Required**. Your GitHub API key.
+
+#### Steps
+
+1. **Install Meshagent CLI**  
+   ```shell
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   [Get started and authenticate with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+
+3. **Deploy MCP Server as Room Agent**  
+   ```shell
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-github-chat:latest --env MESHAGENT_PORT=8001 --env GITHUB_API_KEY=YOUR_GITHUB_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-github-chat-service-test
+   ```
+   - This command will start a test Meshagent Room with a running MCP GitHub Chat server. The server and room are ephemeral and shut down with inactivity.
+
+4. **Start Chatbot with GitHub Chat Toolkit**  
+   ```shell
+   meshagent chatbot join --room=test --agent-name=mcp-github-chat --name=mcp-github-chat --toolkit=mcp-github-chat
+   ```
+   - This adds a chatbot to the same Meshagent Room, enabling natural language access to the GitHub-aware MCP tools.
+   - A link to the room will be provided in the output.
+
+5. **Interact in Browser**  
+   - Visit the room link in your browser and send messages to the agent to interact with the MCP Server tools!
+
+---
+
+## Project Level Deployment (Production)
+
+To make the MCP server and chatbot available in all current and future project rooms, deploy them as persistent project-level services. This is ideal for production—no need to run the tools or bots locally, and they become available automatically whenever a new room is created.
+
+1. **Create Persistent MCP GitHub Chat Service**  
+   ```shell
+   meshagent service create --role=agent --image=meshagent/mcp-github-chat:latest --env MESHAGENT_PORT=8001 --env GITHUB_API_KEY=YOUR_GITHUB_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-github-chat-service
+   ```
+
+2. **Create Persistent Chatbot Service**  
+   ```shell
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-github-chat-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-github-chat-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-github-chat-chatbot --toolkit=mcp-github-chat"
+   ```
+
+Now the MCP GitHub Chat and chatbot will be automatically present in every new Meshagent room in your project!
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+| Tool Name         | Short Description                                         |
+|-------------------|---------------------------------------------------------|
+| `index_repository`| Index a GitHub repository to analyze its codebase.      |
+| `query_repository`| Ask questions about a GitHub repository and receive detailed AI responses.|
+
+### Tools Details
+
+#### Tool: **`index_repository`**
+
+Indexes a GitHub repository to analyze its codebase.  
+Must be used before asking questions about the repository.
+
+| Parameter  | Type    | Description                                                   |
+|------------|---------|---------------------------------------------------------------|
+| `repo_url` | string  | The GitHub repository URL to index (format: https://github.com/username/repo). |
+
+---
+
+#### Tool: **`query_repository`**
+
+Ask questions about a GitHub repository and get detailed AI-powered answers.  
+Note: The repository must be indexed first.
+
+| Parameter           | Type    | Description                                                                                 |
+|---------------------|---------|---------------------------------------------------------------------------------------------|
+| `question`          | string  | The question you want to ask about the repository.                                           |
+| `repo_url`          | string  | The GitHub repository URL being queried (format: https://github.com/username/repo).          |
+| `conversation_history` | string (optional) | Previous conversation history for multi-turn conversations.                   |
+
+---
+
+## Meshagent & Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Documentation (Read The Docs)](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-github-chat)
+
+---
+
+Empower your Meshagent Rooms with GitHub repository intelligence, instantly and at scale!

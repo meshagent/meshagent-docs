@@ -1,0 +1,120 @@
+---
+title: Fetch
+---
+
+
+Get up and running with MCP tools and Meshagent in a cloud Room.
+
+### 1. Install Meshagent CLI
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and authenticate
+
+Follow the setup guide at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+### 3. Start a Test MCP Server Agent in a Meshagent Room
+
+```bash
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-fetch:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-fetch-service-test
+```
+
+- This command launches a Meshagent Room named `test` with the MCP fetch server running as an agent in the room.
+- Rooms will automatically close if they go inactive.
+
+### 4. Start a Chatbot That Can Use the MCP Fetch Toolkit
+
+```bash
+meshagent chatbot join \
+  --room=test \
+  --agent-name=mcp-fetch \
+  --name=mcp-fetch \
+  --toolkit=mcp-fetch
+```
+
+- This launches a chatbot in the same room, configured to use the `fetch` toolkit.
+- More than one toolkit can be enabled in the same room with the same agent.
+- A browser-accessible link to the Room is output by this command.
+
+### 5. Interact in the Room
+
+Open the Room link in your browser (provided in the output above), and message the agent to interact directly with the MCP Server tools.
+
+
+---
+
+## Project Level Deployment
+
+Create persistent services at the project level so MCP tools and chatbots are available in all Rooms automatically—ideal for production! No need to manually run MCP servers or chatbot processes locally every time.
+
+### 1. Deploy the MCP Server as a Persistent Cloud Agent
+
+```bash
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-fetch:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-fetch-service
+```
+
+### 2. Deploy the Chatbot as a Persistent Cloud Service
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-fetch-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-fetch-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-fetch-chatbot --toolkit=mcp-fetch"
+```
+
+- These services will automatically join every new Room in your Meshagent project.
+
+---
+
+## Tools Available
+
+### MCP Fetch (Reference) Server
+
+Fetches a URL from the internet and extracts its contents as markdown.
+
+For more details on the MCP protocol, see [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+#### Provided Tool
+
+| Tool    | Description                                                    |
+|---------|----------------------------------------------------------------|
+| `fetch` | Fetches a URL from the internet and optionally extracts its contents as markdown. |
+
+---
+
+### Tool Details
+
+#### Tool: **`fetch`**
+Fetches a URL from the internet and optionally extracts its contents as markdown.
+
+You now have internet access via this tool. Fetch the latest information from the web.
+
+| Parameter    | Type          | Description                                                   |
+|--------------|--------------|---------------------------------------------------------------|
+| `url`        | `string`     | URL to fetch                                                  |
+| `max_length` | `integer` *optional* | Maximum number of characters to return                        |
+| `raw`        | `boolean` *optional* | Get the actual HTML content without simplification             |
+| `start_index`| `integer` *optional* | Start output at this index if a previous fetch was truncated   |
+
+---
+
+## References and Related Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Docs: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Tool Image: [https://hub.docker.com/r/meshagent/mcp-fetch](https://hub.docker.com/r/meshagent/mcp-fetch)

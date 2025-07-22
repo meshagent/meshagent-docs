@@ -1,0 +1,113 @@
+---
+title: Smithery CLI
+---
+
+
+Jump into testing the MCP server and its Smithery tools by spinning up everything you need in a Meshagent Room. The server and chatbot are auto-removed when the Room closes.
+
+### Environment Variables
+- `SMITHERY_API_KEY`: Your Smithery API key (`your_api_key_here`)
+
+### Steps
+
+1. **Install Meshagent**
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up & Authenticate ([docs](https://docs.meshagent.com/cli/getting_started))**
+    ```sh
+    meshagent login
+    ```
+
+3. **Start MCP Server as an agent in a Room**
+    ```sh
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-smithery-cli:latest --env MESHAGENT_PORT=8001 --env SMITHERY_API_KEY=your_api_key_here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-smithery-cli-service-test
+    ```
+    - This starts a Meshagent Room with a test MCP server inside. Rooms auto-close if inactive.
+
+4. **Start the Chatbot in the Room**
+    ```sh
+    meshagent chatbot join --room=test --agent-name=mcp-smithery-cli --name=mcp-smithery-cli --toolkit=mcp-smithery-cli
+    ```
+    - This starts a chatbot that can use the smithery-cli toolkit inside the room.
+    - Multiple toolkits can be enabled if needed.
+    - The command output gives you a link to the room.
+
+5. **Test it out**
+    - Open the room link in your browser and chat with the agent to interact with MCP Server tools!
+
+---
+
+## Project Level Deployment (Production)
+
+Set up persistent MCP services at the Meshagent _project level_. These services auto-join all rooms in your project, so tools and chatbots are always available (no need to keep local servers running).
+
+### Steps
+
+1. **Create MCP Server Service**
+    ```sh
+    meshagent service create --role=agent --image=meshagent/mcp-smithery-cli:latest --env MESHAGENT_PORT=8001 --env SMITHERY_API_KEY=your_api_key_here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-smithery-cli-service
+    ```
+
+2. **Create Chatbot Service**
+    ```sh
+    meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-smithery-cli-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-smithery-cli-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-smithery-cli-chatbot --toolkit=mcp-smithery-cli"
+    ```
+- These services are persistent and auto-integrate the MCP CLI server and Smithery CLI chatbot into every project room.
+
+---
+
+## Tools Available
+
+### Tools Provided by This MCP Server
+
+| Tool                | Short Description                                       |
+|---------------------|--------------------------------------------------------|
+| `collect_config`    | Collect the config to be used for connection to MCP server |
+| `find_mcp`          | Find the MCP servers by given name                     |
+| `install_mcp`       | Install the MCP server on your local machine           |
+
+---
+
+### Tools Details
+
+#### Tool: **`collect_config`**
+Collect the config to be used for connection to MCP server  
+**Parameters:**
+
+| Parameter      | Type    | Description                                 |
+|----------------|---------|---------------------------------------------|
+| `qualifiedName`| string  | The qualified name of the config to collect |
+
+---
+
+#### Tool: **`find_mcp`**
+Find the MCP servers by given name  
+**Parameters:**
+
+| Parameter      | Type    | Description                                         |
+|----------------|---------|-----------------------------------------------------|
+| `mcpServerName`| string  | The name of the MCP server to find                  |
+
+---
+
+#### Tool: **`install_mcp`**
+Install the MCP server on your local machine.  
+**Parameters:**
+
+| Parameter      | Type    | Description                                                                      |
+|----------------|---------|----------------------------------------------------------------------------------|
+| `client`       | string  | The client to install                                                            |
+| `qualifiedName`| string  | The qualified name of the MCP server to install. ex) @bbangjooo/mcp-finder-mcp-server |
+| `config`       | object _(optional)_ | Configuration schema                                            |
+
+---
+
+## Links & References
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Documentation (Read the Docs)](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image on DockerHub](https://hub.docker.com/r/meshagent/mcp-smithery-cli)
+- [Smithery CLI on GitHub](https://github.com/smithery-ai/smithery-cli-mcp)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

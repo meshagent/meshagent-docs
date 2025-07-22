@@ -1,0 +1,169 @@
+---
+title: Tavily
+---
+
+
+Here’s how to quickly test the Tavily MCP server and tools in a Room on the Meshagent cloud platform. When the Room closes, the MCP server and chatbot are automatically shut down as well.
+
+### Prerequisites
+
+- Python installed
+- [`meshagent` CLI](https://docs.meshagent.com/cli/getting_started)
+- A [Tavily API Key](https://www.tavily.com/)
+
+**Environment Variables Required:**
+- `TAVILY_API_KEY`: your-tavily-apikey-here
+
+### Steps
+
+1. **Install Meshagent CLI and dependencies:**
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate at Meshagent:**
+    ```bash
+    meshagent login
+    ```
+    See details: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the Tavily MCP Server tool as an agent in a Room:**
+    ```bash
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-tavily:latest \
+      --env MESHAGENT_PORT=8001 --env TAVILY_API_KEY=your-tavily-apikey-here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-tavily-service-test
+    ```
+   - This starts a Meshagent Room with the Tavily MCP server as a callable service. Rooms auto-close after inactivity.
+
+4. **Join the Room with a chatbot that uses the Tavily toolkit:**
+    ```bash
+    meshagent chatbot join --room=test --agent-name=mcp-tavily --name=mcp-tavily --toolkit=mcp-tavily
+    ```
+   - This launches a chatbot in the Room that can use Tavily tools.
+   - **A Room link is printed in the output.**
+
+5. **Try It Out:**
+    - Visit the Room link in your browser.
+    - Send a message to the chatbot (mcp-tavily) to interact with the Tavily MCP server tools.
+
+---
+
+## Project Level Deployment
+
+For production use, deploy persistent MCP and chatbot services at the Meshagent project level. This ensures the Tavily tools and chatbot are automatically present in all new Rooms in your Meshagent project—no need for local hosting or manual joins.
+
+### Deploy Persistent MCP and Chatbot Services
+
+1. **Create the Tavily MCP Server as a persistent agent service:**
+    ```bash
+    meshagent service create --role=agent --image=meshagent/mcp-tavily:latest \
+      --env MESHAGENT_PORT=8001 --env TAVILY_API_KEY=your-tavily-apikey-here \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-tavily-service
+    ```
+
+2. **Create a persistent chatbot service using the Tavily toolkit:**
+    ```bash
+    meshagent service create --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-tavily-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-tavily-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-tavily-chatbot --toolkit=mcp-tavily"
+    ```
+
+When new Rooms are created in your Meshagent project, both the Tavily MCP server and chatbot will automatically spin up and join, offering instant access to the full suite of Tavily web tools.
+
+---
+
+## Tools Available
+
+The Tavily MCP server provides seamless interaction with four powerful web tools:
+
+| Tool Name         | Short Description                                                                                                                                |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `tavily-crawl`    | A powerful web crawler that initiates a structured web crawl starting from a specified base URL.                                                |
+| `tavily-extract`  | Retrieves and processes raw content from URLs, perfect for data collection, content analysis, and research tasks.                               |
+| `tavily-map`      | Creates a structured map of website URLs for analyzing site structure, organization, and navigation paths.                                      |
+| `tavily-search`   | Offers comprehensive, real-time web search results using Tavily’s AI search engine, with rich filtering and content options.                    |
+
+### Tool Details
+
+#### **`tavily-crawl`**
+
+Initiate a structured crawl from a base URL, following internal links, supporting depth/breadth control, and filtering by categories or regex.
+
+| Parameter          | Type           | Description                                                                                                                                    |
+|--------------------|----------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `url`              | string         | The root URL to begin the crawl                                                                                                                |
+| `allow_external`   | boolean (opt)  | Whether to follow links to external domains                                                                                                    |
+| `categories`       | array (opt)    | Filter URLs by categories such as documentation, blog, api, etc.                                                                               |
+| `extract_depth`    | string (opt)   | If 'advanced', retrieves more detailed data, including tables and embedded content (higher latency possible)                                   |
+| `format`           | string (opt)   | Extracted content format: 'markdown' or 'text'                                                                                                 |
+| `instructions`     | string (opt)   | Natural language instructions for the crawl                                                                                                    |
+| `limit`            | integer (opt)  | Max number of links to process                                                                                                                 |
+| `max_breadth`      | integer (opt)  | Max number of links per level (per page)                                                                                                       |
+| `max_depth`        | integer (opt)  | Max crawl depth from base URL                                                                                                                  |
+| `select_domains`   | array (opt)    | Regex patterns to restrict crawl to specified domains/subdomains                                                                               |
+| `select_paths`     | array (opt)    | Regex patterns to restrict to specific URL paths                                                                                               |
+
+---
+
+#### **`tavily-extract`**
+
+Extracts and processes raw web content from one or more URLs—including support for advanced extraction and content formatting.
+
+| Parameter           | Type           | Description                                                                                               |
+|---------------------|----------------|-----------------------------------------------------------------------------------------------------------|
+| `urls`              | array          | List of URLs to extract content from                                                                      |
+| `extract_depth`     | string (opt)   | Depth of extraction: 'basic' or 'advanced'                                                                |
+| `format`            | string (opt)   | Format of content: 'markdown' or 'text'                                                                   |
+| `include_images`    | boolean (opt)  | Include a list of images from the URLs in the response                                                    |
+
+---
+
+#### **`tavily-map`**
+
+Maps a website's structure by crawling URLs, helping visualize site organization for audits, navigation checks, or discovery.
+
+| Parameter          | Type           | Description                                                                                               |
+|--------------------|----------------|-----------------------------------------------------------------------------------------------------------|
+| `url`              | string         | The root URL to begin mapping                                                                             |
+| `allow_external`   | boolean (opt)  | Whether to allow links to external domains                                                                |
+| `categories`       | array (opt)    | Filter using URL categories                                                                               |
+| `instructions`     | string (opt)   | Instructions for the crawler                                                                              |
+| `limit`            | integer (opt)  | Max number of links to process                                                                            |
+| `max_breadth`      | integer (opt)  | Max number of links per level                                                                             |
+| `max_depth`        | integer (opt)  | Max crawl depth                                                                                           |
+| `select_domains`   | array (opt)    | Regex to restrict by domain                                                                               |
+| `select_paths`     | array (opt)    | Regex to restrict by path                                                                                 |
+
+---
+
+#### **`tavily-search`**
+
+Real-time, AI-powered web search, returning detailed and filtered web results.
+
+| Parameter                   | Type           | Description                                                                                                   |
+|-----------------------------|----------------|---------------------------------------------------------------------------------------------------------------|
+| `query`                     | string         | The search query                                                                                              |
+| `country`                   | string (opt)   | Prioritize results from a specific country (for 'general' topic)                                              |
+| `days`                      | number (opt)   | Limit search results to the previous N days ('news' topic only)                                               |
+| `exclude_domains`           | array (opt)    | Domains to exclude                                                                                            |
+| `include_domains`           | array (opt)    | Domains to include                                                                                            |
+| `include_image_descriptions`| boolean (opt)  | Include images and descriptions in results                                                                    |
+| `include_images`            | boolean (opt)  | Include related images                                                                                        |
+| `include_raw_content`       | boolean (opt)  | Include cleaned HTML content                                                                                  |
+| `max_results`               | number (opt)   | Maximum number of results                                                                                     |
+| `search_depth`              | string (opt)   | 'basic' or 'advanced' search                                                                                  |
+| `time_range`                | string (opt)   | Specify time range for results ('general' and 'news' topics)                                                  |
+| `topic`                     | string (opt)   | Search category (determines which agent is used)                                                              |
+
+
+---
+
+## Meshagent & Tavily Links
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-tavily](https://hub.docker.com/r/meshagent/mcp-tavily)

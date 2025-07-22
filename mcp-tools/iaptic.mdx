@@ -1,0 +1,249 @@
+---
+title: iAptic
+---
+
+
+The following steps let you spin up a test Meshagent Room containing both the MCP server and a chatbot agent, with all resources defined and cleaned up automatically.
+
+**Environment Variables**  
+Set the following for your environment:
+- `IAPTIC_APP_NAME`: your-app-name-here
+- `IAPTIC_API_KEY`: your-api-key-here
+
+1. **Install Meshagent:**
+   ```
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate:**  
+   Follow instructions: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Server agent in a test room:**
+   ```bash
+   meshagent service test --room=test --role=agent \
+     --image=meshagent/mcp-iaptic:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=IAPTIC_APP_NAME=your-app-name-here \
+     --env=IAPTIC_API_KEY=your-api-key-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-iaptic-service-test
+   ```
+   - This command boots a Meshagent Room, brings up the MCP server inside, and ties it to the room's lifecycle.
+
+4. **Start a chatbot in the test room (with the Iaptic toolkit):**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-iaptic --name=mcp-iaptic --toolkit=mcp-iaptic
+   ```
+   - The chatbot connects with the MCP agent and toolkit. Multiple toolkits/agents can be used per room.
+   - A link to the Meshagent Room will appear in the command output.
+
+5. **Interact!**
+   - Open the room link in your browser, send a message to the agent, and use the MCP server tools instantly.
+   - Both the MCP tool service and chatbot are removed automatically when the Room closes.
+
+---
+
+## Project Level Deployment
+
+For persistent, production-ready deployments, use project-level services. These automatically join new rooms created under your Meshagent project, ensuring MCP server tools and chatbots are always available—no need for local or manual launches.
+
+1. **Create persistent MCP Server agent service:**
+   ```bash
+   meshagent service create --role=agent \
+     --image=meshagent/mcp-iaptic:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=IAPTIC_APP_NAME=your-app-name-here \
+     --env=IAPTIC_API_KEY=your-api-key-here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-iaptic-service
+   ```
+
+2. **Create persistent chatbot service:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-iaptic-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-iaptic-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-iaptic-chatbot --toolkit=mcp-iaptic"
+   ```
+
+With these services, all new Rooms in your Meshagent project will always include your MCP tools and chatbots without manual intervention.
+
+---
+
+## Tools Available
+
+Below are the tools provided by the Iaptic MCP Server, accessible in Meshagent Rooms via the configured agent:
+
+| Tool                         | Short Description                                   |
+|------------------------------|----------------------------------------------------|
+| `customer_add_purchase`      | Manually associate a customer with a purchase.     |
+| `customer_get`               | Get detailed information about a specific customer.|
+| `customer_list`              | List customers from your Iaptic account.           |
+| `customer_subscription`      | Get customer's subscription status.                |
+| `customer_transactions`      | Get customer's transaction history.                |
+| `event_list`                 | List recent events from your Iaptic account.       |
+| `iaptic_current_app`         | Get information about the currently active Iaptic app.|
+| `iaptic_reset_app`           | Reset to the default Iaptic app.                   |
+| `iaptic_switch_app`          | Switch to a different Iaptic app.                  |
+| `purchase_get`               | Get detailed information about a specific purchase.|
+| `purchase_list`              | List purchases from your Iaptic account.           |
+| `stats_app`                  | Get statistics specific to your application.       |
+| `stats_get`                  | Get general transactions, revenue, and usage stats.|
+| `stripe_prices`              | Get available Stripe products and prices.          |
+| `transaction_get`            | Get detailed information about a specific transaction.|
+| `transaction_list`           | List financial transactions from your Iaptic account.|
+
+### Tool Details
+
+#### `customer_add_purchase`
+Manually associate a customer with a purchase.
+- Links a purchase to a specific customer
+- Takes priority over receipt validation links
+- Useful for manual purchase management
+- Purchase format: `platform:purchaseId` (e.g., `apple:123109519983`)
+- Required: customerId and purchaseId
+
+Parameters:
+- `customerId` (string): Application username of the customer
+- `purchaseId` (string): ID of the purchase to associate
+
+---
+
+#### `customer_get`
+Get detailed information about a specific customer.
+- Complete profile including username, purchase history, subscriptions, etc.
+- Required: customerId
+
+Parameters:
+- `customerId` (string): Unique identifier of the customer
+
+---
+
+#### `customer_list`
+List customers from your Iaptic account.
+- Paginated, includes purchase status, subscription info
+- Use `limit` and `offset` for pagination
+
+Parameters:
+- `limit` (number, optional): Max customers to return (default: 100)
+- `offset` (number, optional): Number of customers to skip
+
+---
+
+#### `customer_subscription`
+Get customer's subscription status.
+- Returns active subscription info, renewal details
+- Required: customerId
+
+Parameters:
+- `customerId` (string): Application username of the customer
+
+---
+
+#### `customer_transactions`
+Get customer's transaction history.
+- All transactions, status, payment details
+
+Parameters:
+- `customerId` (string): Application username of the customer
+
+---
+
+#### `event_list`
+List recent events from your Iaptic account.
+- Paginated
+- Events: validations, notifications, webhook deliveries, etc.
+
+Parameters:
+- `enddate` (string, optional): Filter before date (ISO)
+- `limit` (number, optional): Max to return (default: 100)
+- `offset` (number, optional): Skip for pagination
+- `startdate` (string, optional): Filter after date (ISO)
+
+---
+
+#### `iaptic_current_app`
+Get information about the currently active Iaptic app.
+- Shows current app, credential source, authentication info
+
+#### `iaptic_reset_app`
+Reset to the default Iaptic app.
+- Reverts to credentials provided at server initialization.
+
+#### `iaptic_switch_app`
+Switch to a different Iaptic app.
+- Temporarily uses different app's credentials
+
+Parameters:
+- `appName` (string): Name of the app to switch to
+- `apiKey` (string, optional): API key (not needed if using master key)
+
+---
+
+#### `purchase_get`
+Get detailed information about a specific purchase.
+- Product info, status, customer/transaction links
+
+Parameters:
+- `purchaseId` (string): Unique ID of the purchase
+
+---
+
+#### `purchase_list`
+List purchases from your Iaptic account.
+- Paginated, filterable by customerId/date
+
+Parameters:
+- `customerId` (string, optional): Filter by customer ID
+- `enddate` (string, optional): Before date (ISO)
+- `limit` (number, optional): Max to return (default: 100, max: 1000)
+- `offset` (number, optional): Skip for pagination
+- `startdate` (string, optional): After date (ISO)
+
+---
+
+#### `stats_app`
+Get statistics specific to your application.
+- App revenue/growth, subscription/customer metrics
+
+#### `stats_get`
+Get general transactions, revenue, and usage statistics.
+- Aggregated metrics across all applications
+
+#### `stripe_prices`
+Get available Stripe products and prices.
+- Product/price/terms info (5 min cache)
+
+---
+
+#### `transaction_get`
+Get detailed information about a specific transaction.
+- Status, amount, payment method, purchase/customer info
+
+Parameters:
+- `transactionId` (string): Unique ID of the transaction
+
+---
+
+#### `transaction_list`
+List financial transactions from your Iaptic account.
+- Paginated, filterable by purchaseId/date
+
+Parameters:
+- `enddate` (string, optional): Before date (ISO)
+- `limit` (number, optional): Max to return (default: 100, max: 1000)
+- `offset` (number, optional): Skip for pagination
+- `purchaseId` (string, optional): Filter by purchase ID
+- `startdate` (string, optional): After date (ISO)
+
+---
+
+## Useful Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image](https://hub.docker.com/r/meshagent/mcp-iaptic)
+
+For more, visit [Meshagent Docs](https://docs.meshagent.com) and review the [Iaptic MCP Server project](https://github.com/iaptic/mcp-server-iaptic).
+
+---

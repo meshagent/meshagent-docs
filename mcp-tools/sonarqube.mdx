@@ -1,0 +1,196 @@
+---
+title: SonarQube
+---
+
+
+Deploy and test the SonarQube MCP server and chatbot instantly in a cloud-hosted Meshagent Room. When the Room closes, all services and agents are also terminated.
+
+### Required Environment Variables
+
+- `SONARQUBE_URL`: The URL of your SonarQube instance (e.g., `https://my-sonarqube.com`)
+- `SONARQUBE_ORG`: Your SonarQube organization (e.g., `my-org`)
+- `SONARQUBE_TOKEN`: **Your personal access token** for authenticating with SonarQube (`YOUR_SONARQUBE_TOKEN`)
+- `MESHAGENT_PORT`: Port for the MCP service to listen on (default: `8001`)
+
+### Steps
+
+1. **Install the Meshagent Python package:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent:**
+   See [Meshagent CLI Getting Started guide](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the SonarQube MCP service in a test Room:**
+   ```
+   meshagent service test --room=test --role=agent \
+     --image=meshagent/mcp-sonarqube:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SONARQUBE_URL=https://my-sonarqube.com \
+     --env SONARQUBE_ORG=my-org \
+     --env SONARQUBE_TOKEN=YOUR_SONARQUBE_TOKEN \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-sonarqube-service-test
+   ```
+   - This will start a Meshagent Room with the test MCP server available. Rooms automatically close after inactivity, cleaning up running tools and chatbots.
+
+4. **Start a chatbot connected to the MCP service:**
+   ```
+   meshagent chatbot join --room=test \
+     --agent-name=mcp-sonarqube \
+     --name=mcp-sonarqube \
+     --toolkit=mcp-sonarqube
+   ```
+   - This creates a chatbot in the Room with the SonarQube toolkit available.
+   - Multiple tools can be added to the same agent.
+   - The output will provide a browser link to the Room.
+
+5. **Test the Room:**
+   - Visit the Room link in your browser and send a message to interact with the MCP Server tools through the agent.
+
+---
+
+## Project Level Deployment
+
+Automate SonarQube MCP Server and bot setup across all rooms in a Meshagent project for persistent, production-grade deployments. Services and chatbots become available in every project Room on creation, with no need to manually start or manage local services.
+
+1. **Create a persistent MCP service:**
+   ```
+   meshagent service create --role=agent \
+     --image=meshagent/mcp-sonarqube:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env SONARQUBE_URL=https://my-sonarqube.com \
+     --env SONARQUBE_ORG=my-org \
+     --env SONARQUBE_TOKEN=YOUR_SONARQUBE_TOKEN \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-sonarqube-service
+   ```
+
+2. **Create a persistent chatbot for the project:**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-sonarqube-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-sonarqube-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-sonarqube-chatbot --toolkit=mcp-sonarqube"
+   ```
+
+---
+
+## Tools Available
+
+Interact with SonarQube Cloud, Server, and Community Editions over the web API—analyze code, manage issues, and more:
+
+### Tool Summary
+
+| Tool | Description |
+|---|---|
+| `analyze_code_snippet` | Analyze a code snippet with Sonar analyzers to find issues. |
+| `change_sonar_issue_status` | Change the status of a Sonar issue. |
+| `get_component_measures` | Get metrics/measures for a component. |
+| `get_project_quality_gate_status` | Get the Quality Gate Status for a project. |
+| `get_raw_source` | Get source code as raw text. |
+| `get_scm_info` | Get SCM (version control) info for source files. |
+| `get_system_health` | Get health status of SonarQube Server instance. |
+| `get_system_info` | Get detailed system configuration info. |
+| `get_system_logs` | Get system logs in plain-text. |
+| `get_system_status` | Get state/version info about SonarQube Server. |
+| `list_languages` | List programming languages supported. |
+| `list_quality_gates` | List all quality gates in the org. |
+| `list_rule_repositories` | List rule repositories available in SonarQube. |
+| `ping_system` | Ping the SonarQube Server (“pong” if alive). |
+| `search_metrics` | Search for available metrics. |
+| `search_my_sonarqube_projects` | List Sonar projects (paginated). |
+| `search_sonar_issues_in_projects` | Search for issues in projects. |
+| `show_rule` | Show details about a SonarQube rule. |
+
+### Tool Details
+
+#### `analyze_code_snippet`
+Analyze a code snippet with Sonar analyzers to find Sonar issues.
+- `codeSnippet`: (string) The code to analyze.
+- `projectKey`: (string) The SonarQube project key.
+- `language`: (string, optional) The code language.
+
+#### `change_sonar_issue_status`
+Change the status of a Sonar issue.
+- `key`: (string) Issue key to update.
+- `status`: (array) New status value ("accept", "falsepositive", "reopen").
+
+#### `get_component_measures`
+Get measures for a component (project, directory, file).
+- `branch`: (string, optional) Branch to analyze.
+- `component`: (string, optional) Component key.
+- `metricKeys`: (array, optional) Metrics to return.
+- `pullRequest`: (string, optional) PR identifier.
+
+#### `get_project_quality_gate_status`
+Get a project's quality gate status.
+- `analysisId`, `branch`, `projectId`, `projectKey`, `pullRequest`: (optional identifiers)
+
+#### `get_raw_source`
+Get source code as raw text.
+- `key`: (string) File key (e.g. project:file)
+- `branch`, `pullRequest`: (optional) Branch or PR id.
+
+#### `get_scm_info`
+Get SCM info for source files.
+- `key`: (string) File key.
+- `commits_by_line`, `from`, `to`: (optional) Controls output format/range.
+
+#### `get_system_health`
+Get overall health of SonarQube server.
+
+#### `get_system_info`
+Get detailed info on server config and health.
+
+#### `get_system_logs`
+Get system logs (access, app, ce, deprecation, es, web).
+- `name`: (string, optional) Log type.
+
+#### `get_system_status`
+Get overall server status (e.g., UP, DOWN).
+
+#### `list_languages`
+List all supported programming languages.
+- `q`: (string, optional) Pattern to filter by key/name.
+
+#### `list_quality_gates`
+List all quality gates in current org.
+
+#### `list_rule_repositories`
+List rule repositories.
+- `language`, `q`: (optional) Filter repositories.
+
+#### `ping_system`
+Ping for server reachability.
+
+#### `search_metrics`
+Search metrics.
+- `p` (page), `ps` (page size): (optional)
+
+#### `search_my_sonarqube_projects`
+Paginated search for projects.
+- `page`: (optional) Page number.
+
+#### `search_sonar_issues_in_projects`
+Search for issues across projects.
+- `p`, `projects`, `ps`, `pullRequestId`: (optional) Pagination, scope, filters.
+
+#### `show_rule`
+Show detailed metadata about a SonarQube rule.
+- `key`: (string) Rule key.
+
+---
+
+## Additional Resources
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Docs](https://docs.meshagent.com)
+- [Meshagent MCP SonarQube Docker Image](https://hub.docker.com/r/meshagent/mcp-sonarqube)
+
+---
+
+Deploy SonarQube analysis toolkits into cloud-native, collaborative, and ephemeral workspaces with Meshagent and MCP!

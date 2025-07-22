@@ -1,0 +1,108 @@
+---
+title: Perplexity Ask
+---
+
+
+Follow these steps to start the Perplexity MCP server and a chatbot in a Meshagent Room:
+
+**Environment Variables Needed:**
+- `PERPLEXITY_API_KEY` – Your API key for Perplexity
+
+### Steps
+
+1. **Install Meshagent CLI:**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+   - Register and authenticate via the [Meshagent CLI Guide](https://docs.meshagent.com/cli/getting_started)
+   - This is a one-time setup.
+
+3. **Launch the MCP Server as a Room Agent:**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-perplexity-ask:latest --env MESHAGENT_PORT=8001 --env PERPLEXITY_API_KEY=YOUR_PERPLEXITY_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-perplexity-ask-service-test
+   ```
+   - This creates a Meshagent Room called `test`, running the MCP server in the cloud.
+   - Room and all attached services close automatically if inactive.
+
+4. **Join a Chatbot to the Room:**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-perplexity-ask --name=mcp-perplexity-ask --toolkit=mcp-perplexity-ask
+   ```
+   - This attaches a chatbot to your room, enabling it to use Perplexity MCP tools.
+   - Supports adding multiple toolkits per agent.
+   - You’ll receive a link to the room in the command output.
+
+5. **Test in the Browser:**
+   - Visit the provided room link and send a message to the agent.  
+   - Interact with Perplexity MCP server tools live in the Meshagent Room!
+
+**Summary of Required Environment Variables:**
+- `PERPLEXITY_API_KEY`: Your Perplexity API key
+
+---
+
+## Project Level Deployment (Production)
+
+Deploying at the project level lets your MCP server and chatbot appear in every new Room, making them always available without manual setup per-room.
+
+1. **Create Persistent MCP Server Service:**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-perplexity-ask:latest --env MESHAGENT_PORT=8001 --env PERPLEXITY_API_KEY=YOUR_PERPLEXITY_API_KEY --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-perplexity-ask-service
+   ```
+
+2. **Create Persistent Chatbot Service:**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-perplexity-ask-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-perplexity-ask-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-perplexity-ask-chatbot --toolkit=mcp-perplexity-ask"
+   ```
+- With this setup, the MCP server and chatbot will auto-join every new Room in your Meshagent project.
+
+---
+
+## Tools Available
+
+Connector for Perplexity API, to enable real-time, web-wide research.
+
+### Summary of Provided Tools
+
+| Tool Name                | Short Description                               |
+|--------------------------|------------------------------------------------|
+| `perplexity_ask`         | Engages in a conversation using the Sonar API. |
+| `perplexity_reason`      | Performs reasoning tasks using the Perplexity API. |
+| `perplexity_research`    | Performs deep research using the Perplexity API. |
+
+### Tool Details
+
+#### **perplexity_ask**
+Engages in a conversation using the Sonar API. Accepts an array of messages (each with a role and content) and returns an ask completion response from the Perplexity model.
+
+| Parameter | Type   | Description                   |
+|-----------|--------|------------------------------|
+| messages  | array  | Array of conversation messages|
+
+---
+
+#### **perplexity_reason**
+Performs reasoning tasks using the Perplexity API. Accepts an array of messages (each with a role and content) and returns a well-reasoned response using the sonar-reasoning-pro model.
+
+| Parameter | Type   | Description                   |
+|-----------|--------|------------------------------|
+| messages  | array  | Array of conversation messages|
+
+---
+
+#### **perplexity_research**
+Performs deep research using the Perplexity API. Accepts an array of messages (each with a role and content) and returns a comprehensive research response with citations.
+
+| Parameter | Type   | Description                   |
+|-----------|--------|------------------------------|
+| messages  | array  | Array of conversation messages|
+
+---
+
+## Meshagent & Related Links
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-perplexity-ask)

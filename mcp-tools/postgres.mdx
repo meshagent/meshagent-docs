@@ -1,0 +1,130 @@
+---
+title: Postgres
+---
+
+
+Quickly run the MCP PostgreSQL server and a corresponding chatbot inside a Meshagent Room for testing in the cloud. When the Meshagent Room closes, both the server and chatbot are automatically removed.
+
+1. **Install Meshagent**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and Authenticate**  
+   Follow the Meshagent [Getting Started Guide](https://docs.meshagent.com/cli/getting_started) to log in and authenticate with your credentials.
+
+3. **Start the MCP Server in a Room**
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-postgres:latest \
+     --env POSTGRES_URL=postgresql://host.docker.internal:5432/mydb \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-postgres-service-test
+   ```
+   - This command launches a Meshagent Room named `test` running a test MCP server agent.
+   - **Environment Variables:**  
+     - `POSTGRES_URL`: The URL to your PostgreSQL instance (e.g. `postgresql://host.docker.internal:5432/mydb`)  
+     - `MESHAGENT_PORT`: Listening port for the MCP server (default: 8001)
+   - **Note:** Rooms will close if inactive, cleaning up all agents and tools.
+
+4. **Start a Chatbot with Postgres Toolkit in the Room**
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-postgres \
+     --name=mcp-postgres \
+     --toolkit=mcp-postgres
+   ```
+   - Launches a chatbot in the same room that can use the Postgres toolkit.
+   - Multiple toolkits can be used by a single agent.
+   - A joining link to the room is given in the command output.
+
+5. **Interact with the tools**
+   - Open the room link in your browser and send messages to the `mcp-postgres` agent to use the MCP server tools directly.
+
+## Project Level Deployment
+
+For persistent, production setups, create project-level services so that your MCP server and chatbot are available in every Meshagent project room—no manual room joining needed, no separate local hosting.
+
+1. **Deploy MCP Server as a Persistent Project-Level Service**
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-postgres:latest \
+     --env POSTGRES_URL=postgresql://host.docker.internal:5432/mydb \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-postgres-service
+   ```
+
+2. **Deploy Chatbot as a Persistent Project-Level Service**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-postgres-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-postgres-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-postgres-chatbot --toolkit=mcp-postgres"
+   ```
+
+After setting these up, each Meshagent project room will automatically have access to the MCP server tool and the chatbot when created.
+
+## Tools Available
+
+### PostgreSQL readonly (Archived) MCP Server
+
+Connect with read-only access to PostgreSQL databases. This server enables LLMs to inspect database schemas and execute read-only queries.
+
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+#### Available Tools
+
+| Tools provided by this Server | Short Description              |
+|-------------------------------|-------------------------------|
+| `query`                       | Run a read-only SQL query     |
+
+#### Tool Details
+
+**Tool: `query`**  
+_Run a read-only SQL query_  
+Parameters:
+
+| Name | Type     | Description         |
+|------|----------|---------------------|
+| sql  | string   | *optional*          |
+
+---
+
+### Use this MCP Server (standalone Docker)
+
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "POSTGRES_URL",
+        "mcp/postgres",
+        "$POSTGRES_URL"
+      ],
+      "env": {
+        "POSTGRES_URL": "postgresql://host.docker.internal:5432/mydb"
+      }
+    }
+  }
+}
+```
+- [Why run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)
+
+## Resources & Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Postgres Docker Image](https://hub.docker.com/r/meshagent/mcp-postgres)

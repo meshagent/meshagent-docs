@@ -1,0 +1,145 @@
+---
+title: Minecraft Wiki
+---
+
+
+Get up and running fast! Here’s how to run the MCP Minecraft Wiki server and a Meshagent-powered chatbot in a temporary Meshagent Room for testing.
+
+1. **Install the Meshagent CLI**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Follow the authentication steps here: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the MCP Minecraft Wiki Server in a Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-minecraft-wiki:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-minecraft-wiki-service-test
+   ```
+   - This launches a Meshagent Room (`test`) with a deployable, callable MCP server. Rooms automatically close if inactive.
+
+4. **Join the Room with a Chatbot**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-minecraft-wiki --name=mcp-minecraft-wiki --toolkit=mcp-minecraft-wiki
+   ```
+   - This starts a chatbot in the same Meshagent Room, giving it access to the Minecraft Wiki toolkit.
+   - The command’s output will include a link to the Room.
+
+5. **Interact with the Tools**
+   - Visit the Room link in your browser. Send a message to the agent to leverage the Minecraft Wiki tools in real-time!
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production use-cases, you may want the MCP server tools and chatbot to be available in all Rooms in a Meshagent project, automatically. The following steps create persistent services at the project level—so every new Room instantly has access to the Minecraft Wiki tools and chatbots without any manual step.
+
+1. **Create Persistent MCP Minecraft Wiki Service**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-minecraft-wiki:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-minecraft-wiki-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-minecraft-wiki-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-minecraft-wiki-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-minecraft-wiki-chatbot --toolkit=mcp-minecraft-wiki"
+   ```
+
+**Now, every time a Meshagent Room is created within your project, the MCP server and chatbot will join automatically.**  
+There’s no need to run MCP or chatbots locally—they’re provisioned and managed by Meshagent with every Room.
+
+---
+
+## Tools Available
+
+Below are the available tools provided via the MCP Minecraft Wiki server:
+
+| Tool | Short Description |
+|------|------------------|
+| `MinecraftWiki_getCategoriesForPage` | Get categories associated with a specific page. |
+| `MinecraftWiki_getPageContent` | Get the raw wikitext content of a specific Minecraft Wiki page. |
+| `MinecraftWiki_getPageSection` | Get a specific section from a Minecraft Wiki page. |
+| `MinecraftWiki_getPageSummary` | After searching, get the page summary and a list of all available sections. |
+| `MinecraftWiki_getSectionsInPage` | Get an overview of all sections in the page. |
+| `MinecraftWiki_listAllCategories` | List all categories in the Minecraft Wiki. |
+| `MinecraftWiki_listCategoryMembers` | List all pages in a specific category. |
+| `MinecraftWiki_resolveRedirect` | Resolve a redirect and return the target page title. |
+| `MinecraftWiki_searchWiki` | Search for a specific structure, entity, item, or block. |
+
+### Tools Details
+
+#### **MinecraftWiki_getCategoriesForPage**
+_Get categories associated with a specific page._
+
+| Parameter | Type    | Description                           |
+|-----------|---------|---------------------------------------|
+| title     | string  | Title of the Minecraft Wiki page      |
+
+#### **MinecraftWiki_getPageContent**
+_Get the raw wikitext content of a specific Minecraft Wiki page._
+
+| Parameter | Type    | Description                                           |
+|-----------|---------|-------------------------------------------------------|
+| title     | string  | Title of the Minecraft Wiki page to retrieve content for |
+
+#### **MinecraftWiki_getPageSection**
+_Get a specific section from a Minecraft Wiki page._
+
+| Parameter    | Type    | Description                                                         |
+|--------------|---------|---------------------------------------------------------------------|
+| sectionIndex | number  | Index of the section to retrieve (0 = main, 1 = first, etc.)        |
+| title        | string  | Title of the Minecraft Wiki page                                    |
+
+#### **MinecraftWiki_getPageSummary**
+_Get the page summary and a list of all available sections._
+
+| Parameter | Type    | Description                           |
+|-----------|---------|---------------------------------------|
+| title     | string  | Title of the Minecraft Wiki page      |
+
+#### **MinecraftWiki_getSectionsInPage**
+_Get an overview of all sections in a page._
+
+| Parameter | Type    | Description                        |
+|-----------|---------|------------------------------------|
+| title     | string  | Title of the page to obtain sections for |
+
+#### **MinecraftWiki_listAllCategories**
+_List all categories in the Minecraft Wiki._
+
+| Parameter | Type    | Description                                              |
+|-----------|---------|----------------------------------------------------------|
+| limit     | number  | *Optional*: Max number of categories (default: 10, max: 500) |
+| prefix    | string  | *Optional*: Filters categories by prefix                 |
+
+#### **MinecraftWiki_listCategoryMembers**
+_List all pages that are members of a specific category._
+
+| Parameter | Type    | Description                                             |
+|-----------|---------|---------------------------------------------------------|
+| category  | string  | Name of the category (e.g. 'Items', 'Blocks', ...)      |
+| limit     | number  | *Optional*: Max number of pages (default: 100, max: 500) |
+
+#### **MinecraftWiki_resolveRedirect**
+_Resolve a redirect and return the title of the target page._
+
+| Parameter | Type    | Description                           |
+|-----------|---------|---------------------------------------|
+| title     | string  | Title of the page to resolve          |
+
+#### **MinecraftWiki_searchWiki**
+_Search the Minecraft Wiki for a specific structure, entity, item or block._
+
+| Parameter | Type    | Description                                  |
+|-----------|---------|----------------------------------------------|
+| query     | string  | Term to search for (item/block/entity name)  |
+
+---
+
+## Meshagent & MCP Server Links
+
+- **Meshagent Home:** [meshagent.com](https://www.meshagent.com/)
+- **Meshagent Documentation:** [Read The Docs](https://docs.meshagent.com)
+- **Meshagent MCP Minecraft Wiki Image:** [Docker Hub: meshagent/mcp-minecraft-wiki](https://hub.docker.com/r/meshagent/mcp-minecraft-wiki)
+
+For more information on why running MCP Servers via Docker is safer, see: [Docker + MCP](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)

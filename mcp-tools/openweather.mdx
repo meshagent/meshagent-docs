@@ -1,0 +1,122 @@
+---
+title: OpenWeather
+---
+
+
+Follow these steps to run the OpenWeather MCP agent and toolkit at the Room level for testing in the cloud.
+
+**Environment variables required:**
+- `OWM_API_KEY`: OpenWeatherMap API Key  
+  *(Obtain from https://openweathermap.org/api)*
+
+### Steps
+
+1. **Install Meshagent with all dependencies:**
+
+    ```bash
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign up and authenticate with Meshagent:**
+
+    Follow instructions at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the OpenWeather MCP server as an agent in a Meshagent Room:**
+
+    ```bash
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-openweather:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env OWM_API_KEY=<OWM_API_KEY> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-openweather-service-test
+    ```
+   - This command will start a Meshagent Room named `test` with the OpenWeather MCP server available. Rooms close after inactivity.
+
+4. **Start a chatbot in the same Room with access to the OpenWeather toolkit:**
+
+    ```bash
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-openweather \
+      --name=mcp-openweather \
+      --toolkit=mcp-openweather
+    ```
+    - This command adds a chatbot agent with the OpenWeather toolkit to your Room.
+    - The CLI will output a link to the Room.
+
+5. **Test it out:**
+
+    Open the Room link in your browser to interact with the agent and try out the OpenWeather MCP tools.
+
+---
+
+## Project Level Deployment
+
+Establish persistent MCP services and chatbot so they are automatically present in every Room in your Meshagent project—ideal for production scenarios.
+
+1. **Deploy the OpenWeather MCP service as an agent at the project level:**
+
+    ```bash
+    meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-openweather:latest \
+      --env MESHAGENT_PORT=8001 \
+      --env OWM_API_KEY=<OWM_API_KEY> \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-openweather-service
+    ```
+
+2. **Deploy the Meshagent chatbot integrated with the OpenWeather toolkit:**
+
+    ```bash
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-openweather-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-openweather-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-openweather-chatbot --toolkit=mcp-openweather"
+    ```
+
+No need to manage separate MCP server/chatbot processes locally; these services will join any new project-created Room automatically.
+
+---
+
+## Tools Available
+
+### Openweather MCP Server
+
+A simple MCP service that provides current weather and 5-day forecast using the free OpenWeatherMap API.
+
+**Tools provided by this Server:**
+
+| Tool         | Short Description                                   |
+|--------------|-----------------------------------------------------|
+| `weather`    | Get current and forecast weather info for a city    |
+
+---
+
+### Tools Details
+
+#### Tool: **`weather`**
+Get current and forecast weather information for a specific City.
+
+| Parameter | Type     | Description                                                                                 |
+|-----------|----------|---------------------------------------------------------------------------------------------|
+| `city`    | `string` | Location to get weather. If location has a space, wrap the location in double quotes.        |
+| `lang`    | `string` (optional) | Language for weather descriptions - default: en                              |
+| `units`   | `string` (optional) | Temperature units (celsius \| fahrenheit \| kelvin) - default: c              |
+
+*This tool may perform destructive updates.*
+
+*This tool interacts with external entities.*
+
+---
+
+## Meshagent Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Documentation:** https://docs.meshagent.com
+- **OpenWeather MCP Docker Image:** https://hub.docker.com/r/meshagent/mcp-openweather

@@ -1,0 +1,223 @@
+---
+title: MultiversX MX
+---
+
+
+Follow these steps to run an agent and toolkit-bound chatbot in a temporary Meshagent Room for testing. The MCP server and chatbot are automatically removed when the room closes.
+
+**Required Environment Variables:**
+
+- `MVX_NETWORK`: (e.g., "devnet") — sets which MultiversX network to use.
+- `MVX_WALLET`: absolute path to your MultiversX wallet PEM file.
+
+#### 1. Install Meshagent (with all dependencies)
+```sh
+pip install "meshagent[all]"
+```
+
+#### 2. Sign Up and Authenticate
+Follow [these instructions](https://docs.meshagent.com/cli/getting_started) to sign up and authenticate your Meshagent CLI.
+
+#### 3. Start the MCP Agent in a Test Room
+```sh
+meshagent service test \
+  --room=test \
+  --role=agent \
+  --image=meshagent/mcp-multiversx-mx:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env MVX_NETWORK=<MVX_NETWORK> \
+  --env MVX_WALLET=<MVX_WALLET> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-multiversx-mx-service-test
+```
+- This starts a Meshagent Room with a test MCP server agent.
+- **Note:** If the room goes inactive, it will close and all agents/toolkits are removed.
+
+#### 4. Add a Chatbot Bound to the Toolkit
+```sh
+meshagent chatbot join \
+  --room=test \
+  --agent-name=mcp-multiversx-mx \
+  --name=mcp-multiversx-mx \
+  --toolkit=mcp-multiversx-mx
+```
+- This adds a chatbot in the same room, able to call all MCP server tools.
+- You can use multiple toolkits per agent.
+- The command output provides a browser link to the live room.
+
+#### 5. Try It Out
+Visit the provided room link in your browser. Send a message to the agent and interact with the MultiversX MCP Server tools in real time!
+
+---
+
+## Project Level Deployment (Persistent Integration)
+
+For production use, deploy persistent services that auto-join every Meshagent Project room, making tools and chatbot available in all new/active rooms without manual intervention.
+
+#### 1. Deploy the MCP Agent Service
+```sh
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-multiversx-mx:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env MVX_NETWORK=<MVX_NETWORK> \
+  --env MVX_WALLET=<MVX_WALLET> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-multiversx-mx-service
+```
+
+#### 2. Deploy the Persistent Chatbot Service
+```sh
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-multiversx-mx-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-multiversx-mx-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-multiversx-mx-chatbot --toolkit=mcp-multiversx-mx"
+```
+
+Once enabled, your MCP server agent and chatbot will automatically join each project room on creation. No need to run them locally or as separate processes!
+
+---
+
+## Tools Available
+
+### Tools Summary
+
+Tools provided by this Server | Short Description
+-|-
+`create-sft-nft-mesdt-tokens` | Create a transaction to issue a semi-fungible token (SFT), or a non-fungible token (NFT), or a MetaESDT token for a collection and send it.
+`create-wallet` | Create a new wallet and save it as a PEM file.
+`get-balance-of-address` | Get the balance for a MultiversX address.
+`get-network` | Get the network set in the environment config.
+`get-tokens-of-address` | Get the tokens of an address.
+`get-wallet-address` | Get the bech32 address of the wallet set in the environment config.
+`issue-fungible-token` | Create a transaction to issue a fungible token and send it.
+`issue-meta-esdt-collection` | Create a transaction to issue a MetaESDT token collection (MESDT) and send it.
+`issue-nft-collection` | Create a transaction to issue a non-fungible token collection (NFT) and send it.
+`issue-semi-fungible-collection` | Create a transaction to issue a semi-fungible collection (SFT) and send it.
+`send-egld` | Create a move balance transaction and send it.
+`send-egld-to-multiple-receivers` | Create move balance transactions and send them.
+`send-fungible-tokens` | Create a fungible token transfer transaction and send it.
+`send-sft-nft-meta-tokens` | Create a nft, sft or meta esdt transfer transaction and send it.
+
+---
+
+### Tools Details
+
+#### `create-sft-nft-mesdt-tokens`
+Create a transaction to issue a semi-fungible token (SFT), non-fungible token (NFT), or MetaESDT token for a collection and send it.  
+Parameters:  
+- `initialQuantity` (string): The initial quantity (number of tokens) to mint (default: 1).
+- `name` (string): Name of the token.
+- `tokenIdentifier` (string): ID of the collection.
+- `royalties` (string, optional): Royalties you’ll receive.
+
+---
+
+#### `create-wallet`
+Create a new wallet and save it as a PEM file. PEM files ARE NOT SECURE. If a wallet already exists, operation is aborted.
+
+---
+
+#### `get-balance-of-address`
+Get the balance for a MultiversX address.  
+Parameters:  
+- `address` (string): The bech32 representation of the address.
+
+---
+
+#### `get-network`
+Get the network set in the environment config.
+
+---
+
+#### `get-tokens-of-address`
+Get the tokens of an address. Returns the first 25 fungible tokens and the first 25 NFTs, SFTs, MetaESDTs.  
+Parameters:  
+- `address` (string): The bech32 address of the account (erd1...).
+- `size` (number, optional): Number of each token type to return (default: 25).
+
+---
+
+#### `get-wallet-address`
+Get the bech32 address of the wallet set in the environment config.
+
+---
+
+#### `issue-fungible-token`
+Create a transaction to issue a fungible token and send it.  
+Parameters:  
+- `initialSupply` (string): The initial supply to mint.
+- `numDecimals` (string): Number of decimals for the token.
+- `tokenName` (string): Name of the token.
+- `tokenTicker` (string): Ticker of the token.
+
+---
+
+#### `issue-meta-esdt-collection`
+Create a transaction to issue a MetaESDT token collection (MESDT) and send it.  
+Parameters:  
+- `numDecimals` (string): Number of decimals.
+- `tokenName` (string): Name of the collection.
+- `tokenTicker` (string): Ticker of the collection.
+
+---
+
+#### `issue-nft-collection`
+Create a transaction to issue a non-fungible token collection (NFT) and send it.  
+Parameters:  
+- `tokenName` (string): Name of the collection.
+- `tokenTicker` (string): Ticker of the collection.
+
+---
+
+#### `issue-semi-fungible-collection`
+Create a transaction to issue a semi-fungible collection (SFT) and send it.  
+Parameters:  
+- `tokenName` (string): Name of the collection.
+- `tokenTicker` (string): Ticker of the collection.
+
+---
+
+#### `send-egld`
+Create a move balance transaction and send it.  
+Parameters:  
+- `amount` (string): Amount of EGLD to send.
+- `receiver` (string): Bech32 address of the receiver (erd1...).
+
+---
+
+#### `send-egld-to-multiple-receivers`
+Create move balance transactions and send them.  
+Parameters:  
+- `amount` (string): Amount of EGLD to send.
+- `receivers` (array): Array of bech32 addresses of receivers.
+
+---
+
+#### `send-fungible-tokens`
+Create a fungible token transfer transaction and send it.  
+Parameters:  
+- `amount` (string): Amount to send.
+- `receiver` (string): Bech32 address of receiver.
+- `token` (string): Identifier of the token.
+
+---
+
+#### `send-sft-nft-meta-tokens`
+Create a NFT, SFT, or MetaESDT transfer transaction and send it.  
+Parameters:  
+- `receiver` (string): The bech32 address of the receiver.
+- `token` (string): The extended identifier of the token (e.g. NFTEST-123456-0a).
+- `amount` (string, optional): Amount to send (needed for SFT or Meta-ESDT only).
+
+---
+
+## Meshagent & MCP Server Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Meshagent Docs](https://docs.meshagent.com)
+- [Meshagent MCP MultiversX Docker Image](https://hub.docker.com/r/meshagent/mcp-multiversx-mx)
+
+---

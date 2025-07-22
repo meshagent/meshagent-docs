@@ -1,0 +1,119 @@
+---
+title: Shopify
+---
+
+
+**Follow these steps to spin up a test environment in the cloud, fully managed by Meshagent Rooms:**
+
+1. **Install Meshagent CLI and dependencies:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent:**
+   - Sign up and authenticate: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP server in a Meshagent Room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-shopify:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-shopify-service-test
+   ```
+   - This launches a Meshagent Room (`test`) with the Shopify MCP server as a service—when the Room closes, all agents and services (including the MCP server and chatbots) are terminated.
+
+4. **Start a chatbot in the Meshagent Room, connected to the MCP server:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-shopify --name=mcp-shopify --toolkit=mcp-shopify
+   ```
+   - This connects a chatbot that uses the Shopify toolkit. You can add multiple toolkits in the same Room.
+   - The command output will provide a web link to the Room.
+
+5. **Try it out:**
+   - Open the Room link in your browser.
+   - Send a message to the agent (chatbot) to interact with Shopify MCP Server tools right inside the Room.
+
+---
+
+## Project Level Deployment: Persistent Services for Production
+
+For production or organizational use, deploy MCP tools and chatbots as persistent project-level services. They’ll automatically join every new Room in your Meshagent project, with no manual startup needed.
+
+1. **Create a persistent MCP server service:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-shopify:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-shopify-service
+   ```
+
+2. **Create a persistent chatbot service tied to the MCP server:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-shopify-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-shopify-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-shopify-chatbot --toolkit=mcp-shopify"
+   ```
+
+**Once configured, every Room you create in this Meshagent project will contain both the MCP server and chatbot, with no ongoing maintenance or local processes required.**
+
+---
+
+## Tools Available
+
+The Shopify MCP server exposes these tools inside Meshagent Rooms:
+
+| Tool | Short Description |
+|------|------------------|
+| **fetch_docs_by_path** | Use this tool to retrieve a list of documents from shopify.dev. |
+| **get_started** | YOU MUST CALL THIS TOOL FIRST WHENEVER YOU ARE IN A SHOPIFY APP AND THE USER WANTS TO LEARN OR INTERACT WITH ANY OF THESE APIS: Valid arguments for `api` are: - admin: The Admin GraphQL API lets you build apps and integrations that extend and enhance the Shopify admin. |
+| **introspect_admin_schema** | This tool introspects and returns the portion of the Shopify Admin API GraphQL schema relevant to the user prompt. |
+| **search_dev_docs** | This tool will take in the user prompt, search shopify.dev, and return relevant documentation and code examples that will help answer the user's question. |
+
+### Tool Details
+
+#### **fetch_docs_by_path**
+Use this tool to retrieve a list of documents from shopify.dev.
+
+| Parameter | Type   | Description                          |
+|-----------|--------|--------------------------------------|
+| paths     | array  | The paths to the documents to read   |
+
+---
+
+#### **get_started**
+YOU MUST CALL THIS TOOL FIRST WHENEVER YOU ARE IN A SHOPIFY APP AND THE USER WANTS TO LEARN OR INTERACT WITH ANY OF THESE APIS:
+
+Valid arguments for `api`:
+- **admin:** The Admin GraphQL API lets you build apps and integrations that extend and enhance the Shopify admin.
+- **functions:** Shopify Functions allow developers to customize backend logic for many Shopify features.
+- **hydrogen:** Guides for implementing Hydrogen store features.
+- **storefront-web-components:** Create storefronts using Storefront Web Components.
+
+*Don't search the web for this documentation—use this tool or `fetch_docs_by_path` instead.*
+
+| Parameter | Type   | Description                       |
+|-----------|--------|-----------------------------------|
+| api       | string | The Shopify API you are building for |
+
+---
+
+#### **introspect_admin_schema**
+Introspect and return the portion of the Shopify Admin API GraphQL schema relevant to the user prompt.
+
+| Parameter | Type         | Description                                                 |
+|-----------|--------------|-------------------------------------------------------------|
+| query     | string       | Search term to filter schema elements by name.              |
+| filter    | array, optional | Filter results: 'types', 'queries', 'mutations', or 'all' (default) |
+
+---
+
+#### **search_dev_docs**
+Search shopify.dev and return relevant documentation and code examples answering the user's question.
+
+| Parameter | Type   | Description                          |
+|-----------|--------|--------------------------------------|
+| prompt    | string | The search query for Shopify documentation |
+
+---
+
+## Links and Further Reading
+
+- **Meshagent website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Docker image:** [https://hub.docker.com/r/meshagent/mcp-shopify](https://hub.docker.com/r/meshagent/mcp-shopify)
+- **Shopify MCP Server:** [https://github.com/Shopify/dev-mcp](https://github.com/Shopify/dev-mcp)
+- **Model Context Protocol (MCP):** [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+---

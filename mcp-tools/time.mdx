@@ -1,0 +1,101 @@
+---
+title: Time
+---
+
+
+Test the MCP Time Server and tools inside a Meshagent Room on the cloud. When the Room closes (due to inactivity or manually), the tool and chatbot are automatically removed.
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Authenticate
+
+Sign up and authenticate following the guide at:  
+https://docs.meshagent.com/cli/getting_started
+
+### 3. Start an MCP Time Server agent in a Meshagent Room
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-time:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-time-service-test
+```
+- This command starts a new Meshagent Room (`test`) running the MCP Time Server.  
+- Note: Test rooms are temporary and will close if inactive.
+
+### 4. Start a chatbot in the room with access to the MCP Time Server toolkit
+
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-time --name=mcp-time --toolkit=mcp-time
+```
+- The chatbot will join the `test` room and gain access to the time tools.
+- Multiple toolkits and agents can share a room.
+- After this command, a browser link to the Room will be provided.
+
+### 5. Try it out!
+
+Visit the Room link in your browser. Send a message to the agent (e.g., “What time is it in Tokyo?”) and interact with the MCP Server tools directly.
+
+---
+
+## Project Level Deployment
+
+For production environments, deploy persistent services at the Meshagent project level. These services (the MCP Time Server and its chatbot) will be available in *every* new Meshagent Room created under your project, so there’s no need to run local servers or agents—they auto-join for every room session.
+
+### 1. Deploy MCP Time Server as a project service
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-time:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-time-service
+```
+
+### 2. Deploy the chatbot as a project service
+
+```bash
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-time-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-time-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-time-chatbot --toolkit=mcp-time"
+```
+
+This setup ensures all Rooms in your project have the MCP Server tools and chatbot available automatically.
+
+---
+
+## Tools Available
+
+### Tools Provided by MCP Time Server
+
+| Tool               | Short Description                           |
+|--------------------|---------------------------------------------|
+| `convert_time`     | Convert time between timezones              |
+| `get_current_time` | Get current time in a specific timezone     |
+
+---
+
+### Tools Details
+
+#### Tool: `convert_time`
+
+Convert time between timezones
+
+| Parameter         | Type    | Description                                                                                 |
+|-------------------|---------|---------------------------------------------------------------------------------------------|
+| `source_timezone` | string  | Source IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'UTC' as local timezone if not provided. |
+| `target_timezone` | string  | Target IANA timezone name (e.g., 'Asia/Tokyo', 'America/San_Francisco'). Use 'UTC' if not provided.   |
+| `time`            | string  | Time to convert in 24-hour format (HH:MM)                                                    |
+
+---
+
+#### Tool: `get_current_time`
+
+Get current time in a specific timezone
+
+| Parameter | Type   | Description                                                                                       |
+|-----------|--------|---------------------------------------------------------------------------------------------------|
+| `timezone`| string | IANA timezone name (e.g., 'America/New_York', 'Europe/London'). Use 'UTC' if not provided.        |
+
+---
+
+## Meshagent Resources
+
+- **Meshagent**: https://www.meshagent.com/
+- **Documentation**: https://docs.meshagent.com
+- **MCP Time Server Docker Image**: https://hub.docker.com/r/meshagent/mcp-time

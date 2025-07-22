@@ -1,0 +1,149 @@
+---
+title: Neon
+---
+
+
+This workflow deploys an MCP Neon server and toolkit to a test Meshagent Room in the cloud, suitable for evaluation, prototyping, or short-lived automation sessions. When the Room closes, all services—MCP server, chatbot, and tools—are also terminated.
+
+1. **Install Meshagent with all features:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate:**  
+   [Follow steps at Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start a Room-level MCP server agent:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-neon:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-neon-service-test
+   ```
+   - **This creates a temporary room** (`--room=test`) and launches the Neon MCP server in the room as a cloud agent. The service and room will be auto-removed if inactive.
+
+4. **Launch a chatbot in the room with the Neon toolkit:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-neon --name=mcp-neon --toolkit=mcp-neon
+   ```
+   - **Multiple toolkits** can be used per room with the same agent.
+   - The command output will provide a URL to access the room.
+
+5. **Test the integration:**  
+   Open the provided room URL in your browser, and chat with the agent. Any requests will be handled using the Neon MCP server’s tools.
+
+---
+
+## Project Level Deployment: Persistent Services for All Rooms
+
+For production use, you can create persistent agents in your Meshagent project that automatically join every new project room. This ensures the MCP server and tool-enabled chatbot are always available—no manual setup or process hosting needed.
+
+1. **Create a persistent MCP server agent:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-neon:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-neon-service
+   ```
+
+2. **Create a persistent chatbot with the Neon toolkit:**
+   ```bash
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-neon-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-neon-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-neon-chatbot --toolkit=mcp-neon"
+   ```
+
+Once these services are set up, **every new Meshagent room in your project** will automatically get a live MCP server agent and Neon-toolkit-enabled chatbot, eliminating the need to run or manage these processes separately.
+
+---
+
+## Tools Available
+
+**MCP Neon server provides the following tools for Neon database and project management:**
+
+| Tool Name                     | Short Description                                                                 |
+|-------------------------------|----------------------------------------------------------------------------------|
+| `__node_version`              | Get the Node.js version used by the MCP server                                   |
+| `complete_database_migration` | Complete a database migration when the user confirms it is ready to apply         |
+| `complete_query_tuning`       | Finalize or discard query performance improvements in the main or a specified branch |
+| `create_branch`               | Create a branch in a Neon project                                                |
+| `create_project`              | Create a new Neon project                                                        |
+| `delete_branch`               | Delete a branch from a Neon project                                              |
+| `delete_project`              | Delete a Neon project                                                            |
+| `describe_branch`             | Get a tree view of all objects in a branch (databases, schemas, tables, etc.)    |
+| `describe_project`            | Describes a Neon project                                                         |
+| `describe_table_schema`       | Describe the schema of a table in a Neon database                                |
+| `explain_sql_statement`       | Get a PostgreSQL query execution plan for a SQL statement                        |
+| `get_connection_string`       | Get a PostgreSQL connection string for a Neon database                           |
+| `get_database_tables`         | Get all tables in a Neon database                                                |
+| `list_projects`               | List all Neon projects in your account                                           |
+| `prepare_database_migration`  | Perform schema migration steps, apply changes in temporary branch for safety      |
+| `prepare_query_tuning`        | Analyze and suggest improvements to slow SQL queries in a safe temporary branch  |
+| `provision_neon_auth`         | Automatically provision authentication infrastructure for a Neon project          |
+| `run_sql`                     | Execute a single SQL statement against a Neon database                           |
+| `run_sql_transaction`         | Execute multiple SQL statements (a transaction) against a Neon database          |
+
+### Tool Details
+**`__node_version`**  
+Get the Node.js version used by the MCP server.
+
+**`complete_database_migration`**  
+Complete a migration that was prepared and verified in a temporary branch, applying final changes to the main branch.
+
+**`complete_query_tuning`**  
+Finalize (commit or discard) performance improvements identified during query tuning, ensuring cleanup of temporary test branches and proper application of changes.
+
+**`create_branch`**  
+Create a new branch in a Neon project for isolated development or testing.
+
+**`create_project`**  
+Provision a new, fully managed Neon project.
+
+**`delete_branch`**  
+Remove a branch from a Neon project.
+
+**`delete_project`**  
+Delete an existing Neon project and its resources.
+
+**`describe_branch`**  
+Get a complete tree view of all objects (databases, schemas, tables, views, functions) in a specific branch.
+
+**`describe_project`**  
+Summarize a Neon project's structure, resources, and configuration.
+
+**`describe_table_schema`**  
+Return the schema for a given table to support tooling and development.
+
+**`explain_sql_statement`**  
+Analyze a SQL statement's execution plan as run in PostgreSQL (EXPLAIN).
+
+**`get_connection_string`**  
+Generate a PostgreSQL connection string with useful defaults.
+
+**`get_database_tables`**  
+List the tables present in a Neon-managed database.
+
+**`list_projects`**  
+Show all the Neon projects a user has access to.
+
+**`prepare_database_migration`**  
+Generate migration SQL from natural language requests, apply changes to a safe, temporary branch, and present results for user confirmation before merging to production.
+
+**`prepare_query_tuning`**  
+Automatically analyze slow SQL queries, suggest and test optimizations in a temporary branch, then allow review of performance before applying fixes to the main branch.
+
+**`provision_neon_auth`**  
+Provision authentication for a Neon project using modern Stack Auth integration.
+
+**`run_sql`**  
+Run a single SQL command against your Neon database, using temporary branches when needed for safety.
+
+**`run_sql_transaction`**  
+Run a multi-statement SQL transaction, again with support for temporary branches for testing.
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Homepage**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Docs**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Neon Docker Image**: [https://hub.docker.com/r/meshagent/mcp-neon](https://hub.docker.com/r/meshagent/mcp-neon)
+
+For further information, see [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) and explore automated room workflows for your Neon-powered applications.
