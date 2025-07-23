@@ -1,0 +1,57 @@
+---
+title: "Dynamic UI Tools"
+---
+
+import PrivateToolCall from "/snippets/examples/python/private-tool-call.mdx"
+
+This guide explains how dynamic User Interface (UI) tools work in MeshAgent. These elements are client-side tools that run on a user's browser, desktop, or mobile app. Dynamic UIs enable agents to interact directly with users by presenting responsive, on-demand interfaces as needed. They allow agents to do things like: 
+- Collect a document from the user in the middle of a task
+- Pop up a one-off approval dialog
+- Fan out a survey to multiple participants in the room 
+
+## Why Dynamic UI Tools Matter
+
+| Problem in multi-user agent apps | How a Dynamic UI Tool solves it |
+|---------------------------------|---------------------------------|
+| **Mid-task input**: An agent needs extra input *during* a task (e.g. “Which PDF should I summarise?”). | Pop a file-picker on only the requester's screen, collect the answer, continue the run. |
+| **Room wide polls/surveys**: You want a one-off survey of everyone currently in the Room. | Allow the agent to fan-out an **ask_user** dialog to each participant and gather the responses asynchronously. |
+| **Targeted notifications**: Agents must present notifications, approvals, or error messages *only* to the relevant user—not the whole Room. | Each UI toolkit is automatically scoped to the participant who registered it, so dialogs can’t leak across screens. |
+| **Security / Phishing**: Users should not be able to show dialogs on another user's screen just because a tool to show dialogs is exposed. | Toolkits are scoped to the participant that registers them. An agent must pass `participant_id` when it calls `invoke_tool`, so dialogs can’t leak to other users. |
+
+## How MeshAgent Safely Routes UI Tool calls
+
+Behind the scenes MeshAgent supports **private tool registrations**. This ensures that dialogues only appear on the intended user's screen even if several clients register toolkits with the same name. For example, you might have multiple ``ui`` toolkits, but one toolkit is has an ``ask_user`` tool that shows dialogues on a mobile app, a separate one has an ``ask_user`` tool that shows a dialogue in the browser, etc. 
+
+When a user interface registers a private tool, that tool is accessible only to the registering user. An agent can then invoke this private tool by including the unique identifier of the user (the participant ID) in its call. This ensures that the interface is displayed solely to the intended recipient.
+
+## Example: Survey Room Participants
+
+Let’s create a tool that surveys participants in the Room. The tool will conduct a survey of the participants, summarize the results, and store both the raw results and the summary to the Room storage. 
+
+The survey fields are dynamically generated so that we can gather a variety of information using the same UI tools. This means we can use the same tool to conduct a survey where participants respond yes/no to a question, or to provide more detailed feedback on their experience, etc. 
+
+
+<CodeGroup>
+  <PrivateToolCall />
+</CodeGroup>
+
+Copy this code and activate your virtual environment, you will need two tabs open in your terminal. 
+
+In the first tab run:
+```bash bash
+python survey.py
+``` 
+
+In the second tab run: 
+```bash bash
+meshagent setup # this will prompt you to authenticate to MeshAgent, select your project and API keys
+meshagent call tool --room=surveyroom --url=http://localhost:7777/survey --participant-name=survey
+```
+
+Next go to [studio.meshagent.com](https://studio.meshagent.com) and click into the ``surveyroom``. Once inside the room, select the menu icon and click "Run Task", the click "Add Tools" and you will see the survey-toolkit. Click on the invoke button. 
+
+You will be prompted to fill out information that will be used in the survey. For example you might fill in details stating that this survey is to collect feedback on the employee onboarding experience, and you might ask for specific feedback regarding any questions or concerns the employees have and what they learned from the training, you might title the form something like "Onboarding Feedback July". Once you fill in these details, the agent will survey other users in the room and collect their feedback asynchronously. Once the results are captured you will receive a summary of the results and both the summary and raw results will be saved to the room database for future use/access. 
+
+## Next Steps: Using Dynamic Tools in Your Own App
+
+MeshAgent automatically provides a ``ui`` toolkit which you can use and test immediately in the MeshAgent Studio. If you want to create UI tools that work either inside the Studio or present custom dialogues in your own web or mobile client you can create a toolkit with the same name, ``ui``, and the same tools and schemas as the ones available inside the Studio. When a participant from your app invokes the tool, it will display your application's custom interface and still be usable from the studio.
