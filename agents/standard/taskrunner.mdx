@@ -2,53 +2,195 @@
 title: "TaskRunner"
 ---
 
-A TaskRunner is an agent that produces inputs and outputs that match an input and output json schema. It joins a MeshAgent Room and can be discovered and 
-invoked from the Studio using the "Run Task..." menu option or using the ```room.agents.ask``` method on the API.
+A TaskRunner is the bridge that makes any **existing AI Agent built in your framework of choice work seamlessly with MeshAgent**. It is a base agent class designed with one core principle: **bring your own logic**. 
 
-To build a custom TaskRunner, extend the base TaskRunner, provide a JSON schema for input and output, and define an ask method.
+## Why TaskRunner Exists
+
+Many developers already have agents built with their preferred frameworks—whether that's Pydantic AI, LangChain, CrewAI, or custom implementations. TaskRunner eliminates the need to rewrite these agents. Instead, you simply wrap your existing agent with a TaskRunner and can instantly share, deploy, scale, and manage your agents in a cohesive way. 
+
+## Core Components
+
+A TaskRunner defines: 
+- **Input Schema**: JSON schema describing what arguments your agent accepts
+- **Output Schema**: JSON schema describing what your agent returns
+- **Ask Method**: Your custom logic that processes inputs and returns results
+
+A TaskRunner joins a MeshAgent Room and can be discovered and invoked from the [MeshAgent Studio](https://studio.meshagent.com) using the "Run Task..." menu option or using the ```room.agents.ask``` method on the API.
+
+## Example: Integrating a Pydantic AI Agent
+
+This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent TaskRunner. We extend the base TaskRunner class to create our TranslationTaskRunner with a defined input schema, output schema, and ask method. 
+
+Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run.
 
 ```python Python
-
+import os
+import json
 import asyncio
+import logging
+from datetime import date, datetime
+from meshagent.otel import otel_config
+from meshagent.api.services import ServiceHost
 from meshagent.agents import TaskRunner
+from meshagent.api.messaging import TextResponse, JsonResponse
 
-class Sample(TaskRunner):
+from pydantic_ai import Agent
+from pydantic import BaseModel, Field, ConfigDict
+from pydantic_ai.models.anthropic import AnthropicModel
+from pydantic_ai.providers.anthropic import AnthropicProvider
 
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+otel_config(service_name="my-service")
+
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
+
+# Define Inputs, Outputs, and Pydantic AI Agent for Translation
+class TranslationInput(BaseModel):
+    text:str = Field(..., description="Text to translate")
+
+    model_config = ConfigDict(extra='forbid')
+
+class TranslationResult(BaseModel):
+    french_translation:str
+    spanish_translation:str
+
+    model_config = ConfigDict(extra='forbid')
+
+translation_agent = Agent(
+    model=AnthropicModel('claude-4-sonnet-20250514', provider=AnthropicProvider()), #pass API key from env variables
+    deps_type=None,
+    instructions=f"""
+        # Role Background
+        You are responsible for translating recent news announcements into other languages. You are exposed to a variety of topics beyond your knowledge cutoff date. The current date is: {date.today().strftime("%B %d, %Y")}
+
+        # Task
+        Provide two translations, one in French and one in Spanish.     
+    """,
+    output_type=TranslationResult
+)
+
+# Utility function
+async def save_to_storage(room, path: str, data: bytes):
+        handle = await room.storage.open(path=path, overwrite=True)
+        await room.storage.write(handle=handle, data=data)
+        await room.storage.close(handle=handle)
+
+# Use Pydantic AI agent in a MeshAgent Room
+@service.path("/translator")
+class TranslationTaskRunner(TaskRunner):
     def __init__(self):
         super().__init__(
-            name="sample.taskrunner",
-            input_schema={
-                "type" : "object",
-                "additionalProperties" : False,
-                "required" : [ "prompt" ],
-                "properties" : {
-                    "prompt" : {
-                        "type" : "string"
-                    }
-                }
-            }
-            output_schema={
-                "type" : "object",
-                "additionalProperties" : False,
-                "required" : [ "answer" ],
-                "properties" : {
-                    "text" : {
-                        "type" : "string"
-                    }
-                }
-            }
+            name="Translator",
+            description="An agent that translates text to French and Spanish",
+            input_schema=TranslationInput.model_json_schema(),
+            output_schema=TranslationResult.model_json_schema()
         )
 
     async def ask(self, *, context, arguments):
-        return { "answer" : "hello world" }
+        room=context.room
+
+        inputs = TranslationInput(**arguments)
+        log.info(f"Translating Text: {inputs.text}")
+
+        translations = await translation_agent.run(inputs.text)
+        log.info(f"Translation Result: {translations.output}")
+
+        # save results to room storage
+        log.info(f"Translation completed, writing raw results to Room storage.")
+        
+        await save_to_storage(
+            room=room,
+            path=f"translations/{room.room_name}-translation-{datetime.now():%Y%m%dT%H%M%S}.json",
+            data=json.dumps({"input_text": inputs.text, "translations": translations.output.model_dump()}, indent=2, ensure_ascii=False).encode("utf-8")
+        )
+
+        return translations.output.model_dump()
+
+print(f"running on port {service.port}")
+asyncio.run(service.run())
+
+```
+### Running the TaskRunner
+
+**In your terminal**
+
+Start your service locally. Be sure you are in an activated virtual environment where meshagent and pydantic_ai are installed: 
+
+```bash bash
+python translator.py
 ```
 
+Next use the MeshAgent CLI to authenticate and call your agent into a Room:
+```bash bash
+meshagent setup # this will authenticate you 
+meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
+```
 
-The MeshAgent SDK contains a few prebuilt task runners agents in ```meshagent.agents.planning``` that can use tools, be configured with custom tools, and integrate with a LLM to perform operations:
+**In the Studio**
+1. Go to [studio.meshagent.com](https://studio.meshagent.com) 
+2. Enter the room, ``translate``
+3. Click menu --> "Run Task"
+4. Select "Translator" from the agent dropdown 
+5. Enter the text to translate
+6. Results appear and are saved to room storage under the "translations" folder 
 
-**PlanningResponder** - a task runner that takes in a prompt an optional set of custom tools, and returns a text response.
+**Invoking the TaskRunner Programmatically**
 
-**DynamicPlanningResponder** - a task runner that takes in a prompt an optional set of custom tools, and returns a structured response.
+Instead of invoking the agent through the Studio, you can also run the agent through code like this: 
+
+```python Python
+import asyncio
+import json
+from typing import Dict, Any
+from meshagent.api import RoomClient, websocket_protocol
+
+async def call_agent(
+    room_name: str, 
+    agent_name: str, 
+    arguments: Dict[str, Any], 
+    participant_name: str = "api_client"
+) -> Dict[str, Any]:
+    """Call a MeshAgent agent with the given arguments."""
+    async with RoomClient(
+        protocol=websocket_protocol(
+            participant_name=participant_name, 
+            room_name=room_name
+        )
+    ) as room:
+        result = await room.agents.ask(
+            agent=agent_name, 
+            arguments=arguments
+        )
+        # Extract JSON data from JsonBody response
+        return result.json if hasattr(result, 'json') else result
+
+async def main():
+    # Call your translator
+    result = await call_agent(
+        room_name="translate",
+        agent_name="Translator",
+        arguments={"text": "Hello, how are you today?"}
+    )
+    
+    print("Translation result:")
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Prebuilt MeshAgent TaskRunners
+MeshAgent provides pre-built agents that extend the TaskRunner class with additional capabilities. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
+
+### PlanningResponder
+A TaskRunner that adds tool usage, iterative reasoning, and structured planning. It takes in a prompt, an optional set of custom tools, and returns a text response.
+
+### DynamicPlanningResponder 
+A TaskRunner that takes in a prompt an optional set of custom tools, and returns a structured response.
 
 You can customize the PlanningResponder with the following constructor parameters:
 
@@ -75,8 +217,6 @@ You can try them out in the Studio by selecting "Run Task..." from the menu. The
 MeshAgent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
 and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
 
-TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then
-giving those tools to a ChatBot is a great way to get started building multi agent systems. 
+TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi agent systems. 
 
-The base TaskRunner requires JSON schemas to be provided to describe the input and output format. If you'd prefer a level interface, you can use a Pydantic
-BaseModel with the PydanticAgent class in meshagent.agents.pydantic.
+The base TaskRunner requires JSON schemas to be provided to describe the input and output format. 
