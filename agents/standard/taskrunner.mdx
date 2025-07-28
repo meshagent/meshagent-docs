@@ -51,13 +51,11 @@ service = ServiceHost(
 # Define Inputs, Outputs, and Pydantic AI Agent for Translation
 class TranslationInput(BaseModel):
     text:str = Field(..., description="Text to translate")
-
     model_config = ConfigDict(extra='forbid')
 
 class TranslationResult(BaseModel):
     french_translation:str
     spanish_translation:str
-
     model_config = ConfigDict(extra='forbid')
 
 translation_agent = Agent(
@@ -184,14 +182,106 @@ if __name__ == "__main__":
 ```
 
 ## Prebuilt MeshAgent TaskRunners
-MeshAgent provides pre-built agents that extend the TaskRunner class with additional capabilities. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
+MeshAgent provides pre-built agents that extend the TaskRunner class with additional capabilities like tool use and iterative reasoning. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
 
-### PlanningResponder
-A TaskRunner that adds tool usage, iterative reasoning, and structured planning. It takes in a prompt, an optional set of custom tools, and returns a text response.
+### meshagent.planner
+A TaskRunner that uses structured planning and returns a text response. You provide it a prompt (and optionally tools), and it yields a simple text response in a fixed schema: ``{"result":"<text>"}``. 
 
-### DynamicPlanningResponder 
-A TaskRunner that takes in a prompt an optional set of custom tools, and returns a structured response.
+Example without tools: 
 
+```python Python
+import asyncio
+from meshagent.api import RoomClient, websocket_protocol
+
+async def run_planner(room_name:str, prompt:str, participant_name:str="test_user"):
+    """
+    Run the Planner in a MeshAgent Room
+
+    Args:
+        room_name: Name of the room to connect to
+        prompt: The user prompt to send to the agent 
+        participant_name: Name to use as participant (defaults to "test_user")
+    """
+    try:
+        async with RoomClient(
+            protocol=websocket_protocol(
+                participant_name=participant_name, 
+                room_name=room_name
+            )
+        ) as room:
+            response = await room.agents.ask(
+                agent="meshagent.planner",
+                arguments={
+                    "prompt": prompt
+                    }
+                )
+            return response
+    except Exception as e:
+        print(f"Connection failed: {e}")
+
+asyncio.run(run_planner(room_name="test", prompt="Write a product description for a bluetooth speaker"))
+```
+
+When you call tools into the studio you can add them to the generic meshagent.planner which is automatically available in the room. The Planner will ask you for any necessary information and invoke the appropriate tool(s) to perform the task. This is a good way to test how the tools you've built work with agents. 
+
+### meshagent.schema_planner
+A TaskRunner that uses structured planning and returns a structured output. You provide both a prompt and an explicit JSON schema describing the desired output.
+
+Example without tools: 
+```python Python
+import asyncio
+from meshagent.api import RoomClient, websocket_protocol
+
+async def run_schema_planner(room_name:str, prompt:str, output_schema:dict, participant_name:str="test_user"):
+    """
+    Run the Planner in a MeshAgent Room
+
+    Args:
+        room_name: Name of the room to connect to
+        prompt: The user prompt to send to the agent
+        output_schema: The structured output to use in the response 
+        participant_name: Name to use as participant (defaults to "test_user")
+    """
+    try:
+        async with RoomClient(
+            protocol=websocket_protocol(
+                participant_name=participant_name, 
+                room_name=room_name
+            )
+        ) as room:
+            response = await room.agents.ask(
+                agent="meshagent.schema_planner",
+                arguments={
+                    "prompt": prompt,
+                    "output_schema": output_schema
+                }
+            )
+            return response
+    except Exception as e:
+        print(f"Connection failed: {e}")
+
+product_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "title": {"type": "string"},
+        "price": {"type": "number"},
+        "features": {"type": "array", "items": {"type": "string"}},
+        "description": {"type": "string"}
+    },
+    "required": ["title", "price", "features", "description"]
+}
+
+asyncio.run(run_schema_planner(room_name="test", prompt="Create a product listing for a bluetooth speaker", output_schema=product_schema))
+
+```
+Two preconfigured task runners are available by default in MeshAgent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
+You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
+MeshAgent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
+and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
+
+
+## Custom TaskRunners
 You can customize the PlanningResponder with the following constructor parameters:
 
 **requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
@@ -212,11 +302,7 @@ You can customize the PlanningResponder with the following constructor parameter
 
 **supports_tools** Whether the agent should support passing a custom set of tools at runtime (optional)
 
-Two preconfigured task runners are available by default in MeshAgent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
-You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
-MeshAgent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
-and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
-
+## Using TaskRunner Agents as Tools
 TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi agent systems. 
 
 The base TaskRunner requires JSON schemas to be provided to describe the input and output format. 
