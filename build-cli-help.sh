@@ -77,13 +77,13 @@ echo "Generating the docs and saving to $OUTPUT_LOCATION"
 python3 -m typer meshagent.cli.cli utils docs --name meshagent > $OUTPUT_LOCATION
 
 (
-  printf '%s\n' '---' 'title: Meshagent CLI Commands' '---' ''
+  printf '%s\n' '---' 'title: MeshAgent CLI Commands' '---' ''
   cat $OUTPUT_LOCATION
 ) > /tmp/$$.md && mv /tmp/$$.md $OUTPUT_LOCATION
 
 #
 #sed "${SED_BACKUP_OPTION[@]}" '1i\
 #---\
-#title: Meshagent CLI Commands\
+#title: MeshAgent CLI Commands\
 #---\
 #' $OUTPUT_LOCATION
