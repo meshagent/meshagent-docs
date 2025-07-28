@@ -13,7 +13,7 @@ Many developers already have agents built with their preferred frameworks—whet
 A TaskRunner defines: 
 - **Input Schema**: JSON schema describing what arguments your agent accepts
 - **Output Schema**: JSON schema describing what your agent returns
-- **Ask Method**: Your custom logic that processes inputs and returns results
+- **Ask Method**: Your custom logic that processes inputs and returns results (``room.agents.ask()``)
 
 A TaskRunner joins a MeshAgent Room and can be discovered and invoked from the [MeshAgent Studio](https://studio.meshagent.com) using the "Run Task..." menu option or using the ```room.agents.ask``` method on the API.
 
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Prebuilt MeshAgent TaskRunners
+## Example: Prebuilt MeshAgent TaskRunners
 MeshAgent provides pre-built agents that extend the TaskRunner class with additional capabilities like tool use and iterative reasoning. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
 
 ### meshagent.planner
@@ -281,28 +281,355 @@ MeshAgent Studio, the PlanningResponder is used to generate user interface on th
 and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
 
 
-## Custom TaskRunners
-You can customize the PlanningResponder with the following constructor parameters:
+## Example: Custom TaskRunners using an LLM
+We can easily extend the TaskRunner into an LLM powered agent that returns a response once the LLM's execution loop finishes. Let's take a look at the ``LLMTaskRunner`` and ``DynamicLLMTaskRunner`` which allow you to use either a fixed response schema or a caller-supplied one.  
 
-**requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+### How does a TaskRunner change when an LLM is involved? 
+1. **Chat Context**: Add a step to spin up the conversation using the ``init_chat_context`` method
+2. **LLM Call Loop**: Create an ask() function that allows the model to work until the task is finished (we do this by calling ``.next()`` on the ``LLMAdapter`` in the ask function)
+3. **Schema Validation**: Validate the LLM output against the declared schema to ensure consistency.
 
-**input_prompt:** Whether the planner should accept a prompt as input, if true, the input should be in the format ```{ "prompt" : "text" }```.
+### LLMTaskRunner and DynamicLLMTaskRunner
+``LLMTaskRunner`` uses a fixed output schema defined at initialization time and always returns data in the same format. By default it takes in a text prompt and returns a string response. The ``DynamicLLMTaskRunner`` accepts an output_schema parameter at runtime, allowing different structured outputs for different requests.
 
-**output_schema:** a JSON schema that responses must conform to.
+#### Key Constructor Parameters
+- **llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+- **supports_tools** Whether the agent should support passing a custom set of tools at runtime (optional)
+- **tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
+- **toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+- **requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+- **input_prompt:** Whether the TaskRunner should accept a prompt as input, if true, the input should be in the format ```{ "prompt" : "text" }```.
+- **input_schema:** JSON schema describing what arguments your agent accepts. If not provided and input_prompt is True, defaults to a prompt schema accepting text.
+- **output_schema:** For ``LLMTaskRunner`` only, a JSON schema that responses must conform to (by default returns ``{"result": {"type": "string"}}``). In ``DynamicLLMTaskRunner`` the ``output_schema`` is set dynamically at runtime. 
+- **rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
 
-**llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+#### Class Definition
+The following class definitions show how to implement both LLMTaskRunner and DynamicLLMTaskRunner. These classes handle the LLM execution loop, schema validation, and toolkit integration:
 
-**toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+```python Python
 
-**rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+import os
+import json
+import asyncio
+import logging
+from typing import Optional
 
-**max_iterations:** the maximum number of iterations of the planning loop (optional).
+from jsonschema import validate, ValidationError
+from meshagent.api.schema_util import prompt_schema, merge
+from meshagent.api import Requirement
+from meshagent.tools import Toolkit
+from meshagent.agents import TaskRunner
+from meshagent.agents.agent import AgentCallContext
+from meshagent.agents.adapter import LLMAdapter, ToolResponseAdapter
 
-**tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
-**supports_tools** Whether the agent should support passing a custom set of tools at runtime (optional)
+class LLMTaskRunner(TaskRunner):
+    """
+    A Task Runner that uses an LLM execution loop until the task is complete.    
+    """
+    def __init__(
+        self,
+        *,
+        name: str,
+        llm_adapter: LLMAdapter,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        tool_adapter: Optional[ToolResponseAdapter] = None,
+        toolkits: Optional[list[Toolkit]] = None,  
+        requires: Optional[list[Requirement]] = None,
+        supports_tools: bool = True,
+        input_prompt: bool = True,
+        input_schema: Optional[dict] = None,
+        output_schema: dict | None = None,
+        rules: Optional[list[str]] = None,
+        labels: Optional[list[str]] = None,
+    ):  
 
-## Using TaskRunner Agents as Tools
-TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi agent systems. 
+        if input_schema is None:
+            if input_prompt:
+                input_schema = prompt_schema(description="use a prompt to generate content")
+            else:
+                input_schema = {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": [],
+                    "properties": {},
+                }
+
+        if output_schema is None:
+            output_schema = {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["result"],
+                "properties": {"result": {"type": "string"}},
+            }
+        elif not isinstance(output_schema, dict):
+            raise TypeError("output_schema must be a dict or None")
+
+        static_toolkits = list(toolkits or [])
+
+        super().__init__(
+            name=name,
+            title=title,
+            description=description,
+            input_schema=input_schema,
+            output_schema=output_schema,
+            requires=requires,
+            supports_tools=supports_tools,
+            labels=labels,
+            toolkits=static_toolkits,
+        )
+
+        self._extra_rules = rules or []
+        self._llm_adapter = llm_adapter
+        self._tool_adapter = tool_adapter
+        self.toolkits = static_toolkits
+        
+    async def init_chat_context(self):
+        chat = self._llm_adapter.create_chat_context()
+        if self._extra_rules:
+            chat.append_rules(self._extra_rules)
+        return chat
+
+    async def ask(self, context: AgentCallContext, arguments: dict):
+        prompt = arguments.get("prompt")
+        if prompt is None:
+            raise ValueError("`prompt` is required")
+        
+        context.chat.append_user_message(prompt)
+
+        combined_toolkits: list[Toolkit] = [*self.toolkits, *context.toolkits]
+
+        log.info(f"Running agent with prompt: {prompt}")
+        log.info(f"Running agent with self.toolkits: {self.toolkits}")
+        log.info(f"Running agent with self.toolkits: {context.toolkits}")
+
+        resp = await self._llm_adapter.next(
+            context=context.chat,
+            room=context.room,
+            toolkits=combined_toolkits,
+            tool_adapter=self._tool_adapter,
+            output_schema=self.output_schema,
+        )
+
+        # Validate the LLM output against the declared schema
+        try:
+            validate(instance=resp, schema=self.output_schema)
+        except ValidationError as exc: 
+            log.error(f"LLM output failed schema validation: {exc}")
+            raise RuntimeError("LLM output failed schema validation") from exc
+
+        return resp
+
+class DynamicLLMTaskRunner(LLMTaskRunner):
+    """
+    Same capabilities as LLMTaskRunner, but the caller supplies an arbitrary JSON-schema (`output_schema`) at runtime
+    """
+    def __init__(
+            self,
+            *, 
+            name:str,
+            llm_adapter: LLMAdapter,
+            supports_tools: bool = True,
+            title: Optional[str] = None,
+            description: Optional[str] = None,
+            tool_adapter: Optional[ToolResponseAdapter] = None,
+            toolkits: Optional[list[Toolkit]] = None,  
+            rules: Optional[list[str]] = None
+    ):
+        input_schema = merge(
+            schema=prompt_schema(description="use a prompt to generate content"),
+            additional_properties={"output_schema": {"type": "object"}},
+        )
+        super().__init__(
+            name=name,
+            llm_adapter=llm_adapter,
+            supports_tools=supports_tools,
+            title=title,
+            description=description,
+            tool_adapter=tool_adapter,
+            toolkits= toolkits,
+            rules=rules,
+            input_prompt=True,
+            input_schema=input_schema,
+            output_schema={"type":"object"}
+        )
+        
+            
+    async def ask(self, context:AgentCallContext, arguments:dict):
+        prompt = arguments.get("prompt")
+        if prompt is None:
+            raise ValueError("`prompt` is required")
+        
+        # Parse and pass JSON output schema provided at runtime
+        output_schema_raw = arguments.get("output_schema")
+        if output_schema_raw is None:
+            raise ValueError("`output_schema` is required for DynamicLLMTaskRunner")
+        
+        # Convert JSON string → dict if needed
+        if isinstance(output_schema_raw, str):
+            try:
+                output_schema_raw = json.loads(output_schema_raw)
+            except json.JSONDecodeError as exc:
+                raise ValueError("`output_schema` must be valid JSON") from exc
+            
+        context.chat.append_user_message(prompt)
+
+        combined_toolkits: list[Toolkit] = [*self.toolkits, *context.toolkits]
+
+        log.info(f"Running agent with prompt: {prompt}")
+        log.info(f"Running agent with self.toolkits: {self.toolkits}")
+        log.info(f"Running agent with self.toolkits: {context.toolkits}")
+
+
+        resp = await self._llm_adapter.next(
+            context=context.chat,
+            room=context.room,
+            toolkits=combined_toolkits,
+            tool_adapter=self._tool_adapter,
+            output_schema=output_schema_raw,
+        )
+
+        try:
+            validate(instance=resp, schema=output_schema_raw)
+        except ValidationError as exc: 
+            log.error(f"LLM output failed caller schema validation: {exc}")
+            raise RuntimeError("LLM output failed caller schema validation") from exc
+
+        return resp
+```
+
+#### Service Implementation
+Here's a complete example of implementing an ``LLMTaskRunner`` that uses OpenAI's o3 model that takes a text input prompt and returns a string text response. 
+
+The ``DynamicLLMTaskRunner`` also uses OpenAI's o3 model but returns a schema defined at runtime.
+
+```python Python
+import logging
+from meshagent.otel import otel_config
+from meshagent.api.services import ServiceHost
+from meshagent.openai import OpenAIResponsesAdapter
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+otel_config(service_name="llm-taskrunner")
+service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+
+@service.path("/llmtaskrunner")
+class LLMRunner(LLMTaskRunner):
+    def __init__(self):
+        super().__init__(
+            name="llmtaskrunner",
+            title="LLM Task Runner",
+            description="Returns {result: string} unless overridden.",
+            llm_adapter=OpenAIResponsesAdapter(model="o3"),
+            toolkits=None,
+            supports_tools=True,
+            input_prompt=True,
+            output_schema={
+                "type": "object",
+                "required": ["result"],
+                "additionalProperties": False,
+                "properties": {"result": {"type": "string"}},
+            }
+        )
+
+@service.path("/dynamicllmtaskrunner")
+class DynamicLLMRunner(DynamicLLMTaskRunner):
+    def __init__(self):
+        super().__init__(
+            name="dynamicllmtaskrunner",
+            title="Dynamic LLM TaskRunner",
+            description="Prompt + caller‑supplied JSON Schema → structured output.",
+            llm_adapter=OpenAIResponsesAdapter(model="o3"),
+        )
+
+print(f"Running on port {service.port}")
+asyncio.run(service.run())
+```
+
+**Running the Custom TaskRunners**
+
+Run the py file in one tab:
+```bash bash
+python llm_taskrunner.py
+```
+
+Call the agents into the room in another: 
+```bash bash
+meshagent setup #authenticate if not already connected
+meshagent call agent --url=http://localhost:7777/llmtaskrunner --room=myroom --participant-name=llmtaskrunner
+meshagent call agent --url=http://localhost:7777/dynamicllmtaskrunner --room=myroom --participant-name=dynamicllmtaskrunner
+```
+
+**Using the LLMTaskRunner from the Studio**
+1. Go to [studio.meshagent.com](https://studio.meshagent.com)
+2. Enter the room, myroom
+3. Click menu —> “Run Task”
+4. Select “LLM Task Runner” from the agent dropdown
+4a. Optionall click "add tools" and add tools to your new LLMTaskRunner
+5. Enter a prompt
+6. Results appear 
+
+**Using the DynamicLLMTaskRunner Programmatically**
+
+```python Python
+import asyncio
+from meshagent.api import RoomClient, websocket_protocol
+
+async def run_dynamic_llm_taskrunner(room_name: str, agent_name: str, prompt: str, output_schema: dict, participant_name: str = "test_user"):
+    """
+    Run the Dynamic LLM TaskRunner in a MeshAgent Room
+
+    Args:
+        room_name: Name of the room to connect to
+        agent_name: Name of the agent to run
+        prompt: The user prompt to send to the agent
+        output_schema: The structured output schema to use in the response 
+        participant_name: Name to use as participant (defaults to "test_user")
+    """
+    try:
+        async with RoomClient(
+            protocol=websocket_protocol(
+                participant_name=participant_name, 
+                room_name=room_name
+            )
+        ) as room:
+            response = await room.agents.ask(
+                agent=agent_name,
+                arguments={
+                    "prompt": prompt,
+                    "output_schema": output_schema
+                }
+            )
+            return response
+    except Exception as e:
+        print(f"Connection failed: {e}")
+
+product_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "title": {"type": "string"},
+        "price": {"type": "number"},
+        "features": {"type": "array", "items": {"type": "string"}},
+        "description": {"type": "string"}
+    },
+    "required": ["title", "price", "features", "description"]
+}
+
+asyncio.run(run_dynamic_llm_taskrunner(
+    room_name="myroom", 
+    agent_name="dynamicllmtaskrunner", 
+    prompt="Create a product listing for a bluetooth speaker", 
+    output_schema=product_schema
+))
+```
+
+## Example: Using TaskRunner Agents as Tools
+TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi agent systems. 
 
 The base TaskRunner requires JSON schemas to be provided to describe the input and output format. 
