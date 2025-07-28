@@ -21,6 +21,7 @@ A TaskRunner joins a MeshAgent Room and can be discovered and invoked from the [
 
 This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent TaskRunner. We extend the base TaskRunner class to create our TranslationTaskRunner with a defined input schema, output schema, and ask method. 
 
+### Building the Pydantic AI based TaskRunner
 Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run.
 
 ```python Python
@@ -82,7 +83,7 @@ async def save_to_storage(room, path: str, data: bytes):
 class TranslationTaskRunner(TaskRunner):
     def __init__(self):
         super().__init__(
-            name="Translator",
+            name="translator",
             description="An agent that translates text to French and Spanish",
             input_schema=TranslationInput.model_json_schema(),
             output_schema=TranslationResult.model_json_schema()
@@ -132,7 +133,7 @@ meshagent call agent --url=http://localhost:7777/translator --room=translate --p
 1. Go to [studio.meshagent.com](https://studio.meshagent.com) 
 2. Enter the room, ``translate``
 3. Click menu --> "Run Task"
-4. Select "Translator" from the agent dropdown 
+4. Select "translator" from the agent dropdown 
 5. Enter the text to translate
 6. Results appear and are saved to room storage under the "translations" folder 
 
@@ -170,7 +171,7 @@ async def main():
     # Call your translator
     result = await call_agent(
         room_name="translate",
-        agent_name="Translator",
+        agent_name="translator",
         arguments={"text": "Hello, how are you today?"}
     )
     
@@ -629,7 +630,49 @@ asyncio.run(run_dynamic_llm_taskrunner(
 ))
 ```
 
-## Example: Using TaskRunner Agents as Tools
-TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi agent systems. 
+## Example: Using TaskRunner Agents as Agent Tools
+TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi-agent systems. 
 
-The base TaskRunner requires JSON schemas to be provided to describe the input and output format. 
+Let's try this out by creating a new ChatBot and giving it a tool, the Pydantic AI translation agent that we defined earlier. 
+
+### Creating the service with agents-as-tools
+At the end of our ``translator.py`` file all we have to add is the new ChatBot service and pass it the ``translator`` agent as a ``RequiredToolkit``.
+
+```python Python
+@service.path("/chatwithtools")
+class ChatBotAgentTools(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            llm_adapter=OpenAIResponsesAdapter(),
+            requires=[RequiredToolkit(name="agents", tools=["translator"])],
+        )
+```
+
+### Running an agent with agents-as-tools
+
+Run your python file with both the translator and the chatbot:
+
+```bash bash
+python translator.py
+```
+
+Call both agents into the room: 
+
+```bash bash
+meshagent setup #authenticate if not already connected
+meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
+meshagent call agent --url=http://localhost:7777/chatwithtools --room=translate --participant-name=chatagent
+```
+
+### Using the agent with agents as tools
+
+**In the Studio**:
+1. Go to [studio.meshagent.com](https://studio.meshagent.com)
+2. Enter the room translate
+3. In the participants list, you'll see the ``chatagent``
+4. Click on ``chatagent`` to start chatting with the agent
+5. Ask it something like: "Can you translate 'Hello, how are you?' for me?"
+6. The ``chatagent`` will automatically use the ``translator`` agent as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
+
+*Remember: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use agents as tools*
