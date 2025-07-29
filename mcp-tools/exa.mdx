@@ -1,0 +1,120 @@
+---
+title: Exa
+---
+
+
+Try out the MCP server and chatbot toolkit directly in a temporary Meshagent Room.
+
+### Prerequisites
+
+- [Sign up and authenticate with Meshagent](https://docs.meshagent.com/cli/getting_started)
+- [Obtain an Exa API Key](https://exa.ai/)
+
+### Required Environment Variables
+
+- `EXA_API_KEY=your-api-key-here` &nbsp; _(Exa API authentication)_
+
+### Steps
+
+1. **Install Meshagent CLI**
+
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Authenticate with Meshagent**
+
+    Follow onboarding steps at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+3. **Launch Exa MCP Agent in a Room**
+
+    ```sh
+    meshagent service test \
+      --room=test \
+      --role=agent \
+      --image=meshagent/mcp-exa:latest \
+      --env EXA_API_KEY=your-api-key-here \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-exa-service-test
+    ```
+
+    - Starts an Exa MCP server as an agent within the `test` Room. Room and services are temporary and will be cleaned up after inactivity.
+
+4. **Join a Chatbot Linked to the Exa Toolkit**
+
+    ```sh
+    meshagent chatbot join \
+      --room=test \
+      --agent-name=mcp-exa \
+      --name=mcp-exa \
+      --toolkit=mcp-exa
+    ```
+
+    - Spawns a chatbot in the Room capable of using the Exa MCP toolkit. Multiple agents/tools can be combined in a Room.
+    - The command output will include a browser link to the live Room.
+
+5. **Test the Integration**
+
+    - Visit the provided Room URL and initiate a conversation with the `mcp-exa` agent to try out the Exa web search tools.
+
+---
+
+## Project Level Deployment: Persistent MCP Tooling
+
+For production scenarios, deploy the MCP server and chatbot as persistent project-level services. Every new Room in the project will automatically include the Exa tools and/or chatbot, removing the need to launch or manage these resources manually.
+
+### Persistent Agent and Chatbot Services
+
+1. **Create the Exa MCP Agent Service**
+
+    ```sh
+    meshagent service create \
+      --role=agent \
+      --image=meshagent/mcp-exa:latest \
+      --env EXA_API_KEY=your-api-key-here \
+      --env MESHAGENT_PORT=8001 \
+      --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+      --name=mcp-exa-service
+    ```
+
+2. **Create a Persistent Chatbot Linked to the Exa Toolkit**
+
+    ```sh
+    meshagent service create \
+      --image="meshagent/cli:latest" \
+      --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-exa-chatbot" \
+      --env="MESHAGENT_PORT=9001" \
+      --name="mcp-exa-chatbot-service" \
+      --command="meshagent chatbot service --agent-name=mcp-exa-chatbot --toolkit=mcp-exa"
+    ```
+
+---
+
+## Tools Available
+
+### Tools Provided
+
+| Tool                | Short Description                                                               |
+|---------------------|---------------------------------------------------------------------------------|
+| `web_search_exa`    | Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs. |
+
+---
+
+### Tool Details
+
+#### `web_search_exa`
+Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs. Supports configurable result counts and returns the content from the most relevant websites.
+
+| Parameter     | Type      | Description                                                       |
+|---------------|-----------|-------------------------------------------------------------------|
+| `query`       | string    | Search query                                                      |
+| `numResults`  | number *optional* | Number of search results to return (default: 5)                   |
+
+---
+
+## Meshagent and Docker Links
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Exa Tool Docker Image**: [https://hub.docker.com/r/meshagent/mcp-exa](https://hub.docker.com/r/meshagent/mcp-exa)

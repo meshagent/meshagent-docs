@@ -1,0 +1,143 @@
+---
+title: Everything
+---
+
+
+The following guide walks you through setting up, testing, and cleaning up an MCP agent and chatbot inside a Meshagent Room.
+
+1. **Install Meshagent and All Extras**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Visit: [Getting Started](https://docs.meshagent.com/cli/getting_started)
+   - Follow instructions to sign in and set up your auth.
+
+3. **Start MCP Server as a Room Agent for Testing**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-everything:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-everything-service-test
+   ```
+   - This command launches your test MCP server inside a Meshagent Room (`test`). The service is available only while the Room exists.
+
+4. **Start a Chatbot in the Room Using the Everything Toolkit**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-everything --name=mcp-everything --toolkit=mcp-everything
+   ```
+   - You may use multiple toolkits for the same agent in a Room.
+   - The output gives you a URL to the Room.
+
+5. **Try It Out**
+   - Open the Room link from the step above in your browser.
+   - Send a message to the agent—directly interact with the MCP Server tools via the chatbot.
+
+**Note:** When the Room closes (e.g., by going inactive), the MCP server and chatbot are automatically removed.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+To have the MCP server tools and chatbot available in *every* Room for a given Meshagent project (ideal for production):
+
+1. **Create a Persistent MCP Server Agent Service**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-everything:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-everything-service
+   ```
+
+2. **Create a Persistent Chatbot Service in the Project**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-everything-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-everything-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-everything-chatbot --toolkit=mcp-everything"
+   ```
+
+With these persistent services, the MCP agent and the chatbot will automatically join every new Room created in your project, eliminating the need to run them locally or launch them each time.
+
+---
+
+## Tools Available
+
+### Tools Provided by This Server
+
+| Tool Name             | Short Description                                             |
+|-----------------------|--------------------------------------------------------------|
+| `add`                 | Adds two numbers                                             |
+| `annotatedMessage`    | Demonstrates how annotations can be used for metadata        |
+| `echo`                | Echoes back the input                                        |
+| `getResourceReference`| Returns a resource reference usable by MCP clients           |
+| `getTinyImage`        | Returns the MCP_TINY_IMAGE                                   |
+| `longRunningOperation`| Demo: long running operation with progress updates           |
+| `printEnv`            | Prints environment variables for debugging                   |
+| `sampleLLM`           | Samples from an LLM via MCP's sampling feature               |
+
+---
+
+### Tools Details
+
+#### `add`
+_Adds two numbers_
+- **Parameters:**
+  - `a` (*number*): First number
+  - `b` (*number*): Second number
+
+---
+
+#### `annotatedMessage`
+_Provides example annotations (metadata) for content_
+- **Parameters:**
+  - `messageType` (*string*): Type for annotation
+  - `includeImage` (*boolean, optional*): Attach an example image
+
+---
+
+#### `echo`
+_Echoes back your input_
+- **Parameters:**
+  - `message` (*string*): Message to echo
+
+---
+
+#### `getResourceReference`
+_Returns a resource reference for MCP clients_
+- **Parameters:**
+  - `resourceId` (*number*): Resource ID (1-100)
+
+---
+
+#### `getTinyImage`
+_Returns the MCP_TINY_IMAGE_
+- **Parameters:** _None_
+
+---
+
+#### `longRunningOperation`
+_Demonstrates long-running operations and progress updates_
+- **Parameters:**
+  - `duration` (*number, optional*): Duration in seconds
+  - `steps` (*number, optional*): Number of steps
+
+---
+
+#### `printEnv`
+_Prints all environment variables_
+- **Parameters:** _None_
+
+---
+
+#### `sampleLLM`
+_Sample from an LLM using MCP_
+- **Parameters:**
+  - `prompt` (*string*): Prompt for the LLM
+  - `maxTokens` (*number, optional*): Max tokens to generate
+
+---
+
+## Meshagent & Resources
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Documentation:** [Read The Docs](https://docs.meshagent.com)
+- **Meshagent MCP Everything Tool Image:** [Docker Hub: meshagent/mcp-everything](https://hub.docker.com/r/meshagent/mcp-everything)
+
+For more details on MCP and Model Context Protocol, see the [Anthropic MCP announcement](https://www.anthropic.com/news/model-context-protocol).
+
+---
+
+**Start building collaborative, tool-driven agents today using Meshagent and the Everything MCP Server!**

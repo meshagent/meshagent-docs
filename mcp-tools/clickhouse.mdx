@@ -1,0 +1,124 @@
+---
+title: ClickHouse
+---
+
+
+Follow these steps to run the ClickHouse MCP Server agent in a Meshagent Room for testing:
+
+1. **Set Required Environment Variables**  
+   Define these variables as needed for your ClickHouse connection. Replace the password token with your own secret.
+
+   - `CLICKHOUSE_HOST`: sql-clickhouse.clickhouse.com
+   - `CLICKHOUSE_PORT`: 8443
+   - `CLICKHOUSE_USER`: demo
+   - `CLICKHOUSE_SECURE`: true
+   - `CLICKHOUSE_VERIFY`: true
+   - `CLICKHOUSE_CONNECT_TIMEOUT`: 30
+   - `CLICKHOUSE_SEND_RECEIVE_TIMEOUT`: 30
+   - `CLICKHOUSE_PASSWORD`: `<YOUR_CLICKHOUSE_PASSWORD_HERE>`
+
+2. **Install Meshagent**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign Up & Authenticate**  
+   Register and log in as shown in [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started).
+
+4. **Start an MCP Server Agent in a Test Room**  
+   Replace password and any other secrets accordingly:
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-clickhouse:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env CLICKHOUSE_HOST=sql-clickhouse.clickhouse.com \
+     --env CLICKHOUSE_PORT=8443 \
+     --env CLICKHOUSE_USER=demo \
+     --env CLICKHOUSE_SECURE=true \
+     --env CLICKHOUSE_VERIFY=true \
+     --env CLICKHOUSE_CONNECT_TIMEOUT=30 \
+     --env CLICKHOUSE_SEND_RECEIVE_TIMEOUT=30 \
+     --env CLICKHOUSE_PASSWORD=`<YOUR_CLICKHOUSE_PASSWORD_HERE>` \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-clickhouse-service-test
+   ```
+   - This starts a Meshagent Room with a test MCP server available. The agent and room are cleaned up automatically when inactive.
+
+5. **Attach a Chatbot with ClickHouse Tools**  
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-clickhouse --name=mcp-clickhouse --toolkit=mcp-clickhouse
+   ```
+   - This launches a chatbot in the room, ready to use the ClickHouse toolkit. You can load multiple toolkits per room/agent if needed.
+   - A link to the new Room will appear in the output.
+
+6. **Try It Out**  
+   Open the provided room link in your browser and chat with the agent to run database queries and commands using the MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+For production or persistent environments where you want MCP server tools and a chatbot automatically in every new MeshAgent room, deploy these as project-level services:
+
+1. **Create Persistent MCP Server Service**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-clickhouse:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env CLICKHOUSE_HOST=sql-clickhouse.clickhouse.com \
+     --env CLICKHOUSE_PORT=8443 \
+     --env CLICKHOUSE_USER=demo \
+     --env CLICKHOUSE_SECURE=true \
+     --env CLICKHOUSE_VERIFY=true \
+     --env CLICKHOUSE_CONNECT_TIMEOUT=30 \
+     --env CLICKHOUSE_SEND_RECEIVE_TIMEOUT=30 \
+     --env CLICKHOUSE_PASSWORD=`<YOUR_CLICKHOUSE_PASSWORD_HERE>` \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-clickhouse-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-clickhouse-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-clickhouse-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-clickhouse-chatbot --toolkit=mcp-clickhouse"
+   ```
+
+These services become available in every Meshagent Room created in the project. No need to run separate server or chatbot processes—they'll join each new Room automatically.
+
+---
+
+## Tools Available
+
+Tools provided by the ClickHouse MCP Server for use in Meshagent Rooms:
+
+| Tool              | Short Description                                                                             |
+|-------------------|----------------------------------------------------------------------------------------------|
+| `list_databases`  | List available ClickHouse databases                                                          |
+| `list_tables`     | List available ClickHouse tables in a database, including schema, comment, row count, column count. |
+| `run_select_query`| Run a SELECT query in a ClickHouse database                                                  |
+
+### Tool Details
+
+#### Tool: `list_databases`
+- Description: List available ClickHouse databases.
+
+#### Tool: `list_tables`
+- Description: List available ClickHouse tables in a database, including schema, comment, row count, and column count.
+- Parameters:
+    - `database` (string)
+    - `like` (string, optional)
+    - `not_like` (string, optional)
+
+#### Tool: `run_select_query`
+- Description: Run a SELECT query in a ClickHouse database.
+- Parameters:
+    - `query` (string)
+
+---
+
+## Meshagent Project Links
+
+- [Meshagent Home](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP ClickHouse Server Docker Image](https://hub.docker.com/r/meshagent/mcp-clickhouse)

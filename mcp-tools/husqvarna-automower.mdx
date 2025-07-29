@@ -1,0 +1,110 @@
+---
+title: Husqvarna Automower
+---
+
+
+Use the following steps to quickly launch the Husqvarna Automower MCP server and toolkit in a Meshagent Room. When the Room is closed, all services (including chatbots and tools) are automatically removed.
+
+**Environment Variables Required:**
+- `HUSQVARNA_CLIENT_ID` — Your Husqvarna Automower developer client ID   
+- `HUSQVARNA_CLIENT_SECRET` — Your Husqvarna Automower developer client secret
+
+### Steps
+
+1. **Install Meshagent CLI and toolkit dependencies**  
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate with Meshagent**  
+   [Get started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started) (run `meshagent login` and follow instructions)
+
+3. **Start the MCP Server in a Meshagent Room**  
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-husqvarna-automower:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env HUSQVARNA_CLIENT_ID=YOUR_CLIENT_ID_HERE \
+     --env HUSQVARNA_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-husqvarna-automower-service-test
+   ```
+   *This command launches a Meshagent Room (`test`) and includes a running MCP server (as a tool agent) within it. Rooms automatically close when idle.*
+
+4. **Join the Room with a Chatbot using the MCP Toolkit**  
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-husqvarna-automower \
+     --name=mcp-husqvarna-automower \
+     --toolkit=mcp-husqvarna-automower
+   ```
+   - This starts a chatbot in the Meshagent Room with access to the Husqvarna Automower commands.
+   - You can load multiple toolkits in the same Room with the same agent.
+   - After running, you’ll receive a Room link in your terminal output.
+
+5. **Interact with the MCP Server from your browser**  
+   - Visit the Room link provided from step 4 to test and interact with the MCP Server tools via the chatbot.
+
+---
+
+## Project Level Deployment: Persistent MCP Server & Chatbot
+
+To make the MCP server and chatbot always available in every Room on your Meshagent project (for production or shared team access), use the following commands.
+
+### Steps
+
+1. **Create a persistent MCP Server service**  
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-husqvarna-automower:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env HUSQVARNA_CLIENT_ID=YOUR_CLIENT_ID_HERE \
+     --env HUSQVARNA_CLIENT_SECRET=YOUR_CLIENT_SECRET_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-husqvarna-automower-service
+   ```
+
+2. **Create a persistent chatbot service with the MCP toolkit**  
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-husqvarna-automower-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-husqvarna-automower-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-husqvarna-automower-chatbot --toolkit=mcp-husqvarna-automower"
+   ```
+- Now, whenever a Room is created in your Meshagent project, the MCP server and its chatbot tools will automatically appear. There’s no need to run or manage services separately.
+
+---
+
+## Tools Available
+
+The following tools are provided by the Husqvarna Automower MCP Server when integrated via Meshagent:
+
+### Tool Summary
+
+| Tool                                | Short Description                          |
+|--------------------------------------|--------------------------------------------|
+| `Husqvarna Automowers Status`        | Get status of my husqvarna automowers      |
+
+### Tool Details
+
+#### **`Husqvarna Automowers Status`**
+- **Function:** Get status of my husqvarna automowers  
+- Provides the current operational status of your registered Husqvarna Automowers.  
+- Easily invoked via the chatbot or API as described above.
+
+---
+
+## Useful Links
+
+- **Meshagent**: [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation**: [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image**: [https://hub.docker.com/r/meshagent/mcp-husqvarna-automower](https://hub.docker.com/r/meshagent/mcp-husqvarna-automower)
+- **Getting started with Meshagent CLI**: [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+
+---

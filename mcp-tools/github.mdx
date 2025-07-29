@@ -1,0 +1,390 @@
+---
+title: GitHub
+---
+
+
+These steps will run the MCP GitHub server and a chatbot agent inside a Meshagent Room for short-term or testing use. When the Meshagent Room closes, both the MCP server tool and chatbot are automatically removed.
+
+**Environment Variables:**  
+Set these for GitHub MCP server integration:
+- `GITHUB_PERSONAL_ACCESS_TOKEN`: Your GitHub Personal Access Token
+
+### Steps
+
+1. **Install Meshagent CLI:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   Follow [the Meshagent CLI getting started docs](https://docs.meshagent.com/cli/getting_started) to sign up and log in.
+
+3. **Launch MCP GitHub Agent in a Test Room:**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-github:latest \
+     --env GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-github-service-test
+   ```
+   - This starts a Meshagent Room with a GitHub MCP server available in the room.
+   - Rooms close if inactive.
+
+4. **Start a Chatbot in the Room:**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-github --name=mcp-github --toolkit=mcp-github
+   ```
+   - This runs a chatbot in the same Meshagent Room that can use the GitHub toolkit.
+   - You can use multiple toolkits with the same agent.
+
+   _A link to the Room will be provided in the output. Open it in your browser._
+
+5. **Interact!**
+   - Visit the Room link in your browser.
+   - Send messages to the agent to interact with the MCP GitHub tools.
+
+---
+
+## Project Level Deployment
+
+To automatically provide your MCP server and chatbot to **every Meshagent Room in your project**—ideal for production or persistent automation—deploy services at the project level. This ensures agents join all new rooms consistently, with no manual launches or local processes required.
+
+### Steps
+
+1. **Create Persistent MCP GitHub Agent Service:**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-github:latest \
+     --env GITHUB_PERSONAL_ACCESS_TOKEN=<YOUR_TOKEN> \
+     --env MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-github-service
+   ```
+
+2. **Create Persistent Chatbot Service:**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-github-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-github-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-github-chatbot --toolkit=mcp-github"
+   ```
+
+These services will automatically join every new room in your Meshagent project, making the MCP server tools available everywhere, on demand.
+
+---
+
+## Tools Available
+
+Tools for interacting with the GitHub API: file operations, repo management, search, issues, PRs, and more.
+
+### Available Tools (26)
+
+| Tool                                    | Short Description                                            |
+|------------------------------------------|-------------------------------------------------------------|
+| `add_issue_comment`                      | Add a comment to an existing issue                          |
+| `create_branch`                          | Create a new branch in a GitHub repository                  |
+| `create_issue`                           | Create a new issue in a GitHub repository                   |
+| `create_or_update_file`                  | Create or update a single file in a GitHub repository       |
+| `create_pull_request`                    | Create a new pull request in a GitHub repository            |
+| `create_pull_request_review`             | Create a review on a pull request                           |
+| `create_repository`                      | Create a new GitHub repository in your account              |
+| `fork_repository`                        | Fork a GitHub repository                                    |
+| `get_file_contents`                      | Get file or directory contents from a repository            |
+| `get_issue`                              | Get details of a specific issue                             |
+| `get_pull_request`                       | Get details of a specific pull request                      |
+| `get_pull_request_comments`              | Get review comments on a pull request                       |
+| `get_pull_request_files`                 | List files changed in a pull request                        |
+| `get_pull_request_reviews`               | Get reviews on a pull request                               |
+| `get_pull_request_status`                | Get combined status for a pull request                      |
+| `list_commits`                           | List commits of a branch                                    |
+| `list_issues`                            | List issues in a repository                                 |
+| `list_pull_requests`                     | List and filter pull requests in a repo                     |
+| `merge_pull_request`                     | Merge a pull request                                        |
+| `push_files`                             | Push multiple files in a single commit                      |
+| `search_code`                            | Search for code across repositories                         |
+| `search_issues`                          | Search for issues and PRs                                   |
+| `search_repositories`                    | Search for repositories                                     |
+| `search_users`                           | Search for users                                            |
+| `update_issue`                           | Update an existing issue                                    |
+| `update_pull_request_branch`             | Update a PR branch with base changes                        |
+
+### Tools Details
+
+#### `add_issue_comment`
+_Add a comment to an existing issue_  
+**Parameters:**  
+- `body`: string  
+- `issue_number`: number  
+- `owner`: string  
+- `repo`: string  
+
+----
+
+#### `create_branch`
+_Create a new branch in a GitHub repository_  
+**Parameters:**  
+- `branch`: string (new branch name)  
+- `owner`: string  
+- `repo`: string  
+- `from_branch`: string _(optional)_  
+
+----
+
+#### `create_issue`
+_Create a new issue in a GitHub repository_  
+**Parameters:**  
+- `owner`: string  
+- `repo`: string  
+- `title`: string  
+- `assignees`: array _(optional)_  
+- `body`: string _(optional)_  
+- `labels`: array _(optional)_  
+- `milestone`: number _(optional)_  
+
+----
+
+#### `create_or_update_file`
+_Create or update a single file in a GitHub repository_  
+**Parameters:**  
+- `branch`: string  
+- `content`: string  
+- `message`: string  
+- `owner`: string  
+- `path`: string  
+- `repo`: string  
+- `sha`: string _(optional)_  
+
+----
+
+#### `create_pull_request`
+_Create a new pull request_  
+**Parameters:**  
+- `base`: string (target branch)  
+- `head`: string (source branch)  
+- `owner`: string  
+- `repo`: string  
+- `title`: string  
+- `body`: string _(optional)_  
+- `draft`: boolean _(optional)_  
+- `maintainer_can_modify`: boolean _(optional)_  
+
+----
+
+#### `create_pull_request_review`
+_Create a review on a pull request_  
+**Parameters:**  
+- `body`: string  
+- `event`: string  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+- `comments`: array _(optional)_  
+- `commit_id`: string _(optional)_  
+
+----
+
+#### `create_repository`
+_Create a new GitHub repository_  
+**Parameters:**  
+- `name`: string  
+- `autoInit`: boolean _(optional)_  
+- `description`: string _(optional)_  
+- `private`: boolean _(optional)_  
+
+----
+
+#### `fork_repository`
+_Fork a GitHub repository_  
+**Parameters:**  
+- `owner`: string  
+- `repo`: string  
+- `organization`: string _(optional)_  
+
+----
+
+#### `get_file_contents`
+_Get contents of a file or directory_  
+**Parameters:**  
+- `owner`: string  
+- `path`: string  
+- `repo`: string  
+- `branch`: string _(optional)_  
+
+----
+
+#### `get_issue`
+_Get details of a specific issue_  
+**Parameters:**  
+- `issue_number`: number  
+- `owner`: string  
+- `repo`: string  
+
+----
+
+#### `get_pull_request`
+_Get pull request details_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+
+----
+
+#### `get_pull_request_comments`
+_Get review comments on a pull request_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+
+----
+
+#### `get_pull_request_files`
+_List files changed in a pull request_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+
+----
+
+#### `get_pull_request_reviews`
+_Get reviews on a pull request_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+
+----
+
+#### `get_pull_request_status`
+_Get status checks for a pull request_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+
+----
+
+#### `list_commits`
+_List commits of a branch_  
+**Parameters:**  
+- `owner`: string  
+- `repo`: string  
+- `page`: number _(optional)_  
+- `perPage`: number _(optional)_  
+- `sha`: string _(optional)_  
+
+----
+
+#### `list_issues`
+_List issues in a repository_  
+**Parameters:**  
+- `owner`: string  
+- `repo`: string  
+- ...additional filters (see above)...
+
+----
+
+#### `list_pull_requests`
+_List and filter pull requests_  
+**Parameters:**  
+- `owner`: string  
+- `repo`: string  
+- ...filters (see above)...
+
+----
+
+#### `merge_pull_request`
+_Merge a pull request_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+- `commit_message`: string _(optional)_  
+- `commit_title`: string _(optional)_  
+- `merge_method`: string _(optional)_  
+
+----
+
+#### `push_files`
+_Push multiple files in a commit_  
+**Parameters:**  
+- `branch`: string  
+- `files`: array  
+- `message`: string  
+- `owner`: string  
+- `repo`: string  
+
+----
+
+#### `search_code`
+_Search for code across repositories_  
+**Parameters:**  
+- `q`: string (query)  
+- `order`: string _(optional)_  
+- `page`: number _(optional)_  
+- `per_page`: number _(optional)_  
+
+----
+
+#### `search_issues`
+_Search for issues and PRs_  
+**Parameters:**  
+- `q`: string  
+- `order`: string _(optional)_  
+- `page`: number _(optional)_  
+- `per_page`: number _(optional)_  
+- `sort`: string _(optional)_  
+
+----
+
+#### `search_repositories`
+_Search for repos_  
+**Parameters:**  
+- `query`: string  
+- `page`: number _(optional)_  
+- `perPage`: number _(optional)_  
+
+----
+
+#### `search_users`
+_Search for users_  
+**Parameters:**  
+- `q`: string  
+- `order`: string _(optional)_  
+- `page`: number _(optional)_  
+- `per_page`: number _(optional)_  
+- `sort`: string _(optional)_  
+
+----
+
+#### `update_issue`
+_Update an issue_  
+**Parameters:**  
+- `issue_number`: number  
+- `owner`: string  
+- `repo`: string  
+- ...additional fields to update...
+
+----
+
+#### `update_pull_request_branch`
+_Update a pull request branch with the latest base changes_  
+**Parameters:**  
+- `owner`: string  
+- `pull_number`: number  
+- `repo`: string  
+- `expected_head_sha`: string _(optional)_  
+
+---
+
+## Meshagent Resources
+
+- **Meshagent Website:** https://www.meshagent.com/
+- **Documentation:** https://docs.meshagent.com
+- **MCP Tool Docker Image:**  
+  [meshagent/mcp-github](https://hub.docker.com/r/meshagent/mcp-github)  
+  (Prebuilt Docker image for GitHub MCP Server with Meshagent integration)
+
+---

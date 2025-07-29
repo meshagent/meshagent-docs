@@ -1,0 +1,267 @@
+---
+title: Hackle
+---
+
+
+Below is a step-by-step guide for testing the Hackle MCP server and toolkit in an isolated Meshagent Room. When the Room closes, the tool server and chatbot are also automatically removed.
+
+1. **Set Environment Variables:**  
+   The Hackle MCP Server requires the following environment variable(s):
+   - `API_KEY` – Your Hackle API key
+
+2. **Install Meshagent CLI:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign Up & Authenticate with Meshagent:**
+   - Follow [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and log in.
+
+4. **Run MCP Server as an Agent in the Room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-hackle:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_KEY=YOUR_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-hackle-service-test
+   ```
+   - This creates a Meshagent Room with a test Hackle MCP server running inside it. Rooms close automatically if they become inactive.
+
+5. **Start a Chatbot with Hackle Toolkit in the Room:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-hackle --name=mcp-hackle --toolkit=mcp-hackle
+   ```
+   - This starts a chatbot in the Room that can use the Hackle MCP toolkit.
+   - Multiple toolkits may be used within the same Room, by the same agent.
+   - A link to access the Room is provided in the output.
+
+6. **Try It Out:**  
+   Visit the Room link in your browser and send messages to the agent to interact with Hackle MCP Server tools.
+
+---
+
+## Project Level Deployment: Automatic Tools & Chatbot in Every Room
+
+For production deployments, you can set up persistent services at the project level—ensuring the Hackle MCP server tools and chatbot are available in **every** Room created in your Meshagent project. This eliminates the need for local processes or repeated manual launches.
+
+1. **Create Persistent MCP Server Agent:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-hackle:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env API_KEY=YOUR_API_KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-hackle-service
+   ```
+
+2. **Create Persistent Chatbot Agent with Hackle Toolkit:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-hackle-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-hackle-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-hackle-chatbot --toolkit=mcp-hackle"
+   ```
+
+---
+
+## Available Tools
+
+The following tools are available via the wrapped Hackle MCP Server:
+
+| Tool Name                                   | Description                                                                                   |
+|----------------------------------------------|-----------------------------------------------------------------------------------------------|
+| `active-user-series`                        | Retrieves time-series data of active users.                                                   |
+| `analytics-chart-detail`                    | Fetch analytics chart detail.                                                                 |
+| `analytics-chart-list`                      | Fetch data analytics chart list.                                                              |
+| `data-report-detail`                        | Fetch data report detail.                                                                     |
+| `data-report-list`                          | Fetch data report list.                                                                       |
+| `experiment-detail`                         | Retrieves detailed information for a specific A/B test experiment.                            |
+| `experiment-list`                           | Fetches a paginated list of A/B test experiments with search functionality.                   |
+| `in-app-message-detail`                     | Retrieves detailed information for a specific in-app message.                                 |
+| `in-app-message-list`                       | Fetches a paginated list of in-app messages with search functionality.                        |
+| `push-message-detail`                       | Retrieves detailed information for a specific push message.                                   |
+| `push-message-list`                         | Fetches a paginated list of push messages with search functionality.                          |
+| `remote-config-create`                      | Creates an empty remote config.                                                               |
+| `remote-config-detail`                      | Fetch remote config detail.                                                                   |
+| `remote-config-list`                        | Fetch Remote Config list.                                                                     |
+| `remote-config-update`                      | Updates remote config's content.                                                              |
+| `remote-config-update-description`          | Updates remote config's description.                                                          |
+| `remote-config-update-user-identifier-criteria` | Updates remote config's user identifier criteria.                                          |
+| `retention-series`                          | Retrieves time-series data of user retention.                                                 |
+| `stickiness-series`                         | Retrieves time-series data of user stickiness (return visit frequency).                       |
+
+### Tool Details
+
+#### `active-user-series`
+Retrieves time-series data of active users. Available in daily, weekly, and monthly units.
+
+Parameters:
+- `unit` (`string`)
+- `date` (`string`, optional): End date in YYYY-MM-DD format.
+
+---
+
+#### `analytics-chart-detail`
+Fetch analytics chart detail. Visualize the chart using this tool's result.
+
+Parameters:
+- `chartId` (`number`)
+- `chartType` (`string`): Type of the chart. Will throw an error if the chartId's chart type is different from chartType.
+
+---
+
+#### `analytics-chart-list`
+Fetch data analytics chart list.
+
+Parameters (all optional):
+- `chartType` (`string`)
+- `pageNumber` (`number`)
+- `pageSize` (`number`)
+- `searchKeyword` (`string`)
+
+---
+
+#### `data-report-detail`
+Fetch data report detail.
+
+Parameters:
+- `dataReportId` (`number`)
+
+---
+
+#### `data-report-list`
+Fetch data report list.
+
+---
+
+#### `experiment-detail`
+Retrieves detailed information for a specific A/B test experiment.
+
+Parameters:
+- `experimentId` (`number`)
+
+---
+
+#### `experiment-list`
+Fetches a paginated list of A/B test experiments with search functionality.
+
+Parameters (all optional):
+- `pageNumber` (`number`)
+- `pageSize` (`number`)
+- `searchKeyword` (`string`): Name, description, or experimentKey.
+
+---
+
+#### `in-app-message-detail`
+Retrieves detailed information for a specific in-app message.
+
+Parameters:
+- `inAppMessageId` (`number`)
+
+---
+
+#### `in-app-message-list`
+Fetches a paginated list of in-app messages with search functionality.
+
+Parameters (all optional):
+- `pageNumber` (`number`)
+- `pageSize` (`number`)
+- `searchKeyword` (`string`): Name, description, or campaignKey.
+
+---
+
+#### `push-message-detail`
+Retrieves detailed information for a specific push message.
+
+Parameters:
+- `pushMessageId` (`number`)
+
+---
+
+#### `push-message-list`
+Fetches a paginated list of push messages with search functionality.
+
+Parameters (all optional):
+- `pageNumber` (`number`)
+- `pageSize` (`number`)
+- `searchKeyword` (`string`): Name, description, or campaignKey.
+
+---
+
+#### `remote-config-create`
+Creates an empty remote config.
+
+Parameters:
+- `body` (`object`)
+
+---
+
+#### `remote-config-detail`
+Fetch remote config detail.
+
+Parameters:
+- `remoteConfigId` (`number`): Obtain this from the Remote Config List tool.
+
+---
+
+#### `remote-config-list`
+Fetch Remote Config list.
+
+Parameters (all optional):
+- `pageNumber` (`number`)
+- `pageSize` (`number`)
+- `searchKeyword` (`string`)
+- `status` (`string`)
+
+---
+
+#### `remote-config-update`
+Updates remote config's content.
+
+Parameters:
+- `body` (`object`)
+- `remoteConfigId` (`number`)
+
+---
+
+#### `remote-config-update-description`
+Updates remote config's description for both production and development environments.
+
+Parameters:
+- `body` (`object`)
+- `remoteConfigId` (`number`)
+
+---
+
+#### `remote-config-update-user-identifier-criteria`
+Updates remote config's user identifier criteria for both production and development.
+
+Parameters:
+- `body` (`object`)
+- `remoteConfigId` (`number`)
+
+---
+
+#### `retention-series`
+Retrieves time-series data of user retention. Available in daily, weekly, and monthly units.
+
+Parameters:
+- `unit` (`string`)
+- `date` (`string`, optional): End date in YYYY-MM-DD format.
+
+---
+
+#### `stickiness-series`
+Retrieves time-series data of user stickiness (return visit frequency). Available in weekly and monthly units.
+
+Parameters:
+- `unit` (`string`)
+- `date` (`string`, optional): End date in YYYY-MM-DD format.
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Hackle Docker Image](https://hub.docker.com/r/meshagent/mcp-hackle)

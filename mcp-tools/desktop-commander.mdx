@@ -1,0 +1,187 @@
+---
+title: Desktop Commander
+---
+
+
+Follow these steps to start a Desktop Commander MCP server in a Meshagent Room and join a chatbot agent able to use these tools:
+
+### 1. Install Meshagent and Requirements
+
+```shell
+pip install "meshagent[all]"
+```
+
+### 2. Sign Up and Authenticate
+
+[Sign up and authenticate](https://docs.meshagent.com/cli/getting_started) using your Meshagent account.
+
+### 3. Start a Room-Scoped MCP Server (Cloud Test)
+
+```shell
+meshagent service test --room=test --role=agent --image=meshagent/mcp-desktop-commander:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-desktop-commander-service-test
+```
+
+- This command starts a temporary Meshagent Room with a live Desktop Commander MCP server.
+- Rooms close automatically if inactive.
+
+### 4. Start a Chatbot with the Tools Enabled in the Room
+
+```shell
+meshagent chatbot join --room=test --agent-name=mcp-desktop-commander --name=mcp-desktop-commander --toolkit=mcp-desktop-commander
+```
+
+- The chatbot joins your Room and uses the Desktop Commander toolkit.
+- You can include multiple toolkits with the same agent.
+- The command output supplies a direct room link.
+
+### 5. Try It Out!
+
+- Open the Room link in your browser.
+- Message the agent to interact with the MCP Server tools—search, edit files, run commands, and more!
+
+---
+
+## Project Level Deployment (Persistent Across All Project Rooms)
+
+Deploy MCP Server and chatbot services so every new or existing Room in your Meshagent project always has these tools:
+
+### 1. Create a Persistent MCP Server Service
+
+```shell
+meshagent service create --role=agent --image=meshagent/mcp-desktop-commander:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-desktop-commander-service
+```
+
+### 2. Create a Persistent Chatbot Service
+
+```shell
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-desktop-commander-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-desktop-commander-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-desktop-commander-chatbot --toolkit=mcp-desktop-commander"
+```
+
+- Once created, Desktop Commander and chatbot both auto-join all project Rooms. You do **not** need to start them per session—they’re ready on every Room creation.
+
+---
+
+## Tools Available
+
+Desktop Commander MCP Server delivers a full suite of desktop operations and automations for every Meshagent Room. Here’s a summary of tools you can use:
+
+| Tool                          | Summary / Description                                                        |
+|-------------------------------|------------------------------------------------------------------------------|
+| `create_directory`            | Create a new directory or ensure a directory exists.                         |
+| `edit_block`                  | Apply surgical text replacements to files.                                   |
+| `force_terminate`             | Force terminate a running terminal session.                                  |
+| `get_config`                  | Get the complete server configuration as JSON.                               |
+| `get_file_info`               | Retrieve detailed metadata about a file or directory.                        |
+| `interact_with_process`       | Send input to a running process and get the response (for local file analysis, REPLs, etc.). |
+| `kill_process`                | Terminate a running process by PID.                                          |
+| `list_directory`              | Get a detailed listing of all files and directories in a specified path.      |
+| `list_processes`              | List all running processes.                                                  |
+| `list_sessions`               | List all active terminal sessions.                                           |
+| `move_file`                   | Move or rename files and directories.                                        |
+| `read_file`                   | Read the contents of a file from the file system or a URL.                   |
+| `read_multiple_files`         | Read the contents of multiple files simultaneously.                          |
+| `read_process_output`         | Read output from a running process, detects REPL prompts/waiting.            |
+| `search_code`                 | Search for text/code patterns within file contents using ripgrep.             |
+| `search_files`                | Find files by name using substring matching.                                 |
+| `set_config_value`            | Set a specific server configuration value.                                   |
+| `start_process`               | Start a new terminal process, such as a shell or REPL session.               |
+| `write_file`                  | Write or append to file contents.                                            |
+
+### Tool Details
+
+#### `create_directory`
+Create a new directory (including nested ones) or ensure a directory exists.
+- `path`: string. Use absolute paths unless explicitly given otherwise.
+
+#### `edit_block`
+Make precise, contextual text replacements in files.
+- `file_path`: string
+- `old_string`: string
+- `new_string`: string
+- `expected_replacements`: number (optional, default 1)
+
+#### `force_terminate`
+Force-terminate an active terminal session.
+- `pid`: number
+
+#### `get_config`
+Get all configuration values as JSON (blocked commands, allowed directories, etc.).
+
+#### `get_file_info`
+Retrieve size, timestamps, permissions, type, line count, etc. for a file/directory.
+- `path`: string
+
+#### `interact_with_process`
+Send input to a running process (ideal for Python/R/Node/Shell REPL, live CLI work, local file analysis).
+- `pid`: number
+- `input`: string
+- `timeout_ms`: number (optional)
+- `wait_for_prompt`: boolean (optional)
+
+#### `kill_process`
+Terminate a running process by PID.
+- `pid`: number
+
+#### `list_directory`
+List all files and directories at a given path (clear [FILE]/[DIR] output).
+- `path`: string
+
+#### `list_processes`
+List running processes (PID, command, CPU/memory).
+
+#### `list_sessions`
+See all terminal or REPL sessions and their status (blocked, runtime).
+
+#### `move_file`
+Move/rename files or directories; within allowed directories.
+- `source`: string
+- `destination`: string
+
+#### `read_file`
+Read file from disk or optionally from a URL; supports line-range, tail, images.
+- `path`: string
+- `isUrl`: boolean (optional)
+- `offset`: number (optional)
+- `length`: number (optional)
+
+#### `read_multiple_files`
+Read multiple files in one call, with errors on individual files not blocking others.
+- `paths`: array
+
+#### `read_process_output`
+Grab output from a REPL or process, detect REPL-ready/waiting automatically.
+- `pid`: number
+- `timeout_ms`: number (optional)
+
+#### `search_code`
+Search file contents for code/text with ripgrep; supports regex, patterns, context lines, etc.
+- `path`: string
+- `pattern`: string
+- other optional arguments for finer control
+
+#### `search_files`
+Locate files by case-insensitive substring matching.
+- `path`: string
+- `pattern`: string
+- `timeoutMs`: number (optional)
+
+#### `set_config_value`
+Change a server setting by key (e.g., allowedDirectories, fileReadLineLimit, etc.).
+- `key`: string
+- `value`: string (optional)
+
+#### `start_process`
+Start a shell or REPL session (Python, Node, R, Bash, etc.), best for local file analysis workflows.
+
+#### `write_file`
+Write or append lines to a file.
+
+---
+
+## Meshagent Links and Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Desktop Commander Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-desktop-commander)
+
+For more information about MCP Servers, see [Model Context Protocol (Anthropic)](https://www.anthropic.com/news/model-context-protocol).

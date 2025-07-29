@@ -1,0 +1,150 @@
+---
+title: Vizro
+---
+
+
+Test MCP server tools and chatbots at the ROOM level in the cloud. Resources spin up only for the life of the Room and are automatically cleaned up upon closure.
+
+### 1. Install Meshagent
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and Authenticate
+
+Follow instructions to sign up and log in:  
+https://docs.meshagent.com/cli/getting_started
+
+### 3. Start a Room with Test MCP Server
+
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-vizro:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-vizro-service-test
+```
+- Starts a Meshagent Room named `test` with an MCP Vizro server agent.
+- The Room, MCP server, and tools will be shut down when the Room closes due to inactivity.
+
+### 4. Start a Chatbot in the Room
+
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-vizro --name=mcp-vizro --toolkit=mcp-vizro
+```
+- Launches a chatbot in the `test` Room with access to the Vizro toolkit.
+- Multiple toolkits can be enabled in a Room with the same agent.
+- The command output provides a browser link to the Room.
+
+### 5. Try it!
+
+Visit the provided Room link in your browser.  
+Send messages to the agent and interact live with the MCP Server tools and chatbot.
+
+---
+
+## Project Level Deployment: Persistent MCP Services
+
+Deploy at the PROJECT level to automatically join every Room created in your Meshagent project. Great for production or persistent workflows. This removes the need to run the MCP server and chatbot locally — they auto-join on each Room creation.
+
+### 1. Deploy the MCP Server Agent Service
+
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-vizro:latest --env MESHAGENT_PORT=8001  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-vizro-service
+```
+
+### 2. Deploy the Chatbot Service
+
+```bash
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-vizro-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-vizro-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-vizro-chatbot --toolkit=mcp-vizro"
+```
+
+Now, every time a Room is created in that Meshagent project, the MCP server tools and chatbot are always available, with no extra setup required.
+
+---
+
+## Tools Available
+
+The MCP Vizro Server supplies tools and templates to help you create Vizro charts or dashboards step by step.
+
+| Tool                          | Short Description                                                              |
+|-------------------------------|-------------------------------------------------------------------------------|
+| `get_model_json_schema`        | Get the JSON schema for the specified Vizro model.                            |
+| `get_sample_data_info`         | If user provides no data, use this tool to get sample data information.       |
+| `get_vizro_chart_or_dashboard_plan` | Get instructions for creating a Vizro chart or dashboard.               |
+| `load_and_analyze_data`        | Load data from various file formats into a pandas DataFrame and analyze it.   |
+| `validate_chart_code`          | Validate the chart code created by the user and optionally open in PyCafe.    |
+| `validate_model_config`        | Validate Vizro model configuration.                                           |
+
+---
+
+### Tool Details
+
+#### **`get_model_json_schema`**
+
+Get the JSON schema for the specified Vizro model.
+- **Parameters:**
+  - `model_name` (`string`): Name of the Vizro model to get schema for (e.g., 'Card', 'Dashboard', 'Page').
+
+---
+
+#### **`get_sample_data_info`**
+
+Obtain sample data details if no user data is provided.  
+Available datasets:
+- `iris`: Numerical + 1 categorical, good for scatter, histogram, boxplot, etc.
+- `tips`: Mix of numerical and categorical, bar, pie, etc.
+- `stocks`: Stock prices, line, scatter, time series.
+- `gapminder`: Demographics, line, scatter, maps, or many categories.
+- **Parameters:**
+  - `data_name` (`string`): Name of the dataset.
+
+---
+
+#### **`get_vizro_chart_or_dashboard_plan`**
+
+Get step-by-step instructions for creating a Vizro chart or dashboard.  
+Call FIRST when asked to create Vizro things.
+- **Parameters:**
+  - `user_plan` (`string`)
+
+---
+
+#### **`load_and_analyze_data`**
+
+Load data from files or URLs into a pandas DataFrame and analyze its structure.
+
+Supported formats: `.csv`, `.json`, `.html`, `.htm`, `.xls`, `.xlsx`, `.ods`, `.parquet`
+- **Parameters:**
+  - `path_or_url` (`string`): Local file path or URL.
+
+---
+
+#### **`validate_chart_code`**
+
+Validate created chart code and optionally open the PyCafe link.
+- **Parameters:**
+  - `chart_config` (`string`): ChartPlan object with configuration.
+  - `data_info` (`string`): Dataset metadata.
+  - `auto_open` (`boolean`, optional): Open PyCafe in browser.
+
+---
+
+#### **`validate_model_config`**
+
+Validate an entire Vizro dashboard configuration.
+If successful, returns Python code and, if remote, a py.cafe link.
+- **Parameters:**
+  - `dashboard_config` (`object`): Vizro dashboard configuration (JSON/dict).
+  - `data_infos` (`array`): List of DFMetaData objects.
+  - `auto_open` (`boolean`, optional): Open PyCafe in browser.
+
+---
+
+## Meshagent & MCP Resources
+
+- **Meshagent:** https://www.meshagent.com/
+- **Documentation:** https://docs.meshagent.com
+- **Meshagent MCP Vizro Image (Docker Hub):** https://hub.docker.com/r/meshagent/mcp-vizro
+
+Visit [Meshagent.com](https://www.meshagent.com/) or [read the docs](https://docs.meshagent.com) for further details.  
+Find the official MCP Vizro server image on [Docker Hub](https://hub.docker.com/r/meshagent/mcp-vizro).  
+For more on MCP and Vizro: [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)  
+To deploy toolkits with Meshagent, start [here](https://docs.meshagent.com/cli/getting_started).

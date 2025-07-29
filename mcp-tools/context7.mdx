@@ -1,0 +1,112 @@
+---
+title: Context7
+---
+
+
+The following steps show how to deploy the Context7 MCP server and a chatbot agent using Meshagent in a temporary Meshagent Room. When the Room closes, the tools and chatbot are also removed—perfect for experimentation or development.
+
+### 1. Install Meshagent CLI with all features:
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and authenticate:
+See [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) for instructions.
+
+### 3. Launch the MCP server into a test Room
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-context7:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-context7-service-test
+```
+- Starts a Meshagent Room with a temporary MCP server agent.
+- Rooms will close if inactive or when the test is complete.
+
+### 4. Add a chatbot with the Context7 toolkit to the Room
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-context7 --name=mcp-context7 --toolkit=mcp-context7
+```
+- Starts a chatbot agent that can use the Context7 tools in the Room.
+- Multiple toolkits or agents may be used in the same Room.
+- The command output will include a link to open the Room in your browser.
+
+### 5. Visit the Room and Try It!
+Open the provided Room link in your browser and send a message to the agent. You can interact with the MCP server tools via chat—e.g., ask for documentation or resolve a library ID.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production or team flows, you can deploy the MCP server and chatbot as persistent Meshagent services at the project level. They will automatically join **every new Room in your project**, so you no longer need to host them locally or launch them for each session.
+
+### 1. Create the Context7 MCP server service (project-wide)
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-context7:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-context7-service
+```
+
+### 2. Deploy the Context7 chatbot agent (project-wide)
+```bash
+meshagent service create --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-context7-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-context7-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-context7-chatbot --toolkit=mcp-context7"
+```
+
+- These services will be started automatically in every new Room in your Meshagent project.
+- You no longer need to run MCP servers or chatbots locally—everything is managed via Meshagent’s cloud deployment.
+
+---
+
+## Tools Available from Context7 MCP Server
+
+Context7 MCP Server provides two main tools to power AI agents and chatbots for code documentation retrieval:
+
+### `get-library-docs`
+Fetches up-to-date documentation for a library. You must call `resolve-library-id` first to obtain the exact Context7-compatible library ID required to use this tool, **unless** the user explicitly provides a library ID in the format `/org/project` or `/org/project/version` in their query.
+
+**Parameters:**
+
+| Name                        | Type     | Description                                                                       |
+|-----------------------------|----------|-----------------------------------------------------------------------------------|
+| `context7CompatibleLibraryID` | `string` | Exact Context7-compatible library ID (e.g., `/mongodb/docs`, `/vercel/next.js`)   |
+| `tokens`                    | `number` (optional) | Max number of tokens to retrieve (default: 10,000)                       |
+| `topic`                     | `string` (optional) | Topic to narrow focus (e.g., 'hooks', 'routing')                         |
+
+---
+
+### `resolve-library-id`
+Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries.
+
+**Selection Process:**
+- Name similarity (exact match preferred)
+- Description relevance
+- Documentation coverage (prioritize higher code snippet count)
+- Trust score (7-10 preferred)
+
+**Usage:**
+1. Call this tool with the plain package/library name.
+2. Returns the best-matching library ID (and brief explanation).
+3. If no good match is found, it will suggest query refinements.
+
+**Parameters:**
+
+| Name         | Type     | Description                                   |
+|--------------|----------|-----------------------------------------------|
+| `libraryName` | `string` | Name of the library/package to search for     |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent: Website](https://www.meshagent.com/)
+- [Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Docker Image: meshagent/mcp-context7](https://hub.docker.com/r/meshagent/mcp-context7)
+
+---
+
+Happy collaborating, coding, and documenting in real time!

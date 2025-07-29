@@ -1,0 +1,187 @@
+---
+title: Doit
+---
+
+
+Follow these steps to spin up a temporary (ephemeral) MCP server and connect a chatbot in a Meshagent Room for testing and development:
+
+### Prerequisites
+- [Sign up and authenticate with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+- You will need your DoiT API Key (see [DoiT documentation](https://github.com/doitintl/doit-mcp-server) for instructions)
+
+### Required Environment Variables
+
+- `DOIT_API_KEY`: your DoiT API key
+
+### Steps
+
+1. **Install Meshagent CLI + All Dependencies**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Authenticate with Meshagent**
+   ```
+   meshagent login
+   ```
+   (Follow prompts to authenticate.)
+
+3. **Launch MCP Server as an Agent in a Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-doit:latest --env DOIT_API_KEY=your_doit_api_key --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-doit-service-test
+   ```
+   - Starts a Meshagent Room ("test") with the MCP server using your API key.
+   - The server process and tools will be removed when the room goes inactive.
+
+4. **Start Chatbot in the Same Room with DoiT Toolkit**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-doit --name=mcp-doit --toolkit=mcp-doit
+   ```
+   - Joins a chatbot (`mcp-doit`) connected to the MCP tools.
+   - **Note:** Output will provide a direct link to the Room.
+
+5. **Try it Out**
+   - Visit the Room link in your web browser.
+   - Send chat commands to the agent to interact with the MCP Server tools.
+
+---
+
+## Project Level Deployment: Persistent MCP Server in All Project Rooms
+
+For production/always-on deployments, create persistent MCP services tied to your Meshagent project. These services will auto-join any new Room, making MCP tools and chatbot always available without extra setup.
+
+### Steps
+
+1. **Create Persistent MCP Server Service**
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-doit:latest --env DOIT_API_KEY=your_doit_api_key --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-doit-service
+   ```
+
+2. **Create Persistent Chatbot Service with Toolkit**
+   ```
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-doit-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-doit-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-doit-chatbot --toolkit=mcp-doit"
+   ```
+
+Rooms in this project will automatically get the MCP server tools and chatbot every time a Room is created.
+
+---
+
+## Tools Available
+
+The DoiT MCP Server exposes the following tools to chatbots and Meshagent:
+
+| Tool | Short Description |
+|------|-------------------|
+| `get_anomalies` | List anomalies detected in cloud costs |
+| `get_anomaly` | Get a specific anomaly by ID |
+| `get_cloud_incident` | Get a specific cloud incident by ID |
+| `get_cloud_incidents` | Get cloud incidents |
+| `get_dimension` | Get a specific Cloud Analytics dimension by type and ID |
+| `get_report_results` | Get the results of a specific report by ID |
+| `list_dimensions` | Lists Cloud Analytics dimensions that your account has access to. |
+| `list_reports` | Lists Cloud Analytics reports that your account has access to |
+| `run_query` | Runs a report query with the specified configuration without persisting it. |
+| `validate_user` | Validates the current API user and returns domain and email information |
+
+### Tool Details
+
+#### `get_anomalies`
+List anomalies detected in cloud costs
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filter` | `string` *optional* | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. |
+| `pageToken` | `string` *optional* | Token for pagination. Use this to get the next page of results. |
+
+#### `get_anomaly`
+Get a specific anomaly by ID
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | anomaly ID |
+
+#### `get_cloud_incident`
+Get a specific cloud incident by ID
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | incident ID |
+
+#### `get_cloud_incidents`
+Get cloud incidents
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filter` | `string` *optional* | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. Example: 'platform:google-cloud|status:active' or 'platform:google-cloud|platform:amazon-web-services' |
+| `pageToken` | `string` *optional* | Token for pagination. Use this to get the next page of results. |
+| `platform` | `string` *optional* | platform name |
+
+#### `get_dimension`
+Get a specific Cloud Analytics dimension by type and ID
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Dimension id |
+| `type` | `string` | Dimension type |
+
+#### `get_report_results`
+Get the results of a specific report by ID
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | The ID of the report to retrieve results for |
+
+#### `list_dimensions`
+Lists Cloud Analytics dimensions that your account has access to. Use this tool to get the dimensions that you can use in the run_query tool. Use filter to narrow down the results.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filter` | `string` *optional* | Filter string (optional) in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. The fields eligible for filtering are: type, label, key. Use the filter parameter only if you know the exact value of the key, otherwise the filter should be empty. |
+| `pageToken` | `string` *optional* | Token for pagination. Use this to get the next page of results. |
+
+#### `list_reports`
+Lists Cloud Analytics reports that your account has access to
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `filter` | `string` *optional* | Filter string in format 'key:value|key:value'. Multiple values for same key are treated as OR, different keys as AND. Possible filter keys: reportName, owner, type, updateTime, use the filter property only if you know for sure the value is a valid filter key, do not guess it. |
+| `pageToken` | `string` *optional* | Token for pagination. Use this to get the next page of results. |
+
+#### `run_query`
+Runs a report query with the specified configuration without persisting it.  
+Fields that are not populated will use their default values if needed.  
+Use the dimension tool before running the query to get the list of dimensions and their types.  
+If possible, use `timeRange` instead of `customTimeRange` when no specific dates are given.
+
+Example for cost report:
+```json
+{
+  "config": {
+    "dataSource": "billing",
+    "metric": {"type": "basic", "value": "cost"},
+    "timeRange": {"mode": "last", "amount": 1, "unit": "month", "includeCurrent": true},
+    "group": [
+      {
+        "id": "service_description",
+        "type": "fixed",
+        "limit": {"metric": {"type": "basic", "value": "cost"}, "sort": "desc", "value": 10}
+      }
+    ]
+  }
+}
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `config` | `object` | The configuration for the query, including dimensions, metrics, filters, etc. |
+
+#### `validate_user`
+Validates the current API user and returns domain and email information
+
+---
+
+## Additional Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image on Docker Hub](https://hub.docker.com/r/meshagent/mcp-doit)

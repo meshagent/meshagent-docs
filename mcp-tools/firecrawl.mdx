@@ -1,0 +1,149 @@
+---
+title: FireCrawl
+---
+
+
+Run an agent and toolkit at the Room level for testing.
+
+1. **Set Environment Variables**  
+   The following environment variables must be set to configure Firecrawl and handle API access, retries, and rate limits:
+
+   - `FIRECRAWL_API_URL` – API base URL (default: `https://api.firecrawl.dev/v1`)
+   - `FIRECRAWL_RETRY_MAX_ATTEMPTS` – Max retry attempts (default: `5`)
+   - `FIRECRAWL_RETRY_INITIAL_DELAY` – Initial retry delay in ms (default: `2000`)
+   - `FIRECRAWL_RETRY_MAX_DELAY` – Max retry delay in ms (default: `30000`)
+   - `FIRECRAWL_RETRY_BACKOFF_FACTOR` – Exponential backoff multiplier (default: `3`)
+   - `FIRECRAWL_CREDIT_WARNING_THRESHOLD` – Credit warning threshold (default: `2000`)
+   - `FIRECRAWL_CREDIT_CRITICAL_THRESHOLD` – Credit critical threshold (default: `500`)
+   - `FIRECRAWL_API_KEY` – Your Firecrawl API key (**required**)
+
+2. **Install Meshagent CLI**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+3. **Sign Up & Authenticate with Meshagent**  
+   See: https://docs.meshagent.com/cli/getting_started
+
+4. **Start MCP Agent Service in a Test Room**  
+   ```bash
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-firecrawl:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=FIRECRAWL_API_URL=https://api.firecrawl.dev/v1 \
+     --env=FIRECRAWL_RETRY_MAX_ATTEMPTS=5 \
+     --env=FIRECRAWL_RETRY_INITIAL_DELAY=2000 \
+     --env=FIRECRAWL_RETRY_MAX_DELAY=30000 \
+     --env=FIRECRAWL_RETRY_BACKOFF_FACTOR=3 \
+     --env=FIRECRAWL_CREDIT_WARNING_THRESHOLD=2000 \
+     --env=FIRECRAWL_CREDIT_CRITICAL_THRESHOLD=500 \
+     --env=FIRECRAWL_API_KEY=YOUR-API-KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-firecrawl-service-test
+   ```
+   - Starts a Meshagent Room with a Firecrawl MCP server agent available. Room and all its agents are automatically removed if idle.
+
+5. **Join a Chatbot with Firecrawl Toolkit**  
+   ```bash
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-firecrawl \
+     --name=mcp-firecrawl \
+     --toolkit=mcp-firecrawl
+   ```
+   - Starts a chatbot in the Room using the Firecrawl toolkit. Multiple toolkits and agents can participate in the same Room.
+   - Output will show a link to the new Room.
+
+6. **Test in the Browser**  
+   - Open the Room link in your browser and send a message to the agent to interact with the Firecrawl MCP Server tools.
+
+---
+
+## Project Level Deployment
+
+For production, deploy MCP Server tools and chatbot **persistently** at the project level so they auto-join every Room created in the project.
+
+1. **Create Persistent MCP Agent Service**
+   ```bash
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-firecrawl:latest \
+     --env=MESHAGENT_PORT=8001 \
+     --env=FIRECRAWL_API_URL=https://api.firecrawl.dev/v1 \
+     --env=FIRECRAWL_RETRY_MAX_ATTEMPTS=5 \
+     --env=FIRECRAWL_RETRY_INITIAL_DELAY=2000 \
+     --env=FIRECRAWL_RETRY_MAX_DELAY=30000 \
+     --env=FIRECRAWL_RETRY_BACKOFF_FACTOR=3 \
+     --env=FIRECRAWL_CREDIT_WARNING_THRESHOLD=2000 \
+     --env=FIRECRAWL_CREDIT_CRITICAL_THRESHOLD=500 \
+     --env=FIRECRAWL_API_KEY=YOUR-API-KEY \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-firecrawl-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```bash
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-firecrawl-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-firecrawl-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-firecrawl-chatbot --toolkit=mcp-firecrawl"
+   ```
+
+This ensures the Firecrawl MCP server and chatbot are present in every Room in your Meshagent project, with no need to manage local or separate instances.
+
+---
+
+## Tools Available
+
+The following tools are available via the Firecrawl MCP Server in your Meshagent Room:
+
+### Tool: `firecrawl_check_crawl_status`
+Check the status of a crawl job.
+- **Returns:** Status and progress of the crawl job, including results if available.
+
+### Tool: `firecrawl_crawl`
+Starts an asynchronous crawl job on a website and extracts content from all pages.
+- **Best for:** Extracting content from multiple related pages for comprehensive coverage.
+- **Returns:** Operation ID for status checking.
+
+### Tool: `firecrawl_deep_research`
+Conduct deep web research on a query using intelligent crawling, search, and LLM analysis.
+- **Best for:** Complex research questions requiring in-depth analysis from multiple sources.
+- **Returns:** LLM-generated analysis and sources used.
+
+### Tool: `firecrawl_extract`
+Extract structured information from web pages using LLM capabilities.
+- **Best for:** Extracting specific structured data like prices, product details.
+- **Returns:** Extracted structured data as defined by a JSON schema.
+
+### Tool: `firecrawl_generate_llmstxt`
+Generate a standardized llms.txt (and optionally llms-full.txt) file for a domain.
+- **Best for:** Creating machine-readable permission guidelines for AI models.
+
+### Tool: `firecrawl_map`
+Map a website to discover all indexed URLs on the site.
+- **Best for:** Discovering URLs before deciding what to scrape.
+
+### Tool: `firecrawl_scrape`
+Scrape content from a single URL with advanced options.
+- **Best for:** Single page content extraction, when you know the exact page.
+
+### Tool: `firecrawl_search`
+Search the web and optionally extract content from search results.
+- **Best for:** Finding specific information across multiple sites.
+
+See the tool details above for complete parameters and usage.
+
+---
+
+## Meshagent & Firecrawl Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Docs: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Firecrawl MCP Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-firecrawl](https://hub.docker.com/r/meshagent/mcp-firecrawl)
+- Meshagent Getting Started: [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)
+- Firecrawl MCP Server: [https://github.com/mendableai/firecrawl-mcp-server](https://github.com/mendableai/firecrawl-mcp-server)

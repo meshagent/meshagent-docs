@@ -1,0 +1,166 @@
+---
+title: Audiense Insights
+---
+
+
+The following shows how to run the Audiense Insights MCP server and toolkit at the Room level in the Meshagent cloud. When the Room closes or goes inactive, the agent, tools, and chatbot are automatically removed. 
+
+### Required Environment Variables
+
+- `AUDIENSE_CLIENT_ID` — Your Audiense API client ID
+- `AUDIENSE_CLIENT_SECRET` — Your Audiense API client secret
+- `TWITTER_BEARER_TOKEN` — Your Twitter (X) API bearer token
+
+### Steps
+
+1. **Install Meshagent CLI & requirements**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up & authenticate via CLI**  
+   Follow steps at [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start the MCP Audiense Insights server in a Room**
+   ```
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-audiense-insights:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env AUDIENSE_CLIENT_ID=your_client_id_here \
+     --env AUDIENSE_CLIENT_SECRET=your_client_secret_here \
+     --env TWITTER_BEARER_TOKEN=your_token_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-audiense-insights-service-test
+   ```
+   - This launches a Meshagent Room ("test") with the Audiense MCP server running as an agent.
+   - The server, tools, and room will be removed when inactive.
+
+4. **Start a chatbot with the Audiense Insights toolkit in the Room**
+   ```
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-audiense-insights \
+     --name=mcp-audiense-insights \
+     --toolkit=mcp-audiense-insights
+   ```
+   - This launches a chatbot in the test room with access to Audiense Insights tools.
+   - A room link will be displayed in the command output.
+
+5. **Test Tool Access in the Room**
+   - Open the provided Room link in your browser.
+   - Interact with the chatbot: send messages to invoke the MCP server tools.
+
+---
+
+## Project Level Deployment (Production / Always-On Service)
+
+For persistent, always-available MCP tools and chatbots in all project rooms. These agents/services automatically join every room in your Meshagent project—ideal for production!
+
+1. **Create persistent MCP Server service**
+   ```
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-audiense-insights:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env AUDIENSE_CLIENT_ID=your_client_id_here \
+     --env AUDIENSE_CLIENT_SECRET=your_client_secret_here \
+     --env TWITTER_BEARER_TOKEN=your_token_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-audiense-insights-service
+   ```
+
+2. **Create persistent Chatbot service with toolkit**
+   ```
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-audiense-insights-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-audiense-insights-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-audiense-insights-chatbot --toolkit=mcp-audiense-insights"
+   ```
+
+Now, every new Room in this project will auto-include the MCP server and chatbot with no extra setup or local processes needed.
+
+---
+
+## Tools Available
+
+The following tools are provided by the Audiense Insights MCP Server:
+
+| Tool | Short Description |
+|---|---|
+| `compare-audience-influencers` | Compares the influencers of an audience with a baseline audience. |
+| `get-audience-content` | Retrieves audience content engagement details for a given audience. |
+| `get-audience-insights` | Retrieves aggregated insights for a given audience ID, providing statistical distributions across various attributes. |
+| `get-baselines` | Retrieves available baselines, optionally filtered by country. |
+| `get-categories` | Retrieves the list of available affinity categories that can be used as the categories parameter in the compare-audience-influencers tool. |
+| `get-report-info` | Retrieves detailed information about a specific intelligence report, including its status, segmentation type, audience size, segments, and access links. |
+| `get-reports` | Retrieves the list of Audiense insights reports owned by the authenticated user. |
+| `report-summary` | Generates a comprehensive summary of an Audiense report, including segment details, top insights, and influencers. |
+
+---
+
+### Tool Details
+
+#### **`compare-audience-influencers`**
+Compares audience influencers with a baseline audience. Baseline rules:
+- If full audience: uses single-country baseline if >50%, else Global baseline.
+- If segment: uses full audience as the baseline.
+Returns affinity %, baseline affinity %, uniqueness score, plus optional bio keyword/category/country/entity type filters.
+
+**Parameters:**  
+- `audience_influencers_id` *(string, required)*
+- `baseline_audience_influencers_id` *(string, required)*
+- `bio_keyword` *(string, optional)*
+- `categories` *(array, optional)*
+- `count` *(number, optional; default 200)*
+- `countries` *(array, optional)*
+- `cursor` *(number, optional)*
+- `entity_type` *(string, optional; person or brand)*
+- `followers_max` *(number, optional)*
+- `followers_min` *(number, optional)*
+
+#### **`get-audience-content`**
+Breaks down the content an audience interacts with:
+- **Liked/Shared/Influential Content** categorized by: popular posts, domains, emojis, hashtags, links, media, wordcloud.
+- **Parameters:**  
+    - `audience_content_id` *(string, required)*
+
+#### **`get-audience-insights`**
+Aggregated stats across demographics, behavioral traits, psychographics, socioeconomic attributes.
+- **Parameters:**  
+    - `audience_insights_id` *(string, required)*
+    - `insights` *(array, optional)*
+
+#### **`get-baselines`**
+Lists baseline audiences (optionally filtered by country).
+- **Parameters:**  
+    - `country` *(string, optional)*
+
+#### **`get-categories`**
+Lists available affinity categories for filters.
+
+#### **`get-report-info`**
+Gets detailed info on a specific intelligence report.
+- **Parameters:**  
+    - `report_id` *(string, required)*
+
+#### **`get-reports`**
+Lists all Audiense insights reports for the authenticated user.
+
+#### **`report-summary`**
+Summarizes an intelligence report: segments, top insights, influencers.
+- **Parameters:**  
+    - `report_id` *(string, required)*
+
+---
+
+## Meshagent Links
+
+- [Meshagent Homepage](https://www.meshagent.com/)
+- [Meshagent Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP-Audiense-Insights Docker Image](https://hub.docker.com/r/meshagent/mcp-audiense-insights)
+
+---

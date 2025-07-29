@@ -1,0 +1,331 @@
+---
+title: Keboola MCP
+---
+
+
+Get up and running with the MCP Server and tools in a cloud-based Room for quick, disposable experiments or development.
+
+1. **Install Meshagent CLI**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and Authenticate**
+   - Follow the instructions at [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to register and log in.
+
+3. **Start the MCP Server Agent in a Room**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-keboola-mcp:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-keboola-mcp-service-test
+   ```
+   - This will provision a temporary Room called `test` and launch the MCP server as a cloud agent inside. When the Room is closed (e.g., participants leave), both the MCP server and the agent are torn down automatically.
+
+4. **Start a Chatbot with MCP Tools in the Room**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-keboola-mcp --name=mcp-keboola-mcp --toolkit=mcp-keboola-mcp
+   ```
+   - This starts a chatbot in the Room, able to invoke all MCP tools. You can use multiple toolkits or agents in the same Room.
+   - The output provides a link to the Room UI in your browser.
+
+5. **Interact**
+   - Visit the provided Room link and send a message to the agent to interact with the MCP Server tools in real time.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+For production and persistent environments, you can deploy MCP Server tools and agents at the Meshagent project level. This ensures the tools and chatbot are automatically available in all Rooms within the project, without manual startup or teardown.
+
+1. **Create Persistent MCP Server Agent Service**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-keboola-mcp:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-keboola-mcp-service
+   ```
+
+2. **Create Persistent Chatbot Service**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-keboola-mcp-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-keboola-mcp-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-keboola-mcp-chatbot --toolkit=mcp-keboola-mcp"
+   ```
+
+Once configured, the MCP server agent and chatbot are automatically available and running every time a Room is spun up in your Meshagent project.
+
+---
+
+## Tools Available
+
+The following tools are exposed by the MCP Server agent, available for use by Meshagent chatbots or remote control:
+
+### Tool Summary
+
+| Tool Name                        | Short Description                                                                                                                                    |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| add_config_row                    | Creates a component configuration row in the specified configuration_id, using the specified name, component ID, configuration JSON, and description. |
+| create_config                     | Creates a root component configuration using the specified name, component ID, configuration JSON, and description.                                  |
+| create_flow                       | Creates a new flow configuration in Keboola.                                                                                                        |
+| create_sql_transformation         | Creates an SQL transformation using the specified name, SQL query, detailed description, and created table names.                                   |
+| docs_query                        | Answers a question using the Keboola documentation as a source.                                                                                     |
+| find_component_id                 | Returns list of component IDs that match the given query.                                                                                           |
+| get_bucket                        | Gets detailed information about a specific bucket.                                                                                                  |
+| get_component                     | Gets information about a specific component given its ID.                                                                                           |
+| get_config                        | Gets information about a specific component/transformation configuration.                                                                           |
+| get_config_examples               | Retrieves sample configuration examples for a specific component.                                                                                   |
+| get_flow                          | Gets detailed information about a specific flow configuration.                                                                                      |
+| get_flow_schema                   | Returns the JSON schema that defines Flow structure.                                                                                                |
+| get_job                           | Retrieves information about a specific job including status and metadata.                                                                           |
+| get_project_info                  | Returns structured project information from multiple endpoints.                                                                                     |
+| get_sql_dialect                   | Gets the name of the SQL dialect used by Keboola's database.                                                                                        |
+| get_table                         | Gets detailed information about a specific table.                                                                                                   |
+| list_buckets                      | Retrieves all buckets in the project.                                                                                                               |
+| list_configs                      | Retrieves component configurations in the project (filterable).                                                                                     |
+| list_flows                        | Retrieves flow configurations from the project.                                                                                                     |
+| list_jobs                         | Retrieves all jobs (filterable by component ID, status, pagination, etc).                                                                           |
+| list_tables                       | Retrieves all tables in a specific bucket.                                                                                                          |
+| list_transformations              | Retrieves transformation configurations in the project (filterable).                                                                                |
+| query_data                        | Executes an SQL `SELECT` query on Keboola database and returns data.                                                                                |
+| run_job                           | Starts a new job for a given component or transformation.                                                                                           |
+| update_bucket_description         | Updates a bucket's description.                                                                                                                     |
+| update_column_description         | Updates a table column's description.                                                                                                               |
+| update_config                     | Updates a root component configuration with provided parameters.                                                                                    |
+| update_config_row                 | Updates a component configuration row with provided parameters.                                                                                     |
+| update_flow                       | Updates an existing flow configuration.                                                                                                             |
+| update_sql_transformation         | Updates an existing SQL transformation configuration.                                                                                               |
+| update_table_description          | Updates the description for a given table.                                                                                                          |
+
+### Tool Details
+
+<details>
+<summary><strong>add_config_row</strong></summary>
+
+Creates a component configuration row in the specified configuration_id, using the specified name, component ID, configuration JSON, and description.
+
+- The configuration JSON object must follow the `row_configuration_schema` of the specified component, which can be checked using the `component_detail` tool.
+- Example usage: create a row in a component configuration for specialized settings.
+
+</details>
+
+<details>
+<summary><strong>create_config</strong></summary>
+
+Creates a root component configuration using the specified name, component ID, configuration JSON, and description.
+
+- The configuration JSON object must follow the `root_configuration_schema` of the specified component.
+- Example usage: define a new configuration for a component from scratch.
+
+</details>
+
+<details>
+<summary><strong>create_flow</strong></summary>
+
+Creates a new flow configuration in Keboola, orchestrating multiple components in phases and tasks.
+
+- Enforces correct schema and dependencies between tasks/phases.
+- Useful for complex ETL/ELT workflows and orchestrations.
+
+</details>
+
+<details>
+<summary><strong>create_sql_transformation</strong></summary>
+
+Creates an SQL transformation with a specified name, description, SQL query (per current dialect), and list of created table names.
+
+- Intended for declarative, fully described SQL data transformations.
+- Supports referencing fully qualified table and column names.
+
+</details>
+
+<details>
+<summary><strong>docs_query</strong></summary>
+
+Answers a user’s question using the Keboola documentation as a knowledge source.
+
+</details>
+
+<details>
+<summary><strong>find_component_id</strong></summary>
+
+Returns a list of component IDs matching a user-supplied query, useful for discovery.
+
+</details>
+
+<details>
+<summary><strong>get_bucket</strong></summary>
+
+Fetch details about a specific storage bucket.
+
+</details>
+
+<details>
+<summary><strong>get_component</strong></summary>
+
+Fetches detailed information and schemas for a particular component by ID.
+
+</details>
+
+<details>
+<summary><strong>get_config</strong></summary>
+
+Gets information about a specific component or transformation configuration.
+
+</details>
+
+<details>
+<summary><strong>get_config_examples</strong></summary>
+
+Retrieves sample configuration examples for a component.
+
+</details>
+
+<details>
+<summary><strong>get_flow</strong></summary>
+
+Gets detailed information about a specific flow configuration.
+
+</details>
+
+<details>
+<summary><strong>get_flow_schema</strong></summary>
+
+Returns the JSON schema for Flow definitions.
+
+</details>
+
+<details>
+<summary><strong>get_job</strong></summary>
+
+Retrieves detailed information about a specific job, including status, parameters, and results.
+
+</details>
+
+<details>
+<summary><strong>get_project_info</strong></summary>
+
+Returns structured project information from multiple endpoints.
+
+</details>
+
+<details>
+<summary><strong>get_sql_dialect</strong></summary>
+
+Returns the SQL dialect (e.g., Snowflake, Redshift) used in the current Keboola project.
+
+</details>
+
+<details>
+<summary><strong>get_table</strong></summary>
+
+Gets detailed information about a specific table, such as identifier and columns.
+
+</details>
+
+<details>
+<summary><strong>list_buckets</strong></summary>
+
+Lists all buckets in the project.
+
+</details>
+
+<details>
+<summary><strong>list_configs</strong></summary>
+
+Lists all component configurations in the project, optionally filtered by type or ID.
+
+</details>
+
+<details>
+<summary><strong>list_flows</strong></summary>
+
+Lists all flow configurations in the project.
+
+</details>
+
+<details>
+<summary><strong>list_jobs</strong></summary>
+
+Lists all jobs (or filter by component/config/status/etc.), with pagination and sorting.
+
+</details>
+
+<details>
+<summary><strong>list_tables</strong></summary>
+
+Lists all tables within a specific bucket.
+
+</details>
+
+<details>
+<summary><strong>list_transformations</strong></summary>
+
+Lists all transformation configurations in the project (optionally filtered).
+
+</details>
+
+<details>
+<summary><strong>query_data</strong></summary>
+
+Executes an SQL `SELECT` query on the Keboola database, respecting dialect and table naming.
+
+</details>
+
+<details>
+<summary><strong>run_job</strong></summary>
+
+Starts a new job for a specified component or transformation.
+
+</details>
+
+<details>
+<summary><strong>update_bucket_description</strong></summary>
+
+Change the description for a specified bucket.
+
+</details>
+
+<details>
+<summary><strong>update_column_description</strong></summary>
+
+Change the description for a specified table column.
+
+</details>
+
+<details>
+<summary><strong>update_config</strong></summary>
+
+Updates a root component configuration, enforcing the schema and providing a change description.
+
+</details>
+
+<details>
+<summary><strong>update_config_row</strong></summary>
+
+Updates a specific row in a component configuration.
+
+</details>
+
+<details>
+<summary><strong>update_flow</strong></summary>
+
+Updates an existing flow configuration.
+
+</details>
+
+<details>
+<summary><strong>update_sql_transformation</strong></summary>
+
+Updates an existing SQL transformation configuration (description, disabling, etc.).
+
+</details>
+
+<details>
+<summary><strong>update_table_description</strong></summary>
+
+Updates the description for a specified table.
+
+</details>
+
+---
+
+## References & Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-keboola-mcp](https://hub.docker.com/r/meshagent/mcp-keboola-mcp)
+- **MCP Server:** [https://github.com/keboola/mcp-server](https://github.com/keboola/mcp-server)
+- **Get started with Meshagent CLI:** [https://docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started)

@@ -1,0 +1,114 @@
+---
+title: SQLite
+---
+
+
+Follow these steps to run an MCP agent and its toolkit in a Meshagent Room in the cloud for quick testing or demos:
+
+1. **Install Meshagent CLI**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign up and authenticate**
+   - Visit [Getting Started](https://docs.meshagent.com/cli/getting_started) and complete the signup and authentication steps.
+
+3. **Start the MCP SQLite server as a room-level agent**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-sqlite:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-sqlite-service-test
+   ```
+   _This command creates a Meshagent Room named `test` and deploys a test MCP SQLite server agent. Rooms close automatically when inactive._
+
+4. **Start a chatbot in the room with the SQLite toolkit**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-sqlite --name=mcp-sqlite --toolkit=mcp-sqlite
+   ```
+   - Multiple toolkits can be enabled in a single room for the same agent.
+   - The output of this command will include a direct link to the Meshagent Room.
+
+5. **Test the integration**
+   - Open the provided room link in your browser and send a message to the agent to interact with the MCP SQLite server tools.
+
+---
+
+## Project-Level Deployment
+
+For persistent, production-ready deployment, register services at the Meshagent project level. This ensures your MCP server tools and chatbot are automatically available in every new room created within the project—no need to host services or bots locally.
+
+1. **Deploy the MCP SQLite server at the project level**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-sqlite:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-sqlite-service
+   ```
+
+2. **Deploy the chatbot at the project level**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-sqlite-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-sqlite-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-sqlite-chatbot --toolkit=mcp-sqlite"
+   ```
+
+When any room is created in your Meshagent project, both the MCP SQLite server and chatbot will auto-join and be instantly available to participants.
+
+---
+
+## Tools Available
+
+The following tools are exposed by the MCP SQLite Server as callable actions within Meshagent Rooms:
+
+| Tool              | Short Description                                   |
+|-------------------|-----------------------------------------------------|
+| `append_insight`  | Add a business insight to the memo                  |
+| `create_table`    | Create a new table in the SQLite database           |
+| `describe_table`  | Get the schema information for a specific table     |
+| `list_tables`     | List all tables in the SQLite database              |
+| `read_query`      | Execute a SELECT query on the SQLite database       |
+| `write_query`     | Execute an INSERT, UPDATE, or DELETE query          |
+
+### Tools Details
+
+#### **append_insight**
+_Add a business insight to the memo_
+- **Parameters:**
+  - `insight` (`string`): Business insight discovered from data analysis
+
+---
+
+#### **create_table**
+_Create a new table in the SQLite database_
+- **Parameters:**
+  - `query` (`string`): CREATE TABLE SQL statement
+
+---
+
+#### **describe_table**
+_Get the schema information for a specific table_
+- **Parameters:**
+  - `table_name` (`string`): Name of the table to describe
+
+---
+
+#### **list_tables**
+_List all tables in the SQLite database_
+- No parameters
+
+---
+
+#### **read_query**
+_Execute a SELECT query on the SQLite database_
+- **Parameters:**
+  - `query` (`string`): SELECT SQL query to execute
+
+---
+
+#### **write_query**
+_Execute an INSERT, UPDATE, or DELETE query on the SQLite database_
+- **Parameters:**
+  - `query` (`string`): SQL query to execute
+
+---
+
+## Additional Resources
+
+- **Meshagent Website:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP SQLite Tool Docker Image:** [https://hub.docker.com/r/meshagent/mcp-sqlite](https://hub.docker.com/r/meshagent/mcp-sqlite)
+
+For questions, open an issue or reach out via the listed resources.

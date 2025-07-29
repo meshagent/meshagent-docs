@@ -1,0 +1,213 @@
+---
+title: HyperBrowser
+---
+
+
+Spin up an agent and toolkit at the Room level for quick testing. The Room, agent, tools, and chatbot will shut down automatically when the Room is closed:
+
+### Environment Variables Needed
+
+- **HYPERBROWSER_API_KEY:** `<app or user token>`
+
+---
+
+### 1. Install Meshagent CLI and Tool Images
+
+```bash
+pip install "meshagent[all]"
+```
+
+### 2. Sign up and Authenticate
+
+Follow [these instructions](https://docs.meshagent.com/cli/getting_started) to create an account and log in.
+
+### 3. Launch the Hyperbrowser MCP Service Inside a Test Room
+
+```bash
+meshagent service test --room=test \
+  --role=agent \
+  --image=meshagent/mcp-hyperbrowser:latest \
+  --env MESHAGENT_PORT=8001 --env HYPERBROWSER_API_KEY=<your-token> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-hyperbrowser-service-test
+```
+- This command starts a Meshagent Room named `test` with a Hyperbrowser MCP agent available to all Room participants.
+- Rooms auto-close if inactive; tools/agents are removed when the Room closes.
+
+### 4. Start a Chatbot Agent in the Same Room
+
+```bash
+meshagent chatbot join --room=test \
+  --agent-name=mcp-hyperbrowser \
+  --name=mcp-hyperbrowser \
+  --toolkit=mcp-hyperbrowser
+```
+- This launches a chatbot able to use the Hyperbrowser toolkit in the Room.
+- Multiple toolkits can be used by the agent in the same Room.
+- The CLI will provide a link to the Room in the output.
+
+### 5. Interact in the Browser
+
+Visit the Room link provided, and send a message to the agent to use Hyperbrowser tools inside the Room!
+
+---
+
+## Project Level Deployment: Persistent Service for All Rooms
+
+For production, deploy persistent MCP and chatbot services at the project level—agents and tools will *automatically register to every new Room* upon its creation. This removes the need to run the MCP server or chatbot locally or manage Room-by-Room deployments.
+
+### 1. Create the Persistent Hyperbrowser MCP Service
+
+```bash
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-hyperbrowser:latest \
+  --env MESHAGENT_PORT=8001 --env HYPERBROWSER_API_KEY=<your-token> \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-hyperbrowser-service
+```
+
+### 2. Create a Persistent Chatbot Service
+
+```bash
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-hyperbrowser-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-hyperbrowser-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-hyperbrowser-chatbot --toolkit=mcp-hyperbrowser"
+```
+
+Now every Room in your Meshagent Project will automatically include these MCP tools and chatbot!
+
+---
+
+## Tools Available
+
+These tools are accessible in Meshagent Rooms via the MCP Hyperbrowser toolkit:
+
+| Tool                           | Description                                                                                                            |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| `browser_use_agent`             | Open-source browser automation agent for fast, efficient, cost-effective browser tasks using a cloud browser.          |
+| `claude_computer_use_agent`     | Uses Anthropic Claude to autonomously execute complex browser tasks with advanced reasoning using a cloud browser.      |
+| `crawl_webpages`                | Crawl a website from a starting URL and explore linked pages.                                                          |
+| `create_profile`                | Creates a new persistent Hyperbrowser profile.                                                                         |
+| `delete_profile`                | Deletes an existing persistent Hyperbrowser profile by profileId.                                                      |
+| `extract_structured_data`       | Extract structured data from webpages using a schema and prompt.                                                       |
+| `list_profiles`                 | List existing persistent Hyperbrowser profiles.                                                                        |
+| `openai_computer_use_agent`     | Uses OpenAI to autonomously execute general-purpose browser-based tasks using a cloud browser.                         |
+| `scrape_webpage`                | Scrape and extract webpage content in various formats.                                                                 |
+| `search_with_bing`              | Search the web using Bing.                                                                                             |
+
+---
+
+### Tool Details
+
+#### **`browser_use_agent`**
+Cloud browser automation agent for explicitly defined, fast, and cost-effective browser interactions. Best for highly detailed, step-by-step actions and straightforward tasks.
+
+Params:
+- `task` (string): What to perform in the browser (REQUIRED)
+- `maxSteps` (integer, optional)
+- `returnStepInfo` (boolean, optional, default: false)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`claude_computer_use_agent`**
+Invoke Anthropic Claude to handle complex web interactions needing context-sensitive reasoning.
+
+Params:
+- `task` (string): What to perform in the browser (REQUIRED)
+- `maxSteps` (integer, optional)
+- `returnStepInfo` (boolean, optional, default: false)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`crawl_webpages`**
+Crawl a site from a URL, optionally following links. Useful for data collection, site mapping, or large-scale scraping.
+
+Params:
+- `followLinks` (boolean, REQUIRED)
+- `outputFormat` (array, REQUIRED)
+- `url` (string, REQUIRED)
+- `ignoreSitemap` (boolean, optional)
+- `maxPages` (integer, optional)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`create_profile`**
+Create a new persistent profile.
+
+---
+
+#### **`delete_profile`**
+Delete a specified persistent profile.
+
+Params:
+- `profileId` (string, REQUIRED)
+
+---
+
+#### **`extract_structured_data`**
+Extract structured data from webpages matching a schema, e.g., via prompt and JSON schema.
+
+Params:
+- `prompt` (string, REQUIRED)
+- `urls` (array, REQUIRED)
+- `schema` (string, optional)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`list_profiles`**
+List your persistent profiles, with pagination.
+
+Params:
+- `limit` (integer, optional)
+- `page` (integer, optional)
+
+---
+
+#### **`openai_computer_use_agent`**
+Run browser tasks using OpenAI’s models for general-purpose automation.
+
+Params:
+- `task` (string, REQUIRED)
+- `maxSteps` (integer, optional)
+- `returnStepInfo` (boolean, optional, default: false)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`scrape_webpage`**
+Extract raw content, html, or screenshots from a single webpage.
+
+Params:
+- `outputFormat` (array, REQUIRED)
+- `url` (string, REQUIRED)
+- `sessionOptions` (object, optional)
+
+---
+
+#### **`search_with_bing`**
+Web search using Bing.
+
+Params:
+- `query` (string, REQUIRED)
+- `numResults` (integer, optional)
+- `sessionOptions` (object, optional)
+
+---
+
+## Helpful Links
+
+- Meshagent: https://www.meshagent.com/
+- Docs: https://docs.meshagent.com
+- Meshagent MCP Hyperbrowser Docker Image: https://hub.docker.com/r/meshagent/mcp-hyperbrowser
+
+---
+
+*Use the Hyperbrowser MCP server via Meshagent for secure, zero-ops, and scalable browser automation tools in every collaboration Room or project!*

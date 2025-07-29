@@ -1,0 +1,200 @@
+---
+title: Lara
+---
+
+
+Get up and running with Lara Translate tools in your own cloud-based Meshagent Room. The agent, tools, and chatbot are active only while the Room is open and are automatically removed when the Room closes.
+
+### Environment Variables Required
+
+- `LARA_ACCESS_KEY_ID`: **Your Lara Translate API Access Key ID**
+- `LARA_ACCESS_KEY_SECRET`: **Your Lara Translate API Access Key Secret**
+
+### Steps
+
+1. **Install Meshagent Python Package:**
+
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+
+   Follow the [Meshagent CLI getting started guide](https://docs.meshagent.com/cli/getting_started) to sign up and log in.
+
+3. **Start the Lara MCP Tool as an Agent in a Room:**
+
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-lara:latest \
+   --env=MESHAGENT_PORT=8001 \
+   --env=LARA_ACCESS_KEY_ID=YOUR_LARA_ACCESS_KEY_ID \
+   --env=LARA_ACCESS_KEY_SECRET=YOUR_LARA_ACCESS_KEY_SECRET \
+   --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-lara-service-test
+   ```
+   *This command launches an ephemeral Meshagent Room (`test`) with a callable MCP-Lara server. The Room and its services close automatically if they go inactive.*
+
+4. **Start a Chatbot in the Room to Use Lara Tools:**
+
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-lara --name=mcp-lara --toolkit=mcp-lara
+   ```
+   - Starts a chatbot in the Room with the Lara Translate Toolkit enabled.
+   - Multiple toolkits/agents can be used together.
+   - **A room link will be printed in the terminal output.**
+
+5. **Test It Out:**
+
+   - Open the provided Room link in your browser.
+   - Send a message to the `mcp-lara` agent to interact with Lara's translation tools.
+
+---
+
+## Project Level Deployment (Persistent Services)
+
+Deploy persistent services that show up in *all* Meshagent Rooms for your project. This is ideal for production environments—every newly created Room automatically includes the MCP server tools and chatbots, so there is no need to start or manage local processes.
+
+### Steps
+
+1. **Create a Persistent MCP-Lara Agent Service:**
+
+   ```
+   meshagent service create --role=agent --image=meshagent/mcp-lara:latest \
+   --env=MESHAGENT_PORT=8001 \
+   --env=LARA_ACCESS_KEY_ID=YOUR_LARA_ACCESS_KEY_ID \
+   --env=LARA_ACCESS_KEY_SECRET=YOUR_LARA_ACCESS_KEY_SECRET \
+   --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-lara-service
+   ```
+
+2. **Create a Persistent Chatbot Service:**
+
+   ```
+   meshagent service create --image="meshagent/cli:latest" \
+   --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-lara-chatbot" \
+   --env="MESHAGENT_PORT=9001" \
+   --name="mcp-lara-chatbot-service" \
+   --command="meshagent chatbot service --agent-name=mcp-lara-chatbot --toolkit=mcp-lara"
+   ```
+
+---
+
+## Tools Available
+
+This Meshagent-wrapped MCP Server provides the following translation tools, using your Lara Translate API credentials:
+
+### Tools Summary
+
+| Tool Name              | Description                                                                                                      |
+|------------------------|------------------------------------------------------------------------------------------------------------------|
+| `add_translation`      | Adds a translation to a translation memory in your Lara Translate account.                                       |
+| `check_import_status`  | Checks the status of a TMX file import job in your Lara Translate account.                                       |
+| `create_memory`        | Create a translation memory with a custom name in your Lara Translate account.                                   |
+| `delete_memory`        | Deletes a translation memory from your Lara Translate account.                                                   |
+| `delete_translation`   | Deletes a translation from a translation memory from your Lara Translate account.                                |
+| `import_tmx`           | Imports a TMX file into a translation memory in your Lara Translate account.                                     |
+| `list_languages`       | Lists all supported languages in your Lara Translate account.                                                    |
+| `list_memories`        | Lists all translation memories in your Lara Translate account.                                                   |
+| `translate`            | Translate text between languages with support for detection and context-aware translations and translation memory.|
+| `update_memory`        | Updates a translation memory in your Lara Translate account.                                                     |
+
+---
+
+### Tools Details
+
+#### **`add_translation`**
+Adds a translation to a translation memory in your Lara Translate account.  
+**Parameters:**
+- `id` (`array`): The ID(s) where to save the translation unit (e.g., `mem_xyz123`)
+- `sentence` (`string`): The source sentence
+- `source` (`string`): Source language code
+- `target` (`string`): Target language code
+- `translation` (`string`): The translated sentence
+- `sentence_after` (`string`, *optional*): Context sentence after
+- `sentence_before` (`string`, *optional*): Context sentence before
+- `tuid` (`string`, *optional*): Translation Unit unique identifier
+
+---
+
+#### **`check_import_status`**
+Checks the status of a TMX file import job.  
+**Parameters:**
+- `id` (`string`): The import job ID
+
+---
+
+#### **`create_memory`**
+Create a translation memory with a custom name.  
+**Parameters:**
+- `name` (`string`): Memory name
+- `external_id` (`string`, *optional*): External ID for import (optional)
+
+---
+
+#### **`delete_memory`**
+Delete a translation memory from your account.  
+**Parameters:**
+- `id` (`string`): Unique memory identifier
+
+---
+
+#### **`delete_translation`**
+Deletes a translation from a translation memory.  
+**Parameters:**
+- `id` (`array`): The ID(s) for deletion
+- `sentence` (`string`): Source sentence
+- `source` (`string`): Source language code
+- `target` (`string`): Target language code
+- `translation` (`string`): The translation to remove
+- `sentence_after` (`string`, *optional*)
+- `sentence_before` (`string`, *optional*)
+- `tuid` (`string`, *optional*)
+
+---
+
+#### **`import_tmx`**
+Imports a TMX file into a translation memory.  
+**Parameters:**
+- `id` (`string`): Memory ID
+- `gzip` (`boolean`, *optional*): If file is gzip compressed
+- `tmx_content` (`string`, *optional*): Content of TMX to upload
+- `tmx_url` (`string`, *optional*): URL to the TMX file
+
+---
+
+#### **`list_languages`**
+Lists all supported languages.
+
+---
+
+#### **`list_memories`**
+Lists all translation memories.
+
+---
+
+#### **`translate`**
+Translate text with context-aware support.
+**Parameters:**
+- `target` (`string`): Target language code
+- `text` (`array`): Array of text blocks to translate
+- `adapt_to` (`array`, *optional*): Translation memory IDs to adapt
+- `context` (`string`, *optional*): Additional context string for translation
+- `instructions` (`array`, *optional*): Instructions for output behavior
+- `source` (`string`, *optional*): Source language code
+- `source_hint` (`string`, *optional*): Hint for language detection
+
+---
+
+#### **`update_memory`**
+Updates a translation memory.  
+**Parameters:**
+- `id` (`string`): Memory ID
+- `name` (`string`): New memory name
+
+---
+
+## Meshagent Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP-Lara Docker Image](https://hub.docker.com/r/meshagent/mcp-lara)
+
+---
