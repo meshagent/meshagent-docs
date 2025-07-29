@@ -1,0 +1,193 @@
+---
+title: CLI Quickstart
+description: Instructions for using the MeshAgent CLI
+---
+
+## Overview
+The MeshAgent CLI streamlines Room interactions and agent management right from your terminal. With the MeshAgent CLI you can easily:
+
+- Authenticate and activate projects
+- Spin up live rooms and test your in progress agents
+- Deploy finished agents as MeshAgent services
+- Inspect and manage existing projects, secrets, agents, and services
+
+## Before you begin
+1. **Set up MeshAgent**: If you haven't installed MeshAgent yet, follow our [Getting Started](../introduction/get_started.mdx) guide. This will walk you throughhow to set up your MeshAgent account, create your first project, install MeshAgent, and connect to your first room with your first agent.
+
+2. **Install the CLI**. Install the meshagent cli globally on your machine.
+
+    <CodeGroup>
+    ```bash macOS
+    brew tap meshagent/homebrew-meshagent
+    # install the latest version
+    brew install meshagent
+    # Display the help
+    meshagent --help
+    ```
+    ```bash Other
+    # One can install the meshagent cli using pipx
+    pipx install "meshagent[cli]" --include-deps
+    # Optional: ensure meshagent is in the path. 
+    # You may need to open a new terminal.
+    pipx ensurepath
+    # Display the help
+    meshagent --help
+    ```
+    </CodeGroup>
+
+1. **Optional. Using a virtual environment**: Ensure you are in the appropriate project folder and have activated your virtual environment with MeshAgent installed. If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup).
+
+    <CodeGroup>
+    ```bash macOS/Linux
+    pip install "meshagent[cli]"
+    ```
+    ```bash Windows
+    pip install "meshagent[cli]"
+    ```
+    ```bash uv
+    uv add "meshagent[cli]"
+    ```
+    </CodeGroup>
+
+    The virtual environment is active when the terminal prompt start with ``venv``.
+
+## CLI Fundamentals
+The core MeshAgent workflow involves connecting to your MeshAgent project, calling in and deploying AI Agents. 
+
+### Authenticate
+
+First, authenticate and activate a project. These commands will open a browser window for you to authenticate with your MeshAgent account. 
+
+<CodeGroup>
+```bash bash
+# A browser window will open for OAUTH.
+meshagent setup
+```
+</CodeGroup>
+
+__Optional__: Alternatively, instead of running the `meshagent setup` command you can run:
+
+<CodeGroup>
+```bash bash
+# A browser window will open for OAUTH.
+meshagent auth login
+meshagent project activate -i
+meshagent api-key activate -i
+```
+</CodeGroup>
+
+You are now authenticated and ready to use the cli to perform operations involving a room. 
+
+### Connect an agent to a Room
+
+Connect a simple chat and voice agent without tools to a MeshAgent Room. This will give you a sense of how agents work and how to use them in the MeshAgent studio.
+
+<CodeGroup>
+```bash bash
+meshagent chatbot join --room my-room --agent-name "Chat Agent" --name "Chat Friend"
+```
+</CodeGroup>
+
+<CodeGroup>
+```bash bash
+meshagent voicebot join --room my-room --agent-name "Voice Agent" --name "Voice Buddy"
+```
+</CodeGroup>
+
+The chatbot and voicebot are now connected. In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com/). 
+Select your project and join the my-room session.
+
+The chatbot agent named "Chat Friend" and the voicebot agent named "Voice Buddy" will be visible in the room and can be interacted with.
+
+These agents will only exist inside the room for the duration of your session. If you re-open the room later you will need to rerun the above commands to call the agents back into the room. Alternatively, you can deploy the agents as a MeshAgent service and this will cause the agent to appear in all of the rooms inside your project.
+
+### Deploy an agent as a service
+Deploying the agent as a service will make the agent avaialable in all the rooms inside of your project. This is useful when you are satisfied with the agent and want to make sure it is always available. 
+
+Deploying the simple chatbot can be done with this command: 
+
+<CodeGroup>
+```bash bash
+meshagent service create --image=meshagent/cli:latest --port "num=9001 path=/agent liveness=/ type=meshagent.callable" --env "MESHAGENT_PORT=9001" --name="chatbot" --command="meshagent chatbot service --agent-name=chatbot"
+```
+</CodeGroup>
+
+The chatbot is now deployed. In a web browser, go back to [studio.meshagent.com](https://studio.meshagent.com/), click the Services tab and you will see the information about your deployed agent. To test the agent go to the Sessions tab, create a session, and you will see the deployed agent appear in the participants list. To interact with the agent simply select it from the participants list and begin talking to the agent.
+
+Deploying the chatbot as a service using the base MeshAgent CLI image automatically supports tracing and telemetry. You can see this inside the MeshAgent Studio by clicking on the menu tab and turning on "Developer console". Now, when you select the deployed chatbot, "chatbot-9001", you will see real time traces as you interact with the agent. Traces give insight into information like what messages were sent by the user and agent, how long the agent took to reply, which tools were invoked, etc. 
+
+## Start an interactive terminal session inside a Room
+
+There may be instances where you want to open an interactive terminal so that you can test things inside the MeshAgent server. For example, running python code or listing files inside a Room. 
+
+You can do this by running ``meshagent tty connect`` which creates a live shell inside the Room's container over a secure WebSocket connection.
+
+<CodeGroup>
+```bash bash
+meshagent tty connect --room=my-room
+```
+</CodeGroup>
+
+This will start or connect to a room called ``my-room`` and allow you to run commands from your terminal that are executed inside the room. For example, running ``ls /data`` will list any of the files that currently exist in the room, ``my-room``. 
+
+From the interactive terminal session you can also launch an agent with tracing enabled. Do this by running: 
+
+<CodeGroup>
+```bash bash
+meshagent chatbot service --agent-name=test
+```
+</CodeGroup>
+
+From the [MeshAgent Studio UI](https://studio.meshagent.com) click into the "my-room" session and call the agent into the room. You can do this by clicking the menu then "Call Agent" and passing a name, and the url ``http://localhost:8081/agent``. This will add your agent to the participants list and you'll be able to chat with it and see the logs, traces, and metrics from your chat. 
+
+## Create MeshAgent Secrets
+
+When deploying a custom agent, you will need to build and push a docker image. For an example of this, checkout the [Build and Deploy a Chat Agent](../agents/standard/buildanddeploychatbot) guide where you'll learn how to build and deploy a custom chat agent with various tools.
+
+If your docker image is not public, then you will need to configure a secret so that the image can be pulled.
+
+<CodeGroup>
+```bash Python
+meshagent secret docker create --name "my-image-secret" --server "index.docker.io" --username "my-username" --password "my-password"
+```
+</CodeGroup>
+
+
+## Environment Helpers
+### Export Credentials
+If you want to connect to a room directly without calling in an agent you will need to export your MeshAgent credentials to your environment. This is necessary if you are not using the ``meshagent setup`` command.
+
+<CodeGroup>
+```bash bash
+meshagent env
+```
+</CodeGroup>
+
+This will give you the appropriate environment variables to export and allow you to connect to a Room directly. 
+
+### Logout 
+
+Rooms will spin down automatically after you leave and they are inactive. 
+If you wish to logout you can run:
+
+<CodeGroup>
+```bash bash
+meshagent auth logout
+```
+</CodeGroup>
+
+## Frequently used commands
+
+Note you will need to fill in the appropriate parameters for these commands
+
+| Command | What it does |
+|---------|--------------|
+| `meshagent setup` | One-shot login + project + API key wizard |
+| `meshagent env` | Print shell commands to export/unset credentials |
+| `meshagent agents list-agents` | List agents currently connected to a specific room |
+| `meshagent chatbot join` | Join a room with the built-in chatbot |
+| `meshagent voicebot join` | Join a room with the built-in voicebot |
+| `meshagent call` | Call an agent you are working on into a room |
+| `meshagent service create` | Deploy an agent as a managed service |
+| `meshagent service list` | View running services |
+| `meshagent auth logout` | Remove local credentials |
