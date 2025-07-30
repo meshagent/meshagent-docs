@@ -1,22 +1,124 @@
 ---
-title: "Worker"
+title: "Queue Worker"
 ---
-A worker is an agent that connects to a MeshAgent room queue to process messages sent to the queue.
 
-You can customize the worker with the following properties:
+A ``Worker`` is a specialized **queue-based agent that processes messages** sent to a MeshAgent room queue. **Other agents or
+applications can push tasks to the queue and the Worker will handle them in the background**. This is helpful for
+long‑running or asynchronous jobs that shouldn't block an interactive chat agent.
 
-**queue:** the name of a room queue to listen for messages on
+## Why use a Queue Worker?
+There might be cases where you need an agent to:
+- Run long or repetitive jobs off the main chat thread
+- Execute non-interactive tasks where no follow up questions are desired
+- Batch operations that process multiple items sequentially
+- Run scheduled tasks at a particular time
 
-**prompt:** a prompt to run for each message in the queue
+## Queue Worker Properties
 
-**requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+- **queue**: The name of the Room Queue to listen for messages on
+- **llm_adapter**: The adapter to use so the agent works with an LLM. We recommend using the ``OpenAIResponsesAdapter`` from ``meshagent-openai``.
+- **tool_adapter**: A custom tool adapter to use to transform tool responses into context messages. We recommend using the ``OpenAIResponsesToolResponseAdapter`` from ``meshagent-openai`` (optional).
+- **requires**: List of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use existing toolkits and schemas that have been registered with the room with this agent (default is None).
+- **toolkits**: List of local toolkits living only in this worker (e.g. `StorageToolkit`) (optional).
+- **rules**: A set of rules (system or developer prompts) that guide the agent's behavior (optional).
 
-**llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+## Example: Creating a Storage Queue Worker
 
-**toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+The sample below shows a Worker that listens on a queue and writes files using the `StorageToolkit`. After starting the
+service you can push a message to the queue to trigger the worker.
 
-**rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+First create a python file, ``main.py``, and define our ``StorageWorker``: 
 
-**max_iterations:** the maximum number of iterations of the planning loop (optional).
+```python Python
+import os
+import logging
+import asyncio
+from meshagent.otel import otel_config
+from meshagent.agents.worker import Worker
+from meshagent.openai.tools import OpenAIResponsesAdapter, OpenAIResponsesToolResponseAdapter
+from meshagent.api import RequiredToolkit
+from meshagent.api.services import ServiceHost
+from meshagent.tools.storage import StorageToolkit
 
-**tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
+logging.basicConfig(level=logging.INFO)
+
+otel_config(service_name="my-service")
+
+host = ServiceHost(
+    port=7001
+)
+
+logger = logging.getLogger("worker")
+logger.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
+
+@host.path("/worker")
+class StorageWorker(Worker):
+    def __init__(self):
+        super().__init__(
+            queue=os.getenv('WORKER_QUEUE'),
+            name="storage-worker",
+            title="storage worker sample",
+            description="this sample reads messages from a queue",
+            llm_adapter=OpenAIResponsesAdapter(),
+            tool_adapter=OpenAIResponsesToolResponseAdapter(),
+            toolkits=[
+                StorageToolkit()
+            ],
+            rules=[
+                "you will receive a message with instructions, process it and do what it says",
+                "you are not an interactive agent so you must not ask the user questions",
+            ]
+        )
+        
+    async def process_message(self, *, chat_context, room, message, toolkits):
+        logger.info(f"processing {message}")
+        response = await super().process_message(chat_context=chat_context, room=room, message=message, toolkits=toolkits)
+        logger.info(f"response {response}")
+
+
+asyncio.run(host.run())
+```
+
+**Running the Worker**
+
+From your terminal inside an activated virtual environment run: 
+```bash bash
+WORKER_QUEUE=test 
+python main.py
+```
+
+In a seprate tab run: 
+```bash bash
+meshagent setup
+meshagent call agent --room=queue-test --url=http://localhost:7001/worker --participant-name=worker
+```
+
+### Sending Work to the Queue 
+
+Now that our agent is running, let's send it some work! Create a python file ``push.py`` and define our function to push a message to the queue.
+
+```python Python
+import asyncio
+from meshagent.api import RoomClient, WebSocketClientProtocol, websocket_room_url
+import os
+
+async def push():
+    async with RoomClient(
+        protocol=WebSocketClientProtocol(url=websocket_room_url(room_name=os.getenv("ROOM")), token=os.getenv("TOKEN"))
+    ) as room:
+        await room.queues.send(name=os.getenv("WORKER_QUEUE"), message={ "instructions" : "save a poem about ai to poem.txt"}) 
+
+asyncio.run(push())
+```
+
+Generate a short-lived participant token and push a message to the queue:
+
+```bash bash
+meshagent participant-token generate --name=pusher \
+  --room=queue-test --token-path=token.txt
+WORKER_QUEUE=test ROOM=queue-test TOKEN=$(cat token.txt) python3 push.py
+```
+
+### Checking Results in the Studio 
+
+From [studio.meshagent.com](https://studio.meshagent.com) open the room ``queue-test`` and you'll see our poem about AI in the poems.txt file!

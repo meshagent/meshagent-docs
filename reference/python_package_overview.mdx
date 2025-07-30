@@ -121,7 +121,7 @@ The ``Agent`` base class handles static info such as the agent name, description
 The ``SingleRoomAgent``extends the ``Agent`` class, connects to a ``RoomClient``, and installs any declared schemas or toolkits when the agent starts up. All other MeshAgent Agent types extend the ``SingleRoomAgent`` class with additional functionality.
 
 ### TaskRunner
-The ``TaskRunner`` agent is useful when you want to invoke an agent with a well-defined JSON schemas for input and output. This is important for running agents-as-tools or running remote tasks. Often you will define a ``TaskRunner`` and pass it to a ``ChatBot`` or ``VoiceBot`` as a tool for that agent to use. 
+The ``TaskRunner`` is a universal adapter that lets you integrate agents from any framework (Pydantic AI, LangChain, CrewAI, custom implementations) into MeshAgent without rewriting your existing logic. Simply wrap your agent with input/output JSON schemas and an ``ask()`` method to instantly gain Studio integration, standardized APIs, and room collaboration features. TaskRunners are commonly exposed as tools for ``ChatBot`` or ``VoiceBot`` agents, enabling powerful multi-agent workflows.
 
 ### Worker
 The ``Worker`` is a queue-based ``SingleRoomAgent`` that processes queued messages with an LLM and optional tools. This is particularly helpful for running asynchronous jobs. With the ``Worker`` agent you can create a set of tasks that need to run in a Room and the ``Worker`` will execute all of the tasks in the queue. 

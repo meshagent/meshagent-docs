@@ -1,78 +1,159 @@
 ```python Python
+import os
+import json
 import asyncio
+import logging
+from meshagent.otel import otel_config
+from meshagent.api.services import ServiceHost
+from meshagent.api import websocket_protocol
+from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
+from meshagent.api.messaging import TextResponse, JsonResponse
 
-# We'll use pydantic to automate the creation of our input and output schemas.
-from meshagent.agents.pydantic import PydanticAgent, BaseModel
-from meshagent.agents import AgentCallContext, connect_development_agent
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
+otel_config(service_name="my-service")
 
-# define the structure of the input of our agent
-class Input(BaseModel):
-    model_config = dict(extra="forbid")
+service = ServiceHost(
+    port=int(os.getenv("MESHAGENT_PORT","7777"))
+)
 
+async def save_to_storage(room, path: str, data: bytes):
+        handle = await room.storage.open(path=path, overwrite=True)
+        await room.storage.write(handle=handle, data=data)
+        await room.storage.close(handle=handle)
 
-# define the structure of the output of our agent
-class Output(BaseModel):
-    model_config = dict(extra="forbid")
-    result: float
-
-
-class Adder(PydanticAgent):
+class Survey(Tool):
     def __init__(self):
         super().__init__(
-            name="samples.tool-adder",
-            title="sample adder",
-            description="an agent that adds two numbers",
-            input_model=Input,
-            output_model=Output,
+            name="survey",
+            title="survey",
+            description="a tool that conducts a survey of the participants",
+            input_schema={
+                "type": "object",
+                "additionalProperties" : False,
+                "required":[
+                    "subject",
+                    "description",
+                    "name"
+                ],
+                "properties": {
+                    "subject": {"type": "string", "description": "The subject of the form"},
+                    "description": {"type": "string", "description": "The content to fill in (e.g. feedback, poll result)"},
+                    "name": {"type": "string", "description": "A short name to be used on the form"}
+                },
+            }
         )
 
-    # Our agent will receive content matching the input format, and must return content matching the output format
-    async def ask_model(self, context: AgentCallContext, arguments: Input) -> Output:
-        # The studio has a few built in tools for interacting with users. we'll use the ask_user tool which presents a form
-        # and waits for the user to fill it out, and then returns the results.
-        response = await context.room.agents.invoke_tool(
-            participant_id=context.caller.id,
-            toolkit="ui",
-            tool="ask_user",
-            arguments={
-                "subject": "I need some information",
-                "description": "please give me some information",
-                "form": [
-                    {
-                        "input": {
-                            "multiline": False,
-                            "name": "a",
-                            "description": "input a number",
-                            "default_value": "5",
-                        },
-                    },
-                    {
-                        "input": {
-                            "multiline": False,
-                            "name": "b",
-                            "description": "input a number",
-                            "default_value": "5",
+    async def execute(self, context: ToolContext, subject:str, description:str, name:str):
+        room = context.room
+        participants = [p for p in room.messaging.remote_participants if p.role=="user"]
+        log.info("Starting survey for %d participant(s)", len(participants))
+
+        MAX_ATTEMPTS = 2 
+
+        async def ask_participant(p):
+            errors = []
+            for attempt in range(1, MAX_ATTEMPTS + 1):
+                try:
+                    log.info("→ ask_user attempt %d --> %s", attempt, p.id)
+                    resp = await room.agents.invoke_tool(
+                        toolkit="ui",
+                        tool="ask_user",
+                        participant_id=p.id,
+                        arguments={
+                            "subject": subject,
+                            "description": description,
+                            "form": [
+                                {
+                                "input": {
+                                    "multiline": False,
+                                    "name": name,
+                                    "description": description
+                                },
+                            },
+                            ]
                         }
-                    },
-                ],
+                    )
+                    answer = resp.json.get(name)
+                    if answer:
+                        log.info("participant_id", p.id, "response", answer)
+                        return {"participant_id": p.id, "response": answer} 
+                    raise RuntimeError("empty or timed-out response")
+
+                except Exception as exc:
+                    errors.append(f"attempt {attempt}: {exc}")
+                    if attempt < MAX_ATTEMPTS:
+                        log.info("Retrying %s after: %s", p.id, exc)
+                        await asyncio.sleep(1)     # brief back-off
+
+            # All attempts failed – return aggregated error list
+            return {"participant_id": p.id, "errors": errors}
+        
+        log.info("Surveying participants")             
+        tasks = [asyncio.create_task(ask_participant(p)) for p in participants]
+        results = await asyncio.gather(*tasks) 
+        
+        summary = {
+            "meta": {                       # save the prompt generated for the survey
+                "subject": subject,
+                "description": description,
+                "name": name
+            },
+            "success": {},
+            "failed": {}
+        }
+        for item in results:
+            pid = item["participant_id"]
+            if "response" in item:
+                summary["success"][pid] = item["response"]
+            else:
+                summary["failed"][pid]  = item["errors"]
+
+        # write survey results to the room
+        log.info("Survey completed, writing raw results to Room storage")
+        await save_to_storage(
+            room=context.room,
+            path=f"survey/{room.room_name}-{name}.json",
+            data=json.dumps({"summary": summary}, indent=2).encode("utf-8")
+        )
+    
+        # summarize results
+        log.info("Summarizing survey results")
+        summary_resp = await context.room.agents.ask(
+            agent="meshagent.schema_planner",
+            arguments={
+                "prompt": f"Summarize these survey results:\n{json.dumps(summary)}",
+                "output_schema": {
+                    "type": "object",
+                    "properties": {"summary": {"type": "string"}},
+                    "required": ["summary"],
+                    "additionalProperties": False,
+                },
             },
         )
+        summary_text = summary_resp.json["summary"]
+        log.info("Saving survey result summary")
+        await save_to_storage(
+            room=context.room,
+            path=f"survey/{room.room_name}-{name}-summary.doc",
+            data=summary_text.encode("utf-8")
+        )
 
-        a = float(response["a"])
-        b = float(response["b"])
+        return TextResponse(text=summary_text)
 
-        return Output(result=a + b)
+@service.path("/survey")
+class SurveyToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="survey-toolkit",
+            title="survey-toolkit",
+            description="a toolkit for conducting a survey",
+            tools=[Survey()],
+        )
 
-
-async def main():
-    room_name = "examples"
-
-    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI
-    await connect_development_agent(room_name=room_name, agent=Adder())
-
-
-asyncio.run(main())
+print(f"running on port {service.port}")
+asyncio.run(service.run())
 
 ```
 
