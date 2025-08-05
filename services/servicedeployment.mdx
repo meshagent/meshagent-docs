@@ -1,3 +1,74 @@
 ---
 title: Service Deployment
 ---
+
+Once you've built and tested your service locally, you're ready to deploy it so others can use it. MeshAgent offers **two deployment options: project-wide services that are available to all rooms in your project, or room-specific services for specialized workflows**.
+
+## Deployment Options
+
+### Project-Wide Services
+Deploy once and make your service available to all rooms in your project. Perfect for:
+- Shared agents that multiple teams use
+- Common tools and utilities
+- Organization-wide integrations
+- Services that should be consistently available
+
+### Room-Specific Services
+Run directly to individual rooms for specialized use cases. Ideal for:
+- Experimental or prototype services
+- Temporary integrations
+- Services that analyze activities across multiple rooms
+
+## What You Need
+Before deploying ensure you have: 
+- **Source code** with ``ServiceHost`` setup
+- **Dockerfile** that builds your service
+- **meshagent.yaml** ServiceTemplate configuration (not needed if deploying a project-wide service through MeshAgent Studio UI or if you want to specify all the config options through the MeshAgent CLI)
+- **Container image** (built and pushed to a registry) OR **Git repository** with Dockerfile, source code, and meshagent.yaml (for room-specific deployments)
+
+## Deploying a Project-Wide Service
+You can deploy a project-wide service from the MeshAgent Studio UI or using the MeshAgent CLI. In either case you first need to build and push your docker container somewhere you can access it. 
+
+```bash bash
+docker buildx build --platform linux/amd64 -t your-registry/your-service:v1 . --push
+```
+
+**Note**: We recommend using buildx with --platform linux/amd64 to ensure your image works correctly in MeshAgent's infrastructure, regardless of whether you're building on Intel or ARM (Apple Silicon) machines.
+
+### Using MeshAgent Studio UI
+1. Navigate to [studio.meshagent.com](https://studio.meshagent.com)
+2. Select your project
+3. Click the **Services Tab** and click **New Service**
+4. Fill in the applicable information including the name, role, the image details, command to run the container, port information (including number, meshagent.callable type, path, and liveness check), and a room storage path if applicable (/data). 
+
+Once you fill in these details the service you created will be available inside all of the rooms in your project, simply start a new room and the service will appear. 
+
+### Using the MeshAgent CLI
+For automated deployments or CI/CD workflows you can use the MeshAgent CLI: 
+
+For example using the chatbot defined in the [Service Configuration](./serviceconfiguration) example we could deploy it using the following commands: 
+
+```bash bash
+# Authenticate
+meshagent setup
+
+# Deploy project-wide service from container image
+meshagent service create --name=my-chatbot --image=your-registry/chatbot:v1
+
+# Deploy with additional configuration
+meshagent service create \
+  --name my-chatbot \
+  --image your-registry/chatbot:v1 \
+  --role agent \
+  --env "SYSTEM_PROMPT=You are a helpful assistant" \
+  --port "num=* type=meshagent.callable liveness=/ path=/agent participant_name=chatbot"
+
+# Deploy from ServiceTemplate file
+meshagent service create --file meshagent.yaml --image your-registry/chatbot:v1
+```
+
+## Deploying a Room-Specific Service
+
+### Using MeshAgent Studio
+
+### Using the Containers API

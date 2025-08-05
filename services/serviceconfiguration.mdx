@@ -105,12 +105,12 @@ Let's create a simple chatbot that allows users to give it a system prompt when 
 ```python Python
 import os
 import asyncio
-from meshagent.otel import otel_config
+import logging
 from meshagent.agents.chat import ChatBot
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
 
-otel_config(service_name="chatbot")
+logging.basicConfig(level=logging.DEBUG)
 
 system_prompt = os.getenv("SYSTEM_PROMPT")
 rules = [system_prompt] if system_prompt else []
@@ -133,6 +133,11 @@ asyncio.run(host.run())
 
 ```Dockerfile Dockerfile
 FROM meshagent/python-sdk-slim:latest
+
+COPY . /src
+
+WORKDIR /src
+
 ENTRYPOINT [ "python3", "main.py" ]
 ```
 
