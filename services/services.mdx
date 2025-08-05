@@ -1,57 +1,71 @@
-**MeshAgent Services**
+---
+title: Introduction to Services
+---
 
-MeshAgent services are user-deployable, containerized extensions that run within a room’s secure sandbox. They enable you to add custom logic, integrations, and tooling to your collaborative environments without managing underlying infrastructure.
+Services let you add custom functionality to MeshAgent rooms by running your own code alongside room participants. Whether you want to build AI-agents, domain-specific tools, process data, or connect to external systems, services make it possible.
 
+## What are Services? 
 
-## Overview
+A service is any running program that MeshAgent can call into a room. It could be running on your laptop during development, on a server you manage, or inside a MeshAgent room.
 
-MeshAgent services allow you to run custom processes alongside a room session. Whether you need AI agents, domain-specific tools, or external system integrations, services provide:
+Services can be:
+- **MeshAgent-native**: Built using our ServiceHost and APIs for deep integration with rooms
+- **Generic programs**: Any existing web service that can respond to HTTP calls
 
-- **Containerized isolation** for secure execution  
-- **Automatic scaling** tied to room activity  
-- **Seamless access** to room context and storage  
+This flexibility means you can bring virtually any functionality into a MeshAgent room.
+
+## Why use Services? 
+**Extend Room Capabilities**: Add custom functionality to the room - from specialized AI agents to domain-specific tools and external system integrations.
+
+**Flexible Deployment**: Start with local development on your machine, then deploy to production without changing your core logic. Scale from prototype to enterprise-ready automatically.
+
+**Enterprise-Ready Infrastructure**: Deployed services get 
+- **Automatic scaling** tied to room activity
+- **Containerized isolation** for secure execution
+- **Seamless access** to room context and storage 
+- **Automatic lifecycle management** -- services start when a room session begins and terminate upon session end, ensuring efficient resource usage.
+
+**Powerful Technical Features**:
+- **Custom Code Deployment**: Run arbitrary container images (e.g. agents built with OpenAI Agent SDK, Pydantic Agents, CrewAI, Semantic Kernel).
+- **Runtime Configuration**: Inject secrets and environment variables for API keys, database credentials, or feature flags.
+- **Localhost Networking**: Expose one or more ports to enable inter-service communication over localhost.
+- **Optional Storage Mounts**: Grant services direct read/write access to a room’s persistent storage.
+- **Integrated Tool Exposure**: MeshAgent automatically converts services using the MCP SSE protocol into room-native tools available to participants.
+- **Health & Readiness Probes**: Define liveness checks to prevent participants from connecting until all services are operational.
 
 Services behave similarly to serverless functions—automatically starting and stopping with room sessions—but remain co-located within the room environment for low latency and deep integration.
 
----
-
-## Key Features
-
-- **Custom Code Deployment**  
-  Run arbitrary container images (e.g. agents built with OpenAI Agent SDK, Pydantic Agents, CrewAI, Semantic Kernel).
-  
-- **Automatic Lifecycle Management**  
-  Services start when a room session begins and terminate upon session end, ensuring efficient resource usage.
-
-- **Runtime Configuration**  
-  Inject secrets and environment variables for API keys, database credentials, or feature flags.
-
-- **Localhost Networking**  
-  Expose one or more ports to enable inter-service communication over localhost.
-
-- **Optional Storage Mounts**  
-  Grant services direct read/write access to a room’s persistent storage.
-
-- **Integrated Tool Exposure**  
-  MeshAgent automatically converts services using the MCP SSE protocol into room-native tools available to participants.
-
-- **Health & Readiness Probes**  
-  Define liveness checks to prevent participants from connecting until all services are operational.
-
----
-
 ## Service Lifecycle
 
-1. **Session Start**  
-   - Upon the first participant or agent connecting, MeshAgent initializes the room and starts all configured services simultaneously.
+1. **Session Start**: Upon the first participant or agent connecting, MeshAgent initializes the room and starts all configured services simultaneously.
 
-2. **Active Session**  
-   - Services remain running as long as there is at least one active connection. They can process data, communicate via the room API, and interact with storage.
+2. **Active Session**: Services remain running as long as there is at least one active connection. They can process data, communicate via the room API, and interact with storage.
 
-3. **Session End**  
-   - When the last participant disconnects, MeshAgent gracefully shuts down services, freeing resources until the next session.
+3. **Session End**: When the last participant disconnects, MeshAgent gracefully shuts down services, freeing resources until the next session.
 
----
+## Development to Deployment
+**Local Development**: Start by building services on your machine using ``ServiceHost`` - MeshAgent's Python SDK component that turns your code into HTTP endpoints. Test and iterate quickly by calling services into rooms manually.
+
+**Deployment Options**
+When ready for production, you have two paths:
+- **Project-wide services**: Deploy once and make available to all rooms in your project
+- **Room-specific services**: Call directly to individual rooms for specialized workflows
+
+Your core service logic stays the same whether running locally or deployed to production - MeshAgent handles the infrastructure differences for you.
+
+## Real-World Use Cases
+
+1. **AI Agent Orchestration**: Deploy a semantic-kernel-based agent that processes user queries and writes responses directly to the room chat.
+2. **Voice Agents**: Run a long-lived voice transcription and synthesis service—difficult to host in traditional serverless—allowing real-time audio interaction in the room.
+3. **Custom Business Logic**: Spin up an MCP server as a service to handle domain-specific workflows (e.g., data validation, report generation), automatically surfaced as tools for room participants.
+4. **Data Processing Pipelines**: Mount room storage into a service that ingests, transforms, and outputs data files, with progress updates sent back via the room API.
+5. **Secure Integrations**: Use environment-injected secrets to connect to third-party APIs (e.g., CRM systems, analytics platforms) entirely within the room sandbox.
+
+## Next Steps
+
+- [Local Development](./localdevelopment): Learn how to build and test services on your machine using ServiceHost
+- [Service Configuration](./serviceconfiguration): Learn how to build and test services on your machine using ServiceHost
+- [Deployment Options](./servicedeployment): Explore project-wide vs room-specific deployment strategies
 
 ## Configuration Options
 
@@ -87,26 +101,6 @@ Services can be customized via the MeshAgent Studio’s **Services** tab:
 - **Low-Latency Networking**  
   Co-location within the room environment and localhost networking dramatically reduce communication delays compared to external serverless functions.
 
----
-
-## Use Cases & Examples
-
-1. **AI Agent Orchestration**  
-   Deploy a semantic-kernel-based agent that processes user queries and writes responses directly to the room chat.
-
-2. **Voice Agents**  
-   Run a long-lived voice transcription and synthesis service—difficult to host in traditional serverless—allowing real-time audio interaction in the room.
-
-3. **Custom Business Logic**  
-   Spin up an MCP server as a service to handle domain-specific workflows (e.g., data validation, report generation), automatically surfaced as tools for room participants.
-
-4. **Data Processing Pipelines**  
-   Mount room storage into a service that ingests, transforms, and outputs data files, with progress updates sent back via the room API.
-
-5. **Secure Integrations**  
-   Use environment-injected secrets to connect to third-party APIs (e.g., CRM systems, analytics platforms) entirely within the room sandbox.
-
----
 
 ## Managing Services
 

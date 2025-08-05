@@ -1,0 +1,105 @@
+---
+title: Running Services Locally
+---
+
+MeshAgent's ``ServiceHost`` provides an easy way to build services that integrate with MeshAgent rooms. It's a Python SDK component that handles the connection mechanics for you.
+
+## ServiceHost Basics
+``ServiceHost`` is part of the Python SDK and lets you run an agent or tool as an HTTP webhook endpoint without any containerization. When you create a ``ServiceHost``, it starts an aiohttp web application on the specified host and port.
+
+```python Python
+import asyncio
+from meshagent.otel import otel_config
+from meshagent.api.services import ServiceHost
+from meshagent.agents.chat import ChatBot
+from meshagent.openai import OpenAIResponsesAdapter
+
+# Enable OpenTelemetry logging and tracing for the agent 
+otel_config(service_name="chatbot")
+
+# Create a service host
+service = ServiceHost() # optional to pass a port, defaults to 8081
+
+# Register an agent at a specific path
+@service.path("/chat")
+class SimpleChatbot(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            title="Simple Chatbot",
+            description="A helpful chatbot for room participants",
+            rules=[
+                "Always respond to the user first then include a fun fact at the end of your response."
+            ],
+            llm_adapter = OpenAIResponsesAdapter(),
+        )
+
+# Start the service
+asyncio.run(service.run())
+```
+
+## Calling the Service into your Room
+When running locally, you manually call your service into rooms. 
+
+First start the service locally, from your terminal run: 
+```bash bash
+python main.py
+```
+
+From another tab in your terminal run: 
+```bash bash
+meshagent setup # authenticate to MeshAgent if not already done
+meshagent call agent --url=http://localhost:8081/chat --room=my-room --participant-name=chatbot
+```
+
+From [studio.meshagent.com](https://studio.meshagent.com) you'll see the ``chatbot`` available to talk to in the participants tab of your room, ``my-room``.
+
+**How it works**: When a webhook call arrives from the MeshAgent server or CLI, ServiceHost spins up the registered agent, connects it to the requested room via the WebSocket-based RoomClient, and manages the session until the call completes or is dismissed.
+
+## Development Workflow
+1. Write your service using ``ServiceHost`` and set the path for each agent or tool
+2. Start the service locally with ``python main.py``
+3. Test in a room using ``meshagent call agent``
+4. Experiment with the agent from [studio.meshagent.com](https://studio.meshagent.com) 
+4. Iterate quickly - make changes and restart the service (repeat steps 2 and 3) until you get the results you need
+5. Ready to deploy? Create a Dockerfile and meshagent.yaml then deploy
+
+## Working with multiple agents or tools in a single service
+
+You can register multiple agents or tools using a single ``ServiceHost`` this allows you to have one service with different agents and tools running on a unique path. This makes it easy to bundle related agents and tools together into a single deployable service. 
+
+```python Python
+service = ServiceHost()
+
+@service.path("/chat")
+class ChatAgent(ChatBot):
+    # ... chat agent implementation
+
+@service.path("/dataanalysis") 
+class DataAnalysis(Tool):
+    # ... data analysis tool implementation
+
+@service.path("/helper")
+class HelperAgent(TaskRunner):
+    # ... helper agent implementation
+```
+
+First run the file e.g. ``python main.py``
+
+Then call each agent/tool into the room: 
+
+```bash bash
+# Add chat agent
+meshagent call agent --url=http://localhost:8081/chat --room=my-room --participant-name=chat
+
+# Add data analyzer  
+meshagent call tool --url=http://localhost:8081/dataanalysis --room=my-room --participant-name=analyzer
+
+# Add helper
+meshagent call agent --url=http://localhost:8081/helper --room=my-room --participant-name=helper
+```
+
+## Next Steps: 
+Once your service works locally you're ready to:
+- [Configure for Deployment](./serviceconfiguration): Set up applicable environment variables, health checks, and ports
+- [Deploy your Service](./servicedeployment): Make it available to all rooms in your project or use it within a specific project
