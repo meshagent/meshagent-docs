@@ -40,6 +40,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `chatbot`: Join a chatbot to a room
 * `voicebot`: Join a voicebot to a room
 * `mailbot`: Join a mailbot to a room
+* `container`: Manage containers and images inside a room
 
 ## `meshagent exec`
 
@@ -1799,5 +1800,349 @@ $ meshagent mailbot service [OPTIONS]
 * `--host TEXT`
 * `--port INTEGER`
 * `--path TEXT`: [default: /agent]
+* `--help`: Show this message and exit.
+
+## `meshagent container`
+
+Manage containers and images inside a room
+
+**Usage**:
+
+```console
+$ meshagent container [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `ps`
+* `stop`
+* `logs`
+* `run`
+* `run-attached`
+* `images`: Image operations
+* `build`: Build images
+* `builds`: Inspect or manage running builds
+
+### `meshagent container ps`
+
+**Usage**:
+
+```console
+$ meshagent container ps [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--output TEXT`: json | table  [default: json]
+* `--help`: Show this message and exit.
+
+### `meshagent container stop`
+
+**Usage**:
+
+```console
+$ meshagent container stop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--id TEXT`: Container ID  [required]
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+### `meshagent container logs`
+
+**Usage**:
+
+```console
+$ meshagent container logs [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--id TEXT`: Container ID  [required]
+* `--follow / --no-follow`: [default: no-follow]
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+### `meshagent container run`
+
+**Usage**:
+
+```console
+$ meshagent container run [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--image TEXT`: Image to run  [required]
+* `--command TEXT`
+* `-e, --env TEXT`: KEY=VALUE
+* `-p, --port TEXT`: CONTAINER:HOST
+* `--var TEXT`: Template variable KEY=VALUE (optional)
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--mount-path TEXT`
+* `--mount-subpath TEXT`
+* `--participant-name TEXT`
+* `--role TEXT`: [default: user]
+* `--name TEXT`: [default: cli]
+* `--help`: Show this message and exit.
+
+### `meshagent container run-attached`
+
+**Usage**:
+
+```console
+$ meshagent container run-attached [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--image TEXT`: Image to run  [required]
+* `--command TEXT`
+* `--tty / --no-tty`: [default: no-tty]
+* `-e, --env TEXT`: KEY=VALUE
+* `-p, --port TEXT`: CONTAINER:HOST
+* `--send TEXT`: Optional lines to send to container stdin (each becomes a line)
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+### `meshagent container images`
+
+Image operations
+
+**Usage**:
+
+```console
+$ meshagent container images [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`
+* `delete`
+* `pull`
+
+#### `meshagent container images list`
+
+**Usage**:
+
+```console
+$ meshagent container images list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+#### `meshagent container images delete`
+
+**Usage**:
+
+```console
+$ meshagent container images delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--image TEXT`: Image ref/tag to delete  [required]
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+#### `meshagent container images pull`
+
+**Usage**:
+
+```console
+$ meshagent container images pull [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--tag TEXT`: Image tag/ref to pull  [required]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+### `meshagent container build`
+
+Build images
+
+**Usage**:
+
+```console
+$ meshagent container build [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `git`
+* `context`
+* `room`
+
+#### `meshagent container build git`
+
+**Usage**:
+
+```console
+$ meshagent container build git [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--tag TEXT`: Resulting image tag  [required]
+* `--url TEXT`: Git URL  [required]
+* `--ref TEXT`: Git ref/branch/tag  [required]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--pretty / --no-pretty`: [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent container build context`
+
+**Usage**:
+
+```console
+$ meshagent container build context [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--tag TEXT`: Resulting image tag  [required]
+* `--from-dir TEXT`: Directory to tar.gz as build context
+* `--dockerfile TEXT`: Path to a Dockerfile; sends just this file as context
+* `--dockerfile-inline TEXT`: Inline Dockerfile text; sends only this as context
+* `--tgz TEXT`: Use an existing .tar.gz file as the context
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--pretty / --no-pretty`: [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent container build room`
+
+**Usage**:
+
+```console
+$ meshagent container build room [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--tag TEXT`: Resulting image tag  [required]
+* `--path TEXT`: Room path to a .tar.gz context  [required]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--pretty / --no-pretty`: [default: pretty]
+* `--help`: Show this message and exit.
+
+### `meshagent container builds`
+
+Inspect or manage running builds
+
+**Usage**:
+
+```console
+$ meshagent container builds [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`
+* `stop`
+
+#### `meshagent container builds list`
+
+**Usage**:
+
+```console
+$ meshagent container builds list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
+* `--help`: Show this message and exit.
+
+#### `meshagent container builds stop`
+
+**Usage**:
+
+```console
+$ meshagent container builds stop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name. If empty, the MESHAGENT_ROOM environment variable will be used.
+* `--api-key-id TEXT`: A MeshAgent project API key id. If empty, the activated api key will be used.
+* `--request-id TEXT`: Build request_id to stop  [required]
+* `--name TEXT`: [default: cli]
+* `--role TEXT`: [default: user]
 * `--help`: Show this message and exit.
 
