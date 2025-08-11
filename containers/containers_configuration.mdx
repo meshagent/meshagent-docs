@@ -1,13 +1,29 @@
 ---
-title: Service Configuration
+title: Containers Configuration
 ---
 
-When deploying services, you can customize their behavior through various configuration options. Services can be configured via the MeshAgent Studio's Services tab or through ServiceTemplate YAML files. For each Service you will need an accompanying Dockerfile.
+Room-specific containers are configured using the ``ContainerSpec`` which defines how your service should run within a room. Unlike project-wide services, containers are deployed on-demand and can be customized per deployment. 
 
-## ServiceTemplate Structure
-A ServiceTemplate defines how your service should be deployed, including environment variables, ports, and storage requirements. You can make templates flexible by using variables that get filled in when the service is deployed. For example, if you want to allow the user to set a system prompt for the agent you could make this a configurable variable. 
+For each container you will need a the applicable source code, a Dockerfile, and a meshagent.yaml which defines the configuration options using the ``ContainerSpec``. 
 
-A ServiceTemplate contains:  
+## When to Use ContainerSpec
+ContainerSpec is required for all room-specific container deployments. You'll need it whether you're:
+
+- Running your own container in a specific room
+- Creating reusable container templates for your team or organization
+- Allowing others to deploy your container with their own configuration
+- Running ad-hoc processes at any time inside a room
+
+## How Container Templates Work
+
+> **Behind the Scenes**: When someone deploys your ContainerSpec template, MeshAgent converts it to a [ServiceSpec](../services/service_configuration) by substituting their provided variable values. The resulting ServiceSpec is what actually runs in the room.
+
+This transformation allows you to create flexible templates while maintaining the same underlying runtime configuration used by project-wide services.
+
+## ContainerSpec Structure
+A ContainerSpec defines a reusable template for deploying containers, including environment variables that get filled in when the service is deployed, ports, and storage requirements. For example, if you want to allow the user to set a system prompt for the agent you could make this a configurable variable. 
+
+A ContainerSpec contains:  
 - **version**: The template version
 - **kind**: The template kind (use ``ServiceTemplate``)
 - **metadata**: Information about the service including a ``name`` and ``description``
@@ -18,8 +34,17 @@ A ServiceTemplate contains:
 - **role**: Service role - ``agent``, ``tool``, or ``user`` (optional, will likely be set at the port endpoints level)
 - **storage**: Mount room or project storage into your container (optional)
 
+### Metadata
+Metadata keep track of important information about your service like the name and description, and optionally an icon associated with the service and repository where the code for the service lives. 
+
+```yaml yaml
+metadata: 
+  name: agent-service
+  description: "A chat based agent without tools"
+```
+
 ### Variables
-Variables make your ServiceTemplate reusable by allowing different values when deploying. For example if you need to pass a system prompt or api key you could modify the variables section like this: 
+Variables make your ContainerSpec reusable by allowing different values when deploying. For example, if you need to pass a system prompt or api key you could modify the variables section like this so the user can provide the api key (and keep the key hidden): 
 
 ```yaml yaml
 variables:
@@ -53,8 +78,10 @@ environment:
   value: "{api_key}"
 ```
 
+**Variable Substitution**: Use ``{variable_name}`` syntax to substitute user-provided values into environment variables.
+
 ### Ports and Endpoints
-Define how MeshAgent connects to your service:
+Define how MeshAgent connects to your container based service(s):
 
 ```yaml yaml
 ports:
@@ -165,7 +192,8 @@ ports:
     type: meshagent.callable
 ```
 
-Now that we have our agent, Dockerfile, and meshagent.yaml file set up we're ready to go!
+Now that we have our agent code, Dockerfile, and meshagent.yaml file set up we're ready to go!
 
 ## Next Steps
-- [Deploy your service](./servicedeployment): Deploy a project wide service or use the service in a specific room. 
+- [Container Deployment](./containers_deployment): Learn how to deploy room-specific containers. 
+- [Project Level Services](../services/service_deployment): Configure and deploy a project wide service. 

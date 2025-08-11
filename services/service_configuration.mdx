@@ -1,0 +1,171 @@
+---
+title: Service Configuration
+---
+
+Project-wide services are configured using a ServiceSpec, which defines how your service should run across all rooms in your project. Services automatically start when rooms begin and stop when rooms end.
+
+When deploying services, you can customize their behavior through various configuration options. Services can be configured via the MeshAgent Studio's Services tab or through a ServiceSpec YAML file. For each Service you will need an accompanying Dockerfile.
+
+## ServiceSpec Structure
+A ServiceSpec defines how your service should be deployed and contains the following components: 
+
+- **version**: The spec version
+- **kind**: The template kind (use ``Service``)
+- **name**: A name for your service
+- **id**: An id for your service (optional, auto-generated if not provided)
+- **image**: Container image to run
+- **command**: What command runs when your container starts (optional)
+- **ports**: How MeshAgent calls your service endpoints (MeshAgent will automatically assign services to available ports)
+- **role**: Service role - ``agent``, ``tool``, or ``user`` (optional, this will likely be set at the port endpoints level)
+- **environment**: Environment variables for your service (optional)
+- **secrets**: List of secret names to inject as environment variables
+- **pull_secret**: Authentication for private container registries (optional) 
+- **storage**: Mount room or project storage into your container (optional)
+
+### Metadata Fields
+
+```yaml yaml
+version: v1           # Required
+kind: Service         # Required: Always "Service"
+name: my-service      # Required: Unique service name
+id: optional-id       # Optional: Custom ID (auto-generated if not provided)
+```
+
+### Container Configuration 
+
+```yaml yaml
+image: your-registry/service:v1    # Required: Container image
+command: "python main.py"         # Optional: Override container command
+pull_secret: registry-credentials  # Optional: For private registries
+```
+
+### Environment
+Map template variables to environment variables in your container. For example: 
+
+```yaml yaml
+environment:
+- name: SYSTEM_PROMPT
+  value: "{system_prompt}"
+- name: MODEL_NAME
+  value: "{model_name}"
+- name: OPENAI_API_KEY
+  value: "{api_key}"
+```
+
+### Ports and Endpoints
+Define how MeshAgent connects to your service:
+
+```yaml yaml
+ports:
+- num: "*"  # Let MeshAgent assign an available port
+  liveness: "/"  # Health check endpoint to make sure tools and agents are ready 
+  endpoints:
+  - path: /agent
+    identity: chatbot
+    role: agent
+    type: meshagent.callable
+  - path: /tool
+    identity: helper-tool
+    role: tool
+    type: meshagent.callable
+```
+
+**Port Options**:
+- ``num``: Port number or "*" for auto-assignment
+- ``type``: Optional protocol type (``meshagent.callable``, ``mcp.sse``, ``http``, ``tcp``)
+- ``liveness``: Health check path
+- ``endpoints``: List of endpoints this port serves
+
+**Endpoint Options**:
+- ``path``: URL path for this endpoint
+- ``identity``: Unique name for this agent/tool
+- ``type``: Protocol type (``meshagent.callable``, ``mcp.sse``, ``http``, ``tcp``)
+- ``role``: Override the service role for this endpoint (optional)
+
+### Storage
+Optionally mount storage into your service container for file access. This can be done at the room or project level. Room-storage is for room-specific files and read/write by default. Project-wide shared files are read-only by default. 
+
+For example: 
+
+```yaml yaml
+storage:
+  room:
+  - path: /data
+    read_only: false
+  - path: /app/uploads
+    subpath: "user-uploads"
+    read_only: true
+  project:
+  - path: /app/shared
+    read_only: true
+```
+
+## Example
+
+Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+
+**main.py**
+
+```python Python
+import os
+import asyncio
+import logging
+from meshagent.agents.chat import ChatBot
+from meshagent.api.services import ServiceHost
+from meshagent.openai import OpenAIResponsesAdapter
+
+logging.basicConfig(level=logging.DEBUG)
+
+system_prompt = os.getenv("SYSTEM_PROMPT")
+rules = [system_prompt] if system_prompt else []
+
+host = ServiceHost()
+
+@host.path("/agent")
+class MyChatBot(ChatBot): 
+    def __init__(self):
+        super().__init__(
+            name="chatbot",
+            rules=rules,
+            llm_adapter=OpenAIResponsesAdapter(),
+        )
+
+asyncio.run(host.run())
+```
+
+**Dockerfile**
+
+```Dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
+
+COPY . /src
+
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "main.py" ]
+```
+
+**meshagent.yaml**
+```yaml yaml
+kind: Service
+version: v1
+name: chatbot
+
+environment:
+- name: SYSTEM_PROMPT
+  value: "{system_prompt}"
+
+ports:
+- num: "*"
+  liveness: "/"
+  endpoints:
+  - path: /agent
+    identity: chatbot
+    type: meshagent.callable
+```
+
+Now that we have our agent, Dockerfile, and meshagent.yaml file set up we're ready to go!
+
+## Next Steps
+- [Deploy your service](./service_deployment): Learn how to deploy project-wide services.
+- [Container Configuration](../containers/containers_configuration): Configure room-specific services using containers. 
