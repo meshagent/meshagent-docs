@@ -3,9 +3,8 @@ import asyncio
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+
 
 class Add(Tool):
     def __init__(self):
@@ -15,23 +14,21 @@ class Add(Tool):
             description="a tool that adds two numbers",
             input_schema={
                 "type": "object",
-                "additionalProperties" : False,
-                "required":[
-                    "a",
-                    "b"
-                ],
+                "additionalProperties": False,
+                "required": ["a", "b"],
                 "properties": {
                     "a": {"type": "integer"},
                     "b": {"type": "integer"},
                 },
-            }
+            },
         )
 
     async def execute(self, context: ToolContext, *, a: int, b: int):
         result = {"result": a + b}
         print(result)
         return result
-    
+
+
 class Subtract(Tool):
     def __init__(self):
         super().__init__(
@@ -40,22 +37,20 @@ class Subtract(Tool):
             description="a tool that subtracts two numbers",
             input_schema={
                 "type": "object",
-                "additionalProperties" : False,
-                "required":[
-                    "a",
-                    "b"
-                ],
+                "additionalProperties": False,
+                "required": ["a", "b"],
                 "properties": {
                     "a": {"type": "integer"},
                     "b": {"type": "integer"},
                 },
-            }
+            },
         )
 
     async def execute(self, context: ToolContext, *, a: int, b: int):
         result = {"result": a - b}
         print(result)
         return result
+
 
 @service.path("/math")
 class MathToolkit(RemoteToolkit):
@@ -66,6 +61,7 @@ class MathToolkit(RemoteToolkit):
             description="a toolkit for adding and subtracting numbers",
             tools=[Add(), Subtract()],
         )
+
 
 print(f"running on port {service.port}")
 asyncio.run(service.run())
