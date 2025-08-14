@@ -1,0 +1,59 @@
+import os
+import asyncio
+import json
+import logging
+from typing import Dict, Any
+from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
+from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+def env(name: str) -> str:
+    val = os.getenv(name)
+    if not isinstance(val, str) or not val:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return val
+
+async def call_agent(
+    room_name: str, 
+    agent_name: str, 
+    arguments: Dict[str, Any], 
+) -> Dict[str, Any]:
+    """Call a MeshAgent agent with the given arguments."""
+    async with RoomClient(
+        protocol=WebSocketClientProtocol(
+            url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
+            token=ParticipantToken(
+                name="participant",
+                project_id=env("MESHAGENT_PROJECT_ID"),
+                api_key_id=env("MESHAGENT_KEY_ID"),
+                grants=[
+                    ParticipantGrant(name="room", scope=room_name),
+                    ParticipantGrant(name="role", scope="agent"),
+                    ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+                ],
+            ).to_jwt(token=env("MESHAGENT_SECRET"))
+        )
+    ) as room:
+        log.info(f"Connected to room: {room_name}")
+        result = await room.agents.ask(
+            agent=agent_name, 
+            arguments=arguments
+        )
+        # Extract JSON data from JsonBody response
+        return result.json if hasattr(result, 'json') else result
+
+async def main():
+    # Call your translator
+    result = await call_agent(
+        room_name="translate",
+        agent_name="translator",
+        arguments={"text": "Hello, how are you today?"}
+    )
+    
+    print("Translation result:")
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+if __name__ == "__main__":
+    asyncio.run(main())

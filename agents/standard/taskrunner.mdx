@@ -2,13 +2,13 @@
 title: "TaskRunner"
 ---
 
-import PydanticAgents from "/snippets/examples/python/agents/taskrunner/pydantic-agents.mdx"
-import InvokingTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking-taskrunner.mdx"
-import PrebuiltTaskRunner from "/snippets/examples/python/agents/taskrunner/prebuilt-taskrunner.mdx"
-import PrebuiltTaskRunnerSchema from "/snippets/examples/python/agents/taskrunner/prebuilt-taskrunner-schema.mdx"
-import LLMTaskRunners from "/snippets/examples/python/agents/taskrunner/llm-taskrunners.mdx"
-import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm-taskrunners-service.mdx"
-import InvokeLLMTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking-llm-taskrunner.mdx"
+import PydanticAgents from "/snippets/examples/python/agents/taskrunner/pydantic_agents.mdx"
+import InvokingTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking_taskrunner.mdx"
+import PrebuiltTaskRunner from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner.mdx"
+import PrebuiltTaskRunnerSchema from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner_schema.mdx"
+import LLMTaskRunners from "/snippets/examples/python/agents/taskrunner/llm_taskrunners.mdx"
+import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm_taskrunners_service.mdx"
+import InvokeLLMTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking_llm_taskrunner.mdx"
 
 
 A TaskRunner is the bridge that makes any **existing AI Agent built in your framework of choice work seamlessly with MeshAgent**. It is a base agent class designed with one core principle: **bring your own logic**. 
@@ -63,11 +63,67 @@ meshagent call agent --url=http://localhost:7777/translator --room=translate --p
 
 **Invoking the TaskRunner Programmatically**
 
-Instead of invoking the agent through the Studio, you can also run the agent through code like this: 
+Instead of invoking the agent through the Studio, you can also run the agent through code like this. Let's create a file called ``invoke_translator.py``: 
+
 <CodeGroup>
     <InvokingTaskRunner />
 </CodeGroup>
 
+From the terminal run:
+```bash bash
+meshagent env # you need to export the env variables first to invoke tools from code like this
+python invoke_translator.py
+```
+
+You will see the result logged to your terminal and saved in the room. 
+
+
+## Example: Using TaskRunner Agents as Agent Tools
+TaskRunners can also be surfaced in toolkits and used as tools by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi-agent systems. 
+
+Let's try this out by creating a new ChatBot and giving it a tool, the Pydantic AI translation agent that we defined above. 
+
+### Creating the service with agents-as-tools
+At the end of our ``translator.py`` file all we have to add is the new ChatBot service and pass it the ``translator`` agent as a ``RequiredToolkit``.
+
+```python Python
+@service.path("/chatwithtools")
+class ChatBotAgentTools(ChatBot):
+    def __init__(self):
+        super().__init__(
+            name="mychatbot",
+            llm_adapter=OpenAIResponsesAdapter(),
+            requires=[RequiredToolkit(name="agents", tools=["translator"])],
+        )
+```
+
+### Running an agent with agents-as-tools
+
+Run your python file with both the translator and the chatbot:
+
+```bash bash
+python translator.py
+```
+
+Call both agents into the room: 
+
+```bash bash
+meshagent setup #authenticate if not already connected
+meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
+meshagent call agent --url=http://localhost:7777/chatwithtools --room=translate --participant-name=chatagent
+```
+
+### Using the agent with agents as tools
+
+**In the Studio**:
+1. Go to [studio.meshagent.com](https://studio.meshagent.com)
+2. Enter the room translate
+3. In the participants list, you'll see the ``chatagent``
+4. Click on ``chatagent`` to start chatting with the agent
+5. Ask it something like: "Can you translate 'Hello, how are you?' for me?"
+6. The ``chatagent`` will automatically use the ``translator`` agent as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
+
+*Remember: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use agents as tools*
 
 ## Example: Prebuilt MeshAgent TaskRunners
 MeshAgent provides pre-built agents that extend the TaskRunner class with additional capabilities like tool use and iterative reasoning. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
@@ -164,51 +220,3 @@ meshagent call agent --url=http://localhost:7777/dynamicllmtaskrunner --room=myr
 <CodeGroup>
     <InvokeLLMTaskRunner />
 </CodeGroup>
-
-
-## Example: Using TaskRunner Agents as Agent Tools
-TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi-agent systems. 
-
-Let's try this out by creating a new ChatBot and giving it a tool, the Pydantic AI translation agent that we defined earlier. 
-
-### Creating the service with agents-as-tools
-At the end of our ``translator.py`` file all we have to add is the new ChatBot service and pass it the ``translator`` agent as a ``RequiredToolkit``.
-
-```python Python
-@service.path("/chatwithtools")
-class ChatBotAgentTools(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            llm_adapter=OpenAIResponsesAdapter(),
-            requires=[RequiredToolkit(name="agents", tools=["translator"])],
-        )
-```
-
-### Running an agent with agents-as-tools
-
-Run your python file with both the translator and the chatbot:
-
-```bash bash
-python translator.py
-```
-
-Call both agents into the room: 
-
-```bash bash
-meshagent setup #authenticate if not already connected
-meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
-meshagent call agent --url=http://localhost:7777/chatwithtools --room=translate --participant-name=chatagent
-```
-
-### Using the agent with agents as tools
-
-**In the Studio**:
-1. Go to [studio.meshagent.com](https://studio.meshagent.com)
-2. Enter the room translate
-3. In the participants list, you'll see the ``chatagent``
-4. Click on ``chatagent`` to start chatting with the agent
-5. Ask it something like: "Can you translate 'Hello, how are you?' for me?"
-6. The ``chatagent`` will automatically use the ``translator`` agent as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
-
-*Remember: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use agents as tools*

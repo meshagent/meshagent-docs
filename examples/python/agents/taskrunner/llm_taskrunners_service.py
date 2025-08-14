@@ -1,7 +1,8 @@
-```python Python
 import os
 import asyncio
 import logging
+# either import from other file or add this code to your existing file that defines the LLMTaskRunners
+from llm_taskrunner import LLMTaskRunner, DynamicLLMTaskRunner
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
@@ -43,6 +44,3 @@ class DynamicLLMRunner(DynamicLLMTaskRunner):
 
 print(f"Running on port {service.port}")
 asyncio.run(service.run())
-
-```
-
