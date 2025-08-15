@@ -1,14 +1,9 @@
 import os
-import argparse
+import json
 import asyncio
 import logging
 from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
-from meshagent.api.room_server_client import TextDataType
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--room", required=True, help="Room name (creates if missing)")
-args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -19,9 +14,8 @@ def env(name: str) -> str:
         raise RuntimeError(f"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.")
     return val
 
-async def main():
-    # 1. connect as a throw-away participant → this *creates* the room if needed
-    room_name = args.room
+async def talk_to_agent():
+    room_name = "mynewroomtest"
     try:
         async with RoomClient(
             protocol=WebSocketClientProtocol(
@@ -38,26 +32,32 @@ async def main():
                 ).to_jwt(token=env("MESHAGENT_SECRET")),
             )
         ) as room:
-            log.info(f"Connected to room: {room.room_name}")
-            # 2. ensure the tasks table exists
-            try:
-                await room.database.create_table_with_schema(
-                    name="tasks",
-                    schema={
-                        "task_id": TextDataType(),
-                        "task_description": TextDataType(),
-                    },
-                    mode="overwrite",  # change to "overwrite" if you want a clean slate each run
-                    data=None,
-                )
-                log.info("Created table tasks")
-            except Exception as e:
-                log.info(f"Error creating table: {e}")
+            await room.messaging.enable() # turn on messaging 
+            participants = room.messaging.get_participants()
+            participant_names = [p.get_attribute("name") for p in participants]
+            log.info(f"Available participants: {participant_names}")
 
-            log.info(f"Room “{args.room}” ready")
+            chatbot = None
+            for p in participants:
+                if p.get_attribute("name") == "chatbot":
+                    chatbot = p
+                    break
+
+            if not chatbot:
+                log.info("No participant named 'chatbot' is present.")
+                return
+
+            log.info("Sending chatbot a message")
+            response = await room.messaging.send_message(
+                to=chatbot,
+                type="chat",
+                message={"prompt": "Hello, who are you?"}
+            )
+            print(f"Response: {response}")   # prints the agent's reply
+            log.info(f"Response: {response}")
+
 
     except Exception as e:
-        log.info(f"Error communicating with agent: {e}")
+        print(f"Error communicating with agent: {e}")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(talk_to_agent())
