@@ -2,6 +2,10 @@
 title: "Queue Worker"
 ---
 
+import QueueWorker from "/snippets/examples/python/agents/queueworker/queueworker.mdx"
+import PushQueue from "/snippets/examples/python/agents/queueworker/push_queue.mdx"
+
+
 A ``Worker`` is a specialized **queue-based agent that processes messages** sent to a MeshAgent room queue. **Other agents or
 applications can push tasks to the queue and the Worker will handle them in the background**. This is helpful for
 long‑running or asynchronous jobs that shouldn't block an interactive chat agent.
@@ -29,94 +33,38 @@ service you can push a message to the queue to trigger the worker.
 
 First create a python file, ``main.py``, and define our ``StorageWorker``: 
 
-```python Python
-import os
-import logging
-import asyncio
-from meshagent.otel import otel_config
-from meshagent.agents.worker import Worker
-from meshagent.openai.tools import OpenAIResponsesAdapter, OpenAIResponsesToolResponseAdapter
-from meshagent.api import RequiredToolkit
-from meshagent.api.services import ServiceHost
-from meshagent.tools.storage import StorageToolkit
-
-logging.basicConfig(level=logging.INFO)
-
-otel_config(service_name="my-service")
-
-host = ServiceHost(
-    port=7001
-)
-
-logger = logging.getLogger("worker")
-logger.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
-
-@host.path("/worker")
-class StorageWorker(Worker):
-    def __init__(self):
-        super().__init__(
-            queue=os.getenv('WORKER_QUEUE'),
-            name="storage-worker",
-            title="storage worker sample",
-            description="this sample reads messages from a queue",
-            llm_adapter=OpenAIResponsesAdapter(),
-            tool_adapter=OpenAIResponsesToolResponseAdapter(),
-            toolkits=[
-                StorageToolkit()
-            ],
-            rules=[
-                "you will receive a message with instructions, process it and do what it says",
-                "you are not an interactive agent so you must not ask the user questions",
-            ]
-        )
-        
-    async def process_message(self, *, chat_context, room, message, toolkits):
-        logger.info(f"processing {message}")
-        response = await super().process_message(chat_context=chat_context, room=room, message=message, toolkits=toolkits)
-        logger.info(f"response {response}")
-
-
-asyncio.run(host.run())
-```
+<CodeGroup>
+    <QueueWorker />
+</CodeGroup>
 
 **Running the Worker**
 
 From your terminal inside an activated virtual environment run: 
 ```bash bash
-WORKER_QUEUE=test 
+export WORKER_QUEUE=test 
 python main.py
 ```
 
 In a seprate tab run: 
 ```bash bash
 meshagent setup
-meshagent call agent --room=queue-test --url=http://localhost:7001/worker --participant-name=worker
+meshagent call agent --room=queue-test --url=http://localhost:8081/worker --participant-name=worker
 ```
 
 ### Sending Work to the Queue 
 
-Now that our agent is running, let's send it some work! Create a python file ``push.py`` and define our function to push a message to the queue.
+Now that our agent is running, let's send it some work! Create a python file ``push_queue.py`` and define our function to push a message to the queue.
 
-```python Python
-import asyncio
-from meshagent.api import RoomClient, WebSocketClientProtocol, websocket_room_url
-import os
-
-async def push():
-    async with RoomClient(
-        protocol=WebSocketClientProtocol(url=websocket_room_url(room_name=os.getenv("ROOM")), token=os.getenv("TOKEN"))
-    ) as room:
-        await room.queues.send(name=os.getenv("WORKER_QUEUE"), message={ "instructions" : "save a poem about ai to poem.txt"}) 
-
-asyncio.run(push())
-```
+<CodeGroup>
+    <PushQueue />
+</CodeGroup>
 
 Generate a short-lived participant token and push a message to the queue:
 
 ```bash bash
 meshagent participant-token generate --name=pusher \
   --room=queue-test --token-path=token.txt
-WORKER_QUEUE=test ROOM=queue-test TOKEN=$(cat token.txt) python3 push.py
+WORKER_QUEUE=test ROOM=queue-test TOKEN=$(cat token.txt) python3 push_queue.py
 ```
 
 ### Checking Results in the Studio 
