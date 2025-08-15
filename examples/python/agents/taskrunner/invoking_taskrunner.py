@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def env(name: str) -> str:
     val = os.getenv(name)
     if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}")
+        raise RuntimeError(f"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.")
     return val
 
 async def call_agent(
@@ -36,7 +36,7 @@ async def call_agent(
             ).to_jwt(token=env("MESHAGENT_SECRET"))
         )
     ) as room:
-        log.info(f"Connected to room: {room_name}")
+        log.info(f"Connected to room: {room.room_name}")
         result = await room.agents.ask(
             agent=agent_name, 
             arguments=arguments

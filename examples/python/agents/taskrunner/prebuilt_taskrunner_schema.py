@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 def env(name: str) -> str:
     val = os.getenv(name)
     if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}")
+        raise RuntimeError(f"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.")
     return val
 
 
@@ -40,7 +40,7 @@ async def run_schema_planner(room_name:str, prompt:str, output_schema:dict, part
                 ).to_jwt(token=env("MESHAGENT_SECRET")),
             )
         ) as room:
-            log.info(f"Connected to room: {room_name}")
+            log.info(f"Connected to room: {room.room_name}")
             response = await room.agents.ask(
                 agent="meshagent.schema_planner",
                 arguments={
