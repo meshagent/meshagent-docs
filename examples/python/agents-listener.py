@@ -1,9 +1,18 @@
 import asyncio
+import logging
 from typing import Optional
+from meshagent.otel import otel_config
 from meshagent.api import Element
-from meshagent.agents import Listener, ListenerContext, connect_development_agent
+from meshagent.api.services import ServiceHost
+from meshagent.agents import Listener, ListenerContext
 
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
+otel_config(service_name="listener")
+service = ServiceHost()
+
+@service.path("/listener")
 class SampleListener(Listener):
     def __init__(self):
         # We want the listener to only deliver new changes, so we'll tell it to start listening after the document has been synchronized
@@ -41,12 +50,5 @@ class SampleListener(Listener):
         # If we return True, the listener will stop, returning False keeps the listener active
         return False
 
-
-async def main():
-    room_name = "examples"
-
-    # start our agent in developer mode, it will connect to the room and be available immediately from the admin console UI
-    await connect_development_agent(room_name=room_name, agent=SampleListener())
-
-
-asyncio.run(main())
+print(f"Running on port {service.port}")
+asyncio.run(service.run())
