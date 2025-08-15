@@ -2,6 +2,10 @@
 title: "Build and Deploy a Voice Agent"
 ---
 
+import SimpleVoicebot from "/snippets/examples/python/agents/voicebot/simple_voicebot.mdx"
+import MeshToolsVoicebot from "/snippets/examples/python/agents/voicebot/mesh_tools_voicebot.mdx"
+import CustomToolsVoicebot from "/snippets/examples/python/agents/voicebot/custom_tools_voicebot.mdx"
+
 ## Overview
 The MeshAgent **VoiceBot** lets you add a voice agent to any MeshAgent Room with just a few lines of code! VoiceBots use the *same toolkits* as ChatBots, so everything you learned in the [build and deploy a chat agent quick-start](./buildanddeploychatbot) still applies—your agent simply talks instead of types.
 
@@ -48,95 +52,11 @@ Create a main.py file and paste the starter code for the basic VoiceBot. To star
 
 We'll also add context to the conversation so the VoiceBot knows what day it is. If you need to add context to the VoiceBot before the conversation begins you can modify this accordingly.
 
-```python Python
-import os
-import asyncio
-from datetime import date
-from openai import AsyncOpenAI
-from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
-from livekit.plugins import openai, silero
+**Note**: You can optionally set the ``port`` parameter on ``ServiceHost``. If you don't pass a port, it will default to ``8081``. 
 
-from meshagent.livekit.agents.voice import VoiceBot
-from meshagent.api.services import ServiceHost
-from meshagent.tools import ToolContext
-from meshagent.otel import otel_config
-
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-@service.path("/voice")
-class SimpleVoicebot(VoiceBot):
-    def __init__(self):
-        super().__init__(
-            name="voice_agent",
-            title="voice_agent",
-            description="a sample voicebot",
-            rules=[
-                "Always respond to the user and include a fun fact at the end of your response.",
-                "keep your answers short and sweet and be friendly DO NOT include emojis in your response",
-            ],
-        )
-
-    def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
-        room_proxy_url = f"{url}/v1"
-            
-        oaiclient = AsyncOpenAI(
-            api_key=token,
-            base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
-        )
-
-        session = AgentSession(
-            max_tool_steps=50,
-            allow_interruptions=True,
-            vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
-        )
-        return session
-
-
-    async def create_agent(self, *, context, session):
-        ctx=ChatContext()
-        today_str = date.today().strftime("%A %B %-d")
-        ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
-
-        @function_tool
-        async def say(context: RunContext, text: str):
-            "says something out loud to the user"
-            session.say(text)
-            return "success"
-
-        return Agent(
-            chat_ctx=ctx,
-            instructions="\n".join(self.rules),
-            allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
-        )
-    
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-```
+<CodeGroup>
+    <SimpleVoicebot />
+</CodeGroup>
 
 ### Running the Simple VoiceBot in Test Mode: 
 Testing a VoiceBot works the same way as a ChatBot -- just be sure to update your agent name and service path. 
@@ -167,125 +87,9 @@ Next, let's add the same built-in MeshAgent tools to our VoiceBot that we gave t
 Toolkits group tools together and can be used by both chat and voice agents.
 
 We'll also add a few imports and update the voice agent's rules so it knows how to interact with the available tools efficiently. 
-
-```python Python
-import os
-import uuid
-import asyncio
-from datetime import datetime, date
-from openai import AsyncOpenAI
-from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
-from livekit.plugins import openai, silero
-
-from meshagent.api import RequiredToolkit, RequiredSchema
-from meshagent.livekit.agents.voice import VoiceBot
-from meshagent.api.services import ServiceHost
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.schemas.document import document_schema
-from meshagent.tools import Tool, Toolkit, ToolContext
-from meshagent.otel import otel_config
-
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-@service.path("/voice")
-class SimpleVoicebot(VoiceBot):
-    def __init__(self):
-        super().__init__(
-            name="voice_agent",
-            title="voice_agent",
-            description="a sample voicebot",
-            rules=[
-                "Always respond to the user and include a fun fact at the end of your response.",
-                "keep your answers short and sweet and be friendly DO NOT include emojis in your response",
-                "Use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
-                "The document names MUST have the extension .document, automatically add the extension if it is not provided",
-                "You MUST always write content to a document",
-                "First open a document, then use tools to write the document content before closing the document",
-                "Before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
-                "Blob URLs MUST not be added to documents, they must be saved as files first",
-            ],
-            requires=[
-                RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=["markitdown_from_file"]
-                ),
-            ],
-            toolkits=[
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
-                )
-            ],
-        )
-
-    def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
-        room_proxy_url = f"{url}/v1"
-            
-        oaiclient = AsyncOpenAI(
-            api_key=token,
-            base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
-        )
-
-        session = AgentSession(
-            max_tool_steps=50,
-            allow_interruptions=True,
-            vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
-        )
-        return session
-
-
-    async def create_agent(self, *, context, session):
-        ctx=ChatContext()
-        today_str = date.today().strftime("%A %B %-d")
-        ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
-
-        @function_tool
-        async def say(context: RunContext, text: str):
-            "says something out loud to the user"
-            session.say(text)
-            return "success"
-
-        return Agent(
-            chat_ctx=ctx,
-            instructions="\n".join(self.rules),
-            allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
-        )
-    
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-```
+<CodeGroup>
+    <MeshToolsVoicebot />
+</CodeGroup>
 
 We can test the agent using the same commands as we did with the simple voice agent!
 ```sh
@@ -303,185 +107,11 @@ To do this we will update the voice agent initialization and create a table for 
 
 This is a simple example of adding tasks, to create a more useful task writer we'd want to add date information and other metadata to better track and filter tasks. This example is mainly to demonstrate writing to room storage and adding custom tools to our voice agent.
 
-```python Python
-import os
-import uuid
-import asyncio
-from datetime import datetime, date
-from openai import AsyncOpenAI
-from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
-from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit, RequiredSchema
-from meshagent.livekit.agents.voice import VoiceBot
-from meshagent.api.services import ServiceHost
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.schemas.document import document_schema
-from meshagent.api.room_server_client import TextDataType, TimestampDataType
-from meshagent.api.messaging import TextResponse, JsonResponse
-from meshagent.tools import Tool, Toolkit, ToolContext
-from meshagent.otel import otel_config
+<CodeGroup>
+    <CustomToolsVoicebot />
+</CodeGroup>
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-class WriteTask(Tool):
-    def __init__(self):
-        super().__init__(
-            name="WriteTask",
-            title="Add a task",
-            description="A tool to add tasks to the database",
-            input_schema={
-                "type": "object",
-                "additionalProperties" : False,
-                "required": [
-                    "taskdescription"
-                    ],
-                "properties": {
-                    "taskdescription": {"type": "string"}
-                    }
-            }
-        )
-
-    async def execute(self, context, taskdescription: str):
-        await context.room.database.insert(
-            table="tasks",
-            records=[{
-                "task_id": str(uuid.uuid4()),
-                "taskdescription": taskdescription
-            }]
-        )
-        return TextResponse(text="Task added!")
-    
-class GetTasks(Tool):
-    def __init__(self):
-        super().__init__(
-            name="GetTasks",
-            title="List tasks",
-            description="List tasks recorded today or this week",
-            input_schema={
-                "type": "object",
-                "additionalProperties":False,
-                "required": [],
-                "properties": {}
-            }
-        )
-
-    async def execute(self, context):
-        return JsonResponse(json={"values": await context.room.database.search(table="tasks")})
-
-@service.path("/voice")
-class SimpleVoicebot(VoiceBot):
-    def __init__(self):
-        super().__init__(
-            name="voice_agent",
-            title="voice_agent",
-            description="a sample voicebot",
-            rules=[
-                "Always respond to the user and include a fun fact at the end of your response.",
-                "keep your answers short and sweet and be friendly DO NOT include emojis in your response",
-                "Use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
-                "The document names MUST have the extension .document, automatically add the extension if it is not provided",
-                "You MUST always write content to a document",
-                "First open a document, then use tools to write the document content before closing the document",
-                "Before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
-                "Blob URLs MUST not be added to documents, they must be saved as files first",
-            ],
-            requires=[
-                RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=["markitdown_from_file"]
-                ),
-            ],
-            toolkits=[
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
-                ),
-                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()])
-            ],
-        )
-
-    async def start(self, *, room):
-        await super().start(room=room)
-        # One tiny table:
-        await room.database.create_table_with_schema(
-            name="tasks",
-            schema={
-                "task_id": TextDataType(),
-                "taskdescription": TextDataType()
-            },
-            mode="overwrite",
-            data=None
-        )
-
-    def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
-        room_proxy_url = f"{url}/v1"
-            
-        oaiclient = AsyncOpenAI(
-            api_key=token,
-            base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
-        )
-
-        session = AgentSession(
-            max_tool_steps=50,
-            allow_interruptions=True,
-            vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
-        )
-        return session
-
-
-    async def create_agent(self, *, context, session):
-        ctx=ChatContext()
-        today_str = date.today().strftime("%A %B %-d")
-        ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
-
-        @function_tool
-        async def say(context: RunContext, text: str):
-            "says something out loud to the user"
-            session.say(text)
-            return "success"
-
-        return Agent(
-            chat_ctx=ctx,
-            instructions="\n".join(self.rules),
-            allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
-        )
-    
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-```
 
 We can test the agent using the same commands as we did with the simple voice agent! And now when we go to the room we can ask the agent to add a task to our task database. 
 
