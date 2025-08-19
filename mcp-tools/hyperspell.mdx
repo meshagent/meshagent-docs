@@ -1,0 +1,130 @@
+---
+title: HyperSpell
+---
+
+
+You can quickly try out the MCP-Hyperspell tools and chatbot in a Meshagent Room without any local setup. When the room closes, all tools and chatbots are also removed.
+
+### Required Environment Variables
+
+- `USE_RESOURCES`: `false` (default - disables local resource usage)
+- `HYPERSPELL_COLLECTION`: name of your Hyperspell collection (leave blank for default)
+- `HYPERSPELL_TOKEN`: **REQUIRED** (your app or user token for Hyperspell)
+
+### Steps
+
+1. **Install Meshagent CLI**  
+   ```bash
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   Follow [Getting Started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate.
+
+3. **Start Hyperspell MCP Server as a Room Agent**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-hyperspell:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env USE_RESOURCES=false \
+     --env HYPERSPELL_COLLECTION="" \
+     --env HYPERSPELL_TOKEN=<your_hyperspell_token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-hyperspell-service-test
+   ```
+   - Launches a Meshagent Room named `test` with an MCP server agent available.
+   - Tools and agents terminate automatically when the room closes.
+
+4. **Join the Room with a Chatbot Agent**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-hyperspell --name=mcp-hyperspell --toolkit=mcp-hyperspell
+   ```
+   - Starts a chatbot in the Meshagent Room using the MCP-Hyperspell toolkit.
+   - Multiple toolkits can be added to the same room/agent.
+   - A room link will be provided in the output.
+
+5. **Access the Room**
+   - Visit the provided link in your browser.
+   - Interact with the agent by sending messages and invoking Hyperspell MCP server tools.
+
+---
+
+## Project-Level Deployment (Production)
+
+Project-level deployments create persistent services, making Hyperspell tools and agents available in ALL Meshagent project rooms. This is the recommended method for production.
+
+### Steps
+
+1. **Create Persistent MCP Server Service**  
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-hyperspell:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env USE_RESOURCES=false \
+     --env HYPERSPELL_COLLECTION="" \
+     --env HYPERSPELL_TOKEN=<your_hyperspell_token> \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-hyperspell-service
+   ```
+
+2. **Create Persistent Chatbot Service**  
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-hyperspell-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-hyperspell-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-hyperspell-chatbot --toolkit=mcp-hyperspell"
+   ```
+- These services auto-join all new rooms within your Meshagent project, ensuring the tools and chatbot are always accessible.
+
+---
+
+## Tools Available
+
+### Summary
+
+Tools provided by this Server | Short Description
+-|-
+`Add File` | Add a file or website from a URL to Hyperspell.
+`Add Memory` | Add a plain text document or memory to Hyperspell.
+`Search Hyperspell` | Search Hyperspell for documents and data.
+
+---
+
+### Tools Details
+
+#### **`Add File`**
+Add a file or website from a URL to Hyperspell.
+
+Parameter | Type | Description
+-|-|-
+`url` | `string` | The file or website URL to add.
+
+---
+
+#### **`Add Memory`**
+Add a plain text document or memory to Hyperspell.
+
+Parameter | Type | Description
+-|-|-
+`text` | `string` | The text or document contents.
+`title` | `string` (optional) | Title for the memory/document.
+
+---
+
+#### **`Search Hyperspell`**
+Search Hyperspell for documents and data.
+
+Parameter | Type | Description
+-|-|-
+`query` | `string` | Search query for Hyperspell.
+
+---
+
+## Meshagent Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation](https://docs.meshagent.com)
+- [Meshagent MCP-Hyperspell Docker Image](https://hub.docker.com/r/meshagent/mcp-hyperspell)
+
+---
+
+> For full documentation and advanced deployments, see [Meshagent Read The Docs](https://docs.meshagent.com) and [Hyperspell MCP Server](https://github.com/hyperspell/hyperspell-mcp).

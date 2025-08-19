@@ -1,0 +1,148 @@
+---
+title: CyresLab AI Shodan
+---
+
+
+Run the MCP Shodan server and chatbot in an isolated MeshAgent Room for easy cloud testing. When the Room closes, associated tools and chatbots are removed automatically.
+
+**Environment variables required:**
+- `SHODAN_API_KEY` – Your Shodan API key
+
+**Steps:**
+
+- **Install MeshAgent:**  
+  `pip install "meshagent[all]"`
+
+- **Sign up and authenticate:**  
+  [MeshAgent CLI: Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+- **Launch a test MCP Shodan server inside a Room:**  
+  ```
+  meshagent service test \
+    --room=test \
+    --role=agent \
+    --image=meshagent/mcp-cyreslab-ai-shodan:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env SHODAN_API_KEY=YOUR_SHODAN_API_KEY \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-cyreslab-ai-shodan-service-test
+  ```
+  > This spawns an agent with the MCP server in a MeshAgent Room. Rooms automatically close when inactive.
+
+- **Start a chatbot in the room with the Shodan toolkit:**  
+  ```
+  meshagent chatbot join \
+    --room=test \
+    --agent-name=mcp-cyreslab-ai-shodan \
+    --name=mcp-cyreslab-ai-shodan \
+    --toolkit=mcp-cyreslab-ai-shodan
+  ```
+  > This attaches a chatbot that can use the `cyreslab-ai-shodan` tools in the room.  
+  > Multiple toolkits can be added to one agent.
+
+- **Visit the room via the provided link:**  
+  The chatbot join command outputs a URL. Visit it in your browser and interact with the MCP Server tools through chat.
+
+---
+
+## Project Level Deployment
+
+To make the MCP server and chatbot available in every Room in your MeshAgent project by default (ideal for production):
+
+- **Create a persistent MCP Shodan server service:**
+  ```
+  meshagent service create \
+    --role=agent \
+    --image=meshagent/mcp-cyreslab-ai-shodan:latest \
+    --env MESHAGENT_PORT=8001 \
+    --env SHODAN_API_KEY=YOUR_SHODAN_API_KEY \
+    --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+    --name=mcp-cyreslab-ai-shodan-service
+  ```
+
+- **Create a persistent chatbot service:**
+  ```
+  meshagent service create \
+    --image="meshagent/cli:latest" \
+    --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-cyreslab-ai-shodan-chatbot" \
+    --env="MESHAGENT_PORT=9001" \
+    --name="mcp-cyreslab-ai-shodan-chatbot-service" \
+    --command="meshagent chatbot service --agent-name=mcp-cyreslab-ai-shodan-chatbot --toolkit=mcp-cyreslab-ai-shodan"
+  ```
+
+> With these project-level services, every new Room automatically gets both an MCP server agent and chatbot without manual intervention or local servers/processes.
+
+---
+
+## Tools Available
+
+**Tools provided by this Server**
+
+| Tool | Short Description |
+|------|------------------|
+| `get_host_info` | Get detailed information about a specific IP address |
+| `get_ssl_info` | Get SSL certificate information for a domain |
+| `scan_network_range` | Scan a network range (CIDR notation) for devices |
+| `search_iot_devices` | Search for specific types of IoT devices |
+| `search_shodan` | Search Shodan's database for devices and services |
+
+---
+
+### Tool Details
+
+#### `get_host_info`
+_Get detailed information about a specific IP address_  
+**Parameters:**  
+- `ip` (`string`): IP address to look up  
+- `fields` (`array`, optional): List of fields to include (e.g., `['ip_str', 'ports', 'location.country_name']`)
+- `max_items` (`number`, optional): Maximum array size (default: 5)
+
+---
+
+#### `get_ssl_info`
+_Get SSL certificate information for a domain_  
+**Parameters:**  
+- `domain` (`string`): Domain to look up SSL certs for (e.g., `example.com`)
+
+---
+
+#### `scan_network_range`
+_Scan a network range (CIDR) for devices_  
+**Parameters:**  
+- `cidr` (`string`): Network range (e.g., `192.168.1.0/24`)
+- `fields` (`array`, optional): Fields to include (e.g., `['ip_str', 'ports', 'location.country_name']`)
+- `max_items` (`number`, optional): Maximum results (default: 5)
+
+---
+
+#### `search_iot_devices`
+_Search for specific types of IoT devices_  
+**Parameters:**  
+- `device_type` (`string`): IoT device type (e.g., 'webcam', 'router', 'smart tv')
+- `country` (`string`, optional): Limit to country code (e.g., 'US', 'DE')
+- `max_items` (`number`, optional): Max results (default: 5)
+
+---
+
+#### `search_shodan`
+_Search Shodan's device and service database_  
+**Parameters:**  
+- `query` (`string`): Shodan search query (e.g., 'apache country:US')
+- `facets` (`array`, optional): Facets for result aggregation (e.g., `['country', 'org']`)
+- `fields` (`array`, optional): Fields to return (e.g., `['ip_str', 'ports', 'location.country_name']`)
+- `max_items` (`number`, optional): Max array items (default: 5)
+- `page` (`number`, optional): Pagination index (default: 1)
+- `summarize` (`boolean`, optional): Return summary instead of full data (default: false)
+
+---
+
+## MeshAgent & Project Links
+
+- **MeshAgent:** https://www.meshagent.com/
+- **MeshAgent Documentation:** https://docs.meshagent.com
+- **MeshAgent MCP Shodan Image:** https://hub.docker.com/r/meshagent/mcp-cyreslab-ai-shodan
+
+---
+
+For more on running MCP Servers securely with Docker, see [Why is it safer to run MCP Servers with Docker?](https://www.docker.com/blog/the-model-context-protocol-simplifying-building-ai-apps-with-anthropic-claude-desktop-and-docker/)  
+For original MCP Shodan Server details: [Cyreslab-AI/shodan-mcp-server](https://github.com/Cyreslab-AI/shodan-mcp-server)

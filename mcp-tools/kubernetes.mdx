@@ -1,0 +1,201 @@
+---
+title: Kubernetes
+---
+
+
+Test the MCP Kubernetes toolkit and agent in a **cloud Room**—everything is removed instantly when the Room closes.
+
+**1. Install Meshagent with all dependencies:**
+```shell
+pip install "meshagent[all]"
+```
+**2. Sign up and authenticate with the Meshagent CLI:**  
+Follow steps at: https://docs.meshagent.com/cli/getting_started
+
+**3. Launch the MCP Kubernetes Server agent in a test Room:**
+```shell
+meshagent service test --room=test --role=agent \
+  --image=meshagent/mcp-kubernetes:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-kubernetes-service-test
+```
+  - Starts a Meshagent Room with a **test MCP server** available for tools/chatbots in the Room.  
+  - Rooms close automatically if left inactive.
+
+**4. Start a chatbot in the Room (with Kubernetes toolkit enabled):**
+```shell
+meshagent chatbot join --room=test --agent-name=mcp-kubernetes --name=mcp-kubernetes --toolkit=mcp-kubernetes
+```
+  - Brings a chatbot into the Room using the Kubernetes toolkit.
+  - Run multiple toolkits in the same Room if desired.
+  - The Meshagent CLI will output a **link** to your Room.
+
+**5. Open the Room link in your browser:**  
+Interact with your MCP Kubernetes agent and tools by sending chat messages.
+
+---
+
+## Project-Level Deployment: Persistent Agents for Every Room
+
+To ensure the MCP server tools and chatbot appear in *every* Meshagent Room within a project (ideal for production):
+
+**1. Create a persistent MCP Kubernetes service:**
+```shell
+meshagent service create --role=agent \
+  --image=meshagent/mcp-kubernetes:latest \
+  --env MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-kubernetes-service
+```
+
+**2. Create a persistent chatbot service using the MCP Kubernetes toolkit:**
+```shell
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-kubernetes-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-kubernetes-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-kubernetes-chatbot --toolkit=mcp-kubernetes"
+```
+
+With this setup, **every new Room in your project** will automatically have the MCP server tools and chatbot present—no need to run agents or chatbots manually for each session.
+
+---
+
+## Tools Available
+
+The MCP Kubernetes Server toolkit provides the following tools:
+
+| Tool Name              | Description |
+|------------------------|-------------|
+| `cleanup`              | Cleanup all managed resources. |
+| `exec_in_pod`          | Execute a command in a Kubernetes pod or container and return the output. |
+| `explain_resource`     | Get documentation for a Kubernetes resource or field. |
+| `install_helm_chart`   | Install a Helm chart. |
+| `kubectl_apply`        | Apply a Kubernetes YAML manifest from a string or file. |
+| `kubectl_context`      | Manage Kubernetes contexts—list, get, or set the current context. |
+| `kubectl_create`       | Create Kubernetes resources by various methods. |
+| `kubectl_delete`       | Delete Kubernetes resources by type, name, labels, or manifest. |
+| `kubectl_describe`     | Describe Kubernetes resources. |
+| `kubectl_generic`      | Execute any kubectl command with provided args and flags. |
+| `kubectl_get`          | List Kubernetes resources. |
+| `kubectl_logs`         | Get logs from Kubernetes resources. |
+| `kubectl_patch`        | Update fields using strategic merge, JSON merge, or JSON patch. |
+| `kubectl_rollout`      | Manage the rollout of a resource. |
+| `kubectl_scale`        | Scale a Kubernetes deployment. |
+| `list_api_resources`   | List available API resources in the cluster. |
+| `ping`                 | Verify the connection and responsiveness. |
+| `port_forward`         | Forward a local port to a Kubernetes resource. |
+| `stop_port_forward`    | Stop a port-forward process. |
+| `uninstall_helm_chart` | Uninstall a Helm release. |
+| `upgrade_helm_chart`   | Upgrade a Helm release. |
+
+### Tool Details
+
+#### `exec_in_pod`
+Execute a command in a Kubernetes pod or container and return the output  
+- `command`: Command to execute in the pod (string or array of args)
+- `name`: Pod name
+- `container`: (optional) Container name if multiple
+- `namespace`: (optional) Namespace
+- `shell`: (optional) Shell to use for command execution
+- `timeout`: (optional) Timeout in milliseconds (default: 60000)
+
+#### `explain_resource`
+Get documentation for a Kubernetes resource or field  
+- `resource`: Resource name or field path
+- `apiVersion`: (optional) API version
+- `output`: (optional) Output format
+- `recursive`: (optional) Recursively print fields
+
+#### `install_helm_chart`
+Install a Helm chart  
+- `chart`: Chart name  
+- `name`: Release name  
+- `namespace`: Namespace  
+- `repo`: Repository URL  
+- `values`: (optional) Chart values
+
+#### `kubectl_apply`
+Apply a Kubernetes YAML manifest  
+- `dryRun`: (optional) Only validate, don’t apply  
+- `filename`: (optional) Path to YAML file  
+- `force`: (optional) Force apply  
+- `manifest`: (optional) YAML manifest data  
+- `namespace`: (optional) Namespace
+
+#### `kubectl_context`
+List, get, or set Kubernetes contexts  
+- `operation`: list, get, or set  
+- `name`, `output`, `detailed`, `showCurrent`: optional details
+
+#### `kubectl_create`
+Create Kubernetes resources  
+- Provides many parameters for creating resources, see detailed documentation.
+
+#### `kubectl_delete`
+Delete Kubernetes resources  
+- By type, name, label, or manifest  
+- Supports force, gracePeriodSeconds, allNamespaces
+
+#### `kubectl_describe`
+Describe Kubernetes resources  
+- By type, name, and (optionally) namespace
+
+#### `kubectl_generic`
+Run arbitrary kubectl commands  
+- `command`, `args`, `flags`, and more.
+
+#### `kubectl_get`
+Get/list resources  
+- By type, name, namespace, with optional fieldSelector, labelSelector, sortBy, etc.
+
+#### `kubectl_logs`
+Get logs from pods, deployments, or jobs  
+- Filtered by name, type, namespace, etc.
+
+#### `kubectl_patch`
+Patch a resource  
+- By type, name, patchType, with patch data or file
+
+#### `kubectl_rollout`
+Manage resource rollout  
+- Supports subcommands, watching, revisions, and timeouts
+
+#### `kubectl_scale`
+Scale deployments or other objects  
+- By name, namespace, replicas
+
+#### `list_api_resources`
+List available cluster API resources  
+- Filterable by group, namespaced, verbs
+
+#### `ping`
+Test connection
+
+#### `port_forward`
+Forward local port to Kubernetes resource  
+- Requires localPort, resourceName, resourceType, targetPort, (optionally namespace)
+
+#### `stop_port_forward`
+Stop a previously started port-forward  
+- By ID
+
+#### `uninstall_helm_chart`
+Remove a Helm release  
+- By name and namespace
+
+#### `upgrade_helm_chart`
+Upgrade a Helm release  
+- Requires chart, name, namespace, repo, (optional values)
+
+For full parameter reference and advanced usage, explore the detailed API or MCP server documentation.
+
+---
+
+## Related Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Tool Image:** [https://hub.docker.com/r/meshagent/mcp-kubernetes](https://hub.docker.com/r/meshagent/mcp-kubernetes)

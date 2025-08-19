@@ -1,0 +1,159 @@
+---
+title: Paper Search
+---
+
+
+Run a Paper Search agent and chatbot at the Room level in the Meshagent cloud for easy testing.
+
+**1. Install Meshagent CLI**
+```bash
+pip install "meshagent[all]"
+```
+
+**2. Sign up and Authenticate**
+- Visit [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started) to create an account and authenticate the CLI.
+
+**3. Start MCP Paper Search Server in a Room**
+```bash
+meshagent service test --room=test --role=agent --image=meshagent/mcp-paper-search:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-paper-search-service-test
+```
+- This launches a Meshagent Room with the Paper Search MCP server available. Inactive Rooms (and services) are cleaned up automatically.
+
+**4. Start a Chatbot in the Room Using the Toolkit**
+```bash
+meshagent chatbot join --room=test --agent-name=mcp-paper-search --name=mcp-paper-search --toolkit=mcp-paper-search
+```
+- This creates a chatbot in the Room bound to the MCP server. Use multiple toolkits per agent if desired.
+- A Room link appears in the output.
+
+**5. Try it Out!**
+- Open the Room link in your browser and message the agent to interact with the MCP server tools in real-time.
+
+---
+
+## Project-Level Deployment (Persistent Services)
+
+For production: create persistent MCP Server and chatbot services at the project level. These join every new Room in your Meshagent project automatically—no need for manual process management.
+
+**1. Create Persistent MCP Server**
+```bash
+meshagent service create --role=agent --image=meshagent/mcp-paper-search:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-paper-search-service
+```
+**2. Create Persistent Chatbot**
+```bash
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-paper-search-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-paper-search-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-paper-search-chatbot --toolkit=mcp-paper-search"
+```
+- Once deployed, these will show up in all Meshagent project Rooms upon creation.
+
+---
+
+## Tools Available
+
+Paper Search MCP Server provides academic paper search and download functionality from sources like arXiv, PubMed, bioRxiv, and more.
+
+| Tool | Description |
+|------|-------------|
+| `download_arxiv`            | Download PDF of an arXiv paper. |
+| `download_biorxiv`          | Download PDF of a bioRxiv paper. |
+| `download_medrxiv`          | Download PDF of a medRxiv paper. |
+| `download_pubmed`           | Attempt to download PDF of a PubMed paper. |
+| `read_arxiv_paper`          | Read and extract text content from an arXiv paper PDF. |
+| `read_biorxiv_paper`        | Read and extract text content from a bioRxiv paper PDF. |
+| `read_medrxiv_paper`        | Read and extract text content from a medRxiv paper PDF. |
+| `read_pubmed_paper`         | Read and extract text content from a PubMed paper. |
+| `search_arxiv`              | Search academic papers from arXiv. |
+| `search_biorxiv`            | Search academic papers from bioRxiv. |
+| `search_google_scholar`     | Search academic papers from Google Scholar. |
+| `search_medrxiv`            | Search academic papers from medRxiv. |
+| `search_pubmed`             | Search academic papers from PubMed. |
+
+---
+
+### Tools Details
+
+#### `download_arxiv`
+**Description:** Download PDF of an arXiv paper.  
+Parameters:  
+- `paper_id` (string): arXiv paper ID (e.g., '2106.12345').  
+- `save_path` (string, optional): Directory to save the PDF (default: `./downloads`).
+
+#### `download_biorxiv`
+**Description:** Download PDF of a bioRxiv paper.  
+Parameters:  
+- `paper_id` (string): bioRxiv DOI.  
+- `save_path` (string, optional): Directory to save the PDF (default: `./downloads`).
+
+#### `download_medrxiv`
+**Description:** Download PDF of a medRxiv paper.  
+Parameters:  
+- `paper_id` (string): medRxiv DOI.  
+- `save_path` (string, optional): Directory to save the PDF (default: `./downloads`).
+
+#### `download_pubmed`
+**Description:** Attempt to download PDF of a PubMed paper.  
+Parameters:  
+- `paper_id` (string): PubMed ID (PMID).  
+- `save_path` (string, optional): Directory to save the PDF (default: `./downloads`).
+
+#### `read_arxiv_paper`
+**Description:** Read and extract text content from an arXiv paper PDF.  
+Parameters:  
+- `paper_id` (string): arXiv paper ID (e.g., '2106.12345').  
+- `save_path` (string, optional): Directory where the PDF is/will be saved (default: `./downloads`).
+
+#### `read_biorxiv_paper`
+**Description:** Read and extract text content from a bioRxiv paper PDF.  
+Parameters:  
+- `paper_id` (string): bioRxiv DOI.  
+- `save_path` (string, optional): Directory where the PDF is/will be saved (default: `./downloads`).
+
+#### `read_medrxiv_paper`
+**Description:** Read and extract text content from a medRxiv paper PDF.  
+Parameters:  
+- `paper_id` (string): medRxiv DOI.  
+- `save_path` (string, optional): Directory where the PDF is/will be saved (default: `./downloads`).
+
+#### `read_pubmed_paper`
+**Description:** Read and extract text content from a PubMed paper.  
+Parameters:  
+- `paper_id` (string): PubMed ID (PMID).  
+- `save_path` (string, optional): Directory where the PDF would be saved (unused).
+
+#### `search_arxiv`
+**Description:** Search academic papers from arXiv.  
+Parameters:  
+- `query` (string): Search query string (e.g., 'machine learning').  
+- `max_results` (integer, optional): Maximum number of papers to return (default: 10).
+
+#### `search_biorxiv`
+**Description:** Search academic papers from bioRxiv.  
+Parameters:  
+- `query` (string): Search query string (e.g., 'machine learning').  
+- `max_results` (integer, optional): Maximum number of papers to return (default: 10).
+
+#### `search_google_scholar`
+**Description:** Search academic papers from Google Scholar.  
+Parameters:  
+- `query` (string): Search query string (e.g., 'machine learning').  
+- `max_results` (integer, optional): Maximum number of papers to return (default: 10).
+
+#### `search_medrxiv`
+**Description:** Search academic papers from medRxiv.  
+Parameters:  
+- `query` (string): Search query string (e.g., 'machine learning').  
+- `max_results` (integer, optional): Maximum number of papers to return (default: 10).
+
+#### `search_pubmed`
+**Description:** Search academic papers from PubMed.  
+Parameters:  
+- `query` (string): Search query string (e.g., 'machine learning').  
+- `max_results` (integer, optional): Maximum number of papers to return (default: 10).
+
+---
+
+## Resources & Links
+
+- Meshagent Website: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Meshagent Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Paper Search Docker Image: [https://hub.docker.com/r/meshagent/mcp-paper-search](https://hub.docker.com/r/meshagent/mcp-paper-search)
+- Paper Search MCP Server: [https://github.com/openags/paper-search-mcp](https://github.com/openags/paper-search-mcp)

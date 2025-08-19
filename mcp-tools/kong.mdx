@@ -1,0 +1,177 @@
+---
+title: Kong
+---
+
+
+Follow these steps to run the Kong MCP server and tools inside a Meshagent Room for temporary, cloud-based testing:
+
+### Required Environment Variables:
+- `KONNECT_REGION` (e.g., `us`) – The Konnect region.
+- `KONNECT_ACCESS_TOKEN` (e.g., `kpat_api_key_here`) – Your Konnect API key.
+
+### Steps
+
+1. **Install Meshagent CLI with all extras:**
+   ```bash
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and authenticate Meshagent:**  
+   Instructions: [Meshagent CLI Getting Started](https://docs.meshagent.com/cli/getting_started)
+3. **Start the MCP server in a test Room:**
+   ```bash
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-kong:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env KONNECT_REGION=us \
+     --env KONNECT_ACCESS_TOKEN=kpat_api_key_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-kong-service-test
+   ```
+   - _Creates a Meshagent Room with a test MCP server callable via Room tools. Room is auto-destroyed if inactive._
+4. **Start the chatbot (tool-enabled) in the Room:**
+   ```bash
+   meshagent chatbot join --room=test --agent-name=mcp-kong --name=mcp-kong --toolkit=mcp-kong
+   ```
+   - _Bot runs in the Room, using the Kong toolkit._
+   - _Multiple toolkits can be attached to the same Room & agent._
+   - _Room access link is provided on success._
+5. **Try it out:**  
+   Open the provided Room link in your browser and chat with the agent to run queries or actions on your MCP server tools.
+
+---
+
+## Project Level Deployment (Production Usage)
+
+For persistent, always-on MCP tools and chatbot agents in every Room within a project (recommended for production):
+
+1. **Create persistent agent service at project level:**
+   ```bash
+   meshagent service create --role=agent --image=meshagent/mcp-kong:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env KONNECT_REGION=us \
+     --env KONNECT_ACCESS_TOKEN=kpat_api_key_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-kong-service
+   ```
+2. **Create persistent chatbot service at project level:**
+   ```bash
+   meshagent service create --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-kong-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-kong-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-kong-chatbot --toolkit=mcp-kong"
+   ```
+- These services will auto-join every Room created inside the Meshagent project, making the MCP tools and chatbots available by default—no local/server process needed.
+
+---
+
+## Tools Available
+
+A Model Context Protocol (MCP) server for interacting with Kong Konnect APIs, allowing AI assistants to query and analyze Kong Gateway configurations, traffic, and analytics.
+
+### Tools Provided
+
+| Tool | Short Description |
+|------|------------------|
+| **check_control_plane_group_membership** | Check if a control plane is a member of any group. |
+| **get_consumer_requests** | Retrieve and analyze API requests made by a specific consumer. |
+| **get_control_plane** | Get detailed information about a specific control plane. |
+| **list_consumers** | List all consumers associated with a control plane. |
+| **list_control_plane_group_memberships** | List all control planes that are members of a specific control plane group. |
+| **list_control_planes** | List all control planes in your organization. |
+| **list_plugins** | List all plugins associated with a control plane. |
+| **list_routes** | List all routes associated with a control plane. |
+| **list_services** | List all services associated with a control plane. |
+| **query_api_requests** | Query and analyze Kong API Gateway requests with customizable filters. |
+
+---
+
+### Tool Details
+
+#### `check_control_plane_group_membership`
+Check if a control plane is a member of any group.
+
+- **Inputs**: `controlPlaneId` (string) – ID to check membership for.
+- **Outputs**: Membership status, group info, conflicts, related tools.
+
+---
+
+#### `get_consumer_requests`
+Retrieve and analyze API requests from a specific consumer.
+
+- **Inputs**: `consumerId` (string), `timeRange` (string), `successOnly`, `failureOnly`, `maxResults`.
+- **Outputs**: Metadata, usage statistics (latency, success, etc.), detailed request list.
+
+---
+
+#### `get_control_plane`
+Get detailed information about a specific control plane.
+
+- **Inputs**: `controlPlaneId` (string)
+- **Outputs**: All control plane metadata, related endpoints, labels, cluster type, and more.
+
+---
+
+#### `list_consumers`
+List all consumers associated with a control plane.
+
+- **Inputs**: `controlPlaneId` (string), `size`, `offset`
+- **Outputs**: Consumer metadata, paginated consumer list, related tools.
+
+---
+
+#### `list_control_plane_group_memberships`
+List all control planes that are members of a group.
+
+- **Inputs**: `groupId` (string), `pageSize`, `pageAfter`
+- **Outputs**: Member control plane metadata, membership status, conflicts.
+
+---
+
+#### `list_control_planes`
+List all control planes in your organization.
+
+- **Inputs**: `pageSize`, `pageNumber`, `filterName`, `filterClusterType`, `filterCloudGateway`, `labels`, `sort`
+- **Outputs**: Array of control planes, filters, sort info, overall usage hints.
+
+---
+
+#### `list_plugins`
+List all plugins associated with a control plane.
+
+- **Inputs**: `controlPlaneId` (string), `size`, `offset`
+- **Outputs**: Plugin details, types, config, protocols, scoping, tags.
+
+---
+
+#### `list_routes`
+List all routes associated with a control plane.
+
+- **Inputs**: `controlPlaneId` (string), `size`, `offset`
+- **Outputs**: Route metadata, HTTP methods, paths, hosts, service links, flags.
+
+---
+
+#### `list_services`
+List all services associated with a control plane.
+
+- **Inputs**: `controlPlaneId` (string), `size`, `offset`
+- **Outputs**: Service ID, endpoint, protocol, retries, timeouts, tags.
+
+---
+
+#### `query_api_requests`
+Query and analyze Kong API Gateway requests.
+
+- **Inputs**: `timeRange`, filters (`statusCodes`, `excludeStatusCodes`, `httpMethods`, `consumerIds`, `serviceIds`, `routeIds`), `maxResults`.
+- **Outputs**: Filtered request metadata and full detail per request.
+
+---
+
+## Additional Resources
+
+- **Meshagent Home:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Documentation:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **Meshagent MCP Kong Docker Image:** [https://hub.docker.com/r/meshagent/mcp-kong](https://hub.docker.com/r/meshagent/mcp-kong)
+- **Kong Konnect MCP Server Source:** [https://github.com/Kong/mcp-konnect](https://github.com/Kong/mcp-konnect)
+
+---

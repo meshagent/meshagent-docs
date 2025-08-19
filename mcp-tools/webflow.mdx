@@ -1,0 +1,260 @@
+---
+title: Webflow
+---
+
+
+Run the Webflow MCP Server and chatbot together in a Meshagent Room for testing and development.
+
+### Environment Variables
+
+Set the following environment variable when starting the service:
+- `WEBFLOW_TOKEN`: your_api_token (replace with your actual Webflow API token)
+
+### Steps
+
+1. **Install Meshagent CLI**  
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**  
+   Follow the guide: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the MCP Webflow Agent in a Room**  
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-webflow:latest \
+     --env=WEBFLOW_TOKEN=your_api_token \
+     --env=MESHAGENT_PORT=8001 \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-webflow-service-test
+   ```
+   - This command starts a Meshagent Room named `test` with the Webflow MCP server available as a service. The room and all services are automatically removed when inactive.
+
+4. **Join a Chatbot to the Room**  
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-webflow \
+     --name=mcp-webflow \
+     --toolkit=mcp-webflow
+   ```
+   - Starts a chatbot in the Meshagent room that can use the Webflow MCP toolkit.
+   - Multiple toolkits can be used with the same agent in the room.
+   - The command output will provide a link to your Meshagent Room.
+
+5. **Try It Out**  
+   - Open the provided room link in your browser and send a message to `mcp-webflow` to interact with the MCP Server tools.
+
+---
+
+## Project Level Deployment (Production)
+
+To have the MCP Server and chatbot automatically available in every newly created Meshagent Room within your project, set up persistent project-level services.
+
+**Benefits:**
+- Services automatically join each room at creation (no manual start needed).
+- Ensures continuous availability of MCP server tools and chatbot.
+- Removes need to manage locally running servers/chatbots.
+
+### Deploy the MCP Webflow Service
+
+```sh
+meshagent service create \
+  --role=agent \
+  --image=meshagent/mcp-webflow:latest \
+  --env=WEBFLOW_TOKEN=your_api_token \
+  --env=MESHAGENT_PORT=8001 \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-webflow-service
+```
+
+### Deploy the MCP Webflow Chatbot
+
+```sh
+meshagent service create \
+  --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-webflow-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-webflow-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-webflow-chatbot --toolkit=mcp-webflow"
+```
+
+---
+
+## Tools Available
+
+Below are the tools exposed by the Webflow MCP Server, available to chatbots and agents once deployed via Meshagent Rooms.
+
+### Tools Summary
+
+| Tool | Short Description |
+|------|------------------|
+| `collection_fields_create_option` |  |
+| `collection_fields_create_reference` |  |
+| `collection_fields_create_static` |  |
+| `collection_fields_update` |  |
+| `collections_create` |  |
+| `collections_get` |  |
+| `collections_items_create_item` |  |
+| `collections_items_create_item_live` |  |
+| `collections_items_list_items` |  |
+| `collections_items_publish_items` |  |
+| `collections_items_update_items` |  |
+| `collections_items_update_items_live` |  |
+| `collections_list` |  |
+| `pages_get_content` |  |
+| `pages_get_metadata` |  |
+| `pages_list` |  |
+| `pages_update_page_settings` |  |
+| `pages_update_static_content` |  |
+| `sites_get` |  |
+| `sites_list` |  |
+| `sites_publish` |  |
+
+### Tool Details
+
+#### `collection_fields_create_option`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collection_fields_create_reference`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collection_fields_create_static`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collection_fields_update`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| field_id | string |  |
+| request | object |  |
+
+#### `collections_create`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| request | object |  |
+| site_id | string |  |
+
+#### `collections_get`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+
+#### `collections_items_create_item`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collections_items_create_item_live`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collections_items_list_items`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| cmsLocaleId | string | optional |
+| limit | number | optional |
+| name | string | optional |
+| offset | number | optional |
+| slug | string | optional |
+| sortBy | string | optional |
+| sortOrder | string | optional |
+
+#### `collections_items_publish_items`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| itemIds | array |  |
+
+#### `collections_items_update_items`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collections_items_update_items_live`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| collection_id | string |  |
+| request | object |  |
+
+#### `collections_list`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| site_id | string |  |
+
+#### `pages_get_content`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| page_id | string |  |
+| limit | number | optional |
+| localeId | string | optional |
+| offset | number | optional |
+
+#### `pages_get_metadata`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| page_id | string |  |
+| localeId | string | optional |
+
+#### `pages_list`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| site_id | string |  |
+| limit | number | optional |
+| localeId | string | optional |
+| offset | number | optional |
+
+#### `pages_update_page_settings`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| body | object |  |
+| page_id | string |  |
+| localeId | string | optional |
+
+#### `pages_update_static_content`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| localeId | string |  |
+| nodes | array |  |
+| page_id | string |  |
+
+#### `sites_get`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| site_id | string |  |
+
+#### `sites_list`
+
+#### `sites_publish`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| site_id | string |  |
+| customDomains | array | optional |
+| publishToWebflowSubdomain | boolean | optional |
+
+---
+
+## Useful Links
+
+- [Meshagent](https://www.meshagent.com/)
+- [Read The Docs](https://docs.meshagent.com)
+- [Meshagent MCP Tool Image](https://hub.docker.com/r/meshagent/mcp-webflow)
+- [Webflow MCP Server (DockerHub)](https://hub.docker.com/repository/docker/mcp/webflow)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)

@@ -1,0 +1,156 @@
+---
+title: Memory
+---
+
+
+The following steps walk you through launching an MCP server and chatbot agent within a Meshagent Room for cloud-based testing. Both the tool and agent automatically stop when the room closes.
+
+1. **Install Meshagent & Full Feature Set**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate**
+   - Create an account and authenticate per Meshagent docs:
+   - [Getting Started with Meshagent CLI](https://docs.meshagent.com/cli/getting_started)
+
+3. **Start a Test MCP Server as a Cloud Room Service**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-memory:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-memory-service-test
+   ```
+   - This will launch a Meshagent Room in the cloud named `test` with an MCP server running as a service in that room.
+   - The MCP server (`mcp-memory-service-test`) and its tools will be live only as long as the room is active.
+
+4. **Add a Chatbot Agent with the MCP Memory Toolkit**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-memory --name=mcp-memory --toolkit=mcp-memory
+   ```
+   - This launches a chatbot linked to the MCP memory toolkit within the same room.
+   - Multiple toolkits may be assigned to a single agent.
+   - The command output provides a browser link to join the room interactively.
+
+5. **Test the Tools**
+   - Visit the room link in your browser.
+   - Send a message to the agent to interact with the MCP server tools directly in the room chat interface.
+
+---
+
+## Project Level Deployment
+
+For production and persistent deployments: Register services at the Meshagent project level, so every newly created Room automatically gains access to the MCP server tools and a chatbot—no need to run them locally or as separate processes. This makes MCP toolkits and agents available across all rooms.
+
+1. **Create the MCP Memory Service Project-Wide**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-memory:latest --env MESHAGENT_PORT=8001 --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-memory-service
+   ```
+
+2. **Create the MCP Memory Chatbot Project-Wide**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-memory-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-memory-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-memory-chatbot --toolkit=mcp-memory"
+   ```
+
+---
+
+## Tools Available
+
+Tools provided by this MCP Server | Short Description
+-|-
+`add_observations` | Add new observations to existing entities in the knowledge graph
+`create_entities` | Create multiple new entities in the knowledge graph
+`create_relations` | Create multiple new relations between entities in the knowledge graph.
+`delete_entities` | Delete multiple entities and their associated relations from the knowledge graph
+`delete_observations` | Delete specific observations from entities in the knowledge graph
+`delete_relations` | Delete multiple relations from the knowledge graph
+`open_nodes` | Open specific nodes in the knowledge graph by their names
+`read_graph` | Read the entire knowledge graph
+`search_nodes` | Search for nodes in the knowledge graph based on a query
+
+---
+
+### Tools Details
+
+#### Tool: **`add_observations`**
+_Add new observations to existing entities in the knowledge graph_
+
+| Parameters      | Type   | Description          |
+| --------------- | ------ | -------------------- |
+| `observations`  | array  |                      |
+
+---
+
+#### Tool: **`create_entities`**
+_Create multiple new entities in the knowledge graph_
+
+| Parameters      | Type   | Description          |
+| --------------- | ------ | -------------------- |
+| `entities`      | array  |                      |
+
+---
+
+#### Tool: **`create_relations`**
+_Create multiple new relations between entities in the knowledge graph. Relations should be in active voice_
+
+| Parameters      | Type   | Description          |
+| --------------- | ------ | -------------------- |
+| `relations`     | array  |                      |
+
+---
+
+#### Tool: **`delete_entities`**
+_Delete multiple entities and their associated relations from the knowledge graph_
+
+| Parameters      | Type   | Description                      |
+| --------------- | ------ | -------------------------------- |
+| `entityNames`   | array  | An array of entity names to delete|
+
+---
+
+#### Tool: **`delete_observations`**
+_Delete specific observations from entities in the knowledge graph_
+
+| Parameters      | Type   | Description     |
+| --------------- | ------ | -------------- |
+| `deletions`     | array  |                |
+
+---
+
+#### Tool: **`delete_relations`**
+_Delete multiple relations from the knowledge graph_
+
+| Parameters      | Type   | Description                       |
+| --------------- | ------ | ----------------------------------|
+| `relations`     | array  | An array of relations to delete   |
+
+---
+
+#### Tool: **`open_nodes`**
+_Open specific nodes in the knowledge graph by their names_
+
+| Parameters      | Type   | Description                      |
+| --------------- | ------ | -------------------------------- |
+| `names`         | array  | An array of entity names to retrieve |
+
+---
+
+#### Tool: **`read_graph`**
+_Read the entire knowledge graph_
+
+---
+
+#### Tool: **`search_nodes`**
+_Search for nodes in the knowledge graph based on a query_
+
+| Parameters      | Type   | Description                                       |
+| --------------- | ------ | ------------------------------------------------- |
+| `query`         | string | The search query to match against entity names, types, and observation content |
+
+---
+
+## Meshagent & MCP Server Links
+
+- Meshagent: [https://www.meshagent.com/](https://www.meshagent.com/)
+- Documentation: [https://docs.meshagent.com](https://docs.meshagent.com)
+- Meshagent MCP Memory Tool Docker Image: [https://hub.docker.com/r/meshagent/mcp-memory](https://hub.docker.com/r/meshagent/mcp-memory)
+- [What is an MCP Server?](https://www.anthropic.com/news/model-context-protocol)
+
+---

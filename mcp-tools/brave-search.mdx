@@ -1,0 +1,138 @@
+---
+title: Brave Search
+---
+
+
+Follow these steps to quickly deploy the MCP Brave Search tool and chatbot inside a Meshagent Room for testing or development.
+
+### Requirements
+
+- [meshagent](https://www.meshagent.com/) CLI installed:  
+  `pip install "meshagent[all]"`
+- A [Meshagent account](https://docs.meshagent.com/cli/getting_started)
+- A Brave Search API key
+
+### Environment Variables
+
+Set these environment variables (replace values where indicated):
+
+- `BRAVE_API_KEY`: Your Brave Search API Key
+
+---
+
+### Steps
+
+1. **Install Meshagent CLI**  
+   ```sh
+   pip install "meshagent[all]"
+   ```
+2. **Sign up and Authenticate**  
+   Follow the guide at: https://docs.meshagent.com/cli/getting_started
+
+3. **Start the Brave MCP Server as a Meshagent Room Service**
+   ```sh
+   meshagent service test \
+     --room=test \
+     --role=agent \
+     --image=meshagent/mcp-brave-search:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env BRAVE_API_KEY=YOUR_API_KEY_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-brave-search-service-test
+   ```
+   - This creates a temporary Meshagent Room and deploys the Brave MCP Server to it. The service stops when the room closes.
+
+4. **Join with a Chatbot Using the Brave Search Toolkit**
+   ```sh
+   meshagent chatbot join \
+     --room=test \
+     --agent-name=mcp-brave-search \
+     --name=mcp-brave-search \
+     --toolkit=mcp-brave-search
+   ```
+   - This adds a chatbot to the room with access to the Brave Search MCP tools.
+   - The command output provides a room link.
+
+5. **Test the Integration**
+   - Visit the room link in your browser.
+   - Chat with the agent to test Brave Search capabilities.
+
+---
+
+## Project Level Deployment
+
+Deploy Brave Search as persistent services so they’re always available in every new Meshagent project room—ideal for production or team-wide accessibility.
+
+1. **Create the Project-wide MCP Server Service:**
+   ```sh
+   meshagent service create \
+     --role=agent \
+     --image=meshagent/mcp-brave-search:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env BRAVE_API_KEY=YOUR_API_KEY_HERE \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-brave-search-service
+   ```
+
+2. **Create the Project-wide Chatbot Service:**
+   ```sh
+   meshagent service create \
+     --image="meshagent/cli:latest" \
+     --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-brave-search-chatbot" \
+     --env="MESHAGENT_PORT=9001" \
+     --name="mcp-brave-search-chatbot-service" \
+     --command="meshagent chatbot service --agent-name=mcp-brave-search-chatbot --toolkit=mcp-brave-search"
+   ```
+
+- With these project-level services, every new room created in your Meshagent project will automatically have access to Brave Search tools and chatbot, eliminating local or manual deployment needs.
+
+---
+
+## Tools Available
+
+This MCP Server provides the following tools for use in Meshagent rooms:
+
+### Tool Summary
+
+Tools provided by this Server | Short Description
+-|-
+`brave_local_search` | Searches for local businesses and places using Brave's Local Search API.
+`brave_web_search`   | Performs a web search using the Brave Search API, ideal for general queries, news, articles, and online content.
+
+---
+
+### Tools Details
+
+#### **`brave_local_search`**
+
+Searches for local businesses and places using Brave's Local Search API. Best for queries related to physical locations, businesses, restaurants, services, etc. Returns detailed information including:
+- Business names and addresses
+- Ratings and review counts
+- Phone numbers and opening hours
+
+Use this when the query implies 'near me' or mentions specific locations. Automatically falls back to web search if no local results are found.
+
+| Parameters   | Type      | Description                                       |
+| ------------ | --------- | -------------------------------------------------|
+| `query`      | `string`  | Local search query (e.g. 'pizza near Central Park') |
+| `count`      | `number` (*optional*) | Number of results (1-20, default 5)         |
+
+---
+
+#### **`brave_web_search`**
+
+Performs a web search using the Brave Search API, ideal for general queries, news, articles, and online content. Use this for broad information gathering, recent events, or when you need diverse web sources. Supports pagination, content filtering, and freshness controls. Maximum 20 results per request, with offset for pagination.
+
+| Parameters   | Type      | Description                                       |
+| ------------ | --------- | -------------------------------------------------|
+| `query`      | `string`  | Search query (max 400 chars, 50 words)           |
+| `count`      | `number` (*optional*) | Number of results (1-20, default 10)         |
+| `offset`     | `number` (*optional*) | Pagination offset (max 9, default 0)         |
+
+---
+
+## Meshagent Resources
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation (Read The Docs)](https://docs.meshagent.com)
+- [Meshagent MCP Brave Search Docker Image](https://hub.docker.com/r/meshagent/mcp-brave-search)

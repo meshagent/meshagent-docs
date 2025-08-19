@@ -1,0 +1,232 @@
+---
+title: MCP Discord
+---
+
+
+Spin up the Discord MCP server and attach it to a Meshagent Room for easy testing in the cloud. When the Room is closed, the tool and chatbot are automatically removed.
+
+**Environment variables needed:**
+- `DISCORD_TOKEN`: Your Discord bot token.
+
+### Steps
+
+1. **Install Meshagent CLI:**
+   ```sh
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up & Authenticate:**
+   - Go to https://docs.meshagent.com/cli/getting_started and follow the authentication instructions.
+
+3. **Start MCP Server Agent in a Meshagent Room:**
+   ```sh
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-mcp-discord:latest --env MESHAGENT_PORT=8001 --env DISCORD_TOKEN=YOUR_DISCORD_TOKEN --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-mcp-discord-service-test
+   ```
+   - This starts a Meshagent Room (`test`) with the Discord MCP server running as an agent.
+   - If the Room becomes inactive, all services are auto-cleaned up.
+
+4. **Start the Chatbot in the Room:**
+   ```sh
+   meshagent chatbot join --room=test --agent-name=mcp-mcp-discord --name=mcp-mcp-discord --toolkit=mcp-mcp-discord
+   ```
+   - Launches a chatbot in the Room with the `mcp-mcp-discord` toolkit enabled.
+   - You can use multiple toolkits per agent if desired.
+   - The output will display a Room link.
+
+5. **Interact with the Agent:**
+   - Visit the Room link in your browser.
+   - Send messages to the agent to use the Discord MCP Server tools in real time.
+
+---
+
+## Project Level Deployment (Persistent Services for Production)
+
+Enable the MCP Discord Server and chatbot in every Room within a Meshagent Project. Recommended for production; tools and chatbots are always available in every Project Room automatically.
+
+### Steps
+
+1. **Create Persistent MCP Discord Server Agent:**
+   ```sh
+   meshagent service create --role=agent --image=meshagent/mcp-mcp-discord:latest --env MESHAGENT_PORT=8001 --env DISCORD_TOKEN=YOUR_DISCORD_TOKEN --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-mcp-discord-service
+   ```
+
+2. **Create Persistent Chatbot Service:**
+   ```sh
+   meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-mcp-discord-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-mcp-discord-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-mcp-discord-chatbot --toolkit=mcp-mcp-discord"
+   ```
+- These services are available in all new Rooms in your project, with no need for additional setup.
+
+---
+
+## Tools Available
+
+Interact with the Discord platform using Model Context Protocol (MCP) tools. Below is a summary of available tools and their details.
+
+### Tools Summary
+
+Tool | Short Description
+-|-
+`discord_add_multiple_reactions` | Adds multiple emoji reactions to a Discord message at once
+`discord_add_reaction` | Adds an emoji reaction to a specific Discord message
+`discord_create_forum_post` | Creates a new post in a Discord forum channel with optional tags
+`discord_create_text_channel` | Creates a new text channel in a Discord server with an optional topic
+`discord_create_webhook` | Creates a new webhook for a Discord channel
+`discord_delete_channel` | Deletes a Discord channel with an optional reason
+`discord_delete_forum_post` | Deletes a forum post or thread with an optional reason
+`discord_delete_message` | Deletes a specific message from a Discord text channel
+`discord_delete_webhook` | Deletes an existing webhook for a Discord channel
+`discord_edit_webhook` | Edits an existing webhook for a Discord channel
+`discord_get_forum_channels` | Lists all forum channels in a specified Discord server (guild)
+`discord_get_forum_post` | Retrieves details about a forum post including its messages
+`discord_get_server_info` | Retrieves detailed information about a Discord server including channels and member count
+`discord_login` | Logs in to Discord using the configured token
+`discord_read_messages` | Retrieves messages from a Discord text channel with a configurable limit
+`discord_remove_reaction` | Removes a specific emoji reaction from a Discord message
+`discord_reply_to_forum` | Adds a reply to an existing forum post or thread
+`discord_send` | Sends a message to a specified Discord text channel
+`discord_send_webhook_message` | Sends a message to a Discord channel using a webhook
+`test` | A simple test tool to verify the MCP server is working correctly
+
+### Tools Details
+
+#### `discord_add_multiple_reactions`
+Adds multiple emoji reactions to a Discord message at once  
+Parameters:  
+- `channelId` (string)
+- `emojis` (array)
+- `messageId` (string)
+
+#### `discord_add_reaction`
+Adds an emoji reaction to a specific Discord message  
+Parameters:  
+- `channelId` (string)
+- `emoji` (string)
+- `messageId` (string)
+
+#### `discord_create_forum_post`
+Creates a new post in a Discord forum channel with optional tags  
+Parameters:  
+- `content` (string)
+- `forumChannelId` (string)
+- `title` (string)
+- `tags` (array, optional)
+
+#### `discord_create_text_channel`
+Creates a new text channel in a Discord server with an optional topic  
+Parameters:  
+- `channelName` (string)
+- `guildId` (string)
+- `topic` (string, optional)
+
+#### `discord_create_webhook`
+Creates a new webhook for a Discord channel  
+Parameters:  
+- `channelId` (string)
+- `name` (string)
+- `avatar` (string, optional)
+- `reason` (string, optional)
+
+#### `discord_delete_channel`
+Deletes a Discord channel with an optional reason  
+Parameters:  
+- `channelId` (string)
+- `reason` (string, optional)
+
+#### `discord_delete_forum_post`
+Deletes a forum post or thread with an optional reason  
+Parameters:  
+- `threadId` (string)
+- `reason` (string, optional)
+
+#### `discord_delete_message`
+Deletes a specific message from a Discord text channel  
+Parameters:  
+- `channelId` (string)
+- `messageId` (string)
+- `reason` (string, optional)
+
+#### `discord_delete_webhook`
+Deletes an existing webhook for a Discord channel  
+Parameters:  
+- `webhookId` (string)
+- `reason` (string, optional)
+- `webhookToken` (string, optional)
+
+#### `discord_edit_webhook`
+Edits an existing webhook for a Discord channel  
+Parameters:  
+- `webhookId` (string)
+- `avatar` (string, optional)
+- `channelId` (string, optional)
+- `name` (string, optional)
+- `reason` (string, optional)
+- `webhookToken` (string, optional)
+
+#### `discord_get_forum_channels`
+Lists all forum channels in a specified Discord server (guild)  
+Parameters:  
+- `guildId` (string)
+
+#### `discord_get_forum_post`
+Retrieves details about a forum post including its messages  
+Parameters:  
+- `threadId` (string)
+
+#### `discord_get_server_info`
+Retrieves detailed information about a Discord server including channels and member count  
+Parameters:  
+- `guildId` (string)
+
+#### `discord_login`
+Logs in to Discord using the configured token  
+Parameters:  
+- `random_string` (string, optional)
+
+#### `discord_read_messages`
+Retrieves messages from a Discord text channel with a configurable limit  
+Parameters:  
+- `channelId` (string)
+- `limit` (number, optional)
+
+#### `discord_remove_reaction`
+Removes a specific emoji reaction from a Discord message  
+Parameters:  
+- `channelId` (string)
+- `emoji` (string)
+- `messageId` (string)
+- `userId` (string, optional)
+
+#### `discord_reply_to_forum`
+Adds a reply to an existing forum post or thread  
+Parameters:  
+- `message` (string)
+- `threadId` (string)
+
+#### `discord_send`
+Sends a message to a specified Discord text channel  
+Parameters:  
+- `channelId` (string)
+- `message` (string)
+
+#### `discord_send_webhook_message`
+Sends a message to a Discord channel using a webhook  
+Parameters:  
+- `content` (string)
+- `webhookId` (string)
+- `webhookToken` (string)
+- `avatarURL` (string, optional)
+- `threadId` (string, optional)
+- `username` (string, optional)
+
+#### `test`
+A simple test tool to verify the MCP server is working correctly
+
+---
+
+## Further Resources & Links
+
+- [Meshagent Website](https://www.meshagent.com/)
+- [Meshagent Documentation (Read The Docs)](https://docs.meshagent.com)
+- [Docker Hub: MCP Meshagent Discord Server Image](https://hub.docker.com/r/meshagent/mcp-mcp-discord)
+
+For questions or issues, see the official [Meshagent documentation](https://docs.meshagent.com) or visit the [Discord MCP Tool repository](https://github.com/slimslenderslacks/mcp-discord).

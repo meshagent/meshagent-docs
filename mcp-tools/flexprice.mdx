@@ -1,0 +1,250 @@
+---
+title: FlexPrice
+---
+
+
+The following steps will get you running the MCP server and chatbot as tools at a Room level (ephemeral cloud session) for fast testing and prototyping.
+
+### Environment Variables
+
+Set the following required environment variables for your cloud MCP server connection:
+- **BASE_URL**: `https://api.cloud.flexprice.io`
+- **API_KEY**: `your_api_key_here`
+
+### Step-by-step
+
+1. **Install Meshagent CLI and Required Packages**
+   ```
+   pip install "meshagent[all]"
+   ```
+
+2. **Sign Up and Authenticate**
+   - Follow signup and authentication steps at: [Meshagent Getting Started](https://docs.meshagent.com/cli/getting_started)
+
+3. **Create the MCP Service in a Test Room**
+   ```
+   meshagent service test --room=test --role=agent --image=meshagent/mcp-flexprice:latest \
+     --env MESHAGENT_PORT=8001 \
+     --env BASE_URL=https://api.cloud.flexprice.io \
+     --env API_KEY=your_api_key_here \
+     --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+     --name=mcp-flexprice-service-test
+   ```
+   - This command starts a Meshagent Room called `test` with the MCP server active as a callable service. When the room becomes inactive, all services and chatbots are cleaned up.
+
+4. **Add a Chatbot to the Room with the Flexprice Toolkit**
+   ```
+   meshagent chatbot join --room=test --agent-name=mcp-flexprice --name=mcp-flexprice --toolkit=mcp-flexprice
+   ```
+   - Starts a chatbot in the same room that can use the `flexprice` toolkit. Multiple toolkits can be attached to the same agent.
+   - **Note:** The output of this command will include a direct link to your test room.
+
+5. **Test in the Browser**
+   - Open the room link from the previous step in your browser.
+   - Send any message to the agent to interact with the MCP Server tools and explore what they offer.
+
+---
+
+## Project Level Deployment
+
+For production or persistent deployments, you can provision services at the Meshagent project level. These will transparently join every new project room as they open, making the MCP server tools and chatbots available in all project rooms—without requiring any manual startup per session.
+
+### 1. Deploy MCP Server Agent Service
+
+```
+meshagent service create --role=agent \
+  --image=meshagent/mcp-flexprice:latest \
+  --env MESHAGENT_PORT=8001 \
+  --env BASE_URL=https://api.cloud.flexprice.io \
+  --env API_KEY=your_api_key_here \
+  --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" \
+  --name=mcp-flexprice-service
+```
+
+### 2. Deploy MCP Chatbot Service
+
+```
+meshagent service create --image="meshagent/cli:latest" \
+  --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-flexprice-chatbot" \
+  --env="MESHAGENT_PORT=9001" \
+  --name="mcp-flexprice-chatbot-service" \
+  --command="meshagent chatbot service --agent-name=mcp-flexprice-chatbot --toolkit=mcp-flexprice"
+```
+
+These services will then join every room in your Meshagent project automatically and persist for the lifetime of your project.
+
+---
+
+## Tools Available
+
+**The MCP Server provides these tools for access to core FlexPrice operations:**
+
+| Tool | Short Description |
+|------|------------------|
+| `getCustomerById` | Get a customer by ID |
+| `getCustomerByLookupKey` | Get a customer by lookup key (external ID) |
+| `getCustomerEntitlements` | Get a customer's entitlements |
+| `getCustomerSubscriptions` | Get a customer's subscriptions |
+| `getCustomerUsageSummary` | Get a customer's usage summary |
+| `getCustomers` | Get all customers |
+| `getEventsByCustomer` | Get events for a customer |
+| `getInvoiceById` | Get an invoice by its ID |
+| `getInvoiceByNumber` | Get an invoice by its number |
+| `getInvoices` | Get invoices with optional filtering by date range and status |
+| `getInvoicesByCustomerId` | Get all invoices for a specific customer |
+| `getPaymentById` | Get a payment by ID |
+| `getPayments` | Get payments with optional filtering |
+| `getPlanById` | Get a plan by ID |
+| `getPlans` | Get all plans |
+| `getPriceById` | Get a price by ID |
+| `getPrices` | Get all prices |
+| `getSubscriptionById` | Get a subscription by ID |
+| `getSubscriptionPauses` | Get all pauses for a subscription |
+| `getSubscriptionUsage` | Get usage for a subscription |
+| `getSubscriptions` | Get all subscriptions |
+| `getWalletBalance` | Get the real-time balance of a wallet |
+| `getWalletById` | Get a wallet by ID |
+| `getWalletTransactions` | Get transactions for a wallet with pagination |
+| `getWalletsByCustomerId` | Get all wallets for a customer |
+
+---
+
+### Tool Details
+
+#### `getCustomerById`
+- **Description:** Get a customer by ID
+- **Params:** 
+  - `customerId`: `string`
+
+#### `getCustomerByLookupKey`
+- **Description:** Get a customer by lookup key (external ID)
+- **Params:** 
+  - `lookupKey`: `string`
+
+#### `getCustomerEntitlements`
+- **Description:** Get a customer's entitlements
+- **Params:** 
+  - `customerId`: `string`
+
+#### `getCustomerSubscriptions`
+- **Description:** Get a customer's subscriptions
+- **Params:** 
+  - `customerId`: `string`
+
+#### `getCustomerUsageSummary`
+- **Description:** Get a customer's usage summary
+- **Params:** 
+  - `customerId`: `string`
+
+#### `getCustomers`
+- **Description:** Get all customers
+
+#### `getEventsByCustomer`
+- **Description:** Get events for a customer
+- **Params:**
+  - `externalCustomerId`: `string`
+  - `endTime`: `string` *(optional)*
+  - `iterFirstKey`: `string` *(optional)*
+  - `iterLastKey`: `string` *(optional)*
+  - `startTime`: `string` *(optional)*
+
+#### `getInvoiceById`
+- **Description:** Get an invoice by its ID
+- **Params:** 
+  - `invoiceId`: `string`
+
+#### `getInvoiceByNumber`
+- **Description:** Get an invoice by its number
+- **Params:** 
+  - `invoiceNumber`: `string`
+
+#### `getInvoices`
+- **Description:** Get invoices with optional filtering by date range and status
+- **Params:**
+  - `endDate`: `string` *(optional)* (ISO format)
+  - `limit`: `number` *(optional)*
+  - `offset`: `number` *(optional)*
+  - `startDate`: `string` *(optional)* (ISO format)
+  - `status`: `string` *(optional)*
+
+#### `getInvoicesByCustomerId`
+- **Description:** Get all invoices for a specific customer
+- **Params:** 
+  - `customerId`: `string`
+
+#### `getPaymentById`
+- **Description:** Get a payment by ID
+- **Params:** 
+  - `paymentId`: `string`
+
+#### `getPayments`
+- **Description:** Get payments with optional filtering
+- **Params:**
+  - `customerId`: `string` *(optional)*
+  - `limit`: `number` *(optional)*
+  - `offset`: `number` *(optional)*
+  - `status`: `string` *(optional)*
+
+#### `getPlanById`
+- **Description:** Get a plan by ID
+- **Params:** 
+  - `planId`: `string`
+
+#### `getPlans`
+- **Description:** Get all plans
+
+#### `getPriceById`
+- **Description:** Get a price by ID
+- **Params:** 
+  - `priceId`: `string`
+
+#### `getPrices`
+- **Description:** Get all prices
+
+#### `getSubscriptionById`
+- **Description:** Get a subscription by ID
+- **Params:** 
+  - `subscriptionId`: `string`
+
+#### `getSubscriptionPauses`
+- **Description:** Get all pauses for a subscription
+- **Params:** 
+  - `subscriptionId`: `string`
+
+#### `getSubscriptionUsage`
+- **Description:** Get usage for a subscription
+- **Params:** 
+  - `subscriptionId`: `string`
+
+#### `getSubscriptions`
+- **Description:** Get all subscriptions
+
+#### `getWalletBalance`
+- **Description:** Get the real-time balance of a wallet
+- **Params:** 
+  - `walletId`: `string`
+
+#### `getWalletById`
+- **Description:** Get a wallet by ID
+- **Params:** 
+  - `walletId`: `string`
+
+#### `getWalletTransactions`
+- **Description:** Get transactions for a wallet with pagination
+- **Params:**
+  - `walletId`: `string`
+  - `limit`: `number` *(optional)*
+  - `offset`: `number` *(optional)*
+
+#### `getWalletsByCustomerId`
+- **Description:** Get all wallets for a customer
+- **Params:** 
+  - `customerId`: `string`
+
+---
+
+## Relevant Links
+
+- **Meshagent:** [https://www.meshagent.com/](https://www.meshagent.com/)
+- **Meshagent Read The Docs:** [https://docs.meshagent.com](https://docs.meshagent.com)
+- **MCP FlexPrice Docker Image:** [https://hub.docker.com/r/meshagent/mcp-flexprice](https://hub.docker.com/r/meshagent/mcp-flexprice)

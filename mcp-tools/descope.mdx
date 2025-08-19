@@ -1,0 +1,161 @@
+---
+title: Descope
+---
+
+
+You can quickly spin up an MCP server and agent in a Meshagent Room for collaborative testing. When the room closes, the MCP server and chatbot are automatically cleaned up.
+
+### Required Environment Variables
+
+- `DESCOPE_PROJECT_ID`: your-descope-project-id-here
+- `DESCOPE_MANAGEMENT_KEY`: your-descope-management-key-here
+
+### Steps
+
+1. **Install Meshagent CLI and Tools**
+
+    ```sh
+    pip install "meshagent[all]"
+    ```
+
+2. **Sign Up and Authenticate**
+
+    Follow the guide at [docs.meshagent.com/cli/getting_started](https://docs.meshagent.com/cli/getting_started) to register your account and authenticate.
+
+3. **Start a Room-Level MCP Service**
+
+    ```sh
+    meshagent service test --room=test --role=agent --image=meshagent/mcp-descope:latest --env MESHAGENT_PORT=8001 --env DESCOPE_PROJECT_ID=your-descope-project-id-here --env DESCOPE_MANAGEMENT_KEY=your-descope-management-key-here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-descope-service-test
+    ```
+    - This starts a Meshagent Room (`test`) with a dedicated MCP server. The room and its services are automatically removed when no longer active.
+
+4. **Add a Chatbot Connected to the MCP Tools**
+
+    ```sh
+    meshagent chatbot join --room=test --agent-name=mcp-descope --name=mcp-descope --toolkit=mcp-descope
+    ```
+    - This launches a Meshagent chatbot in the same room, enabled to use the Descope toolset. You can use multiple toolkits per agent if needed.
+    - The command output provides a browser link to your room.
+
+5. **Try It Out**
+
+    - Open the provided room link in your browser and interact with the agent to use the MCP tools in real time.
+
+---
+
+## Project Level Deployment (Persistent MCP & Chatbot)
+
+For production scenarios, deploy persistent services to your Meshagent project. These services are available in all rooms, every time a new room is created. No need to manage local processes—your MCP server and chatbot are ready on room creation.
+
+### Deploy Persistent MCP Service
+
+```sh
+meshagent service create --role=agent --image=meshagent/mcp-descope:latest --env MESHAGENT_PORT=8001 --env DESCOPE_PROJECT_ID=your-descope-project-id-here --env DESCOPE_MANAGEMENT_KEY=your-descope-management-key-here --port="num=8001 path=/webhook liveness=/ type=meshagent.callable" --name=mcp-descope-service
+```
+
+### Deploy Persistent Chatbot
+
+```sh
+meshagent service create --image="meshagent/cli:latest" --port="num=9001 path=/agent liveness=/ type=meshagent.callable participant_name=mcp-descope-chatbot" --env="MESHAGENT_PORT=9001" --name="mcp-descope-chatbot-service" --command="meshagent chatbot service --agent-name=mcp-descope-chatbot --toolkit=mcp-descope"
+```
+
+---
+
+## Tools Available
+
+The Meshagent-wrapped Descope MCP Server offers the following tools for automation and management:
+
+| Tools provided by this Server | Short Description |
+|------------------------------|------------------|
+| `create-user`                | Create a new user in Descope project |
+| `invite-user`                | Create and invite a new user to the Descope project |
+| `search-audits`              | Search Descope project audit logs |
+| `search-users`               | Search for users in Descope project |
+
+### Tool Details
+
+#### **`create-user`**  
+_Create a new user in Descope project_  
+**Parameters**:
+- `loginId` (`string`): Primary login identifier for the user
+- `additionalLoginIds` (`array`, optional): Additional login identifiers
+- `customAttributes` (`object`, optional): Custom attributes for the user
+- `displayName` (`string`, optional): User's display name
+- `email` (`string`, optional): User's email address
+- `familyName` (`string`, optional): User's family/last name
+- `givenName` (`string`, optional): User's given/first name
+- `middleName` (`string`, optional): User's middle name
+- `phone` (`string`, optional): User's phone number in E.164 format
+- `picture` (`string`, optional): URL to user's profile picture
+- `roles` (`array`, optional): Global role names to assign to the user
+- `ssoAppIds` (`array`, optional): SSO application IDs to associate
+- `userTenants` (`array`, optional): Tenant associations with specific roles
+- `verifiedEmail` (`boolean`, optional): Whether the email is pre-verified
+- `verifiedPhone` (`boolean`, optional): Whether the phone is pre-verified
+
+---
+
+#### **`invite-user`**  
+_Create and invite a new user to the Descope project_  
+**Parameters**:
+- `loginId` (`string`): Primary login identifier for the user
+- `additionalLoginIds` (`array`, optional): Additional login identifiers
+- `customAttributes` (`object`, optional): Custom attributes for the user
+- `displayName` (`string`, optional): User's display name
+- `email` (`string`, optional): User's email address
+- `familyName` (`string`, optional): User's family/last name
+- `givenName` (`string`, optional): User's given/first name
+- `inviteUrl` (`string`, optional): Custom URL for the invitation link
+- `middleName` (`string`, optional): User's middle name
+- `phone` (`string`, optional): User's phone number in E.164 format
+- `picture` (`string`, optional): URL to user's profile picture
+- `roles` (`array`, optional): Global role names to assign to the user
+- `sendMail` (`boolean`, optional): Send invite via email (default follows settings)
+- `sendSMS` (`boolean`, optional): Send invite via SMS (default follows settings)
+- `ssoAppIds` (`array`, optional): SSO application IDs to associate
+- `templateId` (`string`, optional): Custom template ID for the invitation
+- `templateOptions` (`object`, optional): Options for customizing the invitation template
+- `userTenants` (`array`, optional): Tenant associations with specific roles
+- `verifiedEmail` (`boolean`, optional): Whether the email is pre-verified
+- `verifiedPhone` (`boolean`, optional): Whether the phone is pre-verified
+
+---
+
+#### **`search-audits`**  
+_Search Descope project audit logs_  
+**Parameters**:
+- `actions` (`array`, optional): Filter by specific action types
+- `excludedActions` (`array`, optional): Actions to exclude from results
+- `geos` (`array`, optional): Filter by geographic locations
+- `hoursBack` (`number`, optional): Hours to look back (max 720 hours / 30 days)
+- `limit` (`number`, optional): Number of audit logs to fetch (max 10)
+- `loginIds` (`array`, optional): Filter by specific login IDs
+- `methods` (`array`, optional): Filter by authentication methods
+- `noTenants` (`boolean`, optional): If true, only show events without tenants
+- `tenants` (`array`, optional): Filter by specific tenant IDs
+
+---
+
+#### **`search-users`**  
+_Search for users in Descope project_  
+**Parameters**:
+- `emails` (`array`, optional): Filter by specific email addresses
+- `limit` (`number`, optional): Number of users per page (max 100)
+- `loginIds` (`array`, optional): Filter by specific login IDs
+- `page` (`number`, optional): Page number for pagination
+- `phones` (`array`, optional): Filter by specific phone numbers
+- `roles` (`array`, optional): Filter users by role names
+- `ssoAppIds` (`array`, optional): Filter users by SSO application IDs
+- `statuses` (`array`, optional): Filter by user statuses (`enabled`, `disabled`, or `invited`)
+- `tenantIds` (`array`, optional): Filter users by specific tenant IDs
+- `testUsersOnly` (`boolean`, optional): Return only test users
+- `text` (`string`, optional): Text to search for in user fields
+- `withTestUser` (`boolean`, optional): Include test users in results
+
+---
+
+## Useful Links
+
+- Main Site: [meshagent.com](https://www.meshagent.com/)
+- Meshagent Documentation: [Read The Docs](https://docs.meshagent.com)
+- Meshagent MCP Tool Docker Image: [docker.com/r/meshagent/mcp-descope](https://hub.docker.com/r/meshagent/mcp-descope)
