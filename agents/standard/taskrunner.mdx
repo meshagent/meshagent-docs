@@ -1,0 +1,82 @@
+---
+title: "TaskRunner"
+---
+
+A TaskRunner is an agent that produces inputs and outputs that match an input and output json schema. It joins a MeshAgent Room and can be discovered and 
+invoked from the Studio using the "Run Task..." menu option or using the ```room.agents.ask``` method on the API.
+
+To build a custom TaskRunner, extend the base TaskRunner, provide a JSON schema for input and output, and define an ask method.
+
+```python Python
+
+import asyncio
+from meshagent.agents import TaskRunner
+
+class Sample(TaskRunner):
+
+    def __init__(self):
+        super().__init__(
+            name="sample.taskrunner",
+            input_schema={
+                "type" : "object",
+                "additionalProperties" : False,
+                "required" : [ "prompt" ],
+                "properties" : {
+                    "prompt" : {
+                        "type" : "string"
+                    }
+                }
+            }
+            output_schema={
+                "type" : "object",
+                "additionalProperties" : False,
+                "required" : [ "answer" ],
+                "properties" : {
+                    "text" : {
+                        "type" : "string"
+                    }
+                }
+            }
+        )
+
+    async def ask(self, *, context, arguments):
+        return { "answer" : "hello world" }
+```
+
+
+The MeshAgent SDK contains a few prebuilt task runners agents in ```meshagent.agents.planning``` that can use tools, be configured with custom tools, and integrate with a LLM to perform operations:
+
+**PlanningResponder** - a task runner that takes in a prompt an optional set of custom tools, and returns a text response.
+
+**DynamicPlanningResponder** - a task runner that takes in a prompt an optional set of custom tools, and returns a structured response.
+
+You can customize the PlanningResponder with the following constructor parameters:
+
+**requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+
+**input_prompt:** Whether the planner should accept a prompt as input, if true, the input should be in the format ```{ "prompt" : "text" }```.
+
+**output_schema:** a JSON schema that responses must conform to.
+
+**llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+
+**toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+
+**rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+
+**max_iterations:** the maximum number of iterations of the planning loop (optional).
+
+**tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
+
+**supports_tools** Whether the agent should support passing a custom set of tools at runtime (optional)
+
+Two preconfigured task runners are available by default in MeshAgent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
+You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
+MeshAgent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
+and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
+
+TaskRunners can also be surfaced in toolkits and used as tools that can be used by other agents using the RunTaskTool. Exposing agents as tools and then
+giving those tools to a ChatBot is a great way to get started building multi agent systems. 
+
+The base TaskRunner requires JSON schemas to be provided to describe the input and output format. If you'd prefer a level interface, you can use a Pydantic
+BaseModel with the PydanticAgent class in meshagent.agents.pydantic.
