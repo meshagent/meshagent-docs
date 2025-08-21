@@ -1,0 +1,49 @@
+from meshagent.tools import Tool, RemoteToolkit
+from meshagent.api.services import ServiceHost
+
+import asyncio
+
+service = ServiceHost()
+
+
+class DynamicWidget(Tool):
+    def __init__(self):
+        super().__init__(name="widget", input_schema={
+            "type" : "object",
+            "additionalProperties" : False,
+            "required" : [
+                "data",
+                "platform",
+                "output",
+            ],
+            "properties" : {
+                "data" : { "type" : "string"},
+                 "platform" : { "type" : "string"},
+                  "output" : { "type" : "string"},
+
+            }
+        })
+
+    async def execute(self, context, *, platform: str, data: str, output: str):
+        return """
+import core.widgets;
+
+widget root = Container(
+    color: 0xFF002211,
+    child: Center(
+        child: Text(text: ["Hello, ", data.greet.name, "!"], textDirection: "ltr"),
+    ),
+);
+
+"""
+
+@service.path("/agent")
+class DynamicUI(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="renderer",
+            tools=[DynamicWidget()]
+        )
+
+
+asyncio.run(service.run())
