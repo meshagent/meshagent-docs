@@ -1,11 +1,9 @@
-```python Python
 import os
 import asyncio
 from meshagent.api.services import ServiceHost
-from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
+from meshagent.tools import Tool, ToolContext, RemoteToolkit
 
 service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
-
 
 class Add(Tool):
     def __init__(self):
@@ -63,9 +61,5 @@ class MathToolkit(RemoteToolkit):
             tools=[Add(), Subtract()],
         )
 
-
 print(f"running on port {service.port}")
 asyncio.run(service.run())
-
-```
-

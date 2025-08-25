@@ -1,8 +1,11 @@
-```python Python
 import os
 import asyncio
+import logging
 from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -11,7 +14,7 @@ def env(name: str) -> str:
     return val
 
 async def main():
-    room_name = "my-room"
+    room_name = "toolsroom"
 
     async with RoomClient(
         protocol=WebSocketClientProtocol(
@@ -28,9 +31,21 @@ async def main():
                 ).to_jwt(token=env("MESHAGENT_SECRET")),
             )
     ) as room:
-        print(f"Connected to room: {room.room_name}")
+        log.info(f"Connected to room: {room.room_name}")
+        toolkits = await room.agents.list_toolkits()
+
+        print("The tools connected to our room are:")
+        for toolkit in toolkits:
+            print(
+                f"\n Toolkit: {toolkit.name}: {toolkit.title} - {toolkit.description}"
+            )
+            for tool in toolkit.tools:
+                print(f" Tool: {tool.name}: {tool.title} - {tool.description}")
+
+        agents = await room.agents.list_agents()
+        print("The agents in the room are:")
+        for agent in agents:
+            print(f"Agent: {agent.name}")
+
 
 asyncio.run(main())
-
-```
-

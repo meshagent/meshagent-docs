@@ -1,8 +1,11 @@
-```python Python
 import os
 import asyncio
+import logging
 from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -10,11 +13,18 @@ def env(name: str) -> str:
         raise RuntimeError(f"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.")
     return val
 
-async def main():
-    room_name = "my-room"
+async def run_planner(room_name:str, prompt:str):
+    """
+    Run the Planner in a MeshAgent Room
 
-    async with RoomClient(
-        protocol=WebSocketClientProtocol(
+    Args:
+        room_name: Name of the room to connect to
+        prompt: The user prompt to send to the agent 
+        participant_name: Name to use as participant (defaults to "test_user")
+    """
+    try:
+        async with RoomClient(
+            protocol=WebSocketClientProtocol(
                 url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
                 token=ParticipantToken(
                     name="participant",
@@ -27,10 +37,17 @@ async def main():
                     ],
                 ).to_jwt(token=env("MESHAGENT_SECRET")),
             )
-    ) as room:
-        print(f"Connected to room: {room.room_name}")
+        ) as room:
+            log.info(f"Connected to room: {room.room_name}")
+            response = await room.agents.ask(
+                agent="meshagent.planner",
+                arguments={
+                    "prompt": prompt
+                    }
+                )
+            log.info(f"Response from agent:{response}")
+            return response
+    except Exception as e:
+        print(f"Connection failed: {e}")
 
-asyncio.run(main())
-
-```
-
+asyncio.run(run_planner(room_name="test", prompt="Write a product description for a bluetooth speaker"))
