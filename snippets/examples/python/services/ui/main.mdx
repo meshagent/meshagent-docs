@@ -13,21 +13,23 @@ service = ServiceHost()
 
 class ProductWidget(Tool):
     def __init__(self):
-        super().__init__(name="products", input_schema={
-            "type" : "object",
-            "additionalProperties" : False,
-            "required" : [
-                "data",
-                "platform",
-                "output",
-            ],
-            "properties" : {
-                "data" : { "type" : "string"},
-                "platform" : { "type" : "string"},
-                "output" : { "type" : "string"},
-
-            }
-        })
+        super().__init__(
+            name="products",
+            input_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": [
+                    "data",
+                    "platform",
+                    "output",
+                ],
+                "properties": {
+                    "data": {"type": "string"},
+                    "platform": {"type": "string"},
+                    "output": {"type": "string"},
+                },
+            },
+        )
 
     async def execute(self, context, *, platform: str, data: str, output: str):
         return """
@@ -69,13 +71,12 @@ decoration: {
 
 """
 
+
 @service.path("/renderer", identity="renderer")
 class DynamicUI(RemoteToolkit):
     def __init__(self):
-        super().__init__(
-            name="renderer",
-            tools=[ProductWidget()]
-        )
+        super().__init__(name="renderer", tools=[ProductWidget()])
+
 
 class InsertProductListingTool(Tool):
     def __init__(self, thread: MeshDocument):
@@ -83,54 +84,44 @@ class InsertProductListingTool(Tool):
         super().__init__(
             name="insert_product_listing",
             input_schema={
-                "type" : "object",
-                "additionalProperties" : False,
-                "required" : [
-                    "products"
-                ],
-                "properties" : {
-                    
-                    "products" : {
-                        "type" : "array",
-                        "items" : {    
-                            "anyOf" : [
-                                { 
-                                    "type" : "object",
-                                    "required" : [
-                                        "name"
-                                    ],
-                                    "additionalProperties" : False,
-                                    "properties" : {
-                                        "name" : {
-                                            "type" : "string"
-                                        }
-                                    }
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["products"],
+                "properties": {
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "required": ["name"],
+                                    "additionalProperties": False,
+                                    "properties": {"name": {"type": "string"}},
                                 }
-                            ]                        
-                        }
+                            ]
+                        },
                     }
-                }
-            }
+                },
+            },
         )
 
     async def execute(self, context, products: list):
         for child in self.thread.root.get_children():
             if child.tag_name == "messages":
-                child.append_child("ui", {
-                    "renderer" : "renderer",
-                    "widget" : "products",
-                    "data" : json.dumps({ "products" : products })
-                })
-        
+                child.append_child(
+                    "ui",
+                    {
+                        "renderer": "renderer",
+                        "widget": "products",
+                        "data": json.dumps({"products": products}),
+                    },
+                )
+
 
 class ProductToolkit(Toolkit):
     def __init__(self, thread: MeshDocument):
-        super().__init__(
-            name="products",
-            tools=[
-                InsertProductListingTool(thread)
-            ]
-        )
+        super().__init__(name="products", tools=[InsertProductListingTool(thread)])
+
 
 @service.path("/chatbot", identity="product-chatbot")
 class UIChatBot(ChatBot):
@@ -139,12 +130,14 @@ class UIChatBot(ChatBot):
             name="chatbot",
             llm_adapter=OpenAIResponsesAdapter(),
             rules=[
-                "use the insert_product_listing tool to display a list of products"
-            ]
+                "use the insert_product_listing tool to display a list of products when asked about products"
+            ],
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
-        toolkits = await super().get_thread_toolkits(thread_context=thread_context, participant=participant)
+        toolkits = await super().get_thread_toolkits(
+            thread_context=thread_context, participant=participant
+        )
         toolkits.append(ProductToolkit(thread=thread_context.thread))
         return toolkits
 
