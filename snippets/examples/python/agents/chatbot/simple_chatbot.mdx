@@ -8,9 +8,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost() # defaults to 8081
 
 otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
@@ -27,7 +25,6 @@ class SimpleChatbot(ChatBot):
             llm_adapter = OpenAIResponsesAdapter(),
         )
 
-print(f"running on port {service.port}")
 asyncio.run(service.run())
 ```
 
