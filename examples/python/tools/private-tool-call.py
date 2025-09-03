@@ -4,23 +4,21 @@ import asyncio
 import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
-from meshagent.api import websocket_protocol
-from meshagent.tools import Tool, ToolContext, Toolkit, RemoteToolkit
-from meshagent.api.messaging import TextResponse, JsonResponse
+from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.api.messaging import TextResponse
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 otel_config(service_name="my-service")
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
 
 async def save_to_storage(room, path: str, data: bytes):
-        handle = await room.storage.open(path=path, overwrite=True)
-        await room.storage.write(handle=handle, data=data)
-        await room.storage.close(handle=handle)
+    handle = await room.storage.open(path=path, overwrite=True)
+    await room.storage.write(handle=handle, data=data)
+    await room.storage.close(handle=handle)
+
 
 class Survey(Tool):
     def __init__(self):
@@ -30,26 +28,35 @@ class Survey(Tool):
             description="a tool that conducts a survey of the participants",
             input_schema={
                 "type": "object",
-                "additionalProperties" : False,
-                "required":[
-                    "subject",
-                    "description",
-                    "name"
-                ],
+                "additionalProperties": False,
+                "required": ["subject", "description", "name"],
                 "properties": {
-                    "subject": {"type": "string", "description": "The subject of the form"},
-                    "description": {"type": "string", "description": "The content to fill in (e.g. feedback, poll result)"},
-                    "name": {"type": "string", "description": "A short name to be used on the form"}
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the form",
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "The content to fill in (e.g. feedback, poll result)",
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "A short name to be used on the form",
+                    },
                 },
-            }
+            },
         )
 
-    async def execute(self, context: ToolContext, subject:str, description:str, name:str):
+    async def execute(
+        self, context: ToolContext, subject: str, description: str, name: str
+    ):
         room = context.room
-        participants = [p for p in room.messaging.remote_participants if p.role=="user"]
+        participants = [
+            p for p in room.messaging.remote_participants if p.role == "user"
+        ]
         log.info("Starting survey for %d participant(s)", len(participants))
 
-        MAX_ATTEMPTS = 2 
+        MAX_ATTEMPTS = 2
 
         async def ask_participant(p):
             errors = []
@@ -65,58 +72,58 @@ class Survey(Tool):
                             "description": description,
                             "form": [
                                 {
-                                "input": {
-                                    "multiline": False,
-                                    "name": name,
-                                    "description": description
+                                    "input": {
+                                        "multiline": False,
+                                        "name": name,
+                                        "description": description,
+                                    },
                                 },
-                            },
-                            ]
-                        }
+                            ],
+                        },
                     )
                     answer = resp.json.get(name)
                     if answer:
                         log.info("participant_id", p.id, "response", answer)
-                        return {"participant_id": p.id, "response": answer} 
+                        return {"participant_id": p.id, "response": answer}
                     raise RuntimeError("empty or timed-out response")
 
                 except Exception as exc:
                     errors.append(f"attempt {attempt}: {exc}")
                     if attempt < MAX_ATTEMPTS:
                         log.info("Retrying %s after: %s", p.id, exc)
-                        await asyncio.sleep(1)     # brief back-off
+                        await asyncio.sleep(1)  # brief back-off
 
             # All attempts failed – return aggregated error list
             return {"participant_id": p.id, "errors": errors}
-        
-        log.info("Surveying participants")             
+
+        log.info("Surveying participants")
         tasks = [asyncio.create_task(ask_participant(p)) for p in participants]
-        results = await asyncio.gather(*tasks) 
-        
+        results = await asyncio.gather(*tasks)
+
         summary = {
-            "meta": {                       # save the prompt generated for the survey
+            "meta": {  # save the prompt generated for the survey
                 "subject": subject,
                 "description": description,
-                "name": name
+                "name": name,
             },
             "success": {},
-            "failed": {}
+            "failed": {},
         }
         for item in results:
             pid = item["participant_id"]
             if "response" in item:
                 summary["success"][pid] = item["response"]
             else:
-                summary["failed"][pid]  = item["errors"]
+                summary["failed"][pid] = item["errors"]
 
         # write survey results to the room
         log.info("Survey completed, writing raw results to Room storage")
         await save_to_storage(
             room=context.room,
             path=f"survey/{room.room_name}-{name}.json",
-            data=json.dumps({"summary": summary}, indent=2).encode("utf-8")
+            data=json.dumps({"summary": summary}, indent=2).encode("utf-8"),
         )
-    
+
         # summarize results
         log.info("Summarizing survey results")
         summary_resp = await context.room.agents.ask(
@@ -136,10 +143,11 @@ class Survey(Tool):
         await save_to_storage(
             room=context.room,
             path=f"survey/{room.room_name}-{name}-summary.doc",
-            data=summary_text.encode("utf-8")
+            data=summary_text.encode("utf-8"),
         )
 
         return TextResponse(text=summary_text)
+
 
 @service.path("/survey")
 class SurveyToolkit(RemoteToolkit):
@@ -150,6 +158,7 @@ class SurveyToolkit(RemoteToolkit):
             description="a toolkit for conducting a survey",
             tools=[Survey()],
         )
+
 
 print(f"running on port {service.port}")
 asyncio.run(service.run())

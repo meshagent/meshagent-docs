@@ -2,6 +2,11 @@
 title: "Build and Deploy a Chat Agent"
 ---
 
+import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+import MeshToolsChatbot from "/snippets/examples/python/agents/chatbot/mesh_tools_chatbot.mdx"
+import CustomToolsChatbot from "/snippets/examples/python/agents/chatbot/custom_tools_chatbot.mdx"
+
+
 ## Overview
 The MeshAgent **ChatBot** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code!
 
@@ -46,38 +51,11 @@ Now that we've seen the default chatbot in action, let's create one from scratch
 
 Create a main.py file and paste the starter code below for the basic ChatBot. To start, we can give the agent one rule / system instruction. We'll build up this code over the course of this example. 
 
-```python Python
-import os
-import asyncio
+**Note**: You can optionally set the ``port`` parameter on ``ServiceHost``. If you don't pass a port, it will default to ``8081``. 
 
-from meshagent.api import RequiredToolkit
-from meshagent.agents.chat import ChatBot
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api.services import ServiceHost
-from meshagent.otel import otel_config
-
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-@service.path("/chat")
-class SimpleChatbot(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            title="chatbot",
-            description="a simple chatbot",
-            rules=[
-                "Always respond to the user first then include a fun fact at the end of your response."
-            ],
-            llm_adapter = OpenAIResponsesAdapter(),
-        )
-
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-```
+<CodeGroup>
+    <SimpleChatbot />
+</CodeGroup>
 
 ### Running the Simple ChatBot in Test Mode: 
 Time to try it out!
@@ -106,65 +84,9 @@ Next, let's give our agent the ability to interact with the user, convert docume
 
 We'll also add a few imports and update the chat agent's rules so it knows how to interact with the available tools more efficiently. 
 
-```python Python
-import os
-import asyncio
-
-from meshagent.api import RequiredToolkit, RequiredSchema
-from meshagent.agents.chat import ChatBot
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api.services import ServiceHost
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.schemas.document import document_schema
-from meshagent.otel import otel_config
-
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-@service.path("/chat")
-class SimpleChatbot(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            title="chatbot",
-            description="a simple chatbot",
-            rules=[
-                "Always respond to the user and include a fun fact at the end of your response.",
-                "use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
-                "the document names MUST have the extension .document, automatically add the extension if it is not provided",
-                "you MUST always write content to a document",
-                "first open a document, then use tools to write the document content before closing the document",
-                "before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
-                "blob URLs MUST not be added to documents, they must be saved as files first",
-            ],
-            llm_adapter = OpenAIResponsesAdapter(),
-            requires=[
-                RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=["markitdown_from_file"]
-                ),
-            ],
-            toolkits=[
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
-                )
-            ],
-        )
-
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-```
+<CodeGroup>
+    <MeshToolsChatbot />
+</CodeGroup>
 
 We can test the agent using the same commands as we did with the simple chat agent!
 ```sh
@@ -182,130 +104,9 @@ To do this we will update the chat agent initialization to create a table for th
 
 This is a simple example of adding tasks, to create a more useful task writer we'd want to add date information and other metadata to better track and filter tasks. This example is mainly to demonstrate writing to room storage and adding custom tools to our chat agent.
 
-```python Python
-import os
-import asyncio
-import uuid
-from datetime import datetime, timezone, timedelta
-
-from meshagent.api import RequiredToolkit, RequiredSchema
-from meshagent.agents.chat import ChatBot
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api.services import ServiceHost
-from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
-from meshagent.agents.schemas.document import document_schema
-from meshagent.api.room_server_client import TextDataType, TimestampDataType
-from meshagent.api.messaging import TextResponse, JsonResponse
-from meshagent.tools import Tool, Toolkit
-from meshagent.otel import otel_config
-
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
-
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
-
-class WriteTask(Tool):
-    def __init__(self):
-        super().__init__(
-            name="WriteTask",
-            title="Add a task",
-            description="A tool to add tasks to the database",
-            input_schema={
-                "type": "object",
-                "additionalProperties" : False,
-                "required": [
-                    "taskdescription"
-                    ],
-                "properties": {
-                    "taskdescription": {"type": "string"}
-                    }
-            }
-        )
-
-    async def execute(self, context, taskdescription: str):
-        await context.room.database.insert(
-            table="tasks",
-            records=[{
-                "task_id": str(uuid.uuid4()),
-                "taskdescription": taskdescription
-            }]
-        )
-        return TextResponse(text="Task added!")
-    
-class GetTasks(Tool):
-    def __init__(self):
-        super().__init__(
-            name="GetTasks",
-            title="List tasks",
-            description="List tasks recorded today or this week",
-            input_schema={
-                "type": "object",
-                "additionalProperties":False,
-                "required": [],
-                "properties": {}
-            }
-        )
-
-    async def execute(self, context):
-        return JsonResponse(json={"values": await context.room.database.search(table="tasks")})
-
-@service.path("/chat")
-class SimpleChatbot(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            title="chatbot",
-            description="a simple chatbot",
-            rules=[
-                "Always respond to the user and include a fun fact at the end of your response.",
-                "use the ask_user tool to pick the name of a document, pick a document name if the tool is not available.",
-                "the document names MUST have the extension .document, automatically add the extension if it is not provided",
-                "you MUST always write content to a document",
-                "first open a document, then use tools to write the document content before closing the document",
-                "before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
-                "blob URLs MUST not be added to documents, they must be saved as files first",
-            ],
-            llm_adapter = OpenAIResponsesAdapter(),
-            requires=[
-                RequiredToolkit(
-                    name="ui"
-                ),
-                RequiredSchema(
-                    name="document"
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", 
-                    tools=["markitdown_from_file"]
-                ),
-            ],
-            toolkits=[
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema,
-                    document_type="document"
-                ),
-                Toolkit(name="tasktracker", tools=[WriteTask(), GetTasks()]) # Add our Custom Tools Here!
-            ],
-        )
-
-    async def start(self, *, room):
-        await super().start(room=room)
-        # One tiny table:
-        await room.database.create_table_with_schema(
-            name="tasks",
-            schema={
-                "task_id": TextDataType(),
-                "taskdescription": TextDataType()
-            },
-            mode="overwrite",
-            data=None
-        )
-
-print(f"running on port {service.port}")
-asyncio.run(service.run())
-
-```
+<CodeGroup>
+    <CustomToolsChatbot />
+</CodeGroup>
 
 We can test the agent using the same commands as we did with the simple chat agent! And now when we go to the room we can ask the agent to add a task to our task database. 
 

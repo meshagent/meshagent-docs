@@ -1,55 +1,73 @@
 ---
-title: "Quickstart"
+title: "Agents Quickstart"
 ---
-import AgentsAdder from "/snippets/examples/python/agents-adder.mdx"
-import AgentsWritter from "/snippets/examples/python/agents-writer.mdx"
+import Chatbot from "/snippets/examples/python/agents/quickstart/chat.mdx"
 
-import QuickstartAgentPy from "/snippets/examples/python/quickstart-agent.mdx";
-import QuickstartAgentJs from "/snippets/examples/javascript/quickstart-agent.mdx";
-import QuickstartAgentTs from "/snippets/examples/typescript/quickstart-agent.mdx";
-import QuickstartAgentDart from "/snippets/examples/dart/quickstart-agent.mdx";
+MeshAgent Agents are processes that accept input and produce output. In many cases, your agent will be powered by a LLM, but it could also just be code that performs a task. 
 
-MeshAgent Agents are just processes that accept input and produce output. In many cases, your agent will be powered by a LLM, but in other cases your agent might be doing things that are easier to write code for.
+There are two primary types of agents, participant-based agents that you can talk to with voice or text, or ambient agents (task runners), both can be extended with tools. The main difference is that the chat and voicebots show up as participants and the conversation threads are persisted vs the ambient agents or task runners are something that you invoke and they do a task and then return the response. 
 
-## Our First Agent
+This walkthrough shows how to: 
+- Create a Chatbot
+- Call it into a room
+- Interact with it from the MeshAgent Studio. 
 
-Let's create a simple agent that can add two numbers and connect it to our room:
+## Step 1: Create an agent with ``ServiceHost`` 
+
+Let's create a simple ``Chatbot`` that takes a system prompt (rules). 
+
+What is ServiceHost?
+``ServiceHost`` is a lightweight HTTP server that allows you to register one or more agent classes on paths (e.g., ``/agent``), and the host automatically exposes them as webhooks. When a room “makes a call” to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure.
 
 <CodeGroup>
-    <AgentsAdder />
+    <Chatbot />
 </CodeGroup>
 
 
-From the admin console, if we select "Run" we can now select this agent to test it. We haven't built any UI, but we don't need to!
-By default, the admin console will launch it's own agent that will gather input from the user, send it to our sample agent, and show the results back to the user.
+## Step 2: Run the agent locally
 
-## Writing to documents
+```bash bash
+python main.py
+```
 
-Often we want our agents to be able to interact with live documents. MeshAgent makes it very easy to build agents that can connect to an manipulate documents.
-Let's create a simple agent that will write content to the document that the user requests.
-
-
-<CodeGroup>
-    <AgentsWritter />
-</CodeGroup>
-
-After starting our agent, we can run it directly from the Admin console.
-
-1. Open our room in the admin console
-2. Create a document, let's call it "sample.document".
-3. Click the "Run" button, select "sample_writer" and then "continue"
-4. A built-in assistant agent will be launched which will gather information and forward it to our sample writer.
-
-After the agent is invoked, we will see its output automatically show up in our document.
+By default, the service listens on ``http://localhost:8081/agent``. Here ``8081`` is the default port, and ``/agent`` is the path we set for our chatbot.
 
 
-## Asking an agent
+## Step 3: Call the agent into a room
+You can call the agent into a MeshAgent room from the CLI
 
-What if we want an agent to fill out the document for us? MeshAgent makes it easy to ask for agent assistance. As before, if you open this document in the MeshAgent Admin Console, you will see the changes occur in real time:
+```bash bash
+meshagent setup ## authenticate to meshagent
+meshagent call agent --url=http://localhost:8081/agent --room=quickstart --participant-name=chatbot
+```
 
-<CodeGroup>
-  <QuickstartAgentPy />
-  <QuickstartAgentJs />
-  <QuickstartAgentTs />
-  <QuickstartAgentDart />
-</CodeGroup>
+After the call, the agent joins the room as participant ``chatbot``. You can now converse with it in [MeshAgent Studio](https://www.studio.meshagent.com).
+
+## Step 4: Interact with the Agent 
+You can interact with the agent directly from the [MeshAgent Studio UI](https://www.studio.meshagent.com) or from code. 
+
+### Using the agent in the Studio
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
+2. Enter your room ``quickstart``
+3. Select the agent ``chatbot`` and begin chatting!
+
+## Room Agents API Overview
+The room.agents object lets you invite agents into a room, query who’s already there, and interact with their toolkits directly from code. For more details check out the [Room Agents documentation](../../room_api/agents). Note that these operations work for gathering information from or interacting with services that are running on MeshAgent's infrastructure not your local machine. 
+
+| Method | Purpose |
+| --- | --- |
+| `make_call(name, url, arguments)` | Invites an external service (your agent) to join the room. |
+| `ask(agent, arguments, requires=…)` | Sends a prompt or task to an agent already in the room and returns its answer. |
+| `list_agents()` | Lists every agent currently registered in the room with metadata such as name, title, and schemas. |
+| `list_toolkits(participant_id=None)` | Retrieves all toolkits (and their tools) available in the room. |
+| `invoke_tool(toolkit, tool, arguments, …)` | Directly executes a specific tool within a toolkit without routing through an agent. |
+| `invoke_request_tool(toolkit, tool, request, …)` | Variant of `invoke_tool` that accepts a structured Request object, useful for file or binary payloads. |
+
+
+## Next Steps
+- Add custom rules or toolkits to your agent: 
+  - See [Build and Deploy Chatbot](./buildanddeploychatbot) to learn how to add built-in MeshAgent tools (for things like presenting a UI or writing to documents), and custom tools to your chatbot.
+  - [TaskRunner](./taskrunner) to learn how to run agents from other agent frameworks, "agents" without an LLM, and more.
+  - [Tools Quickstart](../tools/quickstart) to learn how to build custom tools. 
+- Deploy your agent as a MeshAgent Service. 
+- Explore the broader [Room Agents Client](../../room_api/agents) for more information on listing agents, discovering tools, invoking tools, and more. 
