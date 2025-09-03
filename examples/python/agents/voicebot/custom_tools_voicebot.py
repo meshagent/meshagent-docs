@@ -16,9 +16,7 @@ from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit, ToolContext
 from meshagent.otel import otel_config
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost()
 
 otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
@@ -173,5 +171,4 @@ class SimpleVoicebot(VoiceBot):
             ]
         )
     
-print(f"running on port {service.port}")
 asyncio.run(service.run())
