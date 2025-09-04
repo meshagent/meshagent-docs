@@ -2,14 +2,16 @@
 title: Introduction to Services
 ---
 
-Services let you add custom functionality to MeshAgent rooms by running your own code alongside room participants. Whether you want to build AI-agents, domain-specific tools, process data, or connect to external systems, services make it possible.
+MeshAgent lets you add custom functionality to rooms by running your own code alongside room participants. Whether you want to build AI-agents, domain-specific tools, process data, or connect to external systems, services make it possible.
+
+You can deploy services in two ways: as **project-wide services** that are automatically available in every room, or as **room-specific containers** that users can deploy on-demand with custom configurations. See [Deployment Options](./deployment_options) to understand which approach fits your use case.
 
 ## What are Services? 
 
 A service is any running program that MeshAgent can call into a room. It could be running on your laptop during development, on a server you manage, or inside a MeshAgent room.
 
 Services can be:
-- **MeshAgent-native**: Built using our ServiceHost and APIs for deep integration with rooms
+- **MeshAgent native**: Built using our ``ServiceHost`` and APIs for deep integration with rooms
 - **Generic programs**: Any existing web service that can respond to HTTP calls
 
 This flexibility means you can bring virtually any functionality into a MeshAgent room.
@@ -19,16 +21,12 @@ This flexibility means you can bring virtually any functionality into a MeshAgen
 
 **Flexible Deployment**: Start with local development on your machine, then deploy to production without changing your core logic. Scale from prototype to enterprise-ready automatically.
 
-**Enterprise-Ready Infrastructure**: Deployed services get 
-- **Automatic scaling** tied to room activity
-- **Containerized isolation** for secure execution
-- **Seamless access** to room context and storage 
-- **Automatic lifecycle management** -- services start when a room session begins and terminate upon session end, ensuring efficient resource usage.
+**Enterprise-Ready Infrastructure**: Deployed services get automatic scaling tied to room activity, containerized isolation for secure execution, seamless access to room context and storage, and automatic lifecycle management.
 
 **Powerful Technical Features**:
 - **Custom Code Deployment**: Run arbitrary container images (e.g. agents built with OpenAI Agent SDK, Pydantic Agents, CrewAI, Semantic Kernel).
 - **Runtime Configuration**: Inject secrets and environment variables for API keys, database credentials, or feature flags.
-- **Localhost Networking**: Expose one or more ports to enable inter-service communication over  during development.
+- **Localhost Networking**: Expose one or more ports to enable inter-service communication.
 - **Optional Storage Mounts**: Grant services direct read/write access to a room’s persistent storage.
 - **Integrated Tool Exposure**: MeshAgent automatically converts services using the MCP SSE protocol into room-native tools available to participants.
 - **Health & Readiness Probes**: Define liveness checks to prevent participants from connecting until all services are operational.
@@ -43,15 +41,16 @@ Services behave similarly to serverless functions—automatically starting and s
 
 3. **Session End**: When the last participant disconnects, MeshAgent gracefully shuts down services, freeing resources until the next session.
 
-## Development to Deployment
-**Local Development**: Start by building services on your machine using ``ServiceHost`` - MeshAgent's Python SDK component that turns your code into HTTP endpoints. Test and iterate quickly by calling services into rooms manually.
+## Communication & Security
 
-**Deployment Options**
-When ready for production, you have two paths:
-- **Project-wide services**: Deploy once and make available to all rooms in your project
-- **Room-specific services**: Call directly to individual rooms for specialized workflows
+- **Isolated Containers**  
+  Each service runs in its own sandbox, ensuring that secrets and environment variables are scoped per service. One service cannot read another’s configuration.
 
-Your core service logic stays the same whether running locally or deployed to production - MeshAgent handles the infrastructure differences for you.
+- **Room API Integration**  
+  Services interact with the room through the MeshAgent Room API, enabling messaging, event subscriptions, and storage operations.
+
+- **Low-Latency Networking**  
+  Co-location within the room environment and localhost networking dramatically reduce communication delays compared to external serverless functions.
 
 ## Real-World Use Cases
 
@@ -62,7 +61,7 @@ Your core service logic stays the same whether running locally or deployed to pr
 5. **Secure Integrations**: Use environment-injected secrets to connect to third-party APIs (e.g., CRM systems, analytics platforms) entirely within the room sandbox.
 
 ## Next Steps
-
+- [Deployment Options](./deployment_options): Decide how to make your service available to users either at the project-level or room level. 
 - [Local Development](./local_development): Learn how to build and test MeshAgent services on your machine using ServiceHost
 - [Service Configuration](./service_configuration): Learn how to configure your MeshAgent service for project-level deployment.
 - [Service Deployment](./service_deployment): Deploy your service to your MeshAgent project making it available to all the rooms in your project.
@@ -89,35 +88,5 @@ Services can be customized via the MeshAgent Studio’s **Services** tab:
   - **Liveness**: periodically verify the service process is alive  
   - **Readiness**: ensure availability before allowing room connections
 
----
-
-## Communication & Security
-
-- **Isolated Containers**  
-  Each service runs in its own sandbox, ensuring that secrets and environment variables are scoped per service. One service cannot read another’s configuration.
-
-- **Room API Integration**  
-  Services interact with the room through the MeshAgent Room API, enabling messaging, event subscriptions, and storage operations.
-
-- **Low-Latency Networking**  
-  Co-location within the room environment and localhost networking dramatically reduce communication delays compared to external serverless functions.
-
-
-## Managing Services
-
-- **Adding a New Service**  
-  1. Navigate to the **Services** tab in MeshAgent Studio.  
-  2. Click **Add Service**, supply image and configuration details.  
-  3. Save to apply; the service will start on the next room session.
-
-- **Updating an Existing Service**  
-  - Edit environment variables, ports, or health probes and save changes.  
-  - New configurations take effect on the next session restart.
-
-- **Monitoring & Logs**  
-  - View service logs in real time via the MeshAgent Studio log viewer.  
-  - Health check statuses and container events are surfaced alongside room diagnostics.
-
----
 
 With MeshAgent services, you can effortlessly extend room capabilities with robust, secure, and low-latency processes—all managed through a simple UI without worrying about infrastructure.
