@@ -1,33 +1,31 @@
 ```python Python
-import os
 import asyncio
-
-from meshagent.api import RequiredToolkit
+from meshagent.otel import otel_config
+from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api.services import ServiceHost
-from meshagent.otel import otel_config
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+# Enable OpenTelemetry logging and tracing for the agent 
+otel_config(service_name="chatbot")
 
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
+# Create a service host
+service = ServiceHost() # optional to pass a port, defaults to 8081
 
-@service.path("/chat")
+# Register an agent at a specific path
+@service.path(path="/chat", identity="chatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="mychatbot",
-            title="chatbot",
-            description="a simple chatbot",
+            name="chatbot",
+            title="Simple Chatbot",
+            description="A helpful chatbot for room participants",
             rules=[
                 "Always respond to the user first then include a fun fact at the end of your response."
             ],
             llm_adapter = OpenAIResponsesAdapter(),
         )
 
-print(f"running on port {service.port}")
+# Start the service
 asyncio.run(service.run())
 ```
 

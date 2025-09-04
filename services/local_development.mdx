@@ -2,104 +2,73 @@
 title: Running Services Locally
 ---
 
-MeshAgent's ``ServiceHost`` provides an easy way to build services that integrate with MeshAgent rooms. It's a Python SDK component that handles the connection mechanics for you.
+import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+
+Build and test services on your machine, then deploy to production using MeshAgent's ``ServiceHost``.
 
 ## ServiceHost Basics
-``ServiceHost`` is part of the Python SDK and lets you run an agent or tool as an HTTP webhook endpoint without any containerization. When you create a ``ServiceHost``, it starts an aiohttp web application on the specified host and port.
+MeshAgent's ``ServiceHost`` exposes your agents or tools as HTTP webhook endpoints. When you create a ``ServiceHost``, it starts an HTTP server that listens for incoming webhook requests from MeshAgent. When a webhook call arrives, the ``ServiceHost`` automatically spins up your agent or tool, connects it to the requested room, and manages its lifecycle until the session ends. 
 
-```python Python
-import asyncio
-from meshagent.otel import otel_config
-from meshagent.api.services import ServiceHost
-from meshagent.agents.chat import ChatBot
-from meshagent.openai import OpenAIResponsesAdapter
+Let's define a simple chatbot service: 
+<CodeGroup>
+    <SimpleChatbot/>
+</CodeGroup>
 
-# Enable OpenTelemetry logging and tracing for the agent 
-otel_config(service_name="chatbot")
+**Note**: The default port is 8081. You can set a specific port by passing the ``MESHAGENT_PORT`` environment variable or passing a port to the ``ServiceHost`` constructor. For example, ``host = ServiceHost(port=9000)`` or ``host = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "9001")))``.  
 
-# Create a service host
-service = ServiceHost() # optional to pass a port, defaults to 8081
+## Running the Service Locally
+Save your code as ``main.py`` then from the terminal run: 
 
-# Register an agent at a specific path
-@service.path("/chat")
-class SimpleChatbot(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            title="Simple Chatbot",
-            description="A helpful chatbot for room participants",
-            rules=[
-                "Always respond to the user first then include a fun fact at the end of your response."
-            ],
-            llm_adapter = OpenAIResponsesAdapter(),
-        )
-
-# Start the service
-asyncio.run(service.run())
-```
-
-**Note**: The default port is 8081, you can set the port by setting the MESHAGENT_PORT variable or passing a port to the ServiceHost constructor. For example, ``host = ServiceHost(port=9000)`` or ``host = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "9001")))``.  
-
-## Calling the Service into your Room
-When running locally, you manually call your service into rooms. 
-
-First start the service locally, from your terminal run: 
 ```bash bash
-python main.py
+meshagent setup # authenticate to meshagent if not already done
+meshagent service run "main.py" --room=myroom
 ```
 
-From another tab in your terminal run: 
-```bash bash
-meshagent setup # authenticate to MeshAgent if not already done
-meshagent call agent --url=http://localhost:8081/chat --room=my-room --participant-name=chatbot
+You'll see an output showing the connection process: 
+```
+Connecting to room...
+Connecting port 8081...
+Connecting endpoint /chat as chatbot...
+INFO:services:starting -> 0.0.0.0:8081/chat -> SimpleChatbot
+INFO:webhooks:received request http://localhost:8081/chat POST, upgrade: None
+INFO:services:chatbot answering call and joining room
 ```
 
-From [studio.meshagent.com](https://studio.meshagent.com) you'll see the ``chatbot`` available to talk to in the participants tab of your room, ``my-room``.
+This command handles everything for you: 
+- Starts your ``ServiceHost`` HTTP server locally
+- Automatically detects all endpoints 
+- Calls each endpoint into the specified room 
+- Use the ``identity`` from your ``@service.path()`` decorator as the participant name
 
-**How it works**: When a webhook call arrives from the MeshAgent server or CLI, ServiceHost spins up the registered agent, connects it to the requested room via the WebSocket-based RoomClient, and manages the session until the call completes or is dismissed.
+Now go to [studio.meshagent.com](https://studio.meshagent.com) and select the room ``myroom``. You'll see the ``chatbot`` available in the participants tab and can select it to begin chatting.
 
 ## Development Workflow
-1. Write your service using ``ServiceHost`` and set the path for each agent or tool
-2. Start the service locally with ``python main.py``
-3. Test in a room using ``meshagent call agent``
-4. Experiment with the agent from [studio.meshagent.com](https://studio.meshagent.com) 
-4. Iterate quickly - make changes and restart the service (repeat steps 2 and 3) until you get the results you need
-5. Ready to deploy? Create a Dockerfile and meshagent.yaml then deploy
+1. Write your service using ``ServiceHost`` and set the path and identity for each agent or tool
+2. Run and test using ``meshagent service run "main.py" --room=myroom``
+4. Experiment with the agent in the [MeshAgent Studio](https://studio.meshagent.com) 
+4. Iterate quickly - Stop the service (Ctrl+C), make applicable updates to your ``main.py`` file, then restart the service using the ``meshagent service run`` command. 
 
 ## Working with multiple agents or tools in a single service
 
-You can register multiple agents or tools using a single ``ServiceHost`` this allows you to have one service with different agents and tools running on a unique path. This makes it easy to bundle related agents and tools together into a single deployable service. 
+You can register multiple agents or tools in a single ``ServiceHost`` using different paths. This makes it easy to bundle related agents and tools together into a single deployable service. 
 
 ```python Python
 service = ServiceHost()
 
-@service.path("/chat")
+@service.path(path="/chat", identity="chatbot")
 class ChatAgent(ChatBot):
     # ... chat agent implementation
 
-@service.path("/dataanalysis") 
+@service.path(path="/dataanalysis", identity="data-analsis-tool") 
 class DataAnalysis(Tool):
     # ... data analysis tool implementation
 
-@service.path("/helper")
+@service.path(path="/helper", identity="task-helper")
 class HelperAgent(TaskRunner):
     # ... helper agent implementation
 ```
 
-First run the file e.g. ``python main.py``
-
-Then call each agent/tool into the room: 
-
-```bash bash
-# Add chat agent
-meshagent call agent --url=http://localhost:8081/chat --room=my-room --participant-name=chat
-
-# Add data analysis tool  
-meshagent call tool --url=http://localhost:8081/dataanalysis --room=my-room --participant-name=dataanalysis
-
-# Add helper
-meshagent call agent --url=http://localhost:8081/helper --room=my-room --participant-name=helper
-```
+Using ``meshagent service run "main.py" --room=myroom`` will automatically detect and call all three endpoints into the room with their respective identities.
 
 ## Next Steps: 
 Once your service works locally you're ready to:
