@@ -67,6 +67,30 @@ await room.developer.log("info", {
 // Disable developer logs
 await room.developer.disable();
 ```
+```dotnet C#
+using System.Collections.Generic;
+using System.Text.Json;
+using Meshagent.Api;
+using Meshagent.Api.Room;
+
+var protocol = Helpers.CreateWebSocketProtocol("sample_user", "my-example-room");
+var room = new RoomClient(protocol);
+await room.ConnectAsync();
+
+room.Developer.On("log", data =>
+{
+  var type = data.GetValueOrDefault("type");
+  var logData = data.GetValueOrDefault("data");
+  Console.WriteLine($"[DeveloperLog] {type}: {JsonSerializer.Serialize(logData)}");
+});
+
+await room.Developer.Enable();
+await room.Developer.Log("info", new Dictionary<string, object?>
+{
+    { "message", "Hello from DeveloperClient!" }
+});
+await room.Developer.Disable();
+```
 </CodeGroup>
 
 ---
@@ -106,6 +130,12 @@ await room.developer.log("warn", {
     "status": "Something might be wrong"
 });
 ```
+```dotnet C#
+await room.Developer.Log("warn", new Dictionary<string, object?>
+{
+  { "status", "Something might be wrong" }
+});
+```
 </CodeGroup>
 
 
@@ -136,6 +166,9 @@ await room.developer.enable();
 ```dart Dart
 await room.developer.enable();
 ```
+```dotnet C#
+await room.Developer.Enable();
+```
 </CodeGroup>
 
 - **Description**  
@@ -160,6 +193,9 @@ await room.developer.disable();
 ```
 ```dart Dart
 await room.developer.disable();
+```
+```dotnet C#
+await room.Developer.Disable();
 ```
 </CodeGroup>
 
@@ -188,6 +224,9 @@ room.developer.on("log", (event) => console.log("Developer log event:", event));
 ```dart Dart
 room.developer.on("log", (event) => print("Developer log event: $event"));
 ```
+```dotnet C#
+room.Developer.On("log", data => Console.WriteLine($"Developer log event: {data}"));
+```
 </CodeGroup>
 
 
@@ -211,6 +250,7 @@ try {
 } catch (err) {
   console.error("Failed to enable developer logs:", err);
 }
+```
 ```ts TypeScript
 try {
   await room.developer.enable();
@@ -223,6 +263,16 @@ try {
   await room.developer.enable();
 } catch (err) {
   print("Failed to enable developer logs: $err");
+}
+```
+```dotnet Dotnet
+try
+{
+    await room.Developer.Enable();
+}
+catch (Exception err)
+{
+    Console.WriteLine($"Failed to enable developer logs: {err}");
 }
 ```
 </CodeGroup>

@@ -10,14 +10,14 @@ const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const exampleDir = path.join(currentDir, 'examples');
 const snippetsDir = path.join(currentDir, 'snippets', 'examples');
 const extMap = {
-    '.dart': 'dart',
-    '.cs': 'dotnet',
-    '.js': 'javascript',
-    '.json': 'json',
-    '.py': 'python',
-    '.sh': 'bash',
-    '.ts': 'typescript',
-    '.yml': 'yaml',
+    '.dart': { 'language': 'dart', 'tabname': 'Dart' },
+    '.cs': { 'language': 'dotnet', 'tabname': 'C#' },
+    '.js': { 'language': 'javascript', 'tabname': 'Javascript' },
+    '.json': { 'language': 'json', 'tabname': 'Json' },
+    '.py': { 'language': 'python', 'tabname': 'Python' },
+    '.sh': { 'language': 'bash', 'tabname': 'Bash' },
+    '.ts': { 'language': 'typescript', 'tabname': 'Typescript' },
+    '.yml': { 'language': 'yaml', 'tabname': 'Yaml' }
 };
 const ignore = [
     `${exampleDir}/**/node_modules`,
@@ -33,17 +33,15 @@ const ignore = [
 const map = through.obj((file, enc, cb) => {
 
     const parsed = path.parse(file.path);
-    const type = extMap[parsed.ext];
+    const ext = extMap[parsed.ext];
 
-    if (type) {
-        const tabname = type.charAt(0).toUpperCase() + type.slice(1);
-
+    if (ext) {
         parsed.base = `${parsed.name}.mdx`;
         parsed.ext = '.mdx';
 
         file.path = path.format(parsed);
         file.contents = Buffer.from(
-            `\`\`\`${type} ${tabname}\n${file.contents.toString('utf-8')}\n\`\`\`\n\n`
+            `\`\`\`${ext.language} ${ext.tabname}\n${file.contents.toString('utf-8')}\n\`\`\`\n\n`
         );
 
         cb(null, file);

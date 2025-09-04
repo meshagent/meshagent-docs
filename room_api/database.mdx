@@ -40,6 +40,11 @@ final tables = await room.database.listTables();
 
 print(tables); // ["users", "orders", "products", ...]
 ```
+```dotnet C#
+var tables = await room.Database.ListTables();
+
+Console.WriteLine(string.Join(", ", tables)); // ["users", "orders", "products", ...]
+```
 </CodeGroup>
 
 
@@ -121,6 +126,23 @@ await room.database.createTableWithSchema({
   mode: "create"
 });
 ```
+```dotnet C#
+await room.Database.CreateTableWithSchema(
+  "users",
+  new Dictionary<string, DataType>
+  {
+    ["id"] = new IntDataType(),
+    ["username"] = new TextDataType(),
+    ["email"] = new TextDataType(),
+  },
+  new List<Dictionary<string, object?>>
+  {
+    new() { ["id"] = 1, ["username"] = "alice", ["email"] = "alice@example.com" },
+    new() { ["id"] = 2, ["username"] = "bob", ["email"] = "bob@example.com" },
+  },
+  CreateMode.create
+);
+```
 </CodeGroup>
 
 ---
@@ -176,6 +198,17 @@ await room.database.createTableFromData({
   mode: "overwrite"
 });
 ```
+```dotnet C#
+await room.Database.CreateTableFromData(
+  "orders",
+  new List<Dictionary<string, object?>>
+  {
+    new() { ["id"] = 1, ["product"] = "Laptop", ["quantity"] = 2 },
+    new() { ["id"] = 2, ["product"] = "Phone", ["quantity"] = 5 },
+  },
+  CreateMode.overwrite
+);
+```
 </CodeGroup>
 
 ---
@@ -213,6 +246,9 @@ await room.database.dropTable({
   "name": "temp_table",
   "ignoreMissing": true,
 });
+```
+```dotnet C#
+await room.Database.DropTable("temp_table", ignoreMissing: true);
 ```
 </CodeGroup>
 
@@ -264,6 +300,16 @@ await room.database.addColumns({
   },
 });
 ```
+```dotnet C#
+await room.Database.AddColumns(
+  "users",
+  new Dictionary<string, string>
+  {
+    ["isActive"] = "true",
+    ["createdAt"] = "CURRENT_TIMESTAMP",
+  }
+);
+```
 </CodeGroup>
 
 ---
@@ -301,6 +347,12 @@ await room.database.dropColumns({
   "table": "users",
   "columns": ["deprecatedColumn1", "deprecatedColumn2"],
 });
+```
+```dotnet C#
+await room.Database.DropColumns(
+  "users",
+  new List<string> { "deprecatedColumn1", "deprecatedColumn2" }
+);
 ```
 </CodeGroup>
 
@@ -352,6 +404,16 @@ await room.database.insert({
   ],
 });
 ```
+```dotnet C#
+await room.Database.Insert(
+  "users",
+  new List<Dictionary<string, object?>>
+  {
+    new() { ["id"] = 3, ["username"] = "charlie", ["email"] = "charlie@example.com" },
+    new() { ["id"] = 4, ["username"] = "dana", ["email"] = "data@example.com" },
+  }
+);
+```
 </CodeGroup>
 
 ---
@@ -400,6 +462,14 @@ await room.database.update({
   "valuesSql": { "loginCount": "loginCount + 1" },
 })
 ```
+```dotnet C#
+await room.Database.Update(
+  "users",
+  "id = 3",
+  values: new Dictionary<string, object?> { ["email"] = "newcharlie@example.com" },
+  valuesSql: new Dictionary<string, string> { ["loginCount"] = "loginCount + 1" }
+);
+```
 </CodeGroup>
 
 ---
@@ -436,6 +506,12 @@ await room.database.delete({
   "table": "users",
   "where": "id = 4"
 })
+```
+```dotnet C#
+await room.Database.Delete(
+  "users",
+  "id = 4"
+);
 ```
 </CodeGroup>
 
@@ -491,6 +567,17 @@ await room.database.merge({
   ],
 })
 ```
+```dotnet C#
+await room.Database.Merge(
+  "users",
+  "id",
+  new List<Dictionary<string, object?>>
+  {
+    new() { ["id"] = 1, ["username"] = "alice", ["email"] = "alice_new@example.com" },
+    new() { ["id"] = 5, ["username"] = "eric", ["email"] = "eric@example.com" },
+  }
+);
+```
 </CodeGroup>
 
 ---
@@ -544,6 +631,15 @@ final results = await room.database.search({
 
 print(results); // [{"id": 1, "username": "alice", "email": "alice@example.com"}]
 ```
+```dotnet C#
+var results = await room.Database.Search(
+  "users",
+  where: new Dictionary<string, object?> { ["username"] = "alice" },
+  limit: 1
+);
+
+Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@example.com" }]
+```
 </CodeGroup>
 
 ---
@@ -567,6 +663,9 @@ await room.database.optimize("users");
 ```
 ```dart Dart
 await room.database.optimize("users");
+```
+```dotnet C#
+await room.Database.Optimize("users");
 ```
 </CodeGroup>
 
@@ -605,6 +704,12 @@ await room.database.createVectorIndex({
   "column": "embedding",
 });
 ```
+```dotnet C#
+await room.Database.CreateVectorIndex(
+  "documents",
+  "embedding"
+);
+```
 </CodeGroup>
 
 ---
@@ -642,6 +747,12 @@ await room.database.createScalarIndex({
   "column": "email",
 });
 ```
+```dotnet C#
+await room.Database.CreateScalarIndex(
+  "users",
+  "email"
+);
+```
 </CodeGroup>
 
 ---
@@ -678,6 +789,12 @@ await room.database.createFullTextSearchIndex({
   "table": "articles",
   "column": "content",
 });
+```
+```dotnet C#
+await room.Database.CreateFullTextSearchIndex(
+  "articles",
+  "content"
+);
 ```
 </CodeGroup>
 
@@ -728,6 +845,17 @@ console.log(indexes);
 final indexes = await room.database.listIndexes({"table": "users"});
 
 print(indexes);
+// Example output:
+// {
+//   "scalarIndexes": ["email"],
+//   "fullTextIndexes": ["username"],
+//   "vectorIndexes": ["profile_embedding"]
+// }
+```
+```dotnet C#
+var indexes = await room.Database.ListIndexes("users");
+
+Console.WriteLine(indexes);
 // Example output:
 // {
 //   "scalarIndexes": ["email"],

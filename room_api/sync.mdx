@@ -2,12 +2,13 @@ import SchemasHtmlPy from "/snippets/examples/python/schemas-html.mdx"
 import SchemasHtmlJs from "/snippets/examples/javascript/schemas-html.mdx"
 import SchemasHtmlTs from "/snippets/examples/typescript/schemas-html.mdx"
 import SchemasHtmlDart from "/snippets/examples/dart/schemas-html.mdx"
+import SchemasHtmlCs from "/snippets/examples/dotnet/schemas-html.mdx"
 
 import DocumentsWritingPy from "/snippets/examples/python/documents-writing.mdx"
 import DocumentsWritingJs from "/snippets/examples/javascript/documents-writing.mdx"
 import DocumentsWritingTs from "/snippets/examples/typescript/documents-writing.mdx"
 import DocumentsWritingDart from "/snippets/examples/dart/documents-writing.mdx"
-
+import DocumentsWritingCs from "/snippets/examples/dotnet/documents-writing.mdx"
 
 `SyncClient` enables interacting with managed documents - `MeshDocument` and synchronizing local changes with all remote clients.
 
@@ -48,6 +49,7 @@ Suppose you have a basic web page structure and want to define a schema for it.
     <SchemasHtmlJs />
     <SchemasHtmlTs />
     <SchemasHtmlDart />
+    <SchemasHtmlCs />    
 </CodeGroup>
 
 Many LLMs (such as OpenAI) and agent frameworks (such as MeshAgent) support JSON Schemas for defining inputs and outputs. Generating an OpenAI-compatible JSON schema from your MeshSchema requires only one line of code:
@@ -65,6 +67,9 @@ const jsonSchema: Record<string, any> = schema.toJson();
 ``` dart Dart
 final jsonSchema = schema.toJson();
 ```
+``` dotnet C#
+var jsonSchema = schema.ToJson();
+```
 </CodeGroup>
 
 
@@ -77,6 +82,7 @@ To create a MeshDocument based on your schema and enable synchronization across 
     <DocumentsWritingJs />
     <DocumentsWritingTs />
     <DocumentsWritingDart />
+    <DocumentsWritingCs />
 </CodeGroup>
 
 
@@ -126,6 +132,27 @@ final doc = await syncClient.open("my/path", create: true);
 // Close the document
 await room.sync.close("my/path");
 ```
+```dotnet C#
+using Meshagent.Api.Room;
+using Meshagent.Api;
+using System.Text;
+
+// Initialize room client
+var room = new RoomClient(Helpers.CreateWebSocketProtocol("participant", "my-room"));
+await room.ConnectAsync();
+
+// Create a MeshDocument on the server
+await room.Sync.Create("my/path");
+
+// Open a document (creates if not found)
+var doc = await room.Sync.Open("my/path");
+
+// Send raw sync data
+await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
+
+// Close the document
+await room.Sync.Close("my/path");
+```
 </CodeGroup>
 
 
@@ -155,6 +182,9 @@ await room.sync.create("my/path", { key: "value" });
 ```dart Dart
 await room.sync.create("my/path", {"key": "value"});
 ```
+```dotnet C#
+await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = "Hello World" });
+```
 </CodeGroup>
 
 
@@ -179,6 +209,9 @@ const doc = await syncClient.open("my/path", { create: true });
 ```
 ```dart Dart
 final doc = await syncClient.open("my/path", create: true);
+```
+```dotnet C#
+var doc = await room.Sync.Open(path, create: true);
 ```
 </CodeGroup>
 
@@ -206,6 +239,9 @@ await room.sync.close("my/path");
 ```dart Dart
 await room.sync.close("my/path");
 ```
+```dotnet C#
+await room.Sync.Close("my/path");
+```
 </CodeGroup>
 
 
@@ -229,6 +265,9 @@ await room.sync.sync("my/path", new Uint8Array([/*...bytes...*/]));
 ```
 ```dart Dart
 await room.sync.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
+```
+```dotnet C#
+await room.Sync.Sync(path, Encoding.UTF8.GetBytes("some bytes"));
 ```
 </CodeGroup>
 
