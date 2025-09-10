@@ -12,10 +12,8 @@ from pydantic import BaseModel, Field, ConfigDict
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.providers.anthropic import AnthropicProvider
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger(__name__)
-
-otel_config(service_name="my-service")
+otel_config(service_name="translator")
+log = logging.getLogger("translator")
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777")) # if you don't pass a port it defaults to 8081
@@ -31,17 +29,18 @@ class TranslationResult(BaseModel):
     spanish_translation:str
     model_config = ConfigDict(extra='forbid')
 
-translation_agent = Agent(
-    model=AnthropicModel('claude-4-sonnet-20250514', provider=AnthropicProvider()), #pass API key from env variables
-    deps_type=None,
-    instructions=f"""
-        # Role Background
-        You are responsible for translating recent news announcements into other languages. You are exposed to a variety of topics beyond your knowledge cutoff date. The current date is: {date.today().strftime("%B %d, %Y")}
+system_prompt = """
+    # Role Background
+    You are responsible for translating recent news announcements into other languages. You are exposed to a variety of topics beyond your knowledge cutoff date. The current date is: {date.today().strftime("%B %d, %Y")}
 
-        # Task
-        Provide two translations, one in French and one in Spanish.     
-    """,
-    output_type=TranslationResult
+    # Task
+    Provide two translations, one in French and one in Spanish.    
+    """
+translation_agent = Agent(
+     model=AnthropicModel('claude-4-sonnet-20250514', provider=AnthropicProvider()), #pass API key from env variables
+     deps_type=None,
+     instructions=system_prompt,
+     output_type=TranslationResult
 )
 
 # Utility function

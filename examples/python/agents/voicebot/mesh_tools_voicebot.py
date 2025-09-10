@@ -1,7 +1,6 @@
 import os
-import uuid
 import asyncio
-from datetime import datetime, date
+from datetime import date
 from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
@@ -11,12 +10,10 @@ from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTypeAuthoringToolkit
 from meshagent.agents.schemas.document import document_schema
-from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.tools import ToolContext
 from meshagent.otel import otel_config
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost()
 
 otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
@@ -112,5 +109,4 @@ class SimpleVoicebot(VoiceBot):
             ]
         )
     
-print(f"running on port {service.port}")
 asyncio.run(service.run())

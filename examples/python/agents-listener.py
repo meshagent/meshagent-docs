@@ -50,5 +50,4 @@ class SampleListener(Listener):
         # If we return True, the listener will stop, returning False keeps the listener active
         return False
 
-print(f"Running on port {service.port}")
 asyncio.run(service.run())
