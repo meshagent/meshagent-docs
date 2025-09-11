@@ -9,9 +9,7 @@ from meshagent.tools.document_tools import DocumentAuthoringToolkit, DocumentTyp
 from meshagent.agents.schemas.document import document_schema
 from meshagent.otel import otel_config
 
-service = ServiceHost(
-    port=int(os.getenv("MESHAGENT_PORT","7777"))
-)
+service = ServiceHost() # port defaults to 8081
 
 otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
@@ -53,5 +51,4 @@ class SimpleChatbot(ChatBot):
             ],
         )
 
-print(f"running on port {service.port}")
 asyncio.run(service.run())
