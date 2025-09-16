@@ -12,11 +12,11 @@ const snippetsDir = path.join(currentDir, 'snippets', 'examples');
 const extMap = {
     '.dart': { 'language': 'dart', 'tabname': 'Dart' },
     '.cs': { 'language': 'dotnet', 'tabname': 'C#' },
-    '.js': { 'language': 'javascript', 'tabname': 'Javascript' },
+    '.js': { 'language': 'javascript', 'tabname': 'NodeJs' },
     '.json': { 'language': 'json', 'tabname': 'Json' },
     '.py': { 'language': 'python', 'tabname': 'Python' },
     '.sh': { 'language': 'bash', 'tabname': 'Bash' },
-    '.ts': { 'language': 'typescript', 'tabname': 'Typescript' },
+    '.ts': { 'language': 'typescript', 'tabname': 'TypeScript' },
     '.yml': { 'language': 'yaml', 'tabname': 'Yaml' }
 };
 const ignore = [

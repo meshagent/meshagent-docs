@@ -1,4 +1,4 @@
-```javascript Javascript
+```javascript NodeJs
 import { RoomClient, websocketProtocol } from "@meshagent/meshagent";
 
 async function main() {
@@ -8,10 +8,18 @@ async function main() {
         const participantName = "participant-name";
 
         // Initialize the communication protocol
-        const protocol = await websocketProtocol({roomName, participantName});
+        const protocol = await websocketProtocol({
+            roomName,
+            participantName,
+            role: null,
+            projectId: process.env.MESHAGENT_PROJECT_ID,
+            apiKeyId: process.env.MESHAGENT_KEY_ID,
+            secret: process.env.MESHAGENT_SECRET
+        });
+
 
         // Instantiate a new RoomClient for interacting with the room
-        const room = new RoomClient({protocol});
+        const room = new RoomClient({ protocol });
 
         // Connect to the room
         await room.start();

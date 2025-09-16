@@ -34,7 +34,7 @@ def on_file_updated(path: str, participant_id: str):
 
 room.storage.on("file.updated", on_file_updated)
 ```
-```javascript JavaScript
+```javascript NodeJs
 function onFileUpdated(path, participantId) {
     console.log("File updated:", path);
 }
@@ -81,7 +81,7 @@ def on_file_deleted(path: str):
 
 room.storage.on("file.deleted", on_file_deleted)
 ```
-```javascript JavaScript
+```javascript NodeJs
 function onFileDeleted(path) {
     console.log("File deleted:", path);
 }
@@ -125,7 +125,7 @@ You can remove an event handler with:
 room.storage.off("file.updated", on_file_updated)
 room.storage.off("file.deleted", on_file_deleted)
 ```
-```javascript JavaScript
+```javascript NodeJs
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
 ```
@@ -177,7 +177,7 @@ if await room.storage.exists(path="folder/data.json"):
 else:
     print("Data file does not exist.")
 ```
-```javascript JavaScript
+```javascript NodeJs
 if (await room.storage.exists("folder/data.json")) {
     console.log("Data file exists!");
 } else {
@@ -231,7 +231,7 @@ If `overwrite` is `True`, an existing file at this path will be truncated.
 ```python Python
 handle = await room.storage.open(path="files/new.txt", overwrite=True)
 ```
-```javascript JavaScript
+```javascript NodeJs
 let handle = await room.storage.open("files/new.txt", { overwrite: true });
 ```
 ```typescript TypeScript
@@ -267,7 +267,7 @@ data_to_write = b"Sample data"
 
 await room.storage.write(handle=my_handle, data=data_to_write)
 ```
-```javascript JavaScript
+```javascript NodeJs
 const encoder = new TextEncoder();
 const dataToWrite = encoder.encode("Sample data");
 
@@ -310,7 +310,7 @@ Closes an open file handle, ensuring all data has been written.
 ```python Python
 await room.storage.close(handle=my_handle)
 ```
-```javascript JavaScript
+```javascript NodeJs
 await room.storage.close(myHandle);
 ```
 ```typescript TypeScript
@@ -344,7 +344,7 @@ Retrieves the content of a file from the remote storage.
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
 ```
-```javascript JavaScript
+```javascript NodeJs
 const fileResponse = await room.storage.download("files/data.bin");
 console.log(fileResponse.data);  // raw bytes
 ```
@@ -381,7 +381,7 @@ Requests a downloadable URL for the specified file path, which can be used to fe
 url = await room.storage.download_url(path="files/report.pdf")
 print("Download the file from:", url)
 ```
-```javascript JavaScript
+```javascript NodeJs
 const url = await room.storage.downloadUrl("files/report.pdf");
 console.log("Download the file from:", url);
 ```
@@ -419,7 +419,7 @@ entries = await room.storage.list(path="some_folder")
 for e in entries:
     print(e.name, "is folder?" if e.is_folder else "is file?")
 ```
-```javascript JavaScript
+```javascript NodeJs
 const entries = await room.storage.list("some_folder");
 entries.forEach(e => {
     console.log(e.name, e.isFolder ? "is folder" : "is file");
@@ -466,7 +466,7 @@ Deletes a file at the given path. A `file.deleted` event is typically emitted af
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")
 ```
-```javascript JavaScript
+```javascript NodeJs
 await room.storage.delete("folder/old_file.txt");
 console.log("File deleted.");
 ```

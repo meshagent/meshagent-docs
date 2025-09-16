@@ -89,7 +89,7 @@ await room.messaging.broadcast_message({
 # Disable messaging
 await room.messaging.disable()
 ```
-```js JavaScript
+```js NodeJs
 // Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
@@ -225,7 +225,7 @@ await stream_writer.write(MessageStreamChunk(
 # Close the stream
 await stream_writer.close()
 ```
-```js JavaScript
+```js NodeJs
 // Create a new stream
 const streamWriter = await room.messaging.createStream({
   to: myParticipant,
@@ -315,7 +315,7 @@ Enables the messaging subsystem on the server. Optionally provides a callback th
 await room.messaging.enable(
     lambda reader: print(f"New stream opened: {reader._streamId}"))
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
 });
@@ -349,7 +349,7 @@ Disables the messaging subsystem on the server.
 ```python Python
 await room.messaging.disable()
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.disable();
 ```
 ```ts TypeScript
@@ -386,7 +386,7 @@ await room.messaging.send_message({
   "attachment": b"\x01\x02\x03"
 })
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.sendMessage({
   "to": myParticipant,
   "type": "chat",
@@ -442,7 +442,7 @@ await room.messaging.broadcast_message({
   }
 })
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.broadcastMessage({
   "type": "announcement",
   "message": {
@@ -501,7 +501,7 @@ writer = await room.messaging.create_stream(
   header={"purpose": "video-stream"}
 )
 ```
-```js JavaScript
+```js NodeJs
 const writer = await room.messaging.createStream({
   to: myParticipant,
   header: {"purpose": "video-stream" },
@@ -539,7 +539,7 @@ Provides an iterable collection of all known remote participants.
 for participant in room.messaging.remote_participants:
     print(f"Participant: {participant.id}, role: {participant.role}")
 ```
-```js JavaScript
+```js NodeJs
 for (const participant of room.messaging.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
 }
@@ -591,7 +591,7 @@ await stream_writer.write(MessageStreamChunk(
 ))
 await stream_writer.close()
 ```
-```js JavaScript
+```js NodeJs
 // Example usage after acquiring a MessageStreamWriter
 await streamWriter.write(new MessageStreamChunk({
   header: { part: 1 },
@@ -643,7 +643,7 @@ room.messaging.on(
     "participant_added",
     lambda evt: print("A new participant joined:", evt.message.message))
 ```
-```js JavaScript
+```js NodeJs
 room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
