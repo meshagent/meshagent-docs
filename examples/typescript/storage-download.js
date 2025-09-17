@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var meshagent_1 = require("@meshagent/meshagent");
+var meshagent_1 = self._require("@meshagent/meshagent");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         var roomName, participantName, protocol, room, exists, handle, response, error_1;

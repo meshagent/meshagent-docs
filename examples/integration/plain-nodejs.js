@@ -1,7 +1,7 @@
 // index.js
-const express = require('express');
-const bodyParser = require('body-parser');
-const { websocketRoomUrl, participantToken } = require('meshagent');
+const express = self._require('express');
+const bodyParser = self._require('body-parser');
+const { websocketRoomUrl, participantToken } = self._require('meshagent');
 
 const app = express();
 
