@@ -109,7 +109,7 @@ storage:
 
 ## Example
 
-Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+Let's create a simple chatbot that can be deployed to all the rooms in our project. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
 
 **main.py**
 
@@ -123,9 +123,6 @@ from meshagent.openai import OpenAIResponsesAdapter
 
 logging.basicConfig(level=logging.DEBUG)
 
-system_prompt = os.getenv("SYSTEM_PROMPT")
-rules = [system_prompt] if system_prompt else []
-
 host = ServiceHost()
 
 @host.path("/agent")
@@ -133,7 +130,6 @@ class MyChatBot(ChatBot):
     def __init__(self):
         super().__init__(
             name="chatbot",
-            rules=rules,
             llm_adapter=OpenAIResponsesAdapter(),
         )
 
@@ -157,10 +153,6 @@ ENTRYPOINT [ "python3", "main.py" ]
 kind: Service
 version: v1
 name: chatbot
-
-environment:
-- name: SYSTEM_PROMPT
-  value: "{system_prompt}"
 
 ports:
 - num: "*"
