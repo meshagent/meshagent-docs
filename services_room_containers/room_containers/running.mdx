@@ -1,0 +1,63 @@
+---
+title: Run Room Containers
+---
+
+Room containers are the on-demand way to run your code inside a specific room. They create a secure sandbox alongside live participants and stop automatically when you or MeshAgent tear them down.
+
+## Launch Options
+
+### MeshAgent Studio
+MeshAgent Studio allows you to run a container by pulling and running an image from a repository or from Git repos that contain a Dockerfile and ``meshagent.yaml`` file. 
+
+1. Go to [MeshAgent Studio](https://studio.meshagent.com).
+2. Create a new session ``myroom`` and go to the room. 
+3. From the developer console on the bottom of the screen select **Images**. 
+4. Select either ***Build Image** to build the image from a Git Repository or **Pull Image** to pull the image from a docker repository. This will pull and start your container, if any variables are required you'll be prompted to input the values before the container starts.
+5. Your service should now be running in a container. Click the **Containers** tab to see logs for the container. 
+
+### MeshAgent CLI
+
+Launch containers programmatically or from a terminal:
+
+For example using the chatbot we defined in the [configuration docs](./configuration): 
+
+```bash
+meshagent setup # authenticate to MeshAgent 
+meshagent container run \
+  --project-id <project-id> \
+  --room my-room \
+  --image my-agent:v2 \
+  --command "python main.py" \
+  --env SYSTEM_PROMPT="You summarize meetings" \
+  --var tone=formal 
+```
+
+- Use ``--var`` for template variables (converted into ``{variable}`` placeholders).
+- Use ``--env`` for direct environment variables.
+- ``--cred`` supplies temporary registry credentials if the image is private.
+
+## Managing Active Containers
+
+- **Stream logs**: ``meshagent container logs --id <container-id>``
+- **Stop a container**: ``meshagent container stop --id <container-id>``
+
+Inside MeshAgent Studio, the room sidebar shows active containers with controls to stop or relaunch them.
+
+## Lifecycle
+- Containers start with the parameters supplied at launch.
+- They can be long running, but if the room becomes inactive or you explicitly stop them, MeshAgent cleans them up.
+- You can write a project service that orchestrates room containers (e.g., a service can be responsible for starting agents that users have saved to their room), but the containers themselves remain scoped to the room that launched them.
+
+## Troubleshooting
+
+| Symptom | Suggestion |
+| --- | --- |
+| Image pull failures | Ensure ``--cred`` values are correct |
+| Port conflicts | Use ``num: "*"`` in the template to have MeshAgent auto-assign an available port. |
+| Missing environment variables | Confirm variables are defined in the template and spelled correctly in ``--var``/``--env`` flags. |
+| Container not starting | Verify Dockerfile has all required libraries and add logs to your system to troubleshoot issues. |
+
+## Next Steps
+- Check out [project services](../project_services/deployment) if the service should auto-start in all rooms.
+- Learn how MeshAgent injects credentials in [Secrets & Registry Access](../secrets).
+- Explore the [Operations](../operations) page for deeper observability guidance.
