@@ -1,0 +1,17 @@
+```dotnet C#
+var handle = await room.Storage.Open("example.txt", overwrite: true);
+await room.Storage.Write(handle, Encoding.UTF8.GetBytes("Hello, Storage!"));
+await room.Storage.Close(handle);
+
+var response = await room.Storage.Download("example.txt");
+Console.WriteLine($"Downloaded content: {Encoding.UTF8.GetString(response.Data)}");
+
+var entries = await room.Storage.List("");
+foreach (var entry in entries)
+{
+    Console.WriteLine($"{entry.Name} {(entry.IsFolder ? "is folder" : "is file")}");
+}
+
+await room.Storage.Delete("example.txt");
+```
+

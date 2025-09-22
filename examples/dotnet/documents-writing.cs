@@ -1,0 +1,31 @@
+using Meshagent.Api.Room;
+using Meshagent.Api;
+using System.Collections.Generic;
+
+// Define room and participant
+var roomName = "my-room";
+var participantName = "participant-name";
+var path = "hello-world.document";
+
+// Establish communication channel using participant token
+var protocol = Helpers.CreateWebSocketProtocol(participantName, roomName);
+var room = new RoomClient(protocol);
+
+// Connect to the room
+await room.ConnectAsync();
+
+// Open our document
+var doc = await room.Sync.Open(path);
+
+// Wait for the document to sync from the server
+await doc.Synchronized;
+
+// Append body with text
+
+doc.Root.AppendChild("body", new Dictionary<string, object?>
+{
+    ["text"] = "hello world!"
+});
+
+// Close the document
+await room.Sync.Close(path);

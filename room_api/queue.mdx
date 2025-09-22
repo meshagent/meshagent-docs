@@ -1,3 +1,4 @@
+
 This module provides a client for interacting with server-managed queues. It contains two primary exports:
 
 ---
@@ -33,7 +34,7 @@ await room.queues.drain("my-queue")
 # Close the queue
 await room.queues.close("my-queue")
 ```
-```js JavaScript
+```js NodeJs
 // List existing queues
 const queues = await room.queues.list();
 console.log("Queues:", queues);
@@ -96,6 +97,34 @@ await room.queues.drain("my-queue");
 // Close the queue
 await room.queues.close("my-queue");
 ```
+```dotnet C#
+using System.Text.Json;
+
+// List existing queues
+var queues = await room.Queues.List();
+Console.WriteLine("Queues:");
+foreach (var queue in queues)
+{
+    Console.WriteLine($"{queue.Name} - size {queue.Size}");
+}
+
+// Open a queue
+await room.Queues.Open("my-queue");
+
+// Send a message
+var message = new Dictionary<string, object?> { ["payload"] = "Hello World!" };
+await room.Queues.Send("my-queue", message);
+
+// Receive a message
+var received = await room.Queues.Receive("my-queue");
+Console.WriteLine($"Received message: {JsonSerializer.Serialize(received)}");
+
+// Drain a queue
+await room.Queues.Drain("my-queue");
+
+// Close the queue
+await room.Queues.Close("my-queue");
+```
 </CodeGroup>
 
 ---
@@ -108,7 +137,7 @@ A basic representation of a queue, holding a name and its current size.
 ```python Python
 queue = Queue(name="my-queue", size=0)
 ```
-```js JavaScript
+```js NodeJs
 const queue = new Queue({ name: "my-queue", size: 0 });
 ```
 ```ts TypeScript
@@ -116,6 +145,9 @@ const queue = new Queue({ name: "my-queue", size: 0 });
 ```
 ```dart Dart
 final queue = Queue(name: "my-queue", size: 0);
+```
+```dotnet C#
+var queue = new Queue(name: "my-queue", size: 0);
 ```
 </CodeGroup>
 
@@ -141,7 +173,7 @@ The `QueuesClient` is responsible for sending requests through a `RoomClient` to
 ```python Python
 queues = await room.queues.list()
 ```
-```js JavaScript
+```js NodeJs
 const queues = await room.queues.list();
 ```
 ```ts TypeScript
@@ -149,6 +181,9 @@ const queues = await room.queues.list();
 ```
 ```dart Dart
 final queues = await room.queues.list();
+```
+```dotnet C#
+var queues = await room.Queues.List();
 ```
 </CodeGroup>
 
@@ -163,7 +198,7 @@ final queues = await room.queues.list();
 ```python Python
 await room.queues.open("my-queue")
 ```
-```js JavaScript
+```js NodeJs
 await room.queues.open("my-queue");
 ```
 ```ts TypeScript
@@ -171,6 +206,9 @@ await room.queues.open("my-queue");
 ```
 ```dart Dart
 await room.queues.open("my-queue");
+```
+```dotnet C#
+await room.Queues.Open("my-queue");
 ```
 </CodeGroup>
 
@@ -187,7 +225,7 @@ await room.queues.open("my-queue");
 ```python Python
 await room.queues.drain("my-queue")
 ```
-```js JavaScript
+```js NodeJs
 await room.queues.drain("my-queue");
 ```
 ```ts TypeScript
@@ -195,6 +233,9 @@ await room.queues.drain("my-queue");
 ```
 ```dart Dart
 await room.queues.drain("my-queue");
+```
+```dotnet C#
+await room.Queues.Drain("my-queue");
 ```
 </CodeGroup>
 
@@ -211,7 +252,7 @@ await room.queues.drain("my-queue");
 ```python Python
 await room.queues.close("my-queue")
 ```
-```js JavaScript
+```js NodeJs
 await room.queues.close("my-queue");
 ```
 ```ts TypeScript
@@ -219,6 +260,9 @@ await room.queues.close("my-queue");
 ```
 ```dart Dart
 await room.queues.close("my-queue");
+```
+```dotnet C#
+await room.Queues.Close("my-queue");
 ```
 </CodeGroup>
 
@@ -235,7 +279,7 @@ await room.queues.close("my-queue");
 ```python Python
 await room.queues.send("my-queue", {"foo": "bar"}, create=True)
 ```
-```js JavaScript
+```js NodeJs
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
 ```
 ```ts TypeScript
@@ -243,6 +287,10 @@ await room.queues.send("my-queue", { foo: "bar" }, { create: true });
 ```
 ```dart Dart
 await room.queues.send("my-queue", {"foo": "bar"}, create: true);
+```
+```dotnet C#
+var message = new Dictionary<string, object?> { ["payload"] = "Hello World!" };
+await room.Queues.Send("my-queue", message, create: true);
 ```
 </CodeGroup>
 
@@ -261,7 +309,7 @@ await room.queues.send("my-queue", {"foo": "bar"}, create: true);
 ```python Python
 message = await room.queues.receive("my-queue", create=True, wait=True)
 ```
-```js JavaScript
+```js NodeJs
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
 ```
 ```ts TypeScript
@@ -269,6 +317,9 @@ const message = await room.queues.receive("my-queue", { create: true, wait: true
 ```
 ```dart Dart
 final message = await room.queues.receive("my-queue", create: true, wait: true);
+```
+```dotnet C#
+var received = await room.Queues.Receive("my-queue", create: true, wait: true);
 ```
 </CodeGroup>
 

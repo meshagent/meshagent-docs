@@ -1,6 +1,3 @@
-
----
-
 ## Overview
 
 The `AgentsClient` defines methods to call agents, ask questions, list available toolkits, list available agents, and invoke specific tools. It uses an underlying `RoomClient` to send requests.
@@ -39,14 +36,14 @@ await room.agents.make_call(
   arguments={ "foo": "bar" }
 )
 ```
-```typescript Typescript
+```javascript NodeJs
 await room.agents.call({
   name: "example-agent",
   url: "some-endpoint",
   arguments: { "foo": "bar" }
 });
 ```
-```javascript Javascript
+```typescript TypeScript
 await room.agents.call({
   name: "example-agent",
   url: "some-endpoint",
@@ -58,6 +55,16 @@ await room.agents.call(
   name: "example-agent",
   url: "some-endpoint",
   arguments: { "foo": "bar" }
+);
+```
+```dotnet C#
+await room.Agents.MakeCall(
+  "example-agent",
+  "some-endpoint",
+  new Dictionary<string, object?>
+  {
+    ["foo"] = "bar"
+  }
 );
 ```
 </CodeGroup>
@@ -88,7 +95,17 @@ answer = await room.agents.ask(
 
 print(answer)  # logs the JSON structure from the agent
 ```
-```typescript Typescript
+```javascript NodeJs
+const answer = await room.agents.ask({
+  agentName: "example-agent",
+  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  arguments: {
+    prompt: "Explain quantum computing in simple terms."
+  }
+});
+console.log(answer); // logs the JSON structure from the agent
+```
+```typescript TypeScript
 const answer = await room.agents.ask({
   agentName: "example-agent",
   toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
@@ -97,16 +114,6 @@ const answer = await room.agents.ask({
   }
 });
 
-console.log(answer); // logs the JSON structure from the agent
-```
-```javascript Javascript
-const answer = await room.agents.ask({
-  agentName: "example-agent",
-  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
-  arguments: {
-    prompt: "Explain quantum computing in simple terms."
-  }
-});
 console.log(answer); // logs the JSON structure from the agent
 ```
 ```dart Dart
@@ -118,6 +125,20 @@ final answer = await room.agents.ask(
   }
 );
 print(answer); // logs the JSON structure from the agent
+```
+```dotnet C#
+var answer = await room.Agents.Ask(
+  "example-agent",
+  new Dictionary<string, object?>
+  {
+    ["prompt"] = "Explain quantum computing in simple terms."
+  },
+  requires: new List<Requirement>
+  {
+     new RequiredToolkit("exampleToolkit", new List<string> { "toolA", "toolB" })
+  }
+);
+Console.WriteLine(answer); // logs the JSON structure from the agent
 ```
 </CodeGroup>
 
@@ -138,14 +159,14 @@ all_toolkits = await room.agents.list_toolkits()
 for toolkit in all_toolkits:
   print(f"Toolkit: {toolkit.name}, Tools: {[tool.name for tool in toolkit.tools]}")
 ```
-```typescript Typescript
+```javascript NodeJs
 const allToolkits = await room.agents.listToolkits();
 
 allToolkits.forEach((toolkit) => {
   console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map(t => t.name)}`);
 });
 ```
-```javascript Javascript
+```typescript TypeScript
 const allToolkits = await room.agents.listToolkits();
 
 allToolkits.forEach((toolkit) => {
@@ -158,6 +179,19 @@ final allToolkits = await room.agents.listToolkits();
 for (final toolkit in allToolkits) {
   print('Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name).join(", ")}');
 }
+```
+```dotnet C#
+var toolkits = await room.Agents.ListToolkits();
+
+foreach (var toolkit in toolkits)
+{
+  Console.WriteLine($"\n{toolkit.Name}: {toolkit.Title} - {toolkit.Description}");
+  foreach (var tool in toolkit.Tools)
+  {
+     Console.WriteLine($"  {tool.Name}: {tool.Title} - {tool.Description}");
+  }
+}
+
 ```
 </CodeGroup>
 
@@ -177,14 +211,14 @@ agents = await room.agents.list_agents()
 for agent in agents:
   print(f"Agent: {agent.name}, Title: {agent.title}")
 ```
-```typescript Typescript
+```javascript NodeJs
 const agents = await room.agents.listAgents();
 
 agents.forEach((agent) => {
   console.log(`Agent: ${agent.name}, Title: ${agent.title}`);
 });
 ```
-```javascript Javascript
+```typescript TypeScript
 const agents = await room.agents.listAgents();
 
 agents.forEach((agent) => {
@@ -197,6 +231,14 @@ final agents = await room.agents.listAgents();
 for (final agent in agents) {
   print('Agent: ${agent.name}, Title: ${agent.title}');
 }
+```
+```dotnet C#
+var agents = await room.Agents.ListAgents();
+foreach (var item in agents)
+{
+  Console.WriteLine($"{item.Name} - {item.Title}");
+}
+
 ```
 </CodeGroup>
 
@@ -222,21 +264,21 @@ response = await room.agents.invoke_tool(
 )
 # 'response' may contain JSON data or a message detailing the tool's output.
 ```
-```typescript Typescript
+```javascript NodeJs
+const response = await room.agents.invokeTool({
+  toolkit: "exampleToolkit",
+  tool: "toolA",
+  arguments: { param1: "value1" }
+});
+// 'response' may contain JSON data or a message detailing the tool's output.
+```
+```typescript TypeScript
 const response = await room.agents.invokeTool({
   toolkit: "exampleToolkit",
   tool: "toolA",
   arguments: { param1: "value1" }
 });
 
-// 'response' may contain JSON data or a message detailing the tool's output.
-```
-```javascript Javascript
-const response = await room.agents.invokeTool({
-  toolkit: "exampleToolkit",
-  tool: "toolA",
-  arguments: { param1: "value1" }
-});
 // 'response' may contain JSON data or a message detailing the tool's output.
 ```
 ```dart Dart
@@ -248,8 +290,11 @@ final response = await room.agents.invokeTool(
 
 // 'response' may contain JSON data or a message detailing the tool's output.
 ```
+```dotnet C#
+var toolArgs = new Dictionary<string, object?> { { "param1", "value1" } };
+var toolResult = await room.Agents.InvokeTool("exampleToolkit", "toolA", toolArgs);
+```
 </CodeGroup>
-
 
 ---
 

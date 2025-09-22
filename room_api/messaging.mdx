@@ -89,7 +89,7 @@ await room.messaging.broadcast_message({
 # Disable messaging
 await room.messaging.disable()
 ```
-```js JavaScript
+```js NodeJs
 // Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
@@ -164,6 +164,45 @@ await room.messaging.broadcastMessage(
 // Disable messaging
 await room.messaging.disable();
 ```
+```dotnet C#
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using Meshagent.Api.Messaging;
+
+// Suppose you already have a RoomClient instance named `room`
+
+// Enable messaging (allows receiving participant and stream events)
+await room.Messaging.Enable();
+
+// Acquire a participant instance from somewhere; you might discover it via events
+var myParticipant = /* ...some RemoteParticipant... */;
+
+// Send a simple message
+await room.Messaging.SendMessage(
+  to: myParticipant,
+  type: "chat",
+  message: new Dictionary<string, object?> { ["text"] = "Hello from C#!" }
+);
+
+// Broadcast a message to all participants
+await room.Messaging.BroadcastMessage(
+  type: "announcement",
+  message: new Dictionary<string, object?> { ["content"] = "Hello everyone!" }
+);
+
+// Listen for incoming messages
+room.Messaging.On("message", data =>
+{
+  if (data.TryGetValue("message", out var obj) && obj is RoomMessage msg)
+  {
+    Console.WriteLine($"Received {msg.Type}: {JsonSerializer.Serialize(msg.Message)}");
+  }
+});
+
+// Disable messaging
+await room.Messaging.Disable();
+```
 </CodeGroup>
 
 
@@ -186,7 +225,7 @@ await stream_writer.write(MessageStreamChunk(
 # Close the stream
 await stream_writer.close()
 ```
-```js JavaScript
+```js NodeJs
 // Create a new stream
 const streamWriter = await room.messaging.createStream({
   to: myParticipant,
@@ -238,6 +277,30 @@ await streamWriter.write(MessageStreamChunk(
 // Close the stream
 await streamWriter.close();
 ```
+```dotnet C#
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Meshagent.Api.Messaging;
+
+// Suppose you already have a RoomClient instance named `room`
+var myParticipant = /* ...some RemoteParticipant... */;
+
+// Create a new stream
+var streamWriter = await room.Messaging.CreateStream(
+  to: myParticipant,
+  header: new Dictionary<string, object?> { ["streamPurpose"] = "file-transfer" }
+);
+
+// Write chunks
+await streamWriter.Write(new MessageStreamChunk(
+  header: new Dictionary<string, object?> { ["chunkNumber"] = 1 },
+  data: Encoding.UTF8.GetBytes("some binary data")
+));
+
+// Close the stream
+await streamWriter.Close();
+```
 </CodeGroup>
 
 ---
@@ -252,10 +315,11 @@ Enables the messaging subsystem on the server. Optionally provides a callback th
 await room.messaging.enable(
     lambda reader: print(f"New stream opened: {reader._streamId}"))
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
 });
+```
 ```ts TypeScript
 await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
@@ -264,6 +328,12 @@ await room.messaging.enable((reader) => {
 ```dart Dart
 await room.messaging.enable((reader) {
   print("New stream opened: ${reader._streamId}");
+});
+```
+```dotnet C#
+await room.Messaging.Enable(onStreamAccept: reader =>
+{
+  Console.WriteLine($"Stream accepted: {reader.Header["name"]}");
 });
 ```
 </CodeGroup>
@@ -279,7 +349,7 @@ Disables the messaging subsystem on the server.
 ```python Python
 await room.messaging.disable()
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.disable();
 ```
 ```ts TypeScript
@@ -287,6 +357,9 @@ await room.messaging.disable();
 ```
 ```dart Dart
 await room.messaging.disable();
+```
+```dotnet C#
+await room.Messaging.Disable();
 ```
 </CodeGroup>
 
@@ -313,7 +386,7 @@ await room.messaging.send_message({
   "attachment": b"\x01\x02\x03"
 })
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.sendMessage({
   "to": myParticipant,
   "type": "chat",
@@ -336,6 +409,14 @@ await room.messaging.sendMessage({
   "message": {"text": "Hey!"},
   "attachment": Uint8List.fromList([1, 2, 3]),
 });
+```
+```dotnet C#
+await room.Messaging.SendMessage(
+  to: myParticipant,
+  type: "chat",
+  message: new Dictionary<string, object?> { ["text"] = "Hey!" },
+  attachment: new byte[] { 1, 2, 3 }
+);
 ```
 </CodeGroup>
 
@@ -361,7 +442,7 @@ await room.messaging.broadcast_message({
   }
 })
 ```
-```js JavaScript
+```js NodeJs
 await room.messaging.broadcastMessage({
   "type": "announcement",
   "message": {
@@ -388,6 +469,14 @@ await room.messaging.broadcastMessage({
   }
 });
 ```
+```dotnet C#
+await room.Messaging.BroadcastMessage(
+  type: "announcement",
+  message: new Dictionary<string, object?> { 
+   ["title"] = "Server Maintenance", 
+   ["content"] = "We will be down tonight." 
+});
+```
 </CodeGroup>
 
 ---
@@ -412,7 +501,7 @@ writer = await room.messaging.create_stream(
   header={"purpose": "video-stream"}
 )
 ```
-```js JavaScript
+```js NodeJs
 const writer = await room.messaging.createStream({
   to: myParticipant,
   header: {"purpose": "video-stream" },
@@ -430,6 +519,12 @@ final writer = await room.messaging.createStream(
   header: {"purpose": "video-stream"},
 );
 ```
+```dotnet C#
+var writer = await room.Messaging.CreateStream(
+  to: myParticipant,
+  header: new Dictionary<string, object?> { ["name"] = "video-stream" }
+);
+```
 </CodeGroup>
 
 
@@ -444,7 +539,7 @@ Provides an iterable collection of all known remote participants.
 for participant in room.messaging.remote_participants:
     print(f"Participant: {participant.id}, role: {participant.role}")
 ```
-```js JavaScript
+```js NodeJs
 for (const participant of room.messaging.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
 }
@@ -457,6 +552,12 @@ for (const participant of room.messaging.remoteParticipants) {
 ```dart Dart
 for (final participant in room.messaging.remoteParticipants) {
   print("Participant: ${participant.id}, role: ${participant.role}");
+}
+```
+```dotnet C#
+foreach (var participant in room.Messaging.RemoteParticipants)
+{
+  Console.WriteLine($"Participant: {participant.Id}, role: {participant.Role}");
 }
 ```
 </CodeGroup>
@@ -490,7 +591,7 @@ await stream_writer.write(MessageStreamChunk(
 ))
 await stream_writer.close()
 ```
-```js JavaScript
+```js NodeJs
 // Example usage after acquiring a MessageStreamWriter
 await streamWriter.write(new MessageStreamChunk({
   header: { part: 1 },
@@ -514,6 +615,14 @@ await streamWriter.write(MessageStreamChunk(
 ));
 await streamWriter.close();
 ```
+```dotnet C#
+// Send a chunk and close the stream
+await streamWriter.Write(new MessageStreamChunk(
+  header: new Dictionary<string, object?> { ["part"] = 1 },
+  data: new byte[] { 1, 2, 3 }
+));
+await streamWriter.Close();
+```
 </CodeGroup>
 
 
@@ -534,7 +643,7 @@ room.messaging.on(
     "participant_added",
     lambda evt: print("A new participant joined:", evt.message.message))
 ```
-```js JavaScript
+```js NodeJs
 room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
@@ -553,12 +662,18 @@ messagingClient.on("participant_added", (evt) => {
 });
 ```
 ```dart Dart
-room.messaging.on("message", (evt) {
-   print("Received a message of type: ${evt.message.type}");
+room.messaging.on("participant_added", (evt) {
+   print("A new participant joined: ${evt.message.message}");
 });
 
 room.messaging.on("participant_added", (evt) {
    print("A new participant joined: ${evt.message.message}");
+});
+```
+```dotnet C#
+room.Messaging.On("participant_added", data =>
+{
+  Console.WriteLine($"A new participant joined: {data["message"]}");
 });
 ```
 </CodeGroup>

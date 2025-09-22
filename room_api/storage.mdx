@@ -2,7 +2,7 @@ import StorageDownloadPy from "/snippets/examples/python/storage-download.mdx"
 import StorageDownloadJs from "/snippets/examples/javascript/storage-download.mdx"
 import StorageDownloadTs from "/snippets/examples/typescript/storage-download.mdx"
 import StorageDownloadDart from "/snippets/examples/dart/storage-download.mdx"
-
+import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
 The storage API manages files and folders within a room’s remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
 
@@ -34,7 +34,7 @@ def on_file_updated(path: str, participant_id: str):
 
 room.storage.on("file.updated", on_file_updated)
 ```
-```javascript JavaScript
+```javascript NodeJs
 function onFileUpdated(path, participantId) {
     console.log("File updated:", path);
 }
@@ -59,6 +59,14 @@ room.listen((RoomEvent event) {
     }
 });
 ```
+```dotnet C#
+void OnFileUpdated(Dictionary<string, object?> data)
+{
+    Console.WriteLine($"File updated: {data["path"]}");
+}
+
+room.Storage.On("file.updated", OnFileUpdated);
+```
 </CodeGroup>
 
 
@@ -73,7 +81,7 @@ def on_file_deleted(path: str):
 
 room.storage.on("file.deleted", on_file_deleted)
 ```
-```javascript JavaScript
+```javascript NodeJs
 function onFileDeleted(path) {
     console.log("File deleted:", path);
 }
@@ -98,6 +106,14 @@ room.listen((RoomEvent event) {
     }
 });
 ```
+```dotnet C#
+void OnFileDeleted(Dictionary<string, object?> data)
+{
+    Console.WriteLine($"File deleted: {data["path"]}");
+}
+
+room.Storage.On("file.deleted", OnFileDeleted);
+```
 </CodeGroup>
 
 
@@ -109,7 +125,7 @@ You can remove an event handler with:
 room.storage.off("file.updated", on_file_updated)
 room.storage.off("file.deleted", on_file_deleted)
 ```
-```javascript JavaScript
+```javascript NodeJs
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
 ```
@@ -127,6 +143,10 @@ room.listen((RoomEvent event) {
         // Remove handler logic
     }
 });
+```
+```dotnet C#
+room.Storage.Off("file.updated", OnFileUpdated);
+room.Storage.Off("file.deleted", OnFileDeleted);
 ```
 </CodeGroup>
 
@@ -157,7 +177,7 @@ if await room.storage.exists(path="folder/data.json"):
 else:
     print("Data file does not exist.")
 ```
-```javascript JavaScript
+```javascript NodeJs
 if (await room.storage.exists("folder/data.json")) {
     console.log("Data file exists!");
 } else {
@@ -176,6 +196,16 @@ if (await room.storage.exists("folder/data.json")) {
     print("Data file exists!");
 } else {
     print("Data file does not exist.");
+}
+```
+```dotnet C#
+if (await room.Storage.Exists("folder/data.json"))
+{
+    Console.WriteLine("Data file exists!");
+}
+else
+{
+    Console.WriteLine("Data file does not exist.");
 }
 ```
 </CodeGroup>
@@ -201,7 +231,7 @@ If `overwrite` is `True`, an existing file at this path will be truncated.
 ```python Python
 handle = await room.storage.open(path="files/new.txt", overwrite=True)
 ```
-```javascript JavaScript
+```javascript NodeJs
 let handle = await room.storage.open("files/new.txt", { overwrite: true });
 ```
 ```typescript TypeScript
@@ -209,6 +239,9 @@ let handle = await room.storage.open("files/new.txt", { overwrite: true });
 ```
 ```dart Dart
 var handle = await room.storage.open("files/new.txt", overwrite=true);
+```
+```dotnet C#
+var handle = await room.Storage.Open("files/new.txt", overwrite: true);
 ```
 </CodeGroup>
 
@@ -234,7 +267,7 @@ data_to_write = b"Sample data"
 
 await room.storage.write(handle=my_handle, data=data_to_write)
 ```
-```javascript JavaScript
+```javascript NodeJs
 const encoder = new TextEncoder();
 const dataToWrite = encoder.encode("Sample data");
 
@@ -250,6 +283,11 @@ await room.storage.write(myHandle, data=dataToWrite);
 final dataToWrite = utf8.encode("Sample data");
 
 await room.storage.write(myHandle, dataToWrite);
+```
+```dotnet C#
+var dataToWrite = Encoding.UTF8.GetBytes("Sample data");
+
+await room.Storage.Write(myHandle, dataToWrite);
 ```
 </CodeGroup>
 
@@ -272,7 +310,7 @@ Closes an open file handle, ensuring all data has been written.
 ```python Python
 await room.storage.close(handle=my_handle)
 ```
-```javascript JavaScript
+```javascript NodeJs
 await room.storage.close(myHandle);
 ```
 ```typescript TypeScript
@@ -280,6 +318,9 @@ await room.storage.close(myHandle);
 ```
 ```dart Dart
 await room.storage.close(myHandle);
+```
+```dotnet C#
+await room.Storage.Close(myHandle);
 ```
 </CodeGroup>
 
@@ -303,7 +344,7 @@ Retrieves the content of a file from the remote storage.
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
 ```
-```javascript JavaScript
+```javascript NodeJs
 const fileResponse = await room.storage.download("files/data.bin");
 console.log(fileResponse.data);  // raw bytes
 ```
@@ -314,6 +355,10 @@ console.log(fileResponse.data);  // raw bytes
 ```dart Dart
 final fileResponse = await room.storage.download("files/data.bin");
 print(fileResponse.data);  // raw bytes
+```
+```dotnet C#
+var fileResponse = await room.Storage.Download("files/data.bin");
+Console.WriteLine(fileResponse.Data);  // raw bytes
 ```
 </CodeGroup>
 
@@ -336,7 +381,7 @@ Requests a downloadable URL for the specified file path, which can be used to fe
 url = await room.storage.download_url(path="files/report.pdf")
 print("Download the file from:", url)
 ```
-```javascript JavaScript
+```javascript NodeJs
 const url = await room.storage.downloadUrl("files/report.pdf");
 console.log("Download the file from:", url);
 ```
@@ -347,6 +392,10 @@ console.log("Download the file from:", url);
 ```dart Dart
 final url = await room.storage.downloadUrl("files/report.pdf");
 print("Download the file from: $url");
+```
+```dotnet C#
+var url = await room.Storage.DownloadUrl("files/report.pdf");
+Console.WriteLine($"Download the file from: {url}");
 ```
 </CodeGroup>
 
@@ -370,7 +419,7 @@ entries = await room.storage.list(path="some_folder")
 for e in entries:
     print(e.name, "is folder?" if e.is_folder else "is file?")
 ```
-```javascript JavaScript
+```javascript NodeJs
 const entries = await room.storage.list("some_folder");
 entries.forEach(e => {
     console.log(e.name, e.isFolder ? "is folder" : "is file");
@@ -386,6 +435,13 @@ entries.forEach(e => {
 final entries = await room.storage.list("some_folder");
 for (var e in entries) {
     print("${e.name} ${e.isFolder ? "is folder" : "is file"}");
+}
+```
+```dotnet C#
+var entries = await room.Storage.List("some_folder");
+foreach (var e in entries)
+{
+    Console.WriteLine($"{e.Name} {(e.IsFolder ? \"is folder\" : \"is file\")}");
 }
 ```
 </CodeGroup>
@@ -410,7 +466,7 @@ Deletes a file at the given path. A `file.deleted` event is typically emitted af
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")
 ```
-```javascript JavaScript
+```javascript NodeJs
 await room.storage.delete("folder/old_file.txt");
 console.log("File deleted.");
 ```
@@ -421,6 +477,10 @@ console.log("File deleted.");
 ```dart Dart
 await room.storage.delete("folder/old_file.txt");
 print("File deleted.");
+```
+```dotnet C#
+await room.Storage.Delete("folder/old_file.txt");
+Console.WriteLine("File deleted.");
 ```
 </CodeGroup>
 
@@ -441,6 +501,7 @@ A common use case:
     <StorageDownloadJs />
     <StorageDownloadTs />
     <StorageDownloadDart />
+    <StorageDownloadCs/>
 </CodeGroup>
 
 This sequence demonstrates basic creation, reading, and deletion flows within a single session.  
