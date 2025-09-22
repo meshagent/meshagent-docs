@@ -1,6 +1,7 @@
 ---
 title: Example Running a Chatbot with the Containers API
 ---
+import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 
 Services that require or allow users to pass values to the service should be run as room services via the Containers API. For example, if we want to allow users to set the own system prompt on an agent, or bring their own API key, we need to run the agent as a room service not a project service. This is because project services are the same across all the rooms in the project, while room services via the containers API are dynamic and can be tailored to each room. 
 
@@ -12,32 +13,9 @@ Let's create a simple chatbot that allows users to give it a system prompt when 
 
 ### main.py
 
-```python Python
-import os
-import asyncio
-import logging
-from meshagent.agents.chat import ChatBot
-from meshagent.api.services import ServiceHost
-from meshagent.openai import OpenAIResponsesAdapter
-
-logging.basicConfig(level=logging.DEBUG)
-
-system_prompt = os.getenv("SYSTEM_PROMPT")
-rules = [system_prompt] if system_prompt else []
-
-host = ServiceHost()
-
-@host.path("/agent")
-class MyChatBot(ChatBot): 
-    def __init__(self):
-        super().__init__(
-            name="chatbot",
-            rules=rules,
-            llm_adapter=OpenAIResponsesAdapter(),
-        )
-
-asyncio.run(host.run())
-```
+<CodeGroup>
+    <SimpleChatbot />
+</CodeGroup>
 
 ### Dockerfile
 
@@ -52,29 +30,26 @@ ENTRYPOINT [ "python3", "main.py" ]
 ```
 
 ### meshagent.yaml
+
 ```yaml yaml
 kind: ServiceTemplate
 version: v1
 metadata:
   name: chatbot
-  description: "chatbot that takes a system prompt"
-
-variables:
+  description: "A chatbot that takes a system prompt at runtime"                 
+command: python3 main.py      # command executed inside the container
+variables:                    # exposed in MeshAgent Studio UI as form fields when someone launches the service (parameters collected when launching service)
 - name: "system_prompt"
-
-environment:
+environment:                  # passes variables into the container
 - name: SYSTEM_PROMPT
   value: "{system_prompt}"
-- name: tone
-  enum: ["formal", "casual", "enthusiastic"]
-  optional: true
 ports:
-- num: "*"
-  liveness: "/"
+- num: "*"                    # automatically assign an available MESHAGENT_PORT for the agent to run on 
+  liveness: "/"               # ensure the service is alive before connecting to the room
   endpoints:
-  - path: /agent
-    identity: chatbot
-    type: meshagent.callable
+  - path: /agent              # service path to call and run the agent on
+    identity: chatbot         # name of the agent as it shows up in the Room
+    type: meshagent.callable  # instructs the room server to call this endpointx
 ```
 
 ## Build and Run the Container

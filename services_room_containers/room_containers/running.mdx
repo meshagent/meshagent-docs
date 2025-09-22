@@ -12,36 +12,33 @@ MeshAgent Studio allows you to run a container by pulling and running an image f
 1. Go to [MeshAgent Studio](https://studio.meshagent.com).
 2. Create a new session ``myroom`` and go to the room. 
 3. From the developer console on the bottom of the screen select **Images**. 
-4. Select either ***Build Image** to build the image from a Git Repository or **Pull Image** to pull the image from a docker repository. This will pull and start your container, if any variables are required you'll be prompted to input the values before the container starts.
-5. Your service should now be running in a container. Click the **Containers** tab to see logs for the container. 
+4. Select either **Build Image** to build the image from a Git Repository or **Pull Image** to pull the image from a docker repository. This will build or pull the image. 
+5. Click the play icon next to the image once it's built/pulled. If any variables are required you'll be prompted to input the values. (The image should appear green under the Build tab if it was built/pulled correctly. If the image is showing up in white text it was not able to build/pull properly.)
+6. Your service should now be running in a container. Click the **Containers** tab to see logs for the container. 
 
 ### MeshAgent CLI
-
-Launch containers programmatically or from a terminal:
-
-For example using the chatbot we defined in the [configuration docs](./configuration): 
+Launch containers programmatically or from a terminal using the ``meshagent container`` CLI commands. See [room containers example]. 
 
 ```bash
 meshagent setup # authenticate to MeshAgent 
 meshagent container run \
-  --project-id <project-id> \
-  --room my-room \
-  --image my-agent:v2 \
-  --command "python main.py" \
-  --env SYSTEM_PROMPT="You summarize meetings" \
-  --var tone=formal 
+  --project-id <project-id> \ # your project ID
+  --room my-room \ # room to run in
+  --image my-agent:v2 \ # your image if already built and pushed to a repository
+  --command "python main.py" \ # command for your container
+  --var system_prompt="You always reply with a fun fact" # the values for any variables you want to pass to the service
 ```
 
 - Use ``--var`` for template variables (converted into ``{variable}`` placeholders).
 - Use ``--env`` for direct environment variables.
-- ``--cred`` supplies temporary registry credentials if the image is private.
+- ``--cred`` to provide registry credentials if the image is private.
 
 ## Managing Active Containers
-
+- **List containers**: ``meshagent container images list --room <room_name>``
 - **Stream logs**: ``meshagent container logs --id <container-id>``
 - **Stop a container**: ``meshagent container stop --id <container-id>``
 
-Inside MeshAgent Studio, the room sidebar shows active containers with controls to stop or relaunch them.
+Inside MeshAgent Studio, the **developer console** at the bottom of the screen shows images and containers in the room with controls to stop and restart as needed and to view container logs. 
 
 ## Lifecycle
 - Containers start with the parameters supplied at launch.
