@@ -1,0 +1,85 @@
+---
+title: Example: Running a Chatbot with the Containers API
+---
+
+Services that require or allow users to pass values to the service should be run as room services via the Containers API. For example, if we want to allow users to set the own system prompt on an agent, or bring their own API key, we need to run the agent as a room service not a project service. This is because project services are the same across all the rooms in the project, while room services via the containers API are dynamic and can be tailored to each room. 
+
+## Example
+
+Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+
+### main.py
+
+```python Python
+import os
+import asyncio
+import logging
+from meshagent.agents.chat import ChatBot
+from meshagent.api.services import ServiceHost
+from meshagent.openai import OpenAIResponsesAdapter
+
+logging.basicConfig(level=logging.DEBUG)
+
+system_prompt = os.getenv("SYSTEM_PROMPT")
+rules = [system_prompt] if system_prompt else []
+
+host = ServiceHost()
+
+@host.path("/agent")
+class MyChatBot(ChatBot): 
+    def __init__(self):
+        super().__init__(
+            name="chatbot",
+            rules=rules,
+            llm_adapter=OpenAIResponsesAdapter(),
+        )
+
+asyncio.run(host.run())
+```
+
+### Dockerfile
+
+```Dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
+
+COPY . /src
+
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "main.py" ]
+```
+
+### meshagent.yaml
+```yaml yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: chatbot
+  description: "chatbot that takes a system prompt"
+
+variables:
+- name: "system_prompt"
+
+environment:
+- name: SYSTEM_PROMPT
+  value: "{system_prompt}"
+- name: tone
+  enum: ["formal", "casual", "enthusiastic"]
+  optional: true
+ports:
+- num: "*"
+  liveness: "/"
+  endpoints:
+  - path: /agent
+    identity: chatbot
+    type: meshagent.callable
+```
+
+## Build and Push the Container
+Now that we've defined our agent and written the applicable Dockerfile and meshagent.yaml we can build and push the docker container. 
+
+
+## Run the Room Service with the Containers API
+
+
+## Next Steps
