@@ -8,7 +8,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 otel_config(service_name="chatbot")
 
 # Create a service host
-service = ServiceHost() # optional to pass a port, defaults to 8081
+service = ServiceHost() # optional to pass a port, MeshAgent automatically assigns an available one if none provided
 
 # Register an agent at a specific path
 @service.path(path="/chat", identity="chatbot")
