@@ -1,11 +1,14 @@
 ---
-title: Example: Deploying a Chatbot as a Project Service
+title: Example Deploying a Chatbot as a Project Service
 ---
 
+Static services that should be the same across the project should be deployed as a project-wide service. These services can be used to manage room specific services run through the Containers API, provide shared functionality, and much more. These services are meant to be generic and not customized by room. 
+
+To learn more about project vs room level services and understand when to use each see [intro to services and containers](../overview).
 
 ## Example
 
-Let's create a simple chatbot that can be deployed to all the rooms in our project. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+Let's create a simple chatbot that can be deployed to all the rooms in our project. This will ensure everyone always has access to an LLM in any room inside the project. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
 
 ### main.py
 
@@ -21,7 +24,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 host = ServiceHost()
 
-@host.path("/agent")
+@host.path(path="/agent", identity="chatbot")
 class MyChatBot(ChatBot): 
     def __init__(self):
         super().__init__(
@@ -44,7 +47,7 @@ WORKDIR /src
 ENTRYPOINT [ "python3", "main.py" ]
 ```
 
-### meshagent.yaml
+### meshagent.yaml UPDATE to fill in 
 ```yaml yaml
 kind: Service
 version: v1
