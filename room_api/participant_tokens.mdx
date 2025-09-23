@@ -1,28 +1,27 @@
 ---
 title: Participant Tokens
 ---
-MeshAgent signs every participant into a room with a JWT called a **ParticipantToken**. The token describes *who* the participant is and *what* they are allowed to do. Containers launched by MeshAgent, direct user connections, and outbound webhooks all receive one of these tokens before they interact with the Rooms API.
+
+Every participant in a MeshAgent room operates with a secure token that defines their identity and permissions. These JWT-based tokens ensure that users, containers, and services can only access the resources they're authorized to use.
 
 ## Token Anatomy
-A token is modelled by `meshagent.api.participant_token.ParticipantToken` and contains:
+MeshAgent exposes tokens through `meshagent.api.participant_token.ParticipantToken` which consists of:
 
 - `name`: the participant identifier embedded in the JWT payload
-- `sub` (optional): the project id, populated when the participant belongs to a project
-- `kid` (optional): the API key id used to mint the token
-- `version`: the participant-token schema version (defaulted when omitted)
-- `grants`: a list of individual `ParticipantGrant` entries that describe permissions
+- `project_id` (optional): the project id, populated when the participant belongs to a project
+- `api_key_id` (optional): the API key id used to mint the token
+- `version` (optional): the participant-token schema version (defaulted when omitted)
+- `grants` (optional): a list of individual `ParticipantGrant` entries that describe permissions
 
-### Grant names
-Only a handful of grant names are recognised by the runtime today:
+### Permission Types 
+Participant tokens use grants and scopes to define permissions. Each grant has a grant name which indicates the type of permission (``room``, ``role``, ``tunnel_ports``, ``api``), and each grant has a scope which provides the specific details of what is allowed. 
 
 | Grant | Scope format | What it controls |
 | ----- | ------------ | ---------------- |
 | `room` | room name string | Which room the participant may join (`add_room_grant`) |
 | `role` | `"agent" \| "tool" \| "user"` | Participant role advertised to other services (`add_role_grant`) |
 | `tunnel_ports` | comma-separated port numbers | Which tunnel ports can be opened from the room server (`add_tunnel_grant`) |
-| `api` | [`ApiScope`](./api_scopes) object | Fine-grained access to each Rooms API surface (`add_api_grant`) |
-
-Tokens omit grants that are not needed. The helpers in `ParticipantToken` prevent adding more than one `api` grant, ensuring there is a single `ApiScope` to enforce.
+| `api` | [`ApiScope`](./api_scopes) object | Fine-grained access to each Room API surface (`add_api_grant`). A single `ApiScope` can enable multiple sections (storage, containers, secrets, etc.) |
 
 ## How tokens are issued
 MeshAgent components mint tokens on your behalf:
@@ -33,26 +32,6 @@ MeshAgent components mint tokens on your behalf:
 - **Webhooks and remote calls**: `meshagent.server.room_server.call` mints an on-the-fly token and includes it in webhook payloads so downstream services can call back into the room securely.
 
 In all cases the token is signed with your project secret and surfaced to the participant as a standard JWT.
-
-## Working with tokens in code
-Use the SDK helpers to inspect a token and apply additional checks inside your service:
-
-```python
-from meshagent.api.participant_token import ParticipantToken
-
-# Accept the JWT from the environment (e.g., MeshAgent provided MESHAGENT_TOKEN)
-token = ParticipantToken.from_jwt(jwt_str)
-
-print(token.name)              # Participant identifier
-print(token.project_id)        # Project scope if present
-print(token.role)              # Convenience accessor for the role grant
-
-api_scope = token.get_api_grant()
-if api_scope and api_scope.storage:
-    print("Storage access granted")
-```
-
-If you need to mint your own tokens, construct a `ParticipantToken`, call the `add_*_grant` helpers, then sign it with `token.to_jwt(token=YOUR_SECRET)`.
 
 ## Related topics
 - [`ApiScope` reference](./api_scopes)
