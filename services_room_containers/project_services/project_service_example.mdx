@@ -37,7 +37,7 @@ asyncio.run(host.run())
 
 ### Dockerfile
 
-```Dockerfile Dockerfile
+```dockerfile Dockerfile
 FROM meshagent/python-sdk-slim:latest
 
 COPY . /src
@@ -52,7 +52,8 @@ ENTRYPOINT [ "python3", "main.py" ]
 kind: Service
 version: v1
 name: chatbot
-
+image: "IMAGE:TAG" #update with your image and tag
+# pull_secret: PULL_SECRET_ID # add if pulling from private repo
 ports:
 - num: "*"
   liveness: "/"
@@ -62,8 +63,19 @@ ports:
     type: meshagent.callable
 ```
 
+For more details on the ``Service`` manifest, see the [project service configuration](./configuartion) docs. Don't forget to add a "pull_secret" parameter to the manifest if you are pulling from a private repository. 
+
 ## Build and Push the Container
-Now that we've defined our agent and written the applicable Dockerfile and meshagent.yaml we can build and push the docker container. 
+Now that we've defined our agent and written the applicable Dockerfile and meshagent.yaml you can build and push the docker container to your registry. 
+
+```bash
+docker buildx build . \
+  -t "$IMAGE:$TAG" \
+  --platform linux/amd64 \
+  --push
+```
+
+*We recommend docker buildx because it supports cross-platform builds, pushes directly to your registry in one step, and enables optional layer caching for much faster CI builds.*
 
 
 ## Deploy the Project-Wide Service
@@ -80,5 +92,6 @@ For more details on deployment see [deploy and run project services](./deploymen
 Now that your service is deployed try it out in [MeshAgent Studio](https://studio.meshagent.com). You'll see the new service in the **Services** tab of the UI. To use the service, simply start a new session and enter the room, the chatbot will appear in the participants tab for you to interact with. 
 
 ## Related topics
-- [Intro to Project and Room Services](../overview.mdx): Learn more about services in MeshAgent and when to use project wide or room specific services. 
-- [Secrets]: Learn how to create
+- [Project Service Configuartion](./configuartion): Understand the Meshagent ``Service`` manifest format for deploying project services. 
+- [Project Service Deployment](./deployment): Learn how to deploy a project service through the MeshAgent CLI or Studio UI. 
+- [Intro to Project and Room Services](../overview.mdx): Understand services in MeshAgent and learn when to use project wide or room specific services. 
