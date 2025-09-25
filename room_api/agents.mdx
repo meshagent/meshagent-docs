@@ -74,31 +74,30 @@ await room.Agents.MakeCall(
 ### 2. Ask
 
 - **Description**:  
-  - Sends a question or prompt to the specified agent. You can optionally provide an array of `ToolkitConfiguration` objects indicating which toolkits (and which tools within them) are available for this agent to use. 
+  - Sends a question or prompt to the specified agent. You can optionally provide an array of `RequiredToolkit` objects indicating which toolkits (and which tools within them) are available for this agent to use. 
   - The `ask` method allows you to send a question or prompt to an agent, specifying the agent's name, any toolkits you want to enable, and the arguments you want to pass.
   - This is useful for getting responses from agents that can process natural language or perform specific tasks.
 - **Parameters**:
-  - `agentName`: The name/identifier of the agent you want to ask.
-  - `toolkits?`: An optional array of `ToolkitConfiguration` objects that specify which toolkits are allowed for this ask.
+  - `agent`: The name/identifier of the agent you want to ask.
+  - `requires?`: An optional array of `RequiredToolkit` objects that specify which toolkits are allowed for this ask.
   - `arguments`: A record of arguments (payload) that you want to send to the agent.
-- **Returns** the `answer` field from the JSON response.
+- **Returns**:  `Response` object (likely a `JsonResponse`), containing the output or result from the agent.
 
 <CodeGroup>
 ```python Python
 answer = await room.agents.ask(
-  agentName="example-agent",
-  toolkits=[ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"])],
+  agent="example-agent",
+  requires: [RequiredToolkit(name="example-toolkit", tools=["toolA", "toolB"])],
   arguments={
     "prompt": "Explain quantum computing in simple terms."
   }
 )
-
 print(answer)  # logs the JSON structure from the agent
 ```
 ```javascript NodeJs
 const answer = await room.agents.ask({
-  agentName: "example-agent",
-  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  agent: "example-agent",
+  requires: [new RequiredToolkit({ name: "example-toolkit", tools: ["toolA", "toolB"] })],
   arguments: {
     prompt: "Explain quantum computing in simple terms."
   }
@@ -107,19 +106,18 @@ console.log(answer); // logs the JSON structure from the agent
 ```
 ```typescript TypeScript
 const answer = await room.agents.ask({
-  agentName: "example-agent",
-  toolkits: [ new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  agent: "example-agent",
+  requires: [new RequiredToolkit({ name: "example-toolkit", tools: ["toolA", "toolB"] })],
   arguments: {
     prompt: "Explain quantum computing in simple terms."
   }
 });
-
 console.log(answer); // logs the JSON structure from the agent
 ```
 ```dart Dart
 final answer = await room.agents.ask(
   agentName: "example-agent",
-  toolkits: [ ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]) ],
+  requires: [RequiredToolkit(name: "example-toolkit", tools: ["toolA", "toolB"])],
   arguments: {
     "prompt": "Explain quantum computing in simple terms."
   }
@@ -135,7 +133,7 @@ var answer = await room.Agents.Ask(
   },
   requires: new List<Requirement>
   {
-     new RequiredToolkit("exampleToolkit", new List<string> { "toolA", "toolB" })
+     new RequiredToolkit("example-toolkit", new List<string> { "toolA", "toolB" })
   }
 );
 Console.WriteLine(answer); // logs the JSON structure from the agent
@@ -258,7 +256,7 @@ foreach (var item in agents)
 <CodeGroup>
 ```python Python
 response = await room.agents.invoke_tool(
-  toolkit="exampleToolkit",
+  toolkit="example-toolkit",
   tool="toolA",
   arguments={"param1": "value1"}
 )
@@ -266,7 +264,7 @@ response = await room.agents.invoke_tool(
 ```
 ```javascript NodeJs
 const response = await room.agents.invokeTool({
-  toolkit: "exampleToolkit",
+  toolkit: "example-toolkit",
   tool: "toolA",
   arguments: { param1: "value1" }
 });
@@ -274,7 +272,7 @@ const response = await room.agents.invokeTool({
 ```
 ```typescript TypeScript
 const response = await room.agents.invokeTool({
-  toolkit: "exampleToolkit",
+  toolkit: "example-toolkit",
   tool: "toolA",
   arguments: { param1: "value1" }
 });
@@ -283,7 +281,7 @@ const response = await room.agents.invokeTool({
 ```
 ```dart Dart
 final response = await room.agents.invokeTool(
-  toolkit: "exampleToolkit",
+  toolkit: "example-toolkit",
   tool: "toolA",
   arguments: {"param1": "value1"}
 );
@@ -292,7 +290,7 @@ final response = await room.agents.invokeTool(
 ```
 ```dotnet C#
 var toolArgs = new Dictionary<string, object?> { { "param1", "value1" } };
-var toolResult = await room.Agents.InvokeTool("exampleToolkit", "toolA", toolArgs);
+var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
 ```
 </CodeGroup>
 
@@ -314,7 +312,7 @@ var toolResult = await room.Agents.InvokeTool("exampleToolkit", "toolA", toolArg
 3. **Configure Toolkits (Optional)**  
    - Create one or more `ToolkitConfiguration` objects to specify which tools to enable.
    ```ts
-   const toolkitConfig = new ToolkitConfiguration("exampleToolkit", ["toolA", "toolB"]);
+   const toolkitConfig = new ToolkitConfiguration("example-toolkit", ["toolA", "toolB"]);
    ```
 
 4. **Ask a Question to an Agent**  
@@ -330,7 +328,7 @@ var toolResult = await room.Agents.InvokeTool("exampleToolkit", "toolA", toolArg
 5. **Invoke a Specific Tool** (If needed)  
    ```ts
    const toolResponse = await room.agents.invokeTool({
-     toolkit: "exampleToolkit",
+     toolkit: "example-toolkit",
      tool: "toolA",
      arguments: { foo: "bar" }
    });
