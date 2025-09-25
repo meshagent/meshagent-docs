@@ -79,7 +79,7 @@ await room.Agents.MakeCall(
   - This is useful for getting responses from agents that can process natural language or perform specific tasks.
 - **Parameters**:
   - `agent`: The name/identifier of the agent you want to ask.
-  - `requires?`: An optional array of `RequiredToolkit` objects that specify which toolkits are allowed for this ask.
+  - `requires`: An optional array of `RequiredToolkit` objects that specify which toolkits are allowed for this ask.
   - `arguments`: A record of arguments (payload) that you want to send to the agent.
 - **Returns**:  `Response` object (likely a `JsonResponse`), containing the output or result from the agent.
 
@@ -299,34 +299,29 @@ var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolAr
 ## Typical Workflow
 
 1. **Instantiate `RoomClient`**  
-   ```ts
-   const room = new RoomClient(...);
+   ```javascript NodeJs
+   const room = new RoomClient({protocol});
    ```
 
-2. **List or Discover Available Agents and Toolkits**  
-   ```ts
+2. **List Available Agents and Toolkits**  
+   ```javascript NodeJs
    const agents = await room.agents.listAgents();
    const toolkits = await room.agents.listToolkits();
    ```
 
-3. **Configure Toolkits (Optional)**  
-   - Create one or more `ToolkitConfiguration` objects to specify which tools to enable.
-   ```ts
-   const toolkitConfig = new ToolkitConfiguration("example-toolkit", ["toolA", "toolB"]);
-   ```
-
-4. **Ask a Question to an Agent**  
-   ```ts
+3. **Ask a Question to an Agent**  
+   ```javascript NodeJs
+   const toolkit = new RequiredToolkit({ name: "quantum-toolkit", tools: ["add"] });
    const result = await room.agents.ask({
-     agentName: "myAgent",
-     toolkits: [toolkitConfig],
+     agent: "my-agent",
+     requires: [toolkit],
      arguments: { prompt: "Explain the concept of entanglement." }
    });
    console.log("Agent Answer:", result);
    ```
 
-5. **Invoke a Specific Tool** (If needed)  
-   ```ts
+4. **Invoke a Specific Tool** (If needed)  
+   ```javascript NodeJs
    const toolResponse = await room.agents.invokeTool({
      toolkit: "example-toolkit",
      tool: "toolA",
@@ -335,30 +330,14 @@ var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolAr
    console.log("Tool Response:", toolResponse);
    ```
 
-6. **Call an Agent Directly** (If the agent supports such calls)  
-   ```ts
+5. **Call an Agent Directly** (If the agent supports such calls)  
+   ```javascript NodeJs
    await room.agents.call({
      name: "myAgent",
      url: "run-something",
      arguments: { data: "payload" }
    });
    ```
-
----
-
-## Error Handling & Validation
-
-- **Parsing Errors**:  
-  In `AgentDescription.fromJson`, if a requirement object cannot be identified as a `RequiredToolkit` or `RequiredSchema`, it throws an error. Make sure your JSON structure matches the expected shape.
-
-- **Missing Fields**:  
-  If certain fields (like `name` in the agent or tool description) are missing, the constructors or static factories might produce incomplete objects. Validate these fields before usage.
-
-- **Tool/Toolkit Not Found**:  
-  Methods like `ToolkitDescription.getTool` return `undefined` if the tool name doesn’t match. Handle this case to avoid runtime errors.
-
-- **Network/Request Failures**:  
-  The underlying `RoomClient.sendRequest` might throw errors on network failures. Ensure you handle rejections from `AgentsClient` methods (e.g., using `try/catch`).
 
 ---
 
@@ -370,8 +349,8 @@ Represents an agent’s descriptive information, including schemas for input/out
   - **`name`**: The agent's internal name.
   - **`title`**: A short, human-readable title for the agent.
   - **`description`**: Detailed description of the agent’s behavior or purpose.
-  - **`outputSchema?`**: Optional JSON schema that describes the output format of the agent.
-  - **`inputSchema?`**: Optional JSON schema that describes the input format expected by the agent.
+  - **`outputSchema`**: Optional JSON schema that describes the output format of the agent.
+  - **`inputSchema`**: Optional JSON schema that describes the input format expected by the agent.
   - **`requires`**: An array of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`) that define dependencies.
   - **`labels`**: A list of labels/tags associated with the agent.
   - **`supportsTools`**: Boolean indicating whether the agent can use external tools.
@@ -387,9 +366,8 @@ Represents metadata and input requirements for an individual tool. Tools can exi
   - **`name`**: Tool’s unique name.
   - **`description`**: Describes what the tool does and how it might be used.
   - **`inputSchema`**: JSON schema describing the expected input.
-  - **`thumbnailUrl?`**: Optional thumbnail image link.
-  - **`defs?`**: Optional dictionary of additional definitions or metadata.
-
+  - **`thumbnailUrl`**: Optional thumbnail image link.
+  - **`defs`**: Optional dictionary of additional definitions or metadata.
 
 ---
 
@@ -402,7 +380,7 @@ Groups multiple tools under a single toolkit. Allows easy retrieval of tools by 
   - **`name`**: Toolkit’s internal name.
   - **`description`**: Description of the toolkit.
   - **`tools`**: An array of `ToolDescription` items.
-  - **`thumbnailUrl?`**: An optional thumbnail image link.
+  - **`thumbnailUrl`**: An optional thumbnail image link.
 
 
 ---
