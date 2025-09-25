@@ -1,0 +1,97 @@
+---
+title: Example Deploying a Chatbot as a Project Service
+---
+
+Static services that should be the same across the project should be deployed as a project-wide service. These services can be used to manage room specific services run through the Containers API, provide shared functionality, and much more. These services are meant to be generic and not customized by room. 
+
+To learn more about project vs room level services and understand when to use each see [intro to services and containers](../overview).
+
+## Example
+
+Let's create a simple chatbot that can be deployed to all the rooms in our project. This will ensure everyone always has access to an LLM in any room inside the project. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+
+### main.py
+
+```python Python
+import os
+import asyncio
+import logging
+from meshagent.agents.chat import ChatBot
+from meshagent.api.services import ServiceHost
+from meshagent.openai import OpenAIResponsesAdapter
+
+logging.basicConfig(level=logging.DEBUG)
+
+host = ServiceHost()
+
+@host.path(path="/agent", identity="chatbot")
+class MyChatBot(ChatBot): 
+    def __init__(self):
+        super().__init__(
+            name="chatbot",
+            llm_adapter=OpenAIResponsesAdapter(),
+        )
+
+asyncio.run(host.run())
+```
+
+### Dockerfile
+
+```dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
+
+COPY . /src
+
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "main.py" ]
+```
+
+### meshagent.yaml
+```yaml yaml
+kind: Service
+version: v1
+name: chatbot
+image: "IMAGE:TAG" #update with your image and tag
+# pull_secret: PULL_SECRET_ID # add if pulling from private repo
+ports:
+- num: "*"
+  liveness: "/"
+  endpoints:
+  - path: /agent
+    identity: chatbot
+    type: meshagent.callable
+```
+
+For more details on the ``Service`` manifest, see the [project service configuration](./configuration) docs. Don't forget to add a "pull_secret" parameter to the manifest if you are pulling from a private repository. 
+
+## Build and Push the Container
+Now that we've defined our agent and written the applicable Dockerfile and meshagent.yaml you can build and push the docker container to your registry. 
+
+```bash
+docker buildx build . \
+  -t "$IMAGE:$TAG" \
+  --platform linux/amd64 \
+  --push
+```
+
+*We recommend docker buildx because it supports cross-platform builds, pushes directly to your registry in one step, and enables optional layer caching for much faster CI builds.*
+
+
+## Deploy the Project-Wide Service
+From the terminal in the directory with your yaml file simply run:
+
+```bash bash
+meshagent setup # authenticate to MeshAgent if not already done
+meshagent service create "service.yaml"
+```
+
+For more details on deployment see [deploy and run project services](./deployment)
+
+## Use the Service
+Now that your service is deployed try it out in [MeshAgent Studio](https://studio.meshagent.com). You'll see the new service in the **Services** tab of the UI. To use the service, simply start a new session and enter the room, the chatbot will appear in the participants tab for you to interact with. 
+
+## Related topics
+- [Project Service Configuration](./configuration): Understand the Meshagent ``Service`` manifest format for deploying project services. 
+- [Project Service Deployment](./deployment): Learn how to deploy a project service through the MeshAgent CLI or Studio UI. 
+- [Intro to Project and Room Services](../overview.mdx): Understand services in MeshAgent and learn when to use project wide or room specific services. 

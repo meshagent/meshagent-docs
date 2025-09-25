@@ -1,0 +1,145 @@
+---
+title: Configure Room Containers
+---
+Room containers let you **run code on demand inside a specific room through the MeshAgent Containers API**. Unlike project-wide services (which run across every room automatically), containers are **launched ad hoc and can be customized at deployment time**. This is particularly useful for scenarios where you want to allow others to deploy your container with their own configuration or run ad-hoc processes at any time inside a room.
+
+You define a room service with a ``ServiceTemplate`` (``kind: ServiceTemplate``) meshagent.yaml manifest. At launch, MeshAgent combines user-supplied variable values with your template to run the service in a specific room using the Containers API. 
+
+Typical files you’ll need:
+- ``meshagent.yaml`` manifest (``ServiceTemplate``)
+- A Dockerfile
+- Your service code (e.g., ``main.py``)
+
+In this document we’ll walk through how to create a ``ServiceTemplate`` manifest and Dockerfile for your room service. Then we’ll be ready to [run the service](./running) and walk through a complete[example of creating and running a room-specific service](./room_containers_example).
+
+## Creating the ``ServiceTemplate`` meshagent.yaml manifest
+### ServiceTemplate Reference
+| Field       | Required? | Description                                                                     |
+| ----------- | --------- | ------------------------------------------------------------------------------- |
+| version     | Yes       | Template version (`v1`)                                                         |
+| kind        | Yes       | Always `ServiceTemplate`                                                        |
+| metadata    | Yes       | Name, description, optional repo and icon metadata                              |
+| variables   | No        | Inputs collected at launch (can be required, optional, enumerated, or obscured) |
+| environment | No        | Maps variables into environment variables                                       |
+| ports       | Yes       | Ports/endpoints exposed by the container (MeshAgent will automatically assign services to available ports)                              |
+| image       | No        | Default container image (can be overridden at launch)                           |
+| command     | No        | Command that runs when your container starts (override the container entrypoint)                                            |
+| role        | No        | Service role (`agent`, `tool`, or `user`) (optional, will likely be set at the port endpoints level)                           |
+| storage     | No        | Room/project storage mounts                                                     |
+
+
+### Metadata
+Metadata keep track of important information about your service like the name and description, and optionally an icon associated with the service and repository where the code for the service lives. 
+
+```yaml yaml
+metadata: 
+  name: agent-service
+  description: "A chat based agent without tools"
+```
+
+### Variables
+Variables let users provide values at launch. You can restrict inputs or hide sensitive ones. 
+
+For example, if you need to pass a system prompt or api key you can setup the variables section like this.
+
+```yaml yaml
+variables:
+- name: "system_prompt"
+  description: "The system prompt for the chatbot"
+- name: "tone"
+  description: "Tone of the model"
+  enum: ["formal", "casual", "enthusiastic"]
+  optional: true
+- name: "api_key"
+  description: "External API key"
+  obscure: true  # Hide value in UI
+```
+
+Variable Options:
+- ``description``: Help text shown in the UI
+- ``enum``: Dropdown list of allowed values
+- ``optional``: Whether the variable is required
+- ``obscure``: Hide the value in the UI (for sensitive data)
+
+### Environment Variables
+Map template variables to environment variables in the container using ``{variable_name}`` placeholders: 
+
+```yaml yaml
+environment:
+- name: SYSTEM_PROMPT
+  value: "{system_prompt}"
+- name: TONE
+  value: "{tone}"
+- name: OPENAI_API_KEY
+  value: "{api_key}"
+```
+
+### Ports and Endpoints
+Define how MeshAgent connects to your service:
+
+```yaml yaml
+ports:
+- num: "*"  # Let MeshAgent assign an available port
+  liveness: "/"  # Health check endpoint to make sure tools and agents are ready 
+  endpoints:
+  - path: /agent
+    identity: chatbot
+    type: meshagent.callable
+    api:
+      storage:
+        paths:
+          - path: "/data"
+            read_only: true
+  - path: /tool
+    identity: helper-tool
+    type: meshagent.callable
+```
+
+Port Options:
+- ``num``: Port number or "*" for auto-assignment
+- ``liveness``: Health check path
+- ``endpoints``: List of endpoints this port serves
+
+Endpoint Options:
+- ``path``: URL path for this endpoint
+- ``identity``: Unique name for this agent/tool
+- ``type``: Protocol type (meshagent.callable, mcp.sse, http, tcp)
+- ``role``: Override the service role for this endpoint (optional)
+- ``api``: Optional [`ApiScope`](../../room_api/api_scopes) that controls which Rooms API surfaces the container can call
+
+### Storage
+Optionally mount storage into your container for file access. This can be done at the room or project level. Room-storage is read/write by default. Project-wide storage is shared and read-only by default. For example: 
+
+```yaml yaml
+storage:
+  room:
+  - path: /data
+    read_only: false
+  - path: /app/shared
+    subpath: "user-uploads"
+    read_only: true
+  project:
+  - path: /app/models
+    read_only: true
+```
+
+## Creating the ``Dockerfile`` for your service
+The ``Dockerfile`` for your service must install all the libraries required to run your service. You can use MeshAgent provided base images as a starting point. These images install the meshagent packages automatically. 
+
+For example:
+
+```Dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
+
+COPY . /src
+
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "main.py" ]
+```
+
+## Next Steps
+
+Once we've defined our agent code, Dockerfile, and meshagent.yaml, we're ready to build and push our container then run it inside a room. 
+- Continue with [run room containers](./running) to learn how to run your container in a specific room. 
+- Check out the [room containers example](./room_containers_example) to see how to run a simple chatbot with a user provided system prompt inside a specific room. At launch, MeshAgent will set the user provided variables as environment variables and start the container in the specified room. This allows different users to choose which agents to run in their room and customize them. 

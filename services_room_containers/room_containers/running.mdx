@@ -1,0 +1,72 @@
+---
+title: Run Room Containers
+---
+
+Room containers are the on-demand way to run your code inside a specific room. They create a secure sandbox alongside live participants and stop automatically when you or MeshAgent tear them down.
+
+
+## Prerequisites
+To run a service using the Containers API you will need: 
+- **Source code** with ``ServiceHost`` setup
+- **Dockerfile** that defines how to build the container image for your service
+- **ServiceTemplate Manifest** ``meshagent.yaml`` file with ``kind: ServiceTemplate`` 
+
+See the [room service configuartion](./configuration) docs for more details on creating the ``ServiceTemplate`` manifest and Dockerfile for your service.
+
+## Launch Options
+
+### MeshAgent Studio
+MeshAgent Studio allows you to run a container by pulling and running an image from a repository or from Git repos that contain a Dockerfile and ``meshagent.yaml`` file. 
+
+1. Go to [MeshAgent Studio](https://studio.meshagent.com).
+2. Create a new session ``myroom`` and go to the room. 
+3. From the developer console on the bottom of the screen select **Images**. 
+4. Select either **Build Image** to build the image from a Git Repository or **Pull Image** to pull the image from a docker repository. This will build or pull the image. 
+5. Click the play icon next to the image once it's built/pulled. If any variables are required you'll be prompted to input the values. (The image should appear green under the Build tab if it was built/pulled correctly. If the image is showing up in white text it was not able to build/pull properly.)
+6. Your service should now be running in a container. Click the **Containers** tab to see logs for the container. 
+
+### MeshAgent CLI
+Launch containers programmatically or from a terminal using the ``meshagent container`` CLI commands. See [room containers example]. 
+
+```bash
+meshagent setup # authenticate to MeshAgent 
+meshagent container run \
+  --project-id <project-id> \ # your project ID
+  --room my-room \ # room to run in
+  --image my-agent:v2 \ # your image if already built and pushed to a repository
+  --command "python main.py" \ # command for your container
+  --var system_prompt="You always reply with a fun fact" # the values for any variables you want to pass to the service
+```
+
+- Use ``--var`` for template variables (converted into ``{variable}`` placeholders).
+- Use ``--env`` for direct environment variables.
+- ``--cred`` to provide registry credentials if the image is private.
+
+## Managing Active Containers
+- **List containers**: ``meshagent container images list --room <room_name>``
+- **Stream logs**: ``meshagent container logs --id <container-id>``
+- **Stop a container**: ``meshagent container stop --id <container-id>``
+
+Inside MeshAgent Studio, the **developer console** at the bottom of the screen shows images and containers in the room with controls to stop and restart as needed and to view container logs. 
+
+## Lifecycle
+- Containers start with the parameters supplied at launch.
+- They can be long running, but if the room becomes inactive or you explicitly stop them, MeshAgent cleans them up.
+- You can write a project service that orchestrates room containers (e.g., a service can be responsible for starting agents that users have saved to their room), but the containers themselves remain scoped to the room that launched them.
+
+## Troubleshooting
+
+| Symptom | Suggestion |
+| --- | --- |
+| Image pull failures | Ensure ``--cred`` values are correct |
+| Port conflicts | Use ``num: "*"`` in the template to have MeshAgent auto-assign an available port. |
+| Missing environment variables | Confirm variables are defined in the template and spelled correctly in ``--var``/``--env`` flags. |
+| Container not starting | Verify Dockerfile has all required libraries and add logs to your system to troubleshoot issues. |
+
+## Next Steps
+-  For a complete sample of running a room container check out the [room containers example](./room_containers_example). In this example we'll run a simple chatbot with a user provided system prompt inside a specific room. 
+
+### Related Topics
+- [Intro to Services & Containers](../overview): Understand when to use project service and room services.
+- [Room Service Configuration](./configuration): Learn how to structure a ``ServiceTemplate`` manifest and Dockerfile for your service.
+- Check out [project services](../project_services/deployment) if the service should auto-start in all rooms.

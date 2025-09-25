@@ -1,0 +1,112 @@
+---
+title: Intro to Services and Containers
+---
+
+In MeshAgent, a **service** is any running program that MeshAgent can call into a room. A service can be anything: a custom AI agent, domain specific tools, external system integrations, or other custom logic.  
+
+During development you can run services directly on your machine with MeshAgent's ``ServiceHost``. When you’re ready to deploy, you package the same code into a Docker container and then choose how to run it:  
+
+- **Project Services** → Always-available, shared across every room in your project.  
+- **Room Services** → On-demand, launched dynamically inside specific rooms via the MeshAgent Containers API.  
+
+Both options provide containerized isolation for secure execution inside a room. The difference is in **scope** (project-wide vs. room-specific), **lifecycle** (automatic vs. on-demand), and **who can create them** (admins vs apps/users).
+
+## What can you run on MeshAgent? 
+
+A service can be almost anything. MeshAgent supports both **native services** built for deep integration and **generic programs** you already have:  
+
+- **MeshAgent native**: Built using our ``ServiceHost`` and APIs for deep integration with rooms
+- **Generic programs**: Any existing web service that can respond to HTTP calls
+
+This flexibility means you can start with code you already have, or build deeply integrated services using MeshAgent’s libraries.
+
+## Deployment Options
+
+### Project Services
+Project wide services are **shared functionality** for all the rooms in a MeshAgent project. Upon the first participant or agent connecting, MeshAgent initializes the room and starts all configured services simultaneously. Services remain running as long as there is at least one active connection. They can process data, communicate via the room API, and interact with storage. When the last participant disconnects, MeshAgent gracefully shuts down services, freeing resources until the next session.
+
+**Characteristics:**  
+- **Always available**: Run automatically in every room in the project  
+- **MeshAgent Managed Lifecycle**: Start and stop automatically with room sessions; health checks, scaling, and restarts handled for you.
+- **Deployable only by project admins**: Users of your app can't create project level services directly 
+
+**Best for:**  
+- **Shared core functionality** (e.g. agents many teams will use)
+- **Common tools, utilities, or integrations** that every team needs  
+- **Infrastructure services** that other room services may depend on  
+
+**Example:** A transcription agent that records every meeting automatically. Or an agent management service that automatically saves, starts, deletes, or updates other agents across rooms based on on user actions. 
+
+### Room Services (via Containers API)
+Room services are **on-demand services** that run inside a specific room. Room services are created dynamically when requested. They run only as long as needed and can be stopped, restarted, or reconfigured at any time. When a room session ends, any active room services are terminated unless another service or application relaunches them.
+
+**Characteristics:**  
+- **On-demand**: Only start when explicitly launched  
+- **Flexible control**: Each room can run a unique set of services  
+- **Dynamic Lifecycle** Start, stop, reconfigure at runtime
+- **Created by apps or user actions**: Managed by your application logic or end user actions 
+
+**Best for:**  
+- **Optional or personalized features** (e.g. a user chooses to add an agent to their own room)  
+- **Prototypes or experiments** without project-wide impact  
+- **Room-specific tasks** like batch jobs, reporting, or cleanup 
+
+**Example:** A research agent with a custom system prompt that users can add to their rooms if they want it. Each user can configure their own version — and other rooms remain unaffected.  
+
+### Choosing the Right Deployment Model
+
+| Question                | Project Services                                                         | Room Services                                                          |
+| ----------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| When does it start?| Automatically when any room session begins                           | Explicitly launched by user, app, or automation                    |
+| Who can create it?  | Project admins only                                                  | Developers, apps, or end users (via UI)                            |
+| Scope               | Every room in the project                                            | Only the room that launched it                                     |
+| Configuration       | Fixed at deployment(via `kind: Service` manifest)                   | Flexible at launch (via `kind: ServiceTemplate` or CLI flags)      |
+| Lifetime         | Follows room lifecycle; MeshAgent restarts it                        | Runs until stopped or session ends; relaunch needed unless managed |
+| Best for         | Always-on capabilities, common tools, shared infrastructure | Experiments, optional features, personalization, temporary workflows                |
+
+## Shared Runtime Capabilities
+All services, whether project-wide or room-specific, benefit from MeshAgent’s runtime environment:  
+- **Isolation & security**: Each service runs in its own sandbox with scoped secrets.  
+- **Room API integration**: Send/receive messages, subscribe to events, interact with storage.  
+- **Networking**: Localhost networking for low-latency communication between services.  
+- **Storage**: Optional room storage mounts for read/write access.  
+- **Tool exposure**: Services using MCP SSE can become native tools in the room.  
+- **Health checks**: Define liveness/readiness probes to ensure reliable startup.  
+
+## Developer Workflow
+
+1. **Develop locally**: Use ``ServiceHost`` and the MeshAgent CLI ``meshagent service run main.py --room=myroom`` to test your service before containerizing it. 
+2. **Package your code**: Create a Dockerfile with the required libraries. MeshAgent provides a variety of base images for your use.
+3. **Author a manifest**: Use ``kind: Service`` when deploying a project service or ``kind: ServiceTemplate`` for room services run with the MeshAgent Containers API. 
+4. **Push image to a registry**: Room services can also be run using a link to a Git Repository in MeshAgent Studio.
+5. **Deploy and run**: Use the MeshAgent Studio UI or the CLI to configure, deploy, and monitor services.
+
+## End-User Experience
+- **Project Services**: End users don’t configure them — these “just work” in every room.
+- **Room Services**: Users (through your app UI) can add/remove them per room.
+
+**Example Flow**:
+- You deploy an **Agent Manager** as a project service.
+- A user clicks “Add Research Agent” → the Agent Manager launches a Research Agent room service via the MeshAgent Containers API in the user's room.
+- Another user chooses not to add it → their room stays Research Agent-free.
+
+This pattern gives users flexibility without exposing container complexity.
+
+## Real-World Examples
+
+Here are some ways developers use services in MeshAgent. Depending on your needs, any of these could be deployed as a **project service** (always-on) or a **room service** (on-demand).
+
+- **AI Agent Orchestration**: Deploy an agent from your framework of choice that processes user queries and writes responses directly to the room.  
+- **Voice Agents**: Run a long-lived transcription and synthesis agent for real-time audio interaction.  
+- **Custom Business Logic**: Spin up an MCP server to handle domain-specific workflows (e.g. data validation, report generation), automatically surfaced as tools in the room.  
+- **Data Processing Pipelines**: Mount room storage into a service that ingests, transforms, and outputs data files, posting progress back to the room.  
+- **Secure Integrations**: Use secrets and environment variables to connect to third-party APIs (e.g. CRM systems, analytics platforms) entirely within the room sandbox.  
+
+Some of these make more sense as project services (e.g. transcription, compliance), while others are often room services (e.g. research agents, experimental tools). The right choice depends on whether you want the functionality to be always-on or user-selectable.
+
+## Next Steps
+- [Run your code locally](./local_development) to build and test with ``ServiceHost``.
+- [Manage secrets and registry access](../secrets/secrets_overview) to inject credentials securely.
+- [Configure project services](./project_services/configuration) when you’re ready to deploy across every room.
+- [Configure room containers](./room_containers/configuration) to build reusable on-demand templates.
+

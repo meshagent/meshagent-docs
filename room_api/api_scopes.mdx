@@ -1,0 +1,83 @@
+---
+title: API Scopes
+---
+`ApiScope` objects describe exactly which parts of the Rooms API a participant may call. They are carried inside the `api` grant of every [`ParticipantToken`](./participant_tokens) and are defined in `meshagent.api.participant_token.ApiScope`.
+
+## Built-in presets
+MeshAgent ships two convenience constructors:
+
+- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Database, Sync, Storage, Containers, Developer, Agents, and Secrets access.
+- `ApiScope.full()` – everything in `agent_default()` plus the Admin grant.
+
+Use these helpers when you want broad access, then override individual fields when you need to lock things down.
+
+## Scope fields
+Each field is optional. When a field is `None` the runtime treats it as "no restriction" for that capability. When populated, the nested grant limits behaviour as described below.
+
+### `livekit`
+`LivekitGrant` contains an optional `breakout_rooms` list. When provided, only the named breakout rooms can be joined; leaving it empty allows every breakout room (`LivekitGrant.can_join_breakout_room`).
+
+### `queues`
+`QueuesGrant` exposes three controls:
+
+- `send`: list of queue names the participant may publish to (`can_send` checks membership; `None` means all queues).
+- `receive`: list of queues the participant may consume from (`can_receive`).
+- `list`: boolean flag gating `QueuesClient.list` operations (defaults to `True`).
+
+### `messaging`
+`MessagingGrant` has simple booleans for `broadcast`, `list`, and `send`, all defaulting to `True`.
+
+### `database`
+`DatabaseGrant` manages table-level access:
+
+- `tables`: optional list of `TableGrant` entries (`name`, and booleans for `read`, `write`, `alter`). When omitted the participant may access every table.
+- `list_tables`: boolean (defaults to `True`).
+- Helper methods (`can_read`, `can_write`, `can_alter`) enforce the per-table flags.
+
+### `sync`
+`SyncGrant` accepts `paths`: a list of `SyncPathGrant { path, read_only }`. Paths may end with `*` to match prefixes. When no paths are supplied, read and write access is global. `can_read` and `can_write` verify the constraints.
+
+### `storage`
+`StorageGrant` mirrors the sync semantics but checks filesystem-style prefixes (`path.startswith(...)`). A `read_only` flag prevents writes on matching paths.
+
+### `containers`
+`ContainersGrant` controls container management features:
+
+- `build` and `logs`: booleans toggling build and log streaming support.
+- `pull` / `run`: optional allowlists of image tags; each entry can end with `*` to allow a prefix (`can_pull` / `can_run`).
+- `use_containers`: overall switch for container operations (defaults to `True`).
+
+### `developer`
+`DeveloperGrant` currently exposes a single `logs` boolean, enabling developer log forwarding when `True`.
+
+### `agents`
+`AgentsGrant` exposes boolean switches for registering agents or toolkits (`register_agent`, `register_public_toolkit`, `register_private_toolkit`) and for invoking the Agents API (`call`, `use_agents`, `use_tools`). They default to `True` to match the typical agent workflow.
+
+### `admin`
+`AdminGrant` mirrors `StorageGrant` but applies to administrative filesystem operations. Supply `paths` to scope access; omit it for full control.
+
+### `secrets`
+`SecretsGrant` lets a participant ask MeshAgent to exchange OAuth credentials. Provide a list of `OAuthEndpoint { endpoint, client_id }`. Wildcard suffixes (`*`) are supported (`can_request_oauth_token`).
+
+## Examples
+```yaml
+# Restrict a service to a single queue and read-only storage
+api:
+  queues:
+    send: ["notifications"]
+    receive: ["notifications"]
+  storage:
+    paths:
+      - path: "/data/uploads"
+        read_only: true
+```
+
+```python
+from meshagent.api.participant_token import ApiScope, QueuesGrant
+
+scope = ApiScope(
+    queues=QueuesGrant(send=["events"], receive=["events"])
+)
+```
+
+Combine these snippets with the `api` field on a ServiceTemplate or ServiceSpec endpoint to pass the scope through MeshAgent to the running container.
