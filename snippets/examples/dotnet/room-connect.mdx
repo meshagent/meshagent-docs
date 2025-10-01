@@ -13,7 +13,7 @@ class Program
         var value = Environment.GetEnvironmentVariable(name);
         if (string.IsNullOrEmpty(value))
         {
-            throw new Exception($"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.");
+            throw new Exception($"Missing required environment variable: {name}.");
         }
         return value;
     }
@@ -21,11 +21,13 @@ class Program
     static async Task Main()
     {
         var roomName = "my-room";
+        var meshagentApiKey = Env("MESHAGENT_API_KEY");
+        var parsedApiKey = ApiKey.Parse(meshagentApiKey);
 
         var token = new ParticipantToken(
             name: "participant",
-            projectId: Env("MESHAGENT_PROJECT_ID"),
-            apiKeyId: Env("MESHAGENT_KEY_ID")
+            projectId: parsedApiKey.ProjectId,
+            apiKeyId: parsedApiKey.Id
         );
         token.AddRoomGrant(roomName);
         token.AddRoleGrant("agent");
@@ -33,7 +35,7 @@ class Program
 
         var protocol = new WebSocketClientProtocol(
             url: Helpers.WebSocketRoomUrl(roomName),
-            token: token.ToJwt(Env("MESHAGENT_SECRET"))
+            token: token.ToJwt(parsedApiKey.Secret)
         );
 
         await using var room = new RoomClient(protocol);
