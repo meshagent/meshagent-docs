@@ -2,16 +2,26 @@
 title: "Introduction to Agents"
 ---
 
-MeshAgent expands on traditional agent frameworks by focusing on **inter-framework interoperability, rich human-in-the-loop workflows, and seamless multi-device reach**. You can use MeshAgent's Agent framework to build new agents or layer them on top of your existing agents so that you can continue to build agent logic with familiar frameworks—OpenAI Agents SDK, Semantic Kernel, CrewAI, or anything else—while letting MeshAgent handle the parts they typically leave to you:
+Building an agent with an LLM is easy. **Deploying it, scaling it, and integrating it into real applications is hard.** MeshAgent bridges that gap—it helps you **build new agents with ready-made templates, wrap existing agents from other frameworks, and get them working in production with the infrastructure that traditional frameworks leave as exercises for the developer**.
+
+MeshAgent expands on traditional agent frameworks by focusing on **inter-framework interoperability, rich human-in-the-loop workflows, and seamless multi-device reach.** You can build agents directly with MeshAgent's templates, or wrap agents built with familiar frameworks—OpenAI Agents SDK, Semantic Kernel, CrewAI, LangChain, Pydantic AI. Either way, MeshAgent handles everything you need for production scale: 
 
 * **Room-based connectivity.** Agents, tools, and user interfaces join the same room over a lightweight WebSocket mesh. This lets Python, Dart, JavaScript, or .NET components talk to one another as peers instead of forcing every call through a single back-end service.  
 * **Tool abstraction across client and server.** Any capability—opening a local file, showing a toast on a mobile device, invoking an internal REST API—becomes a MeshAgent tool. Tools can live in the user’s device, on your cloud server, or both, yet they’re invoked through the same call pattern from the agent’s perspective.  
 * **First-class observability and cost tracking.** Every tool call automatically records who invoked it, latency, result size, and cost metadata, feeding dashboards and billing pipelines without extra code.  
 * **Plug-and-play UI components.** MeshAgent Studio and the React / Flutter UI kits render agent interactions, streaming responses, and tool call progress out of the box, letting you drop high-quality UX into your own app.  
 
----
+### Why Use MeshAgent When You Already Have Another Framework?
 
-#### Cross-Framework, Cross-Device Example
+Other frameworks excel at defining an agent’s reasoning loop, memory, or planner. MeshAgent focuses on everything around that core:
+
+* **Bridging languages and runtimes.** A TypeScript UI, a Python agent, and a Go microservice can collaborate in a single room without bespoke adapters.  
+* **Interactive UX out of the box.** Human approval steps, progress bars, and device-side actions are first-class citizens, not after-thought hooks.  
+* **Operational insights baked in.** Tool metrics, latency histograms, and per-user cost attribution require no extra middleware.  
+
+Use MeshAgent alone, or pair it with your preferred planner or memory framework.
+
+## How it Works: A Practical Scenario
 
 Suppose your agent is written in Python and hosted on a server, while your customer-facing app is a Flutter mobile client. By connecting both to the same MeshAgent room:
 
@@ -21,9 +31,32 @@ Suppose your agent is written in Python and hosted on a server, while your custo
 
 No additional RPC plumbing, versioning, or security tunnel is required; the room’s mesh protocol handles transport, authentication, and fallback across networks.
 
----
+## Understanding Agent Types
+MeshAgent organizes agents into two categories based on how you interact with them:
 
-#### Built-in Agent Templates
+### Participant-Based Agents
+Interactive agents you communicate with via voice or text. These agents:
+- Appear as participants in the room (like chat members)
+- Maintain persistent conversation threads
+- Support back-and-forth dialogue
+- Best for ongoing interactions where context matters
+
+**Examples**: ChatBot, VoiceBot
+
+**Use when**: You need a conversational interface, user assistance, or iterative problem-solving.
+
+### Ambient Agents
+Background agents that execute specific tasks and return results. These agents:
+- Run without appearing in conversation threads
+- Respond to invocations or queue messages
+- Execute and complete without user dialogue
+- Best for automated workflows and batch processing
+
+**Examples**: TaskRunner, Worker, Indexer
+
+**Use when**: You need to process data, wrap existing agents from other frameworks, handle background jobs, or respond to events.
+
+## Built-in Agent Templates
 
 MeshAgent ships template agents you can use as-is, customize, or wrap around agents you already have:
 
@@ -35,14 +68,22 @@ MeshAgent ships template agents you can use as-is, customize, or wrap around age
 
 Start with these templates in the meshagent-agents project on pypi or wrap your own agent class; either way you immediately gain Studio testing, UI integration, and observability without rewriting business logic.
 
----
+## Managing Agents via the Room Agents API
+Once agents are in a room, you can interact with them programmatically using the ``room.agents`` API. This is useful for building applications that orchestrate multiple agents, invoke specific tasks, or discover available capabilities. The Agents API lets you invite agents into a room, query who’s already there, and interact with their toolkits directly from code. 
 
-#### Why Use MeshAgent When You Already Have Another Framework?
+For more details check out the [Room Agents documentation](../../room_api/agents).
 
-Other frameworks excel at defining an agent’s reasoning loop, memory, or planner. MeshAgent focuses on everything around that core:
+| Method | Purpose |
+| --- | --- |
+| [Call](../../room_api/agents#1-call) | Invites an external service (your agent) to join the room. |
+| [Ask](../../room_api/agents#2-ask) | Sends a prompt or task to an agent already in the room and returns its answer. |
+| [List Agents](../../room_api/agents#4-list-agents) | Lists every agent currently registered in the room with metadata such as name, title, and schemas. |
+| [List Toolkits](../../room_api/agents#3-list-toolkits) | Retrieves all toolkits (and their tools) available in the room. |
+| [Invoke Tool](../../room_api/agents#5-invoke-tool) | Directly executes a specific tool within a toolkit without routing through an agent. |
 
-* **Bridging languages and runtimes.** A TypeScript UI, a Python agent, and a Go microservice can collaborate in a single room without bespoke adapters.  
-* **Interactive UX out of the box.** Human approval steps, progress bars, and device-side actions are first-class citizens, not after-thought hooks.  
-* **Operational insights baked in.** Tool metrics, latency histograms, and per-user cost attribution require no extra middleware.  
 
-Use MeshAgent alone, or pair it with your preferred planner or memory framework.
+## Next Steps
+**Start Building**:
+- Agents Quickstart – Create your first ChatBot in 5 minutes
+- Build a ChatBot – Full tutorial with tools and deployment
+- Wrap an Existing Agent – Integrate agents from other frameworks

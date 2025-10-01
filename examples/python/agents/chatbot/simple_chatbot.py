@@ -18,9 +18,7 @@ class SimpleChatbot(ChatBot):
             name="chatbot",
             title="Simple Chatbot",
             description="A helpful chatbot for room participants",
-            rules=[
-                "Always respond to the user first then include a fun fact at the end of your response."
-            ],
+            rules=["Always respond to the user first then include a fun fact at the end of your response."],
             llm_adapter = OpenAIResponsesAdapter(),
         )
 
