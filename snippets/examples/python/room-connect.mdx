@@ -13,20 +13,18 @@ def env(name: str) -> str:
 
 async def main():
     room_name = "my-room"
-    parsed_key = parse_api_key(env("MESHAGENT_SECRET"))
+    api_key = env("MESHAGENT_API_KEY")
     async with RoomClient(
         protocol=WebSocketClientProtocol(
                 url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
                 token=ParticipantToken(
                     name="participant",
-                    project_id=parsed_key.project_id,
-                    api_key_id=parsed_key.id,
                     grants=[
                         ParticipantGrant(name="room", scope=room_name),
                         ParticipantGrant(name="role", scope="agent"),
                         ParticipantGrant(name="api", scope=ApiScope.agent_default()),
                     ],
-                ).to_jwt(token=parsed_key.secret),
+                ).to_jwt(api_key=api_key),
             )
     ) as room:
         print(f"Connected to room: {room.room_name}")
