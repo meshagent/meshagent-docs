@@ -20,13 +20,10 @@ class Program
     static async Task Main()
     {
         var roomName = "my-room";
-        var meshagentApiKey = Env("MESHAGENT_API_KEY");
-        var parsedApiKey = ApiKey.Parse(meshagentApiKey);
+        var apiKey = Env("MESHAGENT_API_KEY");
 
         var token = new ParticipantToken(
-            name: "participant",
-            projectId: parsedApiKey.ProjectId,
-            apiKeyId: parsedApiKey.Id
+            name: "participant"
         );
         token.AddRoomGrant(roomName);
         token.AddRoleGrant("agent");
@@ -34,7 +31,7 @@ class Program
 
         var protocol = new WebSocketClientProtocol(
             url: Helpers.WebSocketRoomUrl(roomName),
-            token: token.ToJwt(parsedApiKey.Secret)
+            token: token.ToJwt(apiKey: apiKey)
         );
 
         await using var room = new RoomClient(protocol);
