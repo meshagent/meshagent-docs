@@ -22,6 +22,11 @@ import QuickstartAgentDart from "/snippets/examples/dart/quickstart-agent.mdx";
 MeshAgent is an **end to end platform** for building, deploying, and hosting AI Agents. MeshAgent 
 integrates AI Agents and human teams in real time by bundling LLM orchestration, tool integration, real-time messaging, observability, and deployment so you can ship and share agents in minutes instead of weeks. 
 
+### In this guide you will learn how to:
+1. Create a MeshAgent account and project in MeshAgent Studio
+2. Install MeshAgent for Python
+3. Connect to your first MeshAgent Room and call a chat and voice agent into your room
+
 ### Prerequisites 
 
 Before you start, make sure your machine matches the appropriate requirements. If you’ve *never* set up Python, pip, or uv before, follow the [**Machine Setup Guide**](../reference/machine_setup) first, then return here.
@@ -31,22 +36,16 @@ Before you start, make sure your machine matches the appropriate requirements. I
 - **Rooms**: A dedicated space for humans and Agents to collaborate in real time. 
 - **Agents**: ChatBots, VoiceBots, TaskRunners, and Workers that you build and deploy with custom tools or out of the box MeshAgent tools. Once deployed, Agents are automatically available in every Room under that Project. 
 
-
-### In this guide you will learn how to:
-1. Create a MeshAgent account and project in MeshAgent Studio
-2. Install MeshAgent for Python
-3. Connect to your first MeshAgent Room and call a chat and voice agent into your room
-
 ## Setup Guide
 ### Step 1: Create an account and project:
 
-1. In a browser, go to [meshagent.com](https://www.meshagent.com/). Sign into MeshAgent Studio with an existing account or sign up for an new account. 
-2. In the web ui, if necessary, create a new project and give it a name (e.g., MyProject)
-3. Ensure your project has credits to start a room. Go to the Billing page to check your credits in the project.
+1. In a browser, go to [meshagent.com](https://www.meshagent.com/). Sign up or sign into MeshAgent Studio.
+2. Create a new project from the MeshAgent Studio UI or MeshAgent CLI ``meshagent project create my-new-project``
+3. Ensure your project has credits to start a room. Go to the **Billing** page to check your credits in the project. All new accounts start with $5. 
 
 
-### Step 2: Install MeshAgent
-First navigate to your project and activate your virtual environment, for help with this see our [Machine Setup Guide](../reference/machine_setup).
+### Step 2: Install MeshAgent (Python)
+From your terminal create or activate a virtual environment, for help with this see our [Machine Setup Guide](../reference/machine_setup).
 
 Once your virtual environment is activated, install MeshAgent using the Python package manager of your choice. 
 
@@ -73,41 +72,26 @@ meshagent setup
 ```
 </CodeGroup>
 
-__Optional__: Alternatively, instead of running the `meshagent setup` command you can run:
-
-<CodeGroup>
-```bash bash
-# A browser window will open for OAUTH.
-meshagent auth login
-meshagent project activate -i
-meshagent api-key activate -i
-```
-</CodeGroup>
-
 You are now authenticated and ready to use the cli to perform operations involving a room. 
-
 
 ### Step 4: Call an agent into a room using the MeshAgent CLI
 
-To call a chat agent into the room run: 
+Let's call a chatbot and voicebot into a new room and talk to them in MeshAgent Studio. 
 
 ```sh
-meshagent chatbot join --room gettingstarted --agent-name chatagent --name chatagent
+# Start a chat agent in the room "gettingstarted"
+meshagent chatbot join --room gettingstarted --agent-name chatagent 
+
+# Start a voicebot in the same room
+meshagent voicebot join --room gettingstarted --agent-name voiceagent
 ```
 
-The chatbot is now connected to the "gettingstarted" Room. 
+Now open [studio.meshagent.com](https://studio.meshagent.com/) and join the ``gettingstarted`` session. In the participants tab you will see the ``chatagent`` and ``voiceagent`` appear. To talk to the agent, just select it from the participants list and begin chatting! 
 
-In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com/) and join the "gettingstarted" session. In the participants tab you will see the "chatagent" participant appear. To talk to the agent, just select it from the participants list and begin chatting! 
-
-Next, to call a voice agent into the room run: 
-```sh
-meshagent voicebot join --room gettingstarted --agent-name voiceagent --name voiceagent
-```
-
-Go back to [studio.meshagent.com](https://studio.meshagent.com/) and go to the "gettingstarted" room where you'll now see the voiceagent. To talk to the voice agent, select it from the participants tab and begin speaking. We recommend clicking the mute button once you are done talking so the agent does not get interrupted by any potential background noise near you. 
+> Tip: Mute your mic after speaking to avoid background noise triggering the voice agent.
 
 ## Next Steps
 
-To learn more about the MeshAgent CLI for managing rooms and agents from your terminal checkout the [CLI Quickstart](../cli/getting_started). 
-
-To build your first chat or voice agent with tools check out the [Build and Deploy a Chat Agent](../agents/standard/buildanddeploychatbot) and [Build and Deploy a Voice Agent](../agents/standard/buildanddeployvoicebot) guides. 
+- [CLI Quickstart](../cli/getting_started): Learn common commands for managing rooms and agents from your terminal
+- [Build and Deploy a Chat Agent](../agents/standard/buildanddeploychatbot): Full tutorial to build and deploy a chat agent with tools
+- [Build and Deploy a Voice Agent](../agents/standard/buildanddeployvoicebot): Full tutorial to build and deploy a voice agent with tools
