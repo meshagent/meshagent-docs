@@ -5,11 +5,6 @@ import Chatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx
 
 MeshAgent Agents are processes that accept input and produce output. In many cases, your agent will be powered by a LLM, but it could also just be code that performs a task. 
 
-**Two Types of Agents**: 
-Any agent in MeshAgent can be extended with tools. The primary difference in agent types is how you interact with them. 
-- **Participant-based agents**: Interactive agents you communicate with via voice or text (chat). These appear as participants in the room and their conversation threads are persisted for future reference. Use these when you want to have an ongoing conversation with an agent.
-- **Ambient agents**: Background agents that you invoke to perform a specific task and return a result. The TaskRunner agent is an example of an ambient agent. Use these when you want to trigger an action—either manually or automatically in response to events like a transcript being posted or a document changing. They execute their task and return results without being part of a conversation thread.
-
 This walkthrough shows how to: 
 - Create a Chatbot
 - Call it into a room
@@ -30,16 +25,16 @@ What is ServiceHost?
 ## Step 2: Call the agent into a room
 
 ```bash 
-meshagent setup ## authenticate to MeshAgent
+meshagent setup # authenticate to MeshAgent
 meshagent service run "main.py" --room=quickstart
 ```
 
-This command will start the chatbot on an available port at the path ``/chat``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities. 
+This command will start the chatbot on an available port at the path ``/chat``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities (this is the recommended way to test your agents and tools). 
 
 As an alternative to the ``service run`` command you can also run the service locally by running ``python main.py`` in one tab in your terminal, then from another tab you can call individual agents into the room using the ``meshagent call agent`` command. For example: 
 
 ```bash bash
-meshagent setup ## authenticate to meshagent
+meshagent setup # authenticate to meshagent
 meshagent call agent --url=http://localhost:8081/agent --room=quickstart --participant-name=chatbot
 ```
 
