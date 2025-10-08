@@ -1,8 +1,109 @@
 ---
-title: "VoiceBot"
+title: "VoiceBot Overview"
 ---
 
-MeshAgent rooms can be used to host voice agents. The VoiceBot class in the meshagent-livekit package connects a Livekit based voice agent to the room. From 
-within the studio, the agent will show up in the messaging pane.
+``VoiceBot`` builds on ``SingleRoomAgent`` to deliver a voice-enabled conversational agent. It joins a MeshAgent room, listens for ``voice_call`` messages, and connects to a LiveKit breakout room where it can speak and listen in real time.
 
-Within a Flutter app the VoiceAgentCaller widget be used to start a Voice agent session.
+A ``VoiceBot`` combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), and LLM-based reasoning into a single adaptive experience. It can greet users, run tools, and respond through natural speech — all without extra setup.
+
+Toolkit integration, audio streaming, and session management are handled automatically, making the MeshAgent ``VoiceBot`` the quickest path to creating a live, conversational voice assistant.
+
+## When to Use It
+Use ``VoiceBot`` when:
+
+- You want your agent to **talk and listen** in real time instead of using text chat.
+- You’re building a **speech-driven assistant powered by an LLM** (for example, a helpdesk or meeting companion).
+- You want automatic connection to LiveKit rooms and reliable voice session management.
+- You need to **execute tools or reasoning steps** during spoken interaction.
+- You prefer to focus on conversation flow and logic, not on the details of STT, TTS, or audio routing.
+
+If your agent only handles text-based chat, use ``ChatBot`` instead. For non-interactive background agents, see ``Worker`` or ``TaskRunner``.
+
+## Constructor Arguments
+``VoiceBot`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
+
+| Argument             | Type                          | Description                                                                                                           |
+| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `name`               | `str`                         | Unique identifier for the agent within the room.                                                                      |
+| `title`              | `str \| None`                 | Human-friendly name. Defaults to `name`.                                                                              |
+| `description`        | `str \| None`                 | Short description of what the voice agent does.                                                                       |
+| `labels`             | `list[str] \| None`           | Optional tags for discovery and filtering.                                                                            |
+| `rules`              | `list[str] \| None`           | System or behavior rules sent to the LLM. Defaults to `["You are a helpful assistant communicating through voice."]`. |
+| `auto_greet_message` | `str \| None`                 | Optional message spoken to the participant when the session starts.                                                   |
+| `auto_greet_prompt`  | `str \| None`                 | Optional text prompt that seeds the first LLM response at session start.                                              |
+| `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter that converts tool responses into plain speech.                                                      |
+| `toolkits`           | `list[Toolkit] \| None`       | Additional toolkits to install beyond `requires`.                                                                     |
+| `requires`           | `list[Requirement] \| None`   | Toolkits or schemas needed before running (e.g., for tool access or shared data).                                     |
+
+## Lifecycle Overview
+``VoiceBot`` inherits all lifecycle hooks from SingleRoomAgent and adds voice session handling on top.
+
+- ``await start(room: RoomClient)``: Registers the bot as a voice-capable participant by setting ``"supports_voice": True`` and listening for ``voice_call`` messages. When a voice call is received, the bot joins a LiveKit breakout room and starts a real-time session.
+- ``await stop()``: Cancels any active voice sessions and disconnects cleanly from the room.
+- **room** property: Returns the active ``RoomClient`` (inherited from SingleRoomAgent).
+
+## Conversational Flow
+When a user starts a voice call:
+
+1. The participant sends a message of type ``"voice_call"`` with a breakout room ID.
+2. The ``VoiceBot`` receives it through ``on_message()`` and joins the corresponding LiveKit room.
+3. It creates a ``ToolContext`` scoped to that participant.
+4. A new ``AgentSession`` is created, containing:
+    - Speech-to-Text (STT)
+    - Text-to-Speech (TTS)
+    - Voice Activity Detection (VAD)
+    - LLM model interface
+5. A conversational Agent is built with these components and any registered tools.
+6. The bot begins listening, thinking (with background “typing” sounds), and speaking responses in real time.
+
+When the participant hangs up or disconnects, the session ends automatically.
+
+## Key Behaviors and Hooks
+- **Voice connection management:** Each session is isolated in its own LiveKit breakout room. The internal ``VoiceConnection`` helper handles joining, connecting, and disconnecting from the session safely.
+- **Session creation:** ``create_session()`` constructs an AgentSession with STT, TTS, VAD, and LLM components wired to the room’s proxy API.
+- **Agent creation:** ``create_agent()`` builds the conversational logic layer that uses the LLM, applies your rules, and exposes tool functions like ``say()``.
+- **Greeting behavior:** When configured, ``auto_greet_prompt`` triggers the LLM to generate an initial spoken message, and ``auto_greet_message`` plays a prewritten greeting.
+- **Tool integration:** Tools are automatically converted into callable functions for the LLM via ``make_function_tools()``. Responses are adapted to speech when a ``tool_adapter`` is provided.
+- **Interruptions and natural flow:** Sessions allow interruption mid-speech and handle turn-taking automatically through VAD.
+
+## Key Methods
+| Method                                                  | Description                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `async def start(room)`                                 | Registers the bot for voice calls and listens for `voice_call` messages.     |
+| `async def run_voice_agent(participant, breakout_room)` | Connects to the specified LiveKit room and starts a full voice session.      |
+| `async def create_session(context)`                     | Creates a new `AgentSession` wired with STT, TTS, VAD, and LLM capabilities. |
+| `async def create_agent(context, session)`              | Builds a conversational agent with your rules and available tools.           |
+| `async def make_function_tools(context)`                | Converts all registered toolkits into LLM-callable functions.                |
+| `async def _wait_for_disconnect(room)`                  | Awaits the end of the voice call and cleans up resources.                    |
+
+## Built-in Components and Behavior
+
+VoiceBot comes pre-integrated with:
+
+- **Speech-to-Text (STT):** Converts live audio input into text using OpenAI or another configured provider.
+- **Text-to-Speech (TTS):** Streams generated responses as natural audio output.
+- **Voice Activity Detection (VAD):** Detects pauses or user interruptions automatically.
+- **Background Audio Player:** Plays gentle “thinking” sounds during LLM processing to indicate the bot is working.
+- **Tool Invocation:** Voice commands can trigger registered tools and return spoken responses.
+
+These components can be swapped or extended through adapters if you need different models or behaviors. 
+
+## Minimal Example
+
+To run the voicebot in a room:
+```bash bash 
+meshagent service run "main.py" --room=voice-demo
+```
+
+Then, from [MeshAgent Studio](https://studio.meshagent.com), open the **Sessions** tab, select **voice-demo**, and start a voice call to begin interacting with your agent.
+
+## Next Steps 
+``VoiceBot`` builds directly on ``SingleRoomAgent``, inheriting connection management and toolkit installation, and extends it with real-time audio and speech features. Where ``ChatBot`` focuses on text threads, ``VoiceBot`` handles spoken conversations end-to-end.
+
+Continue learning or building:
+
+- [Building and Deploying a VoiceBot](./buildanddeployvoicebot): Step-by-step setup, adapters, tools, and deployment.
+- [ChatBot](./chatbot): Text-based LLM conversations.
+- [Worker](./worker) and [TaskRunner(./taskrunner)]: Background or automation agents.
+
+Use ``VoiceBot`` whenever your agent’s main interface is voice, and you want full real-time conversation and tool interaction.
