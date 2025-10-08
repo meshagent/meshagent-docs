@@ -2,3 +2,65 @@
 title: "Single Room Agent"
 ---
 
+``SingleRoomAgent`` is the foundational base class for any agent that connects to a MeshAgent room. It handles the plumbing — joining a room, managing the connection lifecycle, and installing required toolkits and schemas — so you can focus on what your agent actually does.
+
+Unlike higher-level classes such as ``ChatBot`` or ``VoiceBot``, ``SingleRoomAgent`` doesn’t dictate any particular behavior or communication style. Think of it as a “room-aware shell” that gives your agent a predictable lifecycle and a safe way to interact with other participants.
+
+## When to Use It
+- You need to join a room, run initialization logic, and stay connected for the room lifetime.
+- You are building a specialized agent that does not fit an existing subclass such as `ChatBot` or `TaskRunner`.
+- You want a reusable base class that installs toolkits or schemas before your agent runs its own logic.
+- You plan to expose tools to participants and need helpers for resolving toolkits on demand.
+
+## Constructor Arguments
+Because `SingleRoomAgent` extends `Agent`, it accepts the same initialization arguments:
+- `name (str)`: Unique identifier for the agent within the room. Required.
+- `title (str | None)`: Human-friendly display name. Defaults to the value of `name`.
+- `description (str | None)`: Short description that UX surfaces can show to users. Defaults to an empty string.
+- `requires (list[Requirement] | None)`: Dependencies that must exist in the room (usually `RequiredToolkit` or `RequiredSchema`). Defaults to an empty list.
+- `labels (list[str] | None)`: Optional tags that help discovery and filtering. Defaults to an empty list.
+
+These arguments are stored on the instance and serialized through `Agent.to_json()` when a derived agent registers itself with the room service.
+
+## Lifecycle Methods
+- `await start(room: RoomClient)`: Called when the agent is connected to a room. Stores the `RoomClient` reference and invokes `install_requirements()` so declared toolkits and schemas become available. Override this to add startup logic (logging, bootstrapping state, sending welcome messages), but always call `await super().start(room=room)` first.
+- `await stop()`: Called before the agent disconnects. Clears the cached room reference. Override this for cleanup work and then call `await super().stop()`.
+- `room`: Property returning the active `RoomClient`. Available after `start()` completes; `None` otherwise.
+
+## Requirement Management
+`SingleRoomAgent` installs requirements automatically, but you can call the helper when you need the same logic elsewhere.
+- `await install_requirements(participant_id: str | None = None)`: Collects existing schemas (`room.storage.list(path=".schemas")`) and visible toolkits (`room.agents.list_toolkits`). Missing `RequiredToolkit` or `RequiredSchema` entries are fetched via `room.agents.make_call`. Built-in resources are resolved to `http://localhost:8080/toolkits/<name>` or `/schemas/<name>`; explicit URLs are respected. The method waits briefly after new installs so subsequent operations can rely on them. Passing `participant_id` lets you provision resources on behalf of another participant.
+
+## Toolkit Helpers
+- `await get_toolkits(context: ToolContext, remote_toolkits: list[RequiredToolkit])`: Resolves toolkit declarations into actual `Toolkit` objects. Toolkit factories registered with `register_toolkit_factory()` are preferred; otherwise the tools are wrapped in `RoomTool` proxies that invoke the toolkit through the room. Errors raise `RoomException` when a required toolkit or tool is unavailable.
+- `await get_required_toolkits(context: ToolContext)`: Convenience wrapper that calls `get_toolkits()` using `self.requires`. Most agents use this when building the tool list for an LLM invocation or other task execution.
+
+Both helpers honor `context.on_behalf_of`, ensuring tools execute with the correct participant identity.
+
+## Minimal Example
+
+This example shows how to subclass SingleRoomAgent and override its lifecycle hooks. Always call super().start() and super().stop() to ensure requirements are installed and resources cleaned up properly.
+
+```python
+from meshagent.agents import RequiredToolkit, SingleRoomAgent
+
+class WelcomeAgent(SingleRoomAgent):
+    def __init__(self):
+        super().__init__(
+            name="welcome-agent",
+            title="Welcome Agent",
+            description="Posts a greeting when the room starts",
+            requires=[RequiredToolkit(name="ui")],
+        )
+
+    async def start(self, *, room):
+        await super().start(room=room)
+        await self.room.messaging.send_text("welcome-agent", "Welcome to the room.")
+
+    async def stop(self):
+        if self.room is not None:
+            await self.room.messaging.send_text("welcome-agent", "Shutting down.")
+        await super().stop()
+```
+
+Inherit from `SingleRoomAgent` any time you need a room-aware agent with predictable lifecycle hooks, automatic toolkit installation, and helpers for resolving tools. Higher-level agent types simply build on these capabilities to add task orchestration, chat management, or specialized behaviors.
