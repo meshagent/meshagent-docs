@@ -8,12 +8,13 @@ import CustomToolsChatbot from "/snippets/examples/python/agents/chatbot/custom_
 
 
 ## Overview
-The MeshAgent **ChatBot** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code!
+The MeshAgent **[ChatBot](./chatbot)** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code!
 
-In this quickstart we'll build the agent in three phases: 
-1. **Basic ChatBot**: A simple agent with a system prompt (rules)
-2. **ChatBot with Built-in MeshAgent Tools**: Extend our chat agent by adding MeshAgent's prebuilt tools to interact with the user and write documents to the room.
-3. **ChatBot with Built-in MeshAgent Tools and Custom Tools**: Add our own tools to the agent for use-case specific tasks. 
+In this quickstart we'll build the agent in four phases: 
+1. **[Using the MeshAgent CLI](#phase-1-chat-with-the-built-in-chatbot-from-the-cli)**: With one command we can call a simple chatbot into a MeshAgent room. 
+2. **[Basic ChatBot](#phase-2-building-a-simple-chatbot)**: A simple agent with a system prompt (rules). This allows us to see the code behind the CLI chatbot. 
+3. **[ChatBot with Built-in MeshAgent Tools](#phase-3-adding-built-in-meshagent-tools-to-our-chatbot)**: Extend our chat agent by adding MeshAgent's prebuilt tools to interact with the user and write documents to the room.
+4. **[ChatBot with Built-in MeshAgent Tools and Custom Tools](#phase-4-adding-custom-tools-to-our-chatbot)**: Add our own tools to the agent for use-case specific tasks. 
 
 You'll learn how to:  
 - Build a chat based agent with MeshAgent
@@ -32,7 +33,7 @@ For help getting setup see the [Getting Started Guide](../../introduction/get_st
 meshagent setup
 ```
 
-## Chat with the built-in ChatBot (zero code)
+## Phase 1: Chat with the built-in ChatBot from the CLI
 Let's bring a ready-made chatbot into a room and talk to it: 
 
 ```sh
@@ -46,7 +47,7 @@ Running this command will:
 In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com) and join the ``gettingstarted`` room. You will see the ``chatagent`` participant appear! Simply select the agent and begin typing to talk to it. 
 
 
-## Phase 1: Building a Simple ChatBot
+## Phase 2: Building a Simple ChatBot
 Now that we've seen the default chatbot in action, let's create one from scratch. 
 
 Create a main.py file and paste the starter code below for the basic ChatBot. To start, we can give the agent one rule / system instruction. We'll build up this code over the course of this example. 
@@ -79,7 +80,7 @@ Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and
 
 We can also click on the menu inside the room and turn on the "Developer console" this will allow us to see live logs, traces, and metrics as we interact with the agent.
 
-## Phase 2: Adding Built-in MeshAgent Tools to our ChatBot
+## Phase 3: Adding Built-in MeshAgent Tools to our ChatBot
 Next, let's give our agent the ability to interact with the user, convert documents to markdown, and write documents to the room. We can do this by adding toolkits to our agent. Toolkits represent a group of tools that are used for a particular purpose. 
 
 We'll also add a few imports and update the chat agent's rules so it knows how to interact with the available tools more efficiently. 
@@ -97,7 +98,7 @@ python main.py
 meshagent call agent --url=http://localhost:8081/chat --room=gettingstarted --participant-name=chatagent
 ```
 
-## Phase 3: Adding Custom Tools to our ChatBot
+## Phase 4: Adding Custom Tools to our ChatBot
 Now let's add a custom tool to our ChatBot! We'll create a TaskTracker toolkit that allows the agent to write and read tasks to the Room database. 
 
 To do this we will update the chat agent initialization to create a table for the tasks when the room starts up. We will create a tasks toolkit with two custom tools to **WriteTask** and **GetTasks** from the database. 

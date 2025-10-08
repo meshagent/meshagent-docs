@@ -4,7 +4,7 @@ title: "Chatbot Overview"
 
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 
-`ChatBot` builds on `SingleRoomAgent` to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful, interactive chat-based agent.
+`ChatBot` builds on [`SingleRoomAgent`](./singleroomagent) to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful, interactive chat-based agent.
 
 ## When to Use It
 - You want to build an agent that is **seamlessly connected to the room** and **responds conversationally** to user messages.
@@ -14,7 +14,7 @@ import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatb
 - You plan to add tools, dynamic UI interactions, or other agent-to-room interactions during a chat.
 - You prefer to focus on prompts, tools, and business logic for your agent instead of plumbing for storage, messaging, and scale.
 
-If your agent only needs to perform background tasks or doesn’t interact with participants directly, consider subclasses like ``Worker`` or ``TaskRunner`` instead.
+If your agent only needs to perform background tasks or doesn’t interact with participants directly, consider subclasses like [Worker](./worker) or [TaskRunner](./taskrunner) instead.
 
 ## Constructor Arguments
 `ChatBot` accepts everything that `SingleRoomAgent` does (`name`, `title`, `description`, `requires`, `labels`) and adds chat-specific parameters.
@@ -85,7 +85,13 @@ These can be extended or replaced with your own toolkit factories.
 </CodeGroup>
 
 
-This subclass wires the chatbot to the OpenAI Responses API and applies a a system prompt. You can call the chatbot into a room directly by running `meshagent service run "main.py" --room=gettingstarted` from your terminal. Next from the [MeshAgent Studio](https://studio.meshagent.com) you can go to the **Sessions** tab, open the **gettingstarted** room, and begin chatting with your agent. 
+This subclass uses the OpenAI Responses API and applies a a system prompt. You can call the chatbot into a room directly from your terminal by running: 
+
+```bash bash 
+meshagent service run "main.py" --room=gettingstarted
+``` 
+
+Next from the [MeshAgent Studio](https://studio.meshagent.com) you can go to the **Sessions** tab, open the **gettingstarted** room, and begin chatting with your agent. 
 
 To extend the Chatbot with Tools and learn how to deploy a Chatbot see the next article on [building and deploying a MeshAgent chatbot](./buildanddeploychatbot).
 
