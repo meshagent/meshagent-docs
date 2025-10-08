@@ -2,57 +2,78 @@
 title: "Chatbot"
 ---
 
-The Chatbot agent allows users to chat with an agent over the MeshAgent messaging protocol. The chatbot supports advanced features like stream responses, thinking indicators, and saving
-and loading threads using MeshDocuments.
+`ChatBot` builds on `SingleRoomAgent` to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful assistant.
 
-After joining a MeshAgent room, the Chatbot will show up as a participant on the messaging pane. You can interact with it directly in the studio. You can build your own
-custom chatbot by extending the chatbot class and customizing its initialization options:
+## When to Use It
+- You want an agent that chats with users inside MeshAgent Studio or another Room client.
+- You need first-class support for threaded conversations, typing indicators, and streaming LLM output.
+- You plan to mix in tool calls, UI prompts, or other agent-to-room interactions during a chat.
+- You prefer to focus on prompts, tools, and business logic instead of plumbing for storage and messaging.
 
-```python Python
-from meshagent.api import RequiredToolkit, RequiredSchema
+## Constructor Arguments
+`ChatBot` accepts everything that `SingleRoomAgent` does (`name`, `title`, `description`, `requires`, `labels`) and adds chat-specific options:
+- `llm_adapter (LLMAdapter)`: Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies chat contexts and translates responses into MeshAgent events.
+- `tool_adapter (ToolResponseAdapter | None)`: Optional override for how tool responses are rendered back to the user.
+- `toolkits (list[Toolkit] | None)`: Extra toolkits that are always available to the chatbot beyond what `requires` installs.
+- `rules (list[str] | None)`: System messages that get appended to every chat context. Use this to define behavior, guardrails, or instructions for the LLM.
+- `auto_greet_message (str | None)`: Message sent automatically when a new thread starts. Handy for onboarding users.
+- `empty_state_title (str | None)`: Title text shown in the Studio chat pane before the first user message. Defaults to "How can I help you?".
+
+If you do not pass a `requires` list, `ChatBot` automatically injects `RequiredSchema(name="thread")` so it can store transcripts. You can still add additional toolkits or schemas by supplying your own list.
+
+## Key Behaviors and Hooks
+- **Thread management**: Every conversation lives inside a MeshDocument thread. The chatbot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
+- **Context building**: `init_chat_context()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
+- **Tool resolution**: `get_thread_toolkits()` gathers built-in toolkits, the ones listed in `requires`, and any always-on toolkits you passed in through `toolkits`. It also wraps UI helpers (such as `show_toast`) so they run on behalf of the current user.
+- **Thread helpers**: Use `open_thread()` and `close_thread()` to work with the underlying document, or `load_thread_context()` to replay the stored messages into an existing chat context (for example, when resuming a conversation).
+- **LLM customization**: Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to inject summaries, search hits, or additional metadata).
+- **Participant utilities**: `get_thread_participants()` returns the participants included in the thread so you can tailor responses or access their attributes.
+
+## Beginner-Friendly Example
+```python
+from meshagent.agents import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
-class SampleChatbot(ChatBot):
+class HelpfulChatBot(ChatBot):
     def __init__(self):
         super().__init__(
-            # A unique name for the participant
-            name="mychatbot",
-            # add custom rools to guide the behavior of the chatbot
-            rules=[
-                "use the ask_user tool to gather information from the user",
-            ],
-            # Use the OpenAI Responses API
-            llm_adapter = OpenAIResponsesAdapter(),
-            # Add custom tools
+            name="helpful-chatbot",
+            title="Helpful Chatbot",
+            description="Answers questions about our documentation and demos",
+            llm_adapter=OpenAIResponsesAdapter(),
             requires=[
-                RequiredToolkit(name="ui", tools=[ "ask_user" ]),
+                RequiredToolkit(name="ui", tools=["ask_user"]),
             ],
-            toolkits=[
-                # Optionally add local toolkits
+            rules=[
+                "Answer in plain language.",
+                "Offer to call tools when the user needs extra information.",
             ],
-            # Add a message that is automatically sent to the user
-            auto_greet_message="What would you like me to do?",
+            auto_greet_message="Hi there! What would you like to explore today?",
         )
 
+    async def prepare_llm_context(self, *, thread_context):
+        # Add a short reminder after the user introduces themselves.
+        thread_context.chat.append_rules([
+            "If the user sounds stuck, suggest the quickstart guide.",
+        ])
+
 ```
 
-To send it a message via the room API and integrate it into your own applications, you can send a message using a room client:
+This subclass wires the chatbot to the OpenAI Responses API, ensures the UI toolkit is available, applies a few guardrails, and tweaks the LLM context before each turn. Drop it into a `ServiceHost` alongside your other agents, or call it into a room directly with `meshagent service run`.
 
-```python Python
+## Sending Messages Programmatically
+The chatbot appears in the room as a standard participant. Any Room client can send it chat messages:
+
+```python
 await room.messaging.send(
-    to=participant, 
+    to="helpful-chatbot",
     type="chat",
     message={
-        "path" : "thread_path.thread"
-        "text" : "a chat message" 
-    })
+        "path": "docs.intro.thread",
+        "text": "Can you summarize the quickstart?",
+    },
+)
 ```
 
-You can use the ChatThreadLoader in the Flutter SDK to integrate the same functionality contained in the MeshAgent Studio interface into your own Flutter applications.
-
-# ComputerAgent
-
-The ComputerAgent in ```meshagent-computers``` extends the chatbot with support for using browsers and computers. The computer agent will periodically send screenshots to participants on the
-thread using the MeshAgent messaging protocol, by sending a message of the type "computer_screen" and an attachment that contains a binary screenshot. Install
-meshagent-computers to use the ComputerAgent.
+MeshAgent Studio and the Flutter SDK already provide UI components (such as `ChatThreadLoader`) that understand these threads, so you can embed the same experience in your own apps.
