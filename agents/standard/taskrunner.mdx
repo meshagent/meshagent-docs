@@ -23,3 +23,55 @@ If you need a conversational, message-based assistant, use [ChatBot](./chatbot).
 | `output_schema`  | `dict \| None`          | Optional JSON Schema for responses; if set, responses are validated.                             |
 | `toolkits`       | `list[Toolkit] \| None` | Local toolkits always available to this TaskRunner (in addition to any `requires`).              |
 
+## Lifecycle Overview
+
+``TaskRunner`` inherits lifecycle hooks from ``SingleRoomAgent`` and adds task registration and routing.
+
+- ``await start(room: RoomClient)``: Registers the agent for agent.ask requests, installs requirements, and enables message routing.
+- ``await stop()``: Unregisters the agent if the protocol is open, then disconnects cleanly.
+- ``room property``: Access the active RoomClient as usual.
+
+## TaskRunner Flow
+When a task is invoked (from Studio or code):
+
+1. The room delivers an ``agent.ask`` message to your TaskRunner.
+2. _ask(...) creates an AgentCallContext:
+    - Builds/initializes a chat context via ``init_chat_context()``.
+    - Resolves required/local toolkits (and any toolkits supplied by the caller when supports_tools=True).
+    - Identifies the caller and (optionally) the ``on_behalf_of`` participant.
+3. Arguments are validated against ``input_schema``.
+4. Your ``ask(context, arguments)`` method runs your logic and returns a dict.
+5. If ``output_schema`` is set, the response is validated before being returned to the caller.
+6. The result (or error) is sent back to the room; Studio and SDKs render/store it appropriately.
+
+All the registration, routing, and validation plumbing is handled for you.
+
+## Key Behaviors and Hooks
+
+- **Schema validation:** ``validate_arguments()`` and ``validate_response()`` enforce ``input_schema`` and ``output_schema`` respectively.
+- **Request handler:** start() wires ``_ask(...)`` to the room’s protocol. You implement the public ``ask(...)`` with your business logic.
+- **Context & toolkits:** _ask(...) assembles an AgentCallContext with chat, caller, on_behalf_of, and a merged set of toolkits: local (toolkits), required (requires), and optional caller-supplied sets when supports_tools=True.
+- **Discovery & invocation:** _register() exposes your agent’s name, title, schemas, and capabilities to the room, so Studio and room.agents.ask can find and invoke it.
+- **Agents as tools**: With ``RunTaskTool`` and the "agents" toolkit factory, other agents (e.g., ``ChatBot``) can call your ``TaskRunner`` as a tool.
+
+## Key Methods
+| Method                                       | Description                                                            |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| `async def ask(context, arguments) -> dict`  | **Implement your task logic** Return a JSON-serializable dict.    |
+| `async def validate_arguments(arguments)`    | Validates inputs against `input_schema`.                               |
+| `async def validate_response(response)`      | Validates outputs against `output_schema` when provided.               |
+| `async def start(room)` / `async def stop()` | Registers/unregisters the runner and protocol handlers.                |
+| `def to_json()`                              | Serializes metadata (schemas, flags, labels) used during registration. |
+
+## Minimal Example
+FILL THIS IN 
+
+## Next Steps
+
+For examples of TaskRunners in Action see: 
+- UPDATE EXAMPLES TO SEPARATE PAGES
+
+To better understand other agents check out the following docs: 
+- [Chatbot](./chatbot) for conversation based agents
+- [Voicebot](./voicebot) for voice based agents
+- [Worker](./worker) for background queue based agents
