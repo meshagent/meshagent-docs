@@ -2,78 +2,104 @@
 title: "Chatbot"
 ---
 
-`ChatBot` builds on `SingleRoomAgent` to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful assistant.
+import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+
+`ChatBot` builds on `SingleRoomAgent` to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful, interactive chat-based agent.
 
 ## When to Use It
-- You want an agent that chats with users inside MeshAgent Studio or another Room client.
-- You need first-class support for threaded conversations, typing indicators, and streaming LLM output.
-- You plan to mix in tool calls, UI prompts, or other agent-to-room interactions during a chat.
-- You prefer to focus on prompts, tools, and business logic instead of plumbing for storage and messaging.
+- You want to build an agent that is **seamlessly connected to the room** and **responds conversationally** to user messages.
+- You're building a **text-based agent that uses an LLM** to generate responses. 
+- You need to **synchronize message history** with room documents or threads. 
+- You want automatic integration with toolkits and schemas for dynamic LLM behavior.
+- You plan to add tools, dynamic UI interactions, or other agent-to-room interactions during a chat.
+- You prefer to focus on prompts, tools, and business logic for your agent instead of plumbing for storage, messaging, and scale.
+
+If your agent only needs to perform background tasks or doesn’t interact with participants directly, consider subclasses like ``Worker`` or ``TaskRunner`` instead.
 
 ## Constructor Arguments
-`ChatBot` accepts everything that `SingleRoomAgent` does (`name`, `title`, `description`, `requires`, `labels`) and adds chat-specific options:
-- `llm_adapter (LLMAdapter)`: Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies chat contexts and translates responses into MeshAgent events.
-- `tool_adapter (ToolResponseAdapter | None)`: Optional override for how tool responses are rendered back to the user.
-- `toolkits (list[Toolkit] | None)`: Extra toolkits that are always available to the chatbot beyond what `requires` installs.
-- `rules (list[str] | None)`: System messages that get appended to every chat context. Use this to define behavior, guardrails, or instructions for the LLM.
-- `auto_greet_message (str | None)`: Message sent automatically when a new thread starts. Handy for onboarding users.
-- `empty_state_title (str | None)`: Title text shown in the Studio chat pane before the first user message. Defaults to "How can I help you?".
+`ChatBot` accepts everything that `SingleRoomAgent` does (`name`, `title`, `description`, `requires`, `labels`) and adds chat-specific parameters.
+
+| Argument             | Type                          | Description                                                                                                     |
+| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `name`               | `str`                         | Unique identifier for the agent within the room.                                                                |
+| `title`              | `str \| None`                 | Human-friendly name shown in UX. Defaults to `name`.                                                            |
+| `description`        | `str \| None`                 | Optional short description.                                                                                     |
+| `requires`           | `list[Requirement] \| None`   | Dependencies such as `RequiredSchema` or `RequiredToolkit`. Automatically ensures the `"thread"` schema exists. |
+| `llm_adapter`        | `LLMAdapter`                  |  Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies chat contexts and translates responses into MeshAgent events.                                      |
+| `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter for translating tool call outputs.                                                             |
+| `toolkits`           | `list[Toolkit] \| None`       | Extra toolkits that are always available to the chatbot beyond what `requires` installs. Defaults to `[]`.                                                     |
+| `rules`              | `list[str] \| None`           | List of system or behavior rules appended to each chat context.                                                 |
+| `auto_greet_message` | `str \| None`                 | Optional greeting message sent automatically by the agent when a new thread starts.                                                     |
+| `empty_state_title`  | `str \| None`                 | Title text shown in the Studio chat pane before the first user message. Defaults to `"How can I help you?"`.                                        |
+| `labels`             | `list[str] \| None`           | Optional tags for discovery and filtering.                                                                      |
 
 If you do not pass a `requires` list, `ChatBot` automatically injects `RequiredSchema(name="thread")` so it can store transcripts. You can still add additional toolkits or schemas by supplying your own list.
+
+## Lifecycle Overview
+``ChatBot`` inherits the lifecycle from ``SingleRoomAgent`` but extends it to manage ongoing conversations and message threads.
+
+- ``await start(room: RoomClient)``: Connects to the room, installs requirements, and registers message handlers. Spawns per-thread tasks to handle participant messages, LLM responses, and tool invocations.
+-   ``await stop()``: Cancels active chat threads and clears cached state before disconnecting.
+- ``room`` property: Accesses the active RoomClient just like in SingleRoomAgent.
+
+## Conversation Flow 
+When a participant sends a message:
+1. The chatbot receives the message via ``room.messaging.on("message")``.
+2. It identifies or spawns a chat thread corresponding to that conversation path.
+3. A chat context (``AgentChatContext``) is initialized using the ``llm_adapter``.
+4. The message history is synchronized with the room’s ``"thread"`` document.
+5. The chatbot invokes the LLM, streams back tokens, and appends responses to the thread document.
+6. Toolkits or reasoning tools can be used mid-conversation when invoked by the LLM.
+
+All of this happens automatically once your bot is started.
 
 ## Key Behaviors and Hooks
 - **Thread management**: Every conversation lives inside a MeshDocument thread. The chatbot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
 - **Context building**: `init_chat_context()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
 - **Tool resolution**: `get_thread_toolkits()` gathers built-in toolkits, the ones listed in `requires`, and any always-on toolkits you passed in through `toolkits`. It also wraps UI helpers (such as `show_toast`) so they run on behalf of the current user.
 - **Thread helpers**: Use `open_thread()` and `close_thread()` to work with the underlying document, or `load_thread_context()` to replay the stored messages into an existing chat context (for example, when resuming a conversation).
-- **LLM customization**: Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to inject summaries, search hits, or additional metadata).
+- **LLM customization**: Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to provide additional background context for the agent outside of the system prompt).
 - **Participant utilities**: `get_thread_participants()` returns the participants included in the thread so you can tailor responses or access their attributes.
 
-## Beginner-Friendly Example
-```python
-from meshagent.agents import RequiredToolkit
-from meshagent.agents.chat import ChatBot
-from meshagent.openai import OpenAIResponsesAdapter
+## Key Methods
+| Method                                                         | Description                                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `async def init_chat_context()`                                | Creates a new chat context using the configured `llm_adapter` and applies rules.            |
+| `async def get_thread_toolkits(thread_context, participant)`   | Resolves all toolkits available to a given participant, including built-in reasoning tools. |
+| `async def open_thread(path)` / `async def close_thread(path)` | Opens or closes a thread document in the room.                                              |
+| `async def load_thread_context(thread_context)`                | Loads historical messages into the current chat context from the thread document.           |
+| `async def prepare_llm_context(thread_context)`                | Hook for modifying the chat context before invoking the LLM. Override as needed.            |
 
-class HelpfulChatBot(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="helpful-chatbot",
-            title="Helpful Chatbot",
-            description="Answers questions about our documentation and demos",
-            llm_adapter=OpenAIResponsesAdapter(),
-            requires=[
-                RequiredToolkit(name="ui", tools=["ask_user"]),
-            ],
-            rules=[
-                "Answer in plain language.",
-                "Offer to call tools when the user needs extra information.",
-            ],
-            auto_greet_message="Hi there! What would you like to explore today?",
-        )
+## Built-in Toolkits and Behaviors
+``ChatBot`` automatically provides and manages several toolkits and utilities:
+- **Reasoning Toolkit:** Allows structured “chain-of-thought” reasoning within the chat context.
+- **Built-in Tool Support (OpenAI-style):** May include web_search, local_shell, or image_gen, depending on the LLM adapter.
+- **UI Toolkit Integration:** Supports sending messages, showing toasts, or interacting with user interfaces via the "ui" toolkit.
 
-    async def prepare_llm_context(self, *, thread_context):
-        # Add a short reminder after the user introduces themselves.
-        thread_context.chat.append_rules([
-            "If the user sounds stuck, suggest the quickstart guide.",
-        ])
+These can be extended or replaced with your own toolkit factories.
 
-```
+## Beginner-Friendly Examples
 
-This subclass wires the chatbot to the OpenAI Responses API, ensures the UI toolkit is available, applies a few guardrails, and tweaks the LLM context before each turn. Drop it into a `ServiceHost` alongside your other agents, or call it into a room directly with `meshagent service run`.
+<CodeGroup>
+    <SimpleChatbot />
+</CodeGroup>
 
-## Sending Messages Programmatically
-The chatbot appears in the room as a standard participant. Any Room client can send it chat messages:
 
-```python
-await room.messaging.send(
-    to="helpful-chatbot",
-    type="chat",
-    message={
-        "path": "docs.intro.thread",
-        "text": "Can you summarize the quickstart?",
-    },
-)
-```
+This subclass wires the chatbot to the OpenAI Responses API and applies a a system prompt. You can call the chatbot into a room directly by running `meshagent service run "main.py" --room=gettingstarted` from your terminal. Next from the [MeshAgent Studio](https://studio.meshagent.com) you can go to the **Sessions** tab, open the **gettingstarted** room, and begin chatting with your agent. 
 
-MeshAgent Studio and the Flutter SDK already provide UI components (such as `ChatThreadLoader`) that understand these threads, so you can embed the same experience in your own apps.
+To extend the Chatbot with Tools and learn how to deploy a Chatbot see the next article on [building and deploying a MeshAgent chatbot](./buildanddeploychatbot).
+
+MeshAgent Studio and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand chatbot threads. This means any conversation started in the Studio can be displayed properly or continued inside your own application without extra integration work.
+
+## Next Steps
+
+``ChatBot`` builds directly on ``SingleRoomAgent``, inheriting its lifecycle management, requirement installation, and toolkit resolution. While ``SingleRoomAgent`` focuses on room connection and environment setup, ``ChatBot`` handles conversation orchestration — managing threads, participants, messages, and reasoning.
+
+To continue learning or put your chatbot into action:
+
+- [Build and Deploy a ChatBot](./buildanddeploychatbot): Step-by-step guide to configuring adapters, adding toolkits, and running your chatbot in a MeshAgent room.
+- [VoiceBot](./voicebot): Adds streaming audio input/output for speech interactions.
+- [Worker](./worker) and [TaskRunner](./taskrunner): Perform background or task-based actions.
+- [MailWorker](./mailworker): Integrates with messaging or email systems.
+
+Use ``ChatBot`` whenever your agent’s primary interface is text-based conversation and you need a foundation for more specialized conversational agents.
