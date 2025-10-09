@@ -1,25 +1,27 @@
 ---
-title: Accounts Client
+title: REST API
 ---
 
-The Accounts API lets project admins create and manage projects, rooms, members, and the room-level permissions that become participant tokens. 
+The Meshagent REST API lets project admins create and manage projects, rooms, members, and the room-level permissions that become participant tokens. 
 
 ## Getting started
 ```python
 from meshagent.api.client import Meshagent
 
 client = Meshagent(
-    base_url="https://api.meshagent.com",  # optional; defaults to MESHAGENT_API_URL
+    # optional; defaults to MESHAGENT_API_URL
+    base_url="https://api.meshagent.com", 
+    # optional; defaults to MESHAGENT_API_KEY
     token="<bearer-access-token>"
 )
 
 # ...use the client...
 
-await client.close()  # tidy up the internal aiohttp session
+await client.close()
 ```
 
-- `base_url` defaults to `meshagent.api.helpers.meshagent_base_url()`, which honours the `MESHAGENT_API_URL` environment variable.
-- `token` must be a bearer token authorised to administer the project (typically an API key token or a user session token).
+- `base_url` If set, environment variable `MESHAGENT_API_URL` is used. Default `https://api.meshagent.com`.
+- `token` If set, environment variable `MESHAGENT_API_KEY` is used. The user session token can also be used. The session token can be retrieved from ~/.meshagent/session.json which is set when using the meshagent cli to login.
 
 Every method raises `meshagent.api.RoomException` on non-2xx responses and validates responses with Pydantic models, so malformed payloads surface as rich errors.
 

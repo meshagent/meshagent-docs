@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def env(name: str) -> str:
     val = os.getenv(name)
     if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}. Try running meshagent env in the terminal to export the required environment variables.")
+        raise RuntimeError(f"Missing required environment variable: {name}.")
     return val
 
 async def call_agent(
