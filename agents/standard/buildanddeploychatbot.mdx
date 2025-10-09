@@ -1,87 +1,74 @@
 ---
-title: "Build and Deploy a Chat Agent"
+title: "Build a Chat Agent"
 ---
 
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 import MeshToolsChatbot from "/snippets/examples/python/agents/chatbot/mesh_tools_chatbot.mdx"
 import CustomToolsChatbot from "/snippets/examples/python/agents/chatbot/custom_tools_chatbot.mdx"
 
+The MeshAgent **[ChatBot](./chatbot)** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code! In this guide, you’ll build a working chat agent in four phases, starting with a minimal system prompt and ending with a custom, tool-powered assistant.
 
-## Overview
-The MeshAgent **[ChatBot](./chatbot)** lets you add a conversational (chat/text based) agent to any MeshAgent Room with just a few lines of code!
-
-In this quickstart we'll build the agent in four phases: 
-1. **[Using the MeshAgent CLI](#phase-1-chat-with-the-built-in-chatbot-from-the-cli)**: With one command we can call a simple chatbot into a MeshAgent room. 
-2. **[Basic ChatBot](#phase-2-building-a-simple-chatbot)**: A simple agent with a system prompt (rules). This allows us to see the code behind the CLI chatbot. 
+**Phase Overview**
+1. **[Using the MeshAgent CLI](#phase-1-chat-with-the-built-in-chatbot-from-the-cli)**: Bring a ready-made ChatBot into a room using a single CLI command.
+2. **[Basic ChatBot](#phase-2-building-a-simple-chatbot)**: Create a simple agent with a system prompt (rules) and connect it to a MeshAgent room. This allows us to see the code behind the CLI chatbot. 
 3. **[ChatBot with Built-in MeshAgent Tools](#phase-3-adding-built-in-meshagent-tools-to-our-chatbot)**: Extend our chat agent by adding MeshAgent's prebuilt tools to interact with the user and write documents to the room.
-4. **[ChatBot with Built-in MeshAgent Tools and Custom Tools](#phase-4-adding-custom-tools-to-our-chatbot)**: Add our own tools to the agent for use-case specific tasks. 
+4. **[ChatBot with Built-in MeshAgent Tools and Custom Tools](#phase-4-adding-custom-tools-to-our-chatbot)**: Add additional custom tools to the agent for use-case specific tasks. 
 
-You'll learn how to:  
+**You'll learn how to:**  
 - Build a chat based agent with MeshAgent
-- Connect the agent to a MeshAgent Room for live testing.
-- Deploy the agent as a MeshAgent Service.
-- Generate a shareable link so others can start chatting right away.
+- Connect the agent to a MeshAgent Room for live testing
+- Define and add custom tools to an agent
+- Decide how you want to run and deploy your agent
 
 ## Prerequisites
-Be sure you have created your MeshAgent account and project, set up and activated a virtual environment, and installed the MeshAgent Python SDK. s
-
-For help getting setup see the [Getting Started Guide](../../introduction/get_started). 
-
-## Connect to MeshAgent Project
-
-```sh
-meshagent setup
-```
+Before you begin be sure you have: 
+- Created your MeshAgent account and project
+- Set up and activated a virtual environment, and installed MeshAgent. See the [Getting Started Guide](../../introduction/get_started) for help getting setup. 
+- Authenticated to MeshAgent using the CLI by running ``meshagent setup``
 
 ## Phase 1: Chat with the built-in ChatBot from the CLI
-Let's bring a ready-made chatbot into a room and talk to it: 
+Start by calling the built-in ChatBot into a room directly from the CLI:
 
 ```sh
 meshagent chatbot join --room gettingstarted --agent-name chatagent
 ```
 
-Running this command will: 
-1. Create and open a room called ``gettingstarted`` inside your project
+This will:  
+1. Start a room called ``gettingstarted`` inside your project
 2. Call the ``chatagent`` into the ``gettingstarted`` room 
 
-In a web browser, go to [studio.meshagent.com](https://studio.meshagent.com) and join the ``gettingstarted`` room. You will see the ``chatagent`` participant appear! Simply select the agent and begin typing to talk to it. 
+Next, in a web browser, go to [studio.meshagent.com](https://studio.meshagent.com) and join the ``gettingstarted`` room from the **Sessions** tab. You will see the ``chatagent`` appear in the participants tab. Select it and start chatting!
 
 
 ## Phase 2: Building a Simple ChatBot
 Now that we've seen the default chatbot in action, let's create one from scratch. 
 
-Create a main.py file and paste the starter code below for the basic ChatBot. To start, we can give the agent one rule / system instruction. We'll build up this code over the course of this example. 
+Create a ``main.py`` file and paste the starter code below for the basic ``ChatBot``. To start, we can give the agent one rule / system instruction. We'll build up this code over the course of this tutorial. 
 
-**Note**: You can optionally set the ``port`` parameter on ``ServiceHost``. If you don't pass a port, it will default to ``8081``. 
+> **Note**: You can optionally set the ``port`` parameter on ``ServiceHost``. If you don't pass a port, it will default to an available port. 
 
 <CodeGroup>
     <SimpleChatbot />
 </CodeGroup>
 
-### Running the Simple ChatBot in Test Mode: 
-Time to try it out!
-
-To run the agent you will need two tabs open in your terminal. You need to be in the appropriate directory and have your virtual environment activated in each tab. 
-
-In the first tab run: 
-```sh
-python main.py
-```
-
-In the second tab run the call agent command to bring our agent into the room: 
+Run the ``ChatBot`` locally and connect it to a Room. From your terminal run:
 
 ```sh
-meshagent call agent --url=http://localhost:8081/chat --room=gettingstarted --participant-name=chatagent
+meshagent setup # authenticate to meshagent if not already signed in
+meshagent service run "main.py" --room=gettingstarted
 ```
 
-**Note**: This will bring in the agent named ``chatagent`` into the ``gettingstarted`` room and run it on port ``8081`` using the service path ``chat``. If you want to rename the agent, room, port, or service path simply update the variables in the command.
+MeshAgent will start the ServiceHost, discover your ChatBot endpoint automatically, and call it into the specified room.
+In [MeshAgent Studio](https://studio.meshagent.com/), open the ``gettingstarted`` room from the **Sessions** tab and chat with your new agent!
 
-Now we can navigate to the [MeshAgent Studio](https://studio.meshagent.com/) and we'll see our agent, "mychatagent" show up under the messaging tab! We can chat back and forth with the agent, asking it questions and making sure that it responds with a fun fact like we told it to.
+> **Tip**: There are two ways to connect an agent to a room:
+>    - ``meshagent service run`` – Starts the ``ServiceHost``, automatically discovers all agents and tools defined in your service, and calls them into the room for you. This is the easiest way to test multi-agent or multi-tool setups.
+>    - ``meshagent call agent`` – Manually calls a single agent into a room by URL. Use this when you want finer control or to test one agent endpoint at a time, for example: ``meshagent call agent --url=http://localhost:8081/chat --room=gettingstarted --participant-name=chatbot``. You will also need to run your file to start the agent locally e.g. python main.py before running the call command. 
 
-We can also click on the menu inside the room and turn on the "Developer console" this will allow us to see live logs, traces, and metrics as we interact with the agent.
+To see live logs, traces, and metrics as you interact with the agent check out the Developer Console on the bottom pane of the Studio. You can toggle this console on and off by selecting or deselecting it from the menu in the room. 
 
 ## Phase 3: Adding Built-in MeshAgent Tools to our ChatBot
-Next, let's give our agent the ability to interact with the user, convert documents to markdown, and write documents to the room. We can do this by adding toolkits to our agent. Toolkits represent a group of tools that are used for a particular purpose. 
+Next, let's give our agent the ability to interact with the user through the UI, convert documents to markdown, and write documents to the room. We can do this by adding toolkits to our agent. Toolkits represent a group of tools that are used for a particular purpose. 
 
 We'll also add a few imports and update the chat agent's rules so it knows how to interact with the available tools more efficiently. 
 
@@ -89,17 +76,14 @@ We'll also add a few imports and update the chat agent's rules so it knows how t
     <MeshToolsChatbot />
 </CodeGroup>
 
-We can test the agent using the same commands as we did with the simple chat agent!
+We can test the agent using the same command as we did with the simple chat agent! (Be sure to cancel the previous command Ctrl+C before rerunning)
 ```sh
-python main.py
+meshagent service run "main.py" --room=gettingstarted
 ```
-
-```sh
-meshagent call agent --url=http://localhost:8081/chat --room=gettingstarted --participant-name=chatagent
-```
+Head back to [MeshAgentStudio](https://studio.meshagent.com) and try giving the agent a document to chat about.
 
 ## Phase 4: Adding Custom Tools to our ChatBot
-Now let's add a custom tool to our ChatBot! We'll create a TaskTracker toolkit that allows the agent to write and read tasks to the Room database. 
+Now let's add a custom tool to our ChatBot! We'll create a TaskTracker toolkit that allows the agent to write and read tasks using the Room database. 
 
 To do this we will update the chat agent initialization to create a table for the tasks when the room starts up. We will create a tasks toolkit with two custom tools to **WriteTask** and **GetTasks** from the database. 
 
@@ -112,54 +96,33 @@ This is a simple example of adding tasks, to create a more useful task writer we
 We can test the agent using the same commands as we did with the simple chat agent! And now when we go to the room we can ask the agent to add a task to our task database. 
 
 ```sh
-python main.py
-```
-
-```sh
-meshagent call agent --url=http://localhost:8081/chat --room=gettingstarted --participant-name=chatagent
+meshagent service run "main.py" --room=gettingstarted
 ```
 
 Once we're satisfied with how the agent is performing we can deploy and share it. 
 
-**Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent.
+> **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent.
 
-## Deploying and Running the Agent as a MeshAgent Service
-### Prerequisites: 
-To deploy the agent you will need to have docker setup and a container registry with your cloud provider (e.g. GCP, Azure, AWS). 
+## Agent Deployment Options
+Once your ChatBot is working locally, you can run it in different ways depending on your needs and permissions. 
 
-For this example we are using Azure Container Registry. These steps assume you have created a container registry in Azure, have a service principal setup, and have the appropriate permissions to access and push images to the container registry. 
-- For more information on setting up an Azure Container Registry see the documentation here: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal?tabs=azure-cli 
-- For more information on creating a service principal in azure see the documentation here: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-auth-kubernetes. 
+| Mode                    | Description                                                   | Best For                           |
+| ----------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| **Local (Development)** | Run directly from your machine using `meshagent service run`. | Testing, debugging, iteration      |
+| **Project Service**     | Deploy once to run automatically in every room of a project (admin only).  | Always-on shared agents            |
+| **Room Service**        | Launch dynamically in specific rooms via the Containers API.  | On-demand or user-triggered agents |
 
-You will need to create a new image pull secret so that MeshAgent can pull and run your container, the image pull secret requires the service principal ID and password. To save the image pull secret navigate to the MeshAgent Studio, click the Secrets tab, then click New Image Pull Secret, give a name to your secret and fill in the required information.
+Each mode uses the same ``main.py`` file with our ``ServiceHost`` and agent definition. For both project and room services we'll need to create a Dockerfile for our agent and a meshagent.yaml file that defines the agent configuration. Project Services will use a meshagent.yaml with type ``Service`` and Room Services will use a meshagent.yaml with type ``ServiceTemplate``. To learn more about containerizing and managing your ChatBot at scale see [Services & Room Containers](../../services_room_containers/overview)
 
-Once you have the registry setup proceed with the following steps. 
+## Troubleshooting & Tips
 
-### Step 1: Build and Push Your Container
-1. Create and activate a dedicated Buildx builder
-We recommend using zstd images to speed up image pulls. To enable building zstd images, run the following commands:
+- Use the Developer Console in Studio to view logs, traces, and LLM calls live.
+- Small tweaks to your rules (system prompt) and toolkits can have big quality impacts.
+- Restart the service whenever you modify code; the room will auto-reconnect.
 
-```sh
-docker buildx create --name zstd-builder --driver docker-container
-docker buildx use zstd-builder
-```
-
-2. Log in to Azure, connect to your ACR instance, then build and push the docker container. To build this container, use docker buildx to make a linux/amd64 image and push it to your registry.
-
-```sh
-az login
-az acr login --name myregistry
-docker buildx build . --platform linux/amd64 --output=type=image,name=myregistry.azurecr.io/mychatagent:v1,oci-mediatypes=true,compression=zstd,compression-level=3,force-compression=true,push=true
-```
-
-### Step 2: Create a Service in MeshAgent for each of your Agents
-1. Navigate to the Services tab and click the button to create a New Service and fill in the required information about the agent. 
-2. Add the MESHAGENT_PORT as an environment variable, this needs to match the port that you register the service with. 
-
-### Step 3: Try your agent!
-Navigate to the Sessions tab in [MeshAgent Studio](https://studio.meshagent.com) and either join an existing room or create a new room by starting a session. You will then see the Chatbot Agent available in the room for you to interact with!
-
-## Generate a Link and Share Your Agent
-1. Navigate to your Room, click the hamburger menu icon in the top left corner, next click "Share"
-2. Select the Room and Agent you'd like to share and click "Generate Link"
-3. Proudly share your Agent!
+## Next Steps
+- [ChatBot](./chatbot) Overview — Review the lifecycle, context building, and key methods for MeshAgent ChatBots
+- [TaskRunner](./taskrunner) — Learn how to run agents in the background with TaskRunners
+- [Worker](./worker) — Offload background or long-running jobs
+- [Services & Containers](../../services_room_containers/overview) - Deploy your ChatBot as a managed or on-demand service
+- [Secrets & Registries](../../secrets/secrets_overview) — Learn how to store credentials securely for deployment
