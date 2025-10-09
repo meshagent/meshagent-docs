@@ -2,11 +2,13 @@
 title: "MailWorker Overview"
 ---
 
+import SimpleMailbot from "/snippets/examples/python/agents/mailbot/mailbot.mdx"
+
 The ``MailWorker`` lets your build an agent that communicates via email. It receives incoming messages, stores them in your room, generates replies using an LLM, and sends responses back out through SMTP — automatically turning your inbox into an intelligent, room-connected agent.
 
 ``MailWorker`` extends the [``Worker``](./worker) agent to process inbound email from a queue and send replies via SMTP. It automatically persists every message and attachment to room storage, builds conversation context from past emails, and can call tools or reason over messages like any other agent.
 
-> Note: To use ``MailWorkers`` you must either be an admin of the MeshAgent project you are using or have the admin create and allocate an email address for the agent to use. Only admins can create and allocate email addresses for agents in a project. 
+> Prerequisite: To use ``MailWorkers`` you must either be an admin of the MeshAgent project you are using or have the admin create and allocate an email address for the agent to use. Only admins can create and allocate email addresses for agents in a project. 
 
 ## When to Use It
 Use ``MailWorker`` when you want an agent that:
@@ -55,6 +57,39 @@ If you just need a background job, see [Worker](./worker). If you want real-time
 
 
 ## Example
-First we will create and allocate an available email address for the MailWorker to use in our MeshAgent project. Then we'll create a MailWorker who uses the email address we've allocated. 
+First create and allocate an available email address, then define a ``MailWorker`` that uses it.
+
+<CodeGroup>
+    <SimpleMailbot />
+</CodeGroup>
+
+Set env vars, pick a queue, and choose a unique email address. If you’re self-hosting, you can override the default mail domain.
+You'll also need to export the MeshAgent Project ID you can run ``meshagent project list`` from the CLI to get the IDs associated with the MeshAgent projects you have access to. 
+
+```bash
+export EMAIL_QUEUE="test_email"
+export EMAIL_ADDRESS="myemail@mail.meshagent.com" # come up with a unique email
+export MESHAGENT_PROJECT_ID="<your-project-id>"
+# If self-hosting, you can also set:
+# export MESHAGENT_MAIL_DOMAIN="mail.meshagent.com" # this would be your custom domain instead of the default mail.meshagent.com
+```
+
+Next, run the service:
+
+```bash
+meshagent service run "main.py" --room=maildemo
+```
+
+At this point, the MailWorker is connected to the ``maildemo`` room and listening on the queue you configured. As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
+
+> **Note:** Once you stop the room, the mail agent will not automatically restart unless you save the agent configuration and deploy the agent as a project wide service or run it via a room container. To persist your mail agent and reuse it you will need to save the configuration for your agent and create a project wide service that manages saved agent configurations via room containers. This project wide service will be responsible for starting/stopping agent configuration in a specific room. You can learn more about this in the services & containers documentation. 
 
 ## Next Steps
+Explore and understand other agents in MeshAgent: 
+- [Worker](./worker): Understand how queue based agents work 
+- [TaskRunner](./taskrunner): Learn how to run agents in the background or wrap existing agents from other frameworks
+- [ChatBot](./chatbot): Create a conversational text/chat based agent
+- [VoiceBot](./voicebot): Create a conversational speech/voice based agent
+
+Learn how to deploy and run agents across rooms in a project or in specific rooms: 
+- [Services and Room Containers](../../services_room_containers/overview): Understand agent deployment patterns
