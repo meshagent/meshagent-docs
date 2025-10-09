@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 otel_config(service_name="my-service")
 
-host = ServiceHost() # port defaults to 8081 otherwise set port value
+host = ServiceHost() # port defaults to an available port if not assigned
 
 logger = logging.getLogger("worker")
 logger.info(f"Listening on {os.getenv('WORKER_QUEUE')}")

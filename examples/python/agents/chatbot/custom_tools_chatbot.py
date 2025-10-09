@@ -15,7 +15,7 @@ from meshagent.api.messaging import TextResponse, JsonResponse
 from meshagent.tools import Tool, Toolkit
 from meshagent.otel import otel_config
 
-service = ServiceHost() # port defaults to 8081
+service = ServiceHost() # port defaults to an available port if not assigned
 
 otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
 
