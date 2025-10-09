@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-trixie
 
 ARG MESHAGENT_VERSION="0.0.27"
 
