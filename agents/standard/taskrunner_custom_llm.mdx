@@ -1,0 +1,80 @@
+---
+title: "Custom LLM TaskRunners"
+---
+
+import LLMTaskRunners from "/snippets/examples/python/agents/taskrunner/llm_taskrunners.mdx"
+import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm_taskrunners_service.mdx"
+import InvokeLLMTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking_llm_taskrunner.mdx"
+
+
+## Example: Custom TaskRunners using an LLM
+We can easily extend the TaskRunner into an LLM powered agent that returns a response once the LLM's execution loop finishes. Let's take a look at the ``LLMTaskRunner`` and ``DynamicLLMTaskRunner`` which allow you to use either a fixed response schema or a caller-supplied one.  
+
+### How does a TaskRunner change when an LLM is involved? 
+1. **Chat Context**: Add a step to spin up the conversation using the ``init_chat_context`` method
+2. **LLM Call Loop**: Create an ask() function that allows the model to work until the task is finished (we do this by calling ``.next()`` on the ``LLMAdapter`` in the ask function)
+3. **Schema Validation**: Validate the LLM output against the declared schema to ensure consistency.
+
+### LLMTaskRunner and DynamicLLMTaskRunner
+``LLMTaskRunner`` uses a fixed output schema defined at initialization time and always returns data in the same format. By default it takes in a text prompt and returns a string response. The ``DynamicLLMTaskRunner`` accepts an output_schema parameter at runtime, allowing different structured outputs for different requests.
+
+#### Key Constructor Parameters
+- **llm_adapter:** a LLM adapter to use to integrate with a LLM. We recommend using the OpenAIResponsesAdapter from ```meshagent-openai```.
+- **supports_tools** Whether the agent should support passing a custom set of tools at runtime (optional)
+- **tool_adapter:** a custom tool adapter to use to transform tool responses into context messages (optional).
+- **toolkits:** used to specify local toolkits for the agent. While it's generally recommended to register toolkits with the room so any agent or user can use them, sometimes you need each agent to have it's own instance of a toolkit, for instance with synchorized document authoring.
+- **requires:** a list of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use toolkits and schemas that have been registered with the room with this agent.
+- **input_prompt:** Whether the TaskRunner should accept a prompt as input, if true, the input should be in the format ```{ "prompt" : "text" }```.
+- **input_schema:** JSON schema describing what arguments your agent accepts. If not provided and input_prompt is True, defaults to a prompt schema accepting text.
+- **output_schema:** For ``LLMTaskRunner`` only, a JSON schema that responses must conform to (by default returns ``{"result": {"type": "string"}}``). In ``DynamicLLMTaskRunner`` the ``output_schema`` is set dynamically at runtime. 
+- **rules:** a set of rules that the task runner should use while executing. Rules are used to guide the behavior of the agent with system or developer prompts (optional).
+
+#### Class Definition
+The following class definitions show how to implement both LLMTaskRunner and DynamicLLMTaskRunner. These classes handle the LLM execution loop, schema validation, and toolkit integration:
+
+<CodeGroup>
+    <LLMTaskRunners />
+</CodeGroup>
+
+#### Service Implementation
+Here's a complete example of implementing an ``LLMTaskRunner`` that uses an OpenAI model that takes a text input prompt and returns a string text response. 
+
+The ``DynamicLLMTaskRunner`` also uses an OpenAI model but returns a schema defined at runtime.
+
+<CodeGroup>
+    <LLMTaskRunnerService />
+</CodeGroup>
+
+**Running the Custom TaskRunners**
+
+Run the py file in one tab:
+```bash bash
+python llm_taskrunner.py
+```
+
+Call the agents into the room in another: 
+```bash bash
+meshagent setup #authenticate if not already connected
+meshagent call agent --url=http://localhost:7777/llmtaskrunner --room=myroom --participant-name=llmtaskrunner
+meshagent call agent --url=http://localhost:7777/dynamicllmtaskrunner --room=myroom --participant-name=dynamicllmtaskrunner
+```
+
+**Using the LLMTaskRunner from the Studio**
+1. Go to [studio.meshagent.com](https://studio.meshagent.com)
+2. Enter the room, myroom
+3. Click menu —> “Run Task”
+4. Select “LLM Task Runner” from the agent dropdown
+4a. Optionall click "add tools" and add tools to your new LLMTaskRunner
+5. Enter a prompt
+6. Results appear 
+
+**Using the DynamicLLMTaskRunner Programmatically**
+
+<CodeGroup>
+    <InvokeLLMTaskRunner />
+</CodeGroup>
+
+Now from your terminal run: 
+```bash bash
+python invoke_llm_taskrunner.py
+```

@@ -1,0 +1,34 @@
+---
+title: "Prebuilt TaskRunners"
+---
+
+import PrebuiltTaskRunner from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner.mdx"
+import PrebuiltTaskRunnerSchema from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner_schema.mdx"
+
+MeshAgent provides pre-built agents that extend the [``TaskRunner``](./taskrunner) class with additional capabilities like tool use and iterative reasoning. These built-in agents are automatically available in every MeshAgent room as ``meshagent.planner`` and ``meshagent.schema_planner``.
+
+### meshagent.planner
+A TaskRunner that uses structured planning and returns a text response. You provide it a prompt (and optionally tools), and it yields a simple text response in a fixed schema: ``{"result":"<text>"}``. 
+
+Example without tools: 
+
+<CodeGroup>
+    <PrebuiltTaskRunner />
+</CodeGroup>
+
+
+When you call tools into the studio you can add them to the generic meshagent.planner which is automatically available in the room. The Planner will ask you for any necessary information and invoke the appropriate tool(s) to perform the task. This is a good way to test how the tools you've built work with agents. 
+
+### meshagent.schema_planner
+A TaskRunner that uses structured planning and returns a structured output. You provide both a prompt and an explicit JSON schema describing the desired output.
+
+Example without tools: 
+<CodeGroup>
+    <PrebuiltTaskRunnerSchema />
+</CodeGroup>
+
+Two preconfigured task runners are available by default in MeshAgent rooms. These are available as ```meshagent.planner``` and ```meshagent.schema_planner``` via the ```room.agents.ask``` api.
+You can try them out in the Studio by selecting "Run Task..." from the menu. These built in agents can be useful helpers in your own apps. For example, when you invoke an agent inside the
+MeshAgent Studio, the PlanningResponder is used to generate user interface on the fly and gather the required JSON data to pass as input when invoking an agent. Extending the base TaskRunner 
+and providing a custom set of rules and tools is a great way to get a simple agent up and running quickly.
+
