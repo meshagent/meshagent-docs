@@ -1,3 +1,58 @@
 ---
-title: "Mail Worker Overview"
+title: "MailWorker Overview"
 ---
+
+The ``MailWorker`` lets your build an agent that communicates via email. It receives incoming messages, stores them in your room, generates replies using an LLM, and sends responses back out through SMTP — automatically turning your inbox into an intelligent, room-connected agent.
+
+``MailWorker`` extends the [``Worker``](./worker) agent to process inbound email from a queue and send replies via SMTP. It automatically persists every message and attachment to room storage, builds conversation context from past emails, and can call tools or reason over messages like any other agent.
+
+## When to Use It
+Use ``MailWorker`` when you want an agent that:
+- Responds to incoming email automatically (e.g., helpdesk, order confirmations, triage bots)
+- Maintains threaded context so replies include past conversation history (based on the current email thread)
+- Runs LLMs or tools over incoming email messages before responding
+- Bridges email and your MeshAgent environment, connecting to other agents or toolkits in the same room
+
+If you just need a background job, see [Worker](./worker). If you want real-time conversations outside of email, see [ChatBot](./chatbot) or [VoiceBot](./voicebot). 
+
+## Constructor Arguments
+``MailWorker`` inherits all ``Worker`` arguments (like ``queue``, ``llm_adapter``, ``tool_adapter``, ``toolkits``, ``rules``, and ``requires``) and adds a few email-specific ones:
+
+| Argument        | Type                        | Description                                                                                            |
+| --------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `queue`         | `str`                       | Name of the queue to listen to (default `"email"`).                                                    |
+| `email_address` | `str`                       | The address used as the “From” field for outgoing replies.                                             |
+| `domain`        | `str`                       | Domain for message routing, defaults to `MESHAGENT_MAIL_DOMAIN` or `"mail.meshagent.com"`.             |
+| `smtp`          | `SmtpConfiguration \| None` | SMTP settings (hostname, port, username, password). Defaults to environment variables if not provided. |
+
+
+## Lifecycle Overview
+``MailWorker`` inherits its lifecycle from ``Worker``:
+- ``await start(room)``: connects to the room and begins long-polling the email queue for new messages.
+- ``await stop()``: gracefully stops the polling loop and disconnects.
+
+> Note: “Long-polling” means the worker efficiently waits on the queue until a new message arrives—no busy-looping or manual sleep required.
+
+## Processing Flow
+``MailWorker`` runs a continuous loop inherited from ``Worker`` that listens for incoming email messages on a queue and processes them end-to-end.
+
+1. Receive an email — The worker long-polls the email queue and receives base64-encoded .eml messages.
+2. Parse and persist — It decodes the message, extracts headers, body, and attachments, and saves them under ``.emails/...`` in room storage. A summary record is inserted into the ``emails`` table for lookup and threading.
+3. Rebuild thread context — The agent walks the ``In-Reply-To`` chain to include earlier messages in the LLM’s context.
+4. Generate a reply — The ``llm_adapter`` uses the chat context and toolkits to produce a text reply.
+5. Send via SMTP — A threaded reply (``RE:, In-Reply-To, Message-ID``) is composed and sent using your SMTP credentials. The reply is also stored alongside the original message.
+
+## Key Methods
+
+| Method                                                   | Description                                                                              |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `process_message(chat_context, room, message, toolkits)` | Core processing logic—decodes, saves, builds thread, calls the LLM, and sends the reply. |
+| `append_message_context(room, message, chat_context)`    | Loads the full email thread into the chat context.                                       |
+| `get_thread_toolkits(thread_context)`                    | Resolves local and required toolkits for the current email thread.                       |
+| `send_reply_message(room, message, reply)`               | Composes and sends the actual reply message via SMTP.                                    |
+
+
+## Minimal Example
+NEED MESHAGENT/ADMIN CLIENT TO CREATE? 
+
+## Next Steps

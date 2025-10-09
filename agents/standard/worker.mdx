@@ -6,25 +6,66 @@ import QueueWorker from "/snippets/examples/python/agents/queueworker/queueworke
 import PushQueue from "/snippets/examples/python/agents/queueworker/push_queue.mdx"
 
 
-A ``Worker`` is a specialized **queue-based agent that processes messages** sent to a MeshAgent room queue. **Other agents or
+A ``Worker`` is a specialized **queue-based agent** that processes messages sent to a MeshAgent room queue. **Other agents or
 applications can push tasks to the queue and the Worker will handle them in the background**. This is helpful for
 long‑running or asynchronous jobs that shouldn't block an interactive chat agent.
 
-## Why use a Queue Worker?
-There might be cases where you need an agent to:
+## When to Use It
+- Process background jobs pushed by apps or other agents
 - Run long or repetitive jobs off the main chat thread
 - Execute non-interactive tasks where no follow up questions are desired
 - Batch operations that process multiple items sequentially
-- Run scheduled tasks at a particular time
+- Schedule or trigger work externally and have the agent pick it up
 
-## Queue Worker Properties
+If you need an interactive assistant, use [ChatBot](./chatbot). For real-time speech, see [VoiceBot](./voicebot). For a callable function/agent pattern with structured schemas, see [TaskRunner](./taskrunner). 
 
-- **queue**: The name of the Room Queue to listen for messages on
-- **llm_adapter**: The adapter to use so the agent works with an LLM. We recommend using the ``OpenAIResponsesAdapter`` from ``meshagent-openai``.
-- **tool_adapter**: A custom tool adapter to use to transform tool responses into context messages. We recommend using the ``OpenAIResponsesToolResponseAdapter`` from ``meshagent-openai`` (optional).
-- **requires**: List of requirements for the agent. You can use RequiredSchema, RequiredToolkit to use existing toolkits and schemas that have been registered with the room with this agent (default is None).
-- **toolkits**: List of local toolkits living only in this worker (e.g. `StorageToolkit`) (optional).
-- **rules**: A set of rules (system or developer prompts) that guide the agent's behavior (optional).
+## Constuctor Arguments 
+A ``Worker`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) plus queue-specific and LLM based parameters.
+
+| Argument       | Type                          | Description                                                                                            |
+| -------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `queue`        | `str`                         | **Required.** Name of the room queue to listen for messages on.                                                       |
+| `llm_adapter`  | `LLMAdapter`                  | The adapter to use so the agent works with an LLM. We recommend using the ``OpenAIResponsesAdapter`` from ``meshagent-openai``. |
+| `tool_adapter` | `ToolResponseAdapter \| None` | Optional adapter to translate tool outputs into LLM/context messages. We recommend using the ``OpenAIResponsesToolResponseAdapter`` from ``meshagent-openai``.                                 |
+| `toolkits`     | `list[Toolkit] \| None`       | Local toolkits always available to this worker (in addition to any `requires`).                        |
+| `rules`        | `list[str] \| None`           | Optional system prompt/rules that guide the agent's behavior.                                      |
+| `requires`     | `list[Requirement] \| None`   | Schemas/toolkits to install in the room before processing. You can use RequiredSchema, RequiredToolkit to use existing toolkits and schemas that have been registered with the room.                                            |
+
+## Lifecycle Overview
+
+- ``await start(room)``: Connects to the room, installs requirements, and starts the background run() loop that consumes messages from the configured queue.
+- ``await stop()``: Signals the loop to stop, awaits the main task, then disconnects cleanly.
+- ``room property``: Access the active ``RoomClient`` for queues, storage, messaging, and tools.
+
+## Processing Flow
+
+1. Wait for work (long-polling). The worker listens for jobs using: ``message = await room.queues.receive(name=self._queue, create=True, wait=True)``
+    With ``wait=True``, the call long-polls the queue: instead of returning immediately when the queue is empty, it waits asynchronously for a short window until a message arrives (or the wait times out). This is more efficient than tight polling and ensures the worker can pick up jobs immediately when they’re published.
+
+2. Build context and tools. Create a fresh chat context (``init_chat_context()``), apply any rules, and resolve toolkits from requires plus local toolkits.
+3. Represent the job in context. By default, ``append_message_context(...)`` serializes the message as a user message (JSON). Override this to customize how the payload is injected.
+4. Process the job. ``process_message(...)`` runs the task (default implementation calls your ``llm_adapter.next()`` with the prepared context and toolkits).
+5. Handle errors & keep running. Errors are logged. On receive failures, the loop backs off exponentially and retries; otherwise it immediately waits for the next message.
+
+You can customize steps (2)–(4) by overriding ``decode_message(...)``, ``append_message_context(...)``, or ``process_message(...)``.
+
+## Key Behaviors and Hooks
+- **Queue consumption:** ``run()`` long-polls the queue ``(receive(..., wait=True))``, creating it if needed.
+- **Message decoding:** ``decode_message(message)`` lets you normalize incoming payloads.
+- **Context building:** ``append_message_context(...)`` inserts job data into the chat context (default: dump JSON as a user message).
+- **Job execution:** ``process_message(...)`` is the main hook: it prepares context, tools, and (by default) calls the LLM adapter’s ``.next()`` function to work through the task.
+- **Resilience:** Errors are logged; ``run()`` applies an exponential backoff between receive retries.
+
+## Key Methods
+
+| Method                                                             | Description                                                        |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `async def run(room)`                                              | Main loop: receives queue messages and processes them.             |
+| `async def process_message(chat_context, room, message, toolkits)` | Core job handler—override for custom behavior.                     |
+| `async def append_message_context(room, message, chat_context)`    | How a job is represented in the chat context (override to change). |
+| `def decode_message(message)`                                      | Normalize/validate incoming message payloads.                      |
+| `async def start(room)` / `async def stop()`                       | Start/stop the worker, manage background task.                     |
+
 
 ## Example: Creating a Storage Queue Worker
 
@@ -42,13 +83,8 @@ First create a python file, ``main.py``, and define our ``StorageWorker``:
 From your terminal inside an activated virtual environment run: 
 ```bash bash
 export WORKER_QUEUE=test 
-python main.py
-```
-
-In a seprate tab run: 
-```bash bash
 meshagent setup
-meshagent call agent --room=queue-test --url=http://localhost:8081/worker --participant-name=worker
+meshagent service run "main.py" --room=queue-test
 ```
 
 ### Sending Work to the Queue 
@@ -68,5 +104,11 @@ WORKER_QUEUE=test ROOM=queue-test TOKEN=$(cat token.txt) python3 push_queue.py
 ```
 
 ### Checking Results in the Studio 
-
 From [studio.meshagent.com](https://studio.meshagent.com) open the room ``queue-test`` and you'll see our poem about AI in the poems.txt file!
+
+## Next Steps
+Continue Learning about Agents and Explore a variety of other base agents including: 
+- [ChatBot](./chatbot) for conversational text-based agents
+- [VoiceBot](./voicebot) for conversational speech/voice based agents
+- [TaskRunner](./taskrunner) for agents that run in the background with defined inputs and outputs
+- [MailWorker](./mailworker) for email based agents
