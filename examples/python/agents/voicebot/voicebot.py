@@ -1,5 +1,4 @@
 import asyncio
-
 from meshagent.api.services import ServiceHost
 from meshagent.livekit.agents.voice import VoiceBot
 
