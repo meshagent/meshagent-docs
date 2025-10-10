@@ -8,7 +8,7 @@ import InvokingTaskRunner from "/snippets/examples/python/agents/taskrunner/invo
 This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent [``TaskRunner``](./taskrunner). We extend the base ``TaskRunner`` class to create our ``TranslationTaskRunner`` with a defined input schema, output schema, and ask method. 
 
 ### Example: Integrating a Pydantic AI Agent
-Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run.
+Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run. Or update the example to use a model from a different provider of your choice. 
 
 <CodeGroup>
     <PydanticAgents />
@@ -16,44 +16,54 @@ Copy this code into a file called ``translator.py``. You will need to create and
 
 ### Running the TaskRunner
 
-**In your terminal**
+From the terminal start your service locally. Be sure you are in an activated virtual environment where meshagent and pydantic_ai are installed: 
 
-Start your service locally. Be sure you are in an activated virtual environment where meshagent and pydantic_ai are installed: 
-
-```bash bash
-python translator.py
-```
-
-Next use the MeshAgent CLI to authenticate and call your agent into a Room:
 ```bash bash
 meshagent setup # this will authenticate you 
-meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
+meshagent service run "translator.py" --room=translate
 ```
 
 **In the Studio**
-1. Go to [studio.meshagent.com](https://studio.meshagent.com) 
-2. Enter the room, ``translate``
-3. Click menu --> "Run Task"
-4. Select "translator" from the agent dropdown 
+1. Go to [MeshAgent Studio](https://studio.meshagent.com) 
+2. Enter the room ``translate``
+3. Click the upper left menu --> "Run Task"
+4. Select **translator** from the agent dropdown 
 5. Enter the text to translate
 6. Results appear and are saved to room storage under the "translations" folder 
 
 **Invoking the TaskRunner Programmatically**
 
-Instead of invoking the agent through the Studio, you can also run the agent through code like this. Let's create a file called ``invoke_translator.py``: 
+Instead of invoking the agent through the Studio, you can also run the agent through the CLI or write code to do so.
 
+While the service is running, from a separate tab in your terminal run: 
+```bash CLI
+meshagent agents ask \
+  --room=translate \
+  --agent=translator \
+  --input='{"text":"I love MeshAgent!"}'
+```
+
+This will return a result like: 
+```
+Connecting to room...
+Asking agent...
+{"french_translation": "J'adore MeshAgent !", "spanish_translation": "\u00a1Me encanta MeshAgent!"}
+```
+
+Alternatively, we can create and run a file called ``invoke_translator.py``:
 <CodeGroup>
     <InvokingTaskRunner />
 </CodeGroup>
 
-From the terminal run:
+Next from your terminal run: 
 ```bash bash
-meshagent env # you need to export the env variables first to invoke tools from code like this
+# Create, Activate, and export your MESHAGENT_API_KEY if you haven't already
+# meshagent api-key create my-api-key activate
+# export MESHAGENT_API_KEY="xxxxxxx"
 python invoke_translator.py
 ```
 
 You will see the result logged to your terminal and saved in the room. 
-
 
 ## Example: Using TaskRunner Agents as Agent Tools
 TaskRunners can also be surfaced in toolkits and used as tools by other agents using ``RunTaskTool``. Exposing agents as tools and then giving those tools to a ChatBot is a great way to get started building multi-agent systems. 
@@ -76,21 +86,12 @@ class ChatBotAgentTools(ChatBot):
 
 ### Running an agent with agents-as-tools
 
-Run your python file with both the translator and the chatbot:
-
+The ``ServiceHost`` will automatically discover and start both the translation agent and the chatbot. 
 ```bash bash
-python translator.py
+meshagent service run "translator.py" --room=translate
 ```
 
-Call both agents into the room: 
-
-```bash bash
-meshagent setup #authenticate if not already connected
-meshagent call agent --url=http://localhost:7777/translator --room=translate --participant-name=translator
-meshagent call agent --url=http://localhost:7777/chatwithtools --room=translate --participant-name=chatagent
-```
-
-### Using the agent with agents as tools
+### Using an agent with agents as tools
 
 **In the Studio**:
 1. Go to [studio.meshagent.com](https://studio.meshagent.com)
@@ -100,4 +101,4 @@ meshagent call agent --url=http://localhost:7777/chatwithtools --room=translate 
 5. Ask it something like: "Can you translate 'Hello, how are you?' for me?"
 6. The ``chatagent`` will automatically use the ``translator`` agent as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
 
-*Remember: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use agents as tools*
+> **Remember**: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use a TaskRunner agent as a tool for another agent.

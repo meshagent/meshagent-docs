@@ -17,7 +17,6 @@ log = logging.getLogger("translator")
 
 service = ServiceHost()  # port defaults to an available port if not assigned
 
-
 # Define Inputs, Outputs, and Pydantic AI Agent for Translation
 class TranslationInput(BaseModel):
     text: str = Field(..., description="Text to translate")
@@ -55,7 +54,7 @@ async def save_to_storage(room, path: str, data: bytes):
 
 
 # Use Pydantic AI agent in a MeshAgent Room
-@service.path("/translator")
+@service.path(path="/translator", identity="translator")
 class TranslationTaskRunner(TaskRunner):
     def __init__(self):
         super().__init__(
@@ -92,6 +91,4 @@ class TranslationTaskRunner(TaskRunner):
 
         return translations.output.model_dump()
 
-
-print(f"running on port {service.port}")
 asyncio.run(service.run())
