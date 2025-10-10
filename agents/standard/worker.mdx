@@ -89,19 +89,29 @@ meshagent service run "main.py" --room=queue-test
 
 ### Sending Work to the Queue 
 
-Now that our agent is running, let's send it some work! Create a python file ``push_queue.py`` and define our function to push a message to the queue.
+Now that our agent is running, let's send it some work! 
+
+#### Option 1: Using the MeshAgent CLI
+Use the MeshAgent CLI to directly connect to the room, mint a token, and send a message to the queue. 
+
+```bash bash
+meshagent queue send --room=queue-test --queue=test \
+  --json '{"instructions": "save a poem about ai to poem.txt"}'
+```
+#### Option 2: Invoking the Queue from Code
+Create a python file ``push_queue.py`` and define our function to push a message to the queue.
 
 <CodeGroup>
     <PushQueue />
 </CodeGroup>
 
-Generate a short-lived participant token and push a message to the queue:
+Make sure your service is still running (``meshagent service run "main.py" --room=queue-test``). From a different tab in your terminal you can run the python file we created to send a task to the queue. 
 
-```bash bash
-meshagent participant-token generate --name=pusher \
-  --room=queue-test --token-path=token.txt
-WORKER_QUEUE=test ROOM=queue-test TOKEN=$(cat token.txt) python3 push_queue.py
+```bash bash 
+python push_queue.py
 ```
+
+You'll see logs for the queue activity in the terminal window where your service is running. To verify the results we'll head to MeshAgent Studio where we can see the .txt files. 
 
 ### Checking Results in the Studio 
 From [studio.meshagent.com](https://studio.meshagent.com) open the room ``queue-test`` and you'll see our poem about AI in the poems.txt file!

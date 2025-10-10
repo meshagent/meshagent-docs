@@ -1,19 +1,46 @@
-import asyncio
-from meshagent.api import RoomClient, WebSocketClientProtocol, websocket_room_url
 import os
+import asyncio
+import logging
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
+from meshagent.api.helpers import websocket_room_url
+from meshagent.otel import otel_config 
 
+otel_config(service_name="worker")
+log = logging.getLogger("worker")
+
+api_key = os.getenv("MESHAGENT_API_KEY")
+if not api_key:
+    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 async def push():
-    async with RoomClient(
-        protocol=WebSocketClientProtocol(
-            url=websocket_room_url(room_name=os.getenv("ROOM")),
-            token=os.getenv("TOKEN"),
-        )
-    ) as room:
-        await room.queues.send(
-            name=os.getenv("WORKER_QUEUE"),
-            message={"instructions": "save a poem about ai to poem.txt"},
-        )
+    room_name = "queue-test" # make sure this matches the room your service is running in
+    token = ParticipantToken(
+        name="sample-participant",
+        grants=[
+            ParticipantGrant(name="room", scope=room_name),
+            ParticipantGrant(name="role", scope="agent"),
+            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+        ],
+    ).to_jwt(api_key=api_key)
 
+    protocol = WebSocketClientProtocol(
+        url=websocket_room_url(room_name=room_name), token=token
+    )
+    try:
+        async with RoomClient(protocol=protocol) as room:
+            log.info(f"Connected to room: {room.room_name}")
+            await room.queues.send(
+                name=os.getenv("WORKER_QUEUE"),
+                message={"instructions": "save a poem about ai to poem.txt"}
+            )
+    except Exception as e:
+        log.error(f"Connection failed:{e}")
+        raise
 
 asyncio.run(push())
