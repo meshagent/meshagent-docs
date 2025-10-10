@@ -1,9 +1,16 @@
 ```python Python
 import os
 import asyncio
-from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
 from meshagent.api.keys import parse_api_key
+
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -11,23 +18,25 @@ def env(name: str) -> str:
         raise RuntimeError(f"Missing required environment variable: {name}.")
     return val
 
+
 async def main():
     room_name = "my-room"
     api_key = env("MESHAGENT_API_KEY")
     async with RoomClient(
         protocol=WebSocketClientProtocol(
-                url=f"wss://api.meshagent.com/rooms/{room_name}",
-                token=ParticipantToken(
-                    name="participant",
-                    grants=[
-                        ParticipantGrant(name="room", scope=room_name),
-                        ParticipantGrant(name="role", scope="agent"),
-                        ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-                    ],
-                ).to_jwt(api_key=api_key),
-            )
+            url=f"wss://api.meshagent.com/rooms/{room_name}",
+            token=ParticipantToken(
+                name="participant",
+                grants=[
+                    ParticipantGrant(name="room", scope=room_name),
+                    ParticipantGrant(name="role", scope="agent"),
+                    ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+                ],
+            ).to_jwt(api_key=api_key),
+        )
     ) as room:
         print(f"Connected to room: {room.room_name}")
+
 
 asyncio.run(main())
 

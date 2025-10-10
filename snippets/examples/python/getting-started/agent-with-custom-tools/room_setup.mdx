@@ -3,7 +3,13 @@ import os
 import argparse
 import asyncio
 import logging
-from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
 from meshagent.api.room_server_client import TextDataType
 
@@ -14,11 +20,13 @@ args = parser.parse_args()
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+
 def env(name: str) -> str:
     val = os.getenv(name)
     if not isinstance(val, str) or not val:
         raise RuntimeError(f"Missing required environment variable: {name}.")
     return val
+
 
 async def main():
     # 1. connect as a throw-away participant → this *creates* the room if needed
@@ -26,7 +34,9 @@ async def main():
     try:
         async with RoomClient(
             protocol=WebSocketClientProtocol(
-                url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
+                url=websocket_room_url(
+                    room_name=room_name, base_url=meshagent_base_url()
+                ),
                 token=ParticipantToken(
                     name="participant",
                     project_id=env("MESHAGENT_PROJECT_ID"),
@@ -59,6 +69,7 @@ async def main():
 
     except Exception as e:
         log.info(f"Error communicating with agent: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

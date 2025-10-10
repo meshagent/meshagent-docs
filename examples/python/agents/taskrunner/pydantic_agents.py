@@ -29,7 +29,7 @@ class TranslationResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-system_prompt = """
+system_prompt = f"""
     # Role Background
     You are responsible for translating recent news announcements into other languages. You are exposed to a variety of topics beyond your knowledge cutoff date. The current date is: {date.today().strftime("%B %d, %Y")}
 

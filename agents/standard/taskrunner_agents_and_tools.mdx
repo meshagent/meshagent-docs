@@ -1,13 +1,18 @@
 ---
-title: "Wrap an Existing Agent"
+title: "Use an Existing Agent"
 ---
 
 import PydanticAgents from "/snippets/examples/python/agents/taskrunner/pydantic_agents.mdx"
 import InvokingTaskRunner from "/snippets/examples/python/agents/taskrunner/invoking_taskrunner.mdx"
 
-This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent [``TaskRunner``](./taskrunner). We extend the base ``TaskRunner`` class to create our ``TranslationTaskRunner`` with a defined input schema, output schema, and ask method. 
+This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent [``TaskRunner``](./taskrunner). We subclass the base ``TaskRunner`` to create a ``TranslationTaskRunner`` with a defined input schema, output schema, and ``ask()`` method. This allows us to keep the existing logic from the Pydantic AI agent and run it inside a MeshAgent room.
 
-### Example: Integrating a Pydantic AI Agent
+### Prerequisites
+- Python venv with ``meshagent`` and ``pydantic_ai`` installed
+- An LLM provider key (example uses ``ANTHROPIC_API_KEY``)
+- Authenticate to MeshAgent ``meshagent setup``
+
+## Example: Integrating a Pydantic AI Agent
 Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run. Or update the example to use a model from a different provider of your choice. 
 
 <CodeGroup>
@@ -23,7 +28,7 @@ meshagent setup # this will authenticate you
 meshagent service run "translator.py" --room=translate
 ```
 
-**In the Studio**
+#### Invoking from the Studio
 1. Go to [MeshAgent Studio](https://studio.meshagent.com) 
 2. Enter the room ``translate``
 3. Click the upper left menu --> "Run Task"
@@ -31,11 +36,9 @@ meshagent service run "translator.py" --room=translate
 5. Enter the text to translate
 6. Results appear and are saved to room storage under the "translations" folder 
 
-**Invoking the TaskRunner Programmatically**
-
-Instead of invoking the agent through the Studio, you can also run the agent through the CLI or write code to do so.
-
-While the service is running, from a separate tab in your terminal run: 
+### Invoking from the CLI or Code
+**From the CLI** 
+While the service is running, create a new tab in your terminal and run: 
 ```bash CLI
 meshagent agents ask \
   --room=translate \
@@ -50,12 +53,15 @@ Asking agent...
 {"french_translation": "J'adore MeshAgent !", "spanish_translation": "\u00a1Me encanta MeshAgent!"}
 ```
 
-Alternatively, we can create and run a file called ``invoke_translator.py``:
+**From Code** 
+
+Create and run a file called ``invoke_translator.py``. This will establish the connection to the room and allow you to run the TranslationTaskRunner. 
+
 <CodeGroup>
     <InvokingTaskRunner />
 </CodeGroup>
 
-Next from your terminal run: 
+Be sure your service is still running locally, then from a separate tab in your terminal run:
 ```bash bash
 # Create, Activate, and export your MESHAGENT_API_KEY if you haven't already
 # meshagent api-key create my-api-key activate
@@ -71,34 +77,39 @@ TaskRunners can also be surfaced in toolkits and used as tools by other agents u
 Let's try this out by creating a new ChatBot and giving it a tool, the Pydantic AI translation agent that we defined above. 
 
 ### Creating the service with agents-as-tools
-At the end of our ``translator.py`` file all we have to add is the new ChatBot service and pass it the ``translator`` agent as a ``RequiredToolkit``.
+At the end of our ``translator.py`` file let's add A new ChatBot service and pass it the ``translator`` agent as a ``RequiredToolkit``. This will allow us to chat with the ChatBot while the ChatBot uses the translator agent as a tool when necessary. 
 
 ```python Python
-@service.path("/chatwithtools")
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.api import RequiredToolkit
+from meshagent.agents.chat import ChatBot
+
+@service.path(path="/chatwithtools", identity="chat-translator")
 class ChatBotAgentTools(ChatBot):
     def __init__(self):
         super().__init__(
-            name="mychatbot",
+            name="chat-translator",
             llm_adapter=OpenAIResponsesAdapter(),
             requires=[RequiredToolkit(name="agents", tools=["translator"])],
         )
 ```
 
-### Running an agent with agents-as-tools
+The ``ServiceHost`` will automatically discover and start both the translation agent and the chatbot since they are part of the same service. 
 
-The ``ServiceHost`` will automatically discover and start both the translation agent and the chatbot. 
 ```bash bash
 meshagent service run "translator.py" --room=translate
 ```
-
-### Using an agent with agents as tools
-
-**In the Studio**:
+Now you can interact with the chat agent from the studio and have it create translations for you! To use the chatbot: 
 1. Go to [studio.meshagent.com](https://studio.meshagent.com)
-2. Enter the room translate
-3. In the participants list, you'll see the ``chatagent``
-4. Click on ``chatagent`` to start chatting with the agent
+2. Enter the room ``translate``
+3. In the participants list, you'll see the ``chat-translator``
+4. Click on ``chat-translator`` to start chatting with the agent
 5. Ask it something like: "Can you translate 'Hello, how are you?' for me?"
-6. The ``chatagent`` will automatically use the ``translator`` agent as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
+6. The ``chat-translator`` will automatically use the ``translator`` Pydantic AI TranslationTaskRunner as a tool to complete the request and you will see the JSON results added to the translations folder in the room storage. 
 
-> **Remember**: You can still use the translator agent directly since it is running in the room, this approach just demonstrates an easy way to use a TaskRunner agent as a tool for another agent.
+> **Remember**: You can still use the Pydantic AI TranslationTaskRunner directly since it is running in the room, this approach just demonstrates an easy way to use a TaskRunner agent as a tool for another agent.
+
+## Next Steps
+- [TaskRunner Overview](./taskrunner): Review what TaskRunners are and when to use them
+- [Create a Custom LLM TaskRunner](./taskrunner_custom_llm): Build your own LLM-driven task agent
+- [Services & Containers](../../services_room_containers/overview): Learn how to deploy and manage agents in production
