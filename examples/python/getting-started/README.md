@@ -77,13 +77,7 @@ To run a milestone locally (assumes you have installed MeshAgent and set the req
 
 ```bash
 cd getting-started/agent-with-meshagent-tools
-python main.py
-meshagent call agent --url=http://localhost:MESHAGENT_PORT/SERVICE_PATH --room=ROOM_NAME --agent-name=AGENT_NAME --name=AGENT_NAME
-```
-
-As an example: 
-```bash
-meshagent call agent --url=http://localhost:7777/chat --room=myagentroom --agent-name=mychatagent --name=mychatagent
+meshagent service run "main.py" --room=myroom
 ```
 
 > **Tip:** Each milestone README walks through the new concepts introduced at that stage. You will gradually enrich main.py -- feel free to jump between folders or follow the videos step by step.

@@ -8,7 +8,7 @@ from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
 
 otel_config(service_name="llm-taskrunner")
-service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+service = ServiceHost()
 
 
 @service.path("/llmtaskrunner")

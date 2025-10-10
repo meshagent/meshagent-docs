@@ -3,7 +3,7 @@ import asyncio
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
 
-service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+service = ServiceHost()
 
 
 class Add(Tool):
