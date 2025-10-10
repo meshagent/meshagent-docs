@@ -2,14 +2,74 @@
 title: "Indexer"
 ---
 
-An indexer adds content to a MeshAgent room's built in vector database to enable RAG scenarios. 
+import StorageRagService from "/snippets/examples/python/services/storage_rag/main.mdx"
 
-A few sample indexers are provided out of the box:
+Indexers keep a room’s vector database fresh so other agents can run retrieval-augmented generation (RAG) queries. They watch for new content, chunk and embed it, then store both the raw text and embeddings in a table that `RagToolkit` powered agents can search.
 
-**StorageIndexer** - Listens to storage events and uses MarkitDown to automatically index files into the room's storage.
+## When to Use
+- Automate RAG over room storage without manually rebuilding embeddings
+- Keep crawled websites synchronized with a room before a chat session
+- Pair with ChatBot or VoiceBot so they can answer questions using indexed documents
+- Pre-process content for long-running workflows (document review, data labeling, etc.)
 
-**SiteIndexer** - Exposes a TaskRunner that uses FireCrawl to index a website and add it to the room's index. To add a site to the index, invoke
-    the SiteIndexer from the "Run Task..." menu or use the ```room.agents.ask``` API.
+## How Indexers Work
+1. **Detect content**: listen for storage events or take a crawl input.
+2. **Transform**: convert the source into plain text (customizable via `read_file`).
+3. **Chunk**: split text with a `Chunker` (defaults use `chonkie.SemanticChunker`).
+4. **Embed**: call the configured `Embedder` (defaults use OpenAI embedding models).
+5. **Persist**: upsert rows into a room database table and build full-text / vector indexes.
 
-By providing a **RagToolkit** to a **Chatbot** or **VoiceBot**, your agent will gain the ability to perform RAG searches against the room's
-built in vector store.
+Once data is in the table, add `RagToolkit(table="…")` to any conversational agent and the results become searchable.
+
+## Built-in Indexers
+
+### StorageIndexer
+`StorageIndexer` extends `SingleRoomAgent` and watches `room.storage` events. Whenever a file is uploaded, updated, or deleted it:
+
+- calls `read_file(path=…)` to obtain text (you override this to run MarkitDown, OCR, etc.)
+- chunks and embeds the content
+- writes rows into the configured database table (defaults to `storage_index`)
+- maintains vector and full-text indexes so downstream searches stay fast
+
+You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`. The example below shows a MarkitDown-powered indexer paired with a RAG-enabled ChatBot.
+
+<CodeGroup>
+    <StorageRagService />
+</CodeGroup>
+
+**Constructor arguments**
+
+| Argument | Type | Description |
+| -------- | ---- | ----------- |
+| `name` | `str` | Required agent identity shown in the room. |
+| `title` / `description` | `str \| None` | Optional metadata displayed in Studio. |
+| `requires` | `list[Requirement] \| None` | Toolkits or schemas to install before indexing (e.g., MarkitDown). |
+| `labels` | `list[str] \| None` | Tag for discovery/filtering. |
+| `chunker` | `Chunker \| None` | Splits text into chunks; defaults to `ChonkieChunker`. |
+| `embedder` | `Embedder \| None` | Produces embeddings; defaults to `OpenAIEmbedding3Large`. |
+| `table` | `str` | Database table used to store rows and embeddings. |
+
+> **Tip:** Implement `async read_file(self, *, path: str) -> str | None` to pull text from storage. Returning `None` skips indexing that file.
+
+### SiteIndexer
+`SiteIndexer` is a `TaskRunner` that orchestrates crawls with the FireCrawl toolkit. Invoke it from MeshAgent Studio (“Run Task…”) or via `room.agents.ask` to populate a specified table:
+
+1. Sends a crawl job to the FireCrawl queue.
+2. Streams page results back through the room queue.
+3. Chunks, embeds, and writes rows into the provided table (creating vector / FTS indexes automatically).
+
+You can select the queue, destination table, and starting URL when you call the task. Pair the resulting table with `RagToolkit` the same way you would with `StorageIndexer`.
+
+### RagToolkit
+Add `RagToolkit(table="your_table")` to a ChatBot, VoiceBot, or TaskRunner to surface the rows produced by either indexer. The toolkit exposes a `rag_search` tool that optionally accepts a custom embedder, letting you reuse the same model for both indexing and querying.
+
+## Prerequisites and Dependencies
+- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`).
+- `chonkie` for semantic chunking (installed with the agents package).
+- Optional toolkits such as `meshagent.markitdown` or `meshagent.firecrawl` depending on which indexer you deploy.
+
+## Operational Notes
+- Index tables live in the room database. You can explore them with `meshagent database` commands or `room.database.*` APIs.
+- `StorageIndexer` debounces index rebuilds; large bursts consolidate into a single optimization pass.
+- Deleting a file triggers removal of its rows automatically.
+- For cross-room reuse, host indexers via `ServiceHost` or `RemoteAgentServer` just like other agents.
