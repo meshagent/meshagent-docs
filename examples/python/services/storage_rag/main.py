@@ -10,6 +10,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.agents.indexer import RagToolkit, StorageIndexer
 from meshagent.api.services import ServiceHost
 from meshagent.markitdown.tools import MarkItDownToolkit
+from meshagent.tools import ToolContext
 
 
 import asyncio
