@@ -17,6 +17,8 @@ from meshagent.agents import ListenerContext
 from typing import Optional
 from meshagent.api import Element, JsonResponse
 from meshagent.api.schema_document import Text
+from meshagent.markitdown.tools import MarkItDownToolkit
+
 
 service = ServiceHost()
 
@@ -50,12 +52,10 @@ class SampleVoiceAgentWithTools(VoiceBot):
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", tools=["markitdown_from_file"]
-                ),
                 RequiredSchema(name="presentation"),
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(

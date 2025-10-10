@@ -2,6 +2,7 @@ from meshagent.api import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost
+from meshagent.markitdown.tools import MarkItDownToolkit
 
 import asyncio
 
@@ -17,11 +18,8 @@ class SimpleChatbot(ChatBot):
             description="an simple chatbot",
             rules=[],
             llm_adapter=OpenAIResponsesAdapter(),
-            requires=[
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
+            toolkits=[
+                MarkItDownToolkit()
             ],
         )
 

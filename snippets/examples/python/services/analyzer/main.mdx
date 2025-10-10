@@ -8,6 +8,7 @@ from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
     DocumentTypeAuthoringToolkit,
 )
+from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
@@ -51,15 +52,12 @@ class DocumentAnalyzer(ChatBot):
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
                 RequiredSchema(name="document"),
                 RequiredSchema(name="presentation"),
             ],
             toolkits=[
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
+                MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"

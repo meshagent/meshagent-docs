@@ -8,6 +8,7 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.markitdown.tools import MarkItDownToolkit
 
 import asyncio
 
@@ -58,13 +59,10 @@ class Designer(ChatBot):
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
                 RequiredSchema(name="gallery"),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
             ],
             toolkits=[
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
+                MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=gallery_schema, document_type="gallery"

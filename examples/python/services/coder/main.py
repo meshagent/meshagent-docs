@@ -4,6 +4,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 import asyncio
 
 from meshagent.api.services import ServiceHost
+from meshagent.markitdown.tools import MarkItDownToolkit
 
 service = ServiceHost()
 
@@ -30,12 +31,11 @@ class CoderChatbot(ChatBot):
                         "display_document",
                     ],
                 ),
-                RequiredToolkit(name="storage"),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
+                RequiredToolkit(name="storage")
             ],
+            toolkits=[
+                MarkItDownToolkit()
+            ]
         )
 
 

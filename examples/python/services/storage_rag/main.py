@@ -9,6 +9,8 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.agents.indexer import RagToolkit, StorageIndexer
 from meshagent.api.services import ServiceHost
+from meshagent.markitdown.tools import MarkItDownToolkit
+
 
 import asyncio
 import os
@@ -35,12 +37,10 @@ class RagChatBot(ChatBot):
                 RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
-                ),
-                RequiredToolkit(
-                    name="meshagent.markitdown", tools=["markitdown_from_file"]
-                ),
+                )
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"

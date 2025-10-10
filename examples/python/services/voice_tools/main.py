@@ -9,6 +9,7 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.server.outputs.document import document_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
+from meshagent.markitdown.tools import MarkItDownToolkit
 
 import livekit.agents.utils.http_context
 import livekit.agents.cli.log
@@ -45,13 +46,10 @@ class SampleVoiceAgentWithTools(VoiceBot):
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
                 RequiredSchema(name="document"),
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
@@ -85,13 +83,10 @@ class SampleVoiceAgentWithTools(VoiceBot):
             ],
             requires=[
                 RequiredToolkit(name="ui", tools=["display_document", "show_toast"]),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
                 RequiredSchema(name="document"),
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(

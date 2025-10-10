@@ -14,6 +14,7 @@ from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
     DocumentTypeAuthoringToolkit,
 )
+from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools import ToolContext
 
@@ -41,13 +42,10 @@ class SimpleChatbot(ChatBot):
             llm_adapter=OpenAIResponsesAdapter(),
             requires=[
                 RequiredToolkit(name="ui"),
-                RequiredSchema(name="document"),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
+                RequiredSchema(name="document")
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
@@ -75,13 +73,10 @@ class SimpleVoicebot(VoiceBot):
             ],
             requires=[
                 RequiredToolkit(name="ui"),
-                RequiredSchema(name="document"),
-                RequiredToolkit(
-                    name="meshagent.markitdown",
-                    tools=["markitdown_from_file"],
-                ),
+                RequiredSchema(name="document")
             ],
             toolkits=[
+                MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
