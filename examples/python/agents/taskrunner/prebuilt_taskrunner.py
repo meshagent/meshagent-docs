@@ -1,53 +1,58 @@
 import os
 import asyncio
 import logging
-from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
-from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
+from meshagent.api.helpers import websocket_room_url
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-def env(name: str) -> str:
-    val = os.getenv(name)
-    if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}.")
-    return val
+api_key = os.getenv("MESHAGENT_API_KEY")
+if not api_key:
+    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
-async def run_planner(room_name:str, prompt:str):
+
+async def run_planner(room_name: str, prompt: str):
     """
-    Run the Planner in a MeshAgent Room
+    Connect to a MeshAgent room and ask the built-in Planner to handle a one-turn task.
 
     Args:
-        room_name: Name of the room to connect to
-        prompt: The user prompt to send to the agent 
-        participant_name: Name to use as participant (defaults to "test_user")
+        room_name: Target room (will be created on first connect if it doesn't exist)
+        prompt:    The text to send to meshagent.planner
     """
+    token = ParticipantToken(
+        name="sample-participant",
+        grants=[
+            ParticipantGrant(name="room", scope=room_name),
+            ParticipantGrant(name="role", scope="agent"),
+            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+        ],
+    ).to_jwt(api_key=api_key)
+
+    protocol = WebSocketClientProtocol(
+        url=websocket_room_url(room_name=room_name), token=token
+    )
     try:
-        async with RoomClient(
-            protocol=WebSocketClientProtocol(
-                url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
-                token=ParticipantToken(
-                    name="participant",
-                    project_id=env("MESHAGENT_PROJECT_ID"),
-                    api_key_id=env("MESHAGENT_KEY_ID"),
-                    grants=[
-                        ParticipantGrant(name="room", scope=room_name),
-                        ParticipantGrant(name="role", scope="agent"),
-                        ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-                    ],
-                ).to_jwt(token=env("MESHAGENT_SECRET")),
-            )
-        ) as room:
+        async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
             response = await room.agents.ask(
-                agent="meshagent.planner",
-                arguments={
-                    "prompt": prompt
-                    }
-                )
+                agent="meshagent.planner", arguments={"prompt": prompt}
+            )
             log.info(f"Response from agent:{response}")
             return response
     except Exception as e:
-        print(f"Connection failed: {e}")
+        log.error(f"Connection failed:{e}")
+        raise
 
-asyncio.run(run_planner(room_name="test", prompt="Write a product description for a bluetooth speaker"))
+
+asyncio.run(
+    run_planner(
+        room_name="test", prompt="Write a product description for a bluetooth speaker"
+    )
+)

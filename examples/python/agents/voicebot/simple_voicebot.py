@@ -12,7 +12,10 @@ from meshagent.otel import otel_config
 
 service = ServiceHost()
 
-otel_config(service_name="my-service") # automatically enables telemetry data collection for your agents and tools 
+otel_config(
+    service_name="my-service"
+)  # automatically enables telemetry data collection for your agents and tools
+
 
 @service.path("/voice")
 class SimpleVoicebot(VoiceBot):
@@ -28,40 +31,29 @@ class SimpleVoicebot(VoiceBot):
         )
 
     def create_session(self, *, context: ToolContext) -> AgentSession:
-        token : str = context.room.protocol.token
-        url : str = context.room.room_url
-         
+        token: str = context.room.protocol.token
+        url: str = context.room.room_url
+
         room_proxy_url = f"{url}/v1"
-            
+
         oaiclient = AsyncOpenAI(
             api_key=token,
             base_url=room_proxy_url,
-            default_headers={
-                "Meshagent-Session" : context.room.session_id
-            }
+            default_headers={"Meshagent-Session": context.room.session_id},
         )
 
         session = AgentSession(
             max_tool_steps=50,
             allow_interruptions=True,
             vad=silero.VAD.load(),
-            stt=openai.STT(
-                client=oaiclient
-            ),
-            tts=openai.TTS(
-                client=oaiclient,
-                voice="sage"
-            ),
-            llm=openai.LLM(
-                client=oaiclient, 
-                model="gpt-4.1"
-            ),
+            stt=openai.STT(client=oaiclient),
+            tts=openai.TTS(client=oaiclient, voice="sage"),
+            llm=openai.LLM(client=oaiclient, model="gpt-4.1"),
         )
         return session
 
-
     async def create_agent(self, *, context, session):
-        ctx=ChatContext()
+        ctx = ChatContext()
         today_str = date.today().strftime("%A %B %-d")
         ctx.add_message(role="assistant", content=f"Today's date is: {today_str}")
 
@@ -75,10 +67,8 @@ class SimpleVoicebot(VoiceBot):
             chat_ctx=ctx,
             instructions="\n".join(self.rules),
             allow_interruptions=True,
-            tools=[
-                *await self.make_function_tools(context=context),
-                say
-            ]
+            tools=[*await self.make_function_tools(context=context), say],
         )
-    
+
+
 asyncio.run(service.run())

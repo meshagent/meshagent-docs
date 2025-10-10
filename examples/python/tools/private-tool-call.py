@@ -12,6 +12,7 @@ log = logging.getLogger("my-service")
 
 service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
 
+
 async def save_to_storage(room, path: str, data: bytes):
     handle = await room.storage.open(path=path, overwrite=True)
     await room.storage.write(handle=handle, data=data)

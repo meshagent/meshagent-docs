@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 otel_config(service_name="listener")
 service = ServiceHost()
 
+
 @service.path("/listener")
 class SampleListener(Listener):
     def __init__(self):
@@ -49,5 +50,6 @@ class SampleListener(Listener):
 
         # If we return True, the listener will stop, returning False keeps the listener active
         return False
+
 
 asyncio.run(service.run())

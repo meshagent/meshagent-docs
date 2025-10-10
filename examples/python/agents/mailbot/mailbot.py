@@ -18,6 +18,7 @@ project_id = os.environ["MESHAGENT_PROJECT_ID"]
 
 service = ServiceHost()  # MeshAgent assigns a free port if you omit one
 
+
 async def ensure_mailbox(*, room_name: str) -> None:
     meshagent = Meshagent(base_url=os.getenv("MESHAGENT_BASE_URL"))
     try:
@@ -57,5 +58,6 @@ class ExampleMailbot(MailWorker):
             await ensure_mailbox(room_name=room.room_name)
             self._mailbox_ready = True
         await super().start(room=room)
+
 
 asyncio.run(service.run())

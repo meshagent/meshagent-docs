@@ -1,5 +1,6 @@
 import os
 import asyncio
+
 # either import from other file or add this code to your existing file that defines the LLMTaskRunners
 from llm_taskrunner import LLMTaskRunner, DynamicLLMTaskRunner
 from meshagent.otel import otel_config
@@ -8,6 +9,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 
 otel_config(service_name="llm-taskrunner")
 service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+
 
 @service.path("/llmtaskrunner")
 class LLMRunner(LLMTaskRunner):
@@ -25,8 +27,9 @@ class LLMRunner(LLMTaskRunner):
                 "required": ["result"],
                 "additionalProperties": False,
                 "properties": {"result": {"type": "string"}},
-            }
+            },
         )
+
 
 @service.path("/dynamicllmtaskrunner")
 class DynamicLLMRunner(DynamicLLMTaskRunner):
@@ -37,6 +40,7 @@ class DynamicLLMRunner(DynamicLLMTaskRunner):
             description="Prompt + caller‑supplied JSON Schema → structured output.",
             llm_adapter=OpenAIResponsesAdapter(),
         )
+
 
 print(f"Running on port {service.port}")
 asyncio.run(service.run())

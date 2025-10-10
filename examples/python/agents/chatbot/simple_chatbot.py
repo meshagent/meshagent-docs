@@ -4,11 +4,12 @@ from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
-# Enable OpenTelemetry logging and tracing for the agent 
+# Enable OpenTelemetry logging and tracing for the agent
 otel_config(service_name="chatbot")
 
 # Create a service host
-service = ServiceHost() # optional to pass a port, MeshAgent automatically assigns an available one if none provided
+service = ServiceHost()  # optional to pass a port, MeshAgent automatically assigns an available one if none provided
+
 
 # Register an agent at a specific path
 @service.path(path="/chat", identity="chatbot")
@@ -18,9 +19,12 @@ class SimpleChatbot(ChatBot):
             name="chatbot",
             title="Simple Chatbot",
             description="A helpful chatbot for room participants",
-            rules=["Always respond to the user first then include a fun fact at the end of your response."],
-            llm_adapter = OpenAIResponsesAdapter(),
+            rules=[
+                "Always respond to the user first then include a fun fact at the end of your response."
+            ],
+            llm_adapter=OpenAIResponsesAdapter(),
         )
+
 
 # Start the service
 asyncio.run(service.run())

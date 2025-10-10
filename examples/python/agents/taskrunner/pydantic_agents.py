@@ -15,17 +15,20 @@ from pydantic_ai.providers.anthropic import AnthropicProvider
 otel_config(service_name="translator")
 log = logging.getLogger("translator")
 
-service = ServiceHost() # port defaults to an available port if not assigned
+service = ServiceHost()  # port defaults to an available port if not assigned
+
 
 # Define Inputs, Outputs, and Pydantic AI Agent for Translation
 class TranslationInput(BaseModel):
-    text:str = Field(..., description="Text to translate")
-    model_config = ConfigDict(extra='forbid')
+    text: str = Field(..., description="Text to translate")
+    model_config = ConfigDict(extra="forbid")
+
 
 class TranslationResult(BaseModel):
-    french_translation:str
-    spanish_translation:str
-    model_config = ConfigDict(extra='forbid')
+    french_translation: str
+    spanish_translation: str
+    model_config = ConfigDict(extra="forbid")
+
 
 system_prompt = """
     # Role Background
@@ -35,17 +38,21 @@ system_prompt = """
     Provide two translations, one in French and one in Spanish.    
     """
 translation_agent = Agent(
-     model=AnthropicModel('claude-4-sonnet-20250514', provider=AnthropicProvider()), #pass API key from env variables
-     deps_type=None,
-     instructions=system_prompt,
-     output_type=TranslationResult
+    model=AnthropicModel(
+        "claude-4-sonnet-20250514", provider=AnthropicProvider()
+    ),  # pass API key from env variables
+    deps_type=None,
+    instructions=system_prompt,
+    output_type=TranslationResult,
 )
+
 
 # Utility function
 async def save_to_storage(room, path: str, data: bytes):
-        handle = await room.storage.open(path=path, overwrite=True)
-        await room.storage.write(handle=handle, data=data)
-        await room.storage.close(handle=handle)
+    handle = await room.storage.open(path=path, overwrite=True)
+    await room.storage.write(handle=handle, data=data)
+    await room.storage.close(handle=handle)
+
 
 # Use Pydantic AI agent in a MeshAgent Room
 @service.path("/translator")
@@ -55,11 +62,11 @@ class TranslationTaskRunner(TaskRunner):
             name="translator",
             description="An agent that translates text to French and Spanish",
             input_schema=TranslationInput.model_json_schema(),
-            output_schema=TranslationResult.model_json_schema()
+            output_schema=TranslationResult.model_json_schema(),
         )
 
     async def ask(self, *, context, arguments):
-        room=context.room
+        room = context.room
 
         inputs = TranslationInput(**arguments)
         log.info(f"Translating Text: {inputs.text}")
@@ -69,14 +76,22 @@ class TranslationTaskRunner(TaskRunner):
 
         # save results to room storage
         log.info(f"Translation completed, writing raw results to Room storage.")
-        
+
         await save_to_storage(
             room=room,
             path=f"translations/{room.room_name}-translation-{datetime.now():%Y%m%dT%H%M%S}.json",
-            data=json.dumps({"input_text": inputs.text, "translations": translations.output.model_dump()}, indent=2, ensure_ascii=False).encode("utf-8")
+            data=json.dumps(
+                {
+                    "input_text": inputs.text,
+                    "translations": translations.output.model_dump(),
+                },
+                indent=2,
+                ensure_ascii=False,
+            ).encode("utf-8"),
         )
 
         return translations.output.model_dump()
+
 
 print(f"running on port {service.port}")
 asyncio.run(service.run())

@@ -1,7 +1,14 @@
 import os
 import asyncio
-from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -9,24 +16,25 @@ def env(name: str) -> str:
         raise RuntimeError(f"Missing required environment variable: {name}.")
     return val
 
+
 async def main():
     # Define a unique room name
     room_name = "my-room"
 
     async with RoomClient(
         protocol=WebSocketClientProtocol(
-                url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
-                token=ParticipantToken(
-                    name="participant",
-                    project_id=env("MESHAGENT_PROJECT_ID"),
-                    api_key_id=env("MESHAGENT_KEY_ID"),
-                    grants=[
-                        ParticipantGrant(name="room", scope=room_name),
-                        ParticipantGrant(name="role", scope="agent"),
-                        ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-                    ],
-                ).to_jwt(token=env("MESHAGENT_SECRET")),
-            )
+            url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
+            token=ParticipantToken(
+                name="participant",
+                project_id=env("MESHAGENT_PROJECT_ID"),
+                api_key_id=env("MESHAGENT_KEY_ID"),
+                grants=[
+                    ParticipantGrant(name="room", scope=room_name),
+                    ParticipantGrant(name="role", scope="agent"),
+                    ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+                ],
+            ).to_jwt(token=env("MESHAGENT_SECRET")),
+        )
     ) as room:
         print(f"Connected to room: {room.room_name}")
         # open our document
@@ -41,5 +49,6 @@ async def main():
 
         # wait before closing so the sync can finish
         await asyncio.sleep(3)
+
 
 asyncio.run(main())

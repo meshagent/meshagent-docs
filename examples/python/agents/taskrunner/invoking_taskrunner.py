@@ -3,11 +3,18 @@ import asyncio
 import json
 import logging
 from typing import Dict, Any
-from meshagent.api import RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope, ParticipantGrant
+from meshagent.api import (
+    RoomClient,
+    WebSocketClientProtocol,
+    ParticipantToken,
+    ApiScope,
+    ParticipantGrant,
+)
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
+
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -15,10 +22,11 @@ def env(name: str) -> str:
         raise RuntimeError(f"Missing required environment variable: {name}.")
     return val
 
+
 async def call_agent(
-    room_name: str, 
-    agent_name: str, 
-    arguments: Dict[str, Any], 
+    room_name: str,
+    agent_name: str,
+    arguments: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Call a MeshAgent agent with the given arguments."""
     async with RoomClient(
@@ -33,27 +41,26 @@ async def call_agent(
                     ParticipantGrant(name="role", scope="agent"),
                     ParticipantGrant(name="api", scope=ApiScope.agent_default()),
                 ],
-            ).to_jwt(token=env("MESHAGENT_SECRET"))
+            ).to_jwt(token=env("MESHAGENT_SECRET")),
         )
     ) as room:
         log.info(f"Connected to room: {room.room_name}")
-        result = await room.agents.ask(
-            agent=agent_name, 
-            arguments=arguments
-        )
+        result = await room.agents.ask(agent=agent_name, arguments=arguments)
         # Extract JSON data from JsonBody response
-        return result.json if hasattr(result, 'json') else result
+        return result.json if hasattr(result, "json") else result
+
 
 async def main():
     # Call your translator
     result = await call_agent(
         room_name="translate",
         agent_name="translator",
-        arguments={"text": "Hello, how are you today?"}
+        arguments={"text": "Hello, how are you today?"},
     )
-    
+
     print("Translation result:")
     print(json.dumps(result, indent=2, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     asyncio.run(main())
