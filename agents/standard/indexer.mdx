@@ -57,25 +57,23 @@ You can select the queue, destination table, and starting URL when you call the 
 ### RagToolkit
 Add `RagToolkit(table="your_table")` to a ChatBot, VoiceBot, or TaskRunner to surface the rows produced by either indexer. The toolkit exposes a `rag_search` tool that optionally accepts a custom embedder, letting you reuse the same model for both indexing and querying.
 
-## Prerequisites and Dependencies
-- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`).
+## Example
+You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`. The example below shows a MarkitDown-powered indexer paired with a RAG-enabled ChatBot.
+
+**Prerequisites and Dependencies**
+- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`, this will be provisioned automatically with the MeshAgent CLI).
 - `chonkie` for semantic chunking (installed with the agents package).
 - Optional toolkits such as `meshagent.markitdown` or `meshagent.firecrawl` depending on which indexer you deploy.
 
-## Operational Notes
-- Index tables live in the room database. You can explore them with `meshagent database` commands or `room.database.*` APIs.
-- `StorageIndexer` debounces index rebuilds; large bursts consolidate into a single optimization pass.
-- Deleting a file triggers removal of its rows automatically.
-- For cross-room reuse, host indexers via `ServiceHost` or `RemoteAgentServer` just like other agents.
-
-## Example
-You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`. The example below shows a MarkitDown-powered indexer paired with a RAG-enabled ChatBot.
+**Creating a Rag based ChatBot and Rag tool**
 
 <CodeGroup>
     <StorageRagService />
 </CodeGroup>
 
-Now that we've defined our services, let's start the room and connect the chatbot and indexer: 
+Now that we've defined our services, let's start the room and connect the chatbot and indexer. 
+
+> *Note*: If running this locally you will need to export ``OPENAI_API_KEY``. When deployed and running in the room that will be set automatically. 
 
 ```bash bash
 meshagent setup # authenticate if not already

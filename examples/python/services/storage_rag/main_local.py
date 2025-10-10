@@ -1,4 +1,3 @@
-```python Python
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
@@ -7,12 +6,17 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.agents.indexer import RagToolkit, StorageIndexer
+from meshagent.agents.indexer import (
+    RagToolkit,
+    StorageIndexer,
+    Embedder,
+    OpenAIEmbedder,
+)
 from meshagent.agents.agent import SingleRoomAgent
 from meshagent.api.services import ServiceHost
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.tools import ToolContext
-
+from meshagent.openai.proxy import get_client
 
 import asyncio
 from contextlib import suppress
@@ -23,6 +27,9 @@ service = ServiceHost()
 @service.path(path="/agent", identity="meshagent.chatbot.storage_rag")
 class RagChatBot(ChatBot):
     def __init__(self):
+        self._rag_embedder = _DeferredEmbedder()
+        self._rag_toolkit = RagToolkit(table="rag-index", embedder=self._rag_embedder)
+
         super().__init__(
             name="meshagent.chatbot.storage_rag",
             title="Storage RAG chatbot",
@@ -45,10 +52,26 @@ class RagChatBot(ChatBot):
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
-                RagToolkit(table="rag-index")
+                self._rag_toolkit,
             ],
             labels=["chatbot", "rag"],
         )
+
+    async def start(self, *, room):
+        self._rag_toolkit.tools[0]._embedder = OpenAIEmbedder(
+            size=3072,
+            max_length=8191,
+            model="text-embedding-3-large",
+            openai=get_client(room=room),
+        )
+        await super().start(room=room)
+
+class _DeferredEmbedder(Embedder):
+    def __init__(self):
+        super().__init__(size=0, max_length=0)
+
+    async def embed(self, *, text: str) -> list[float]:
+        raise RuntimeError("Embedder not initialized yet")
 
 @service.path(path="/indexer", identity="storage_indexer")
 class MarkitDownFileIndexer(StorageIndexer):
@@ -64,7 +87,8 @@ class MarkitDownFileIndexer(StorageIndexer):
         table="rag-index",
     ):
         self._markitdown = MarkItDownToolkit()
-        
+        if embedder is None:
+            embedder = _DeferredEmbedder()
         super().__init__(
             name=name,
             title=title,
@@ -87,7 +111,25 @@ class MarkitDownFileIndexer(StorageIndexer):
         )
         return getattr(response, "text", None)
 
+    async def start(self, *, room):
+        self.embedder = OpenAIEmbedder(
+            size=3072,
+            max_length=8191,
+            model="text-embedding-3-large",
+            openai=get_client(room=room),
+        )
+        await super().start(room=room)
+
+    async def stop(self):
+        if getattr(self, "_chan", None) is not None and not self._chan.closed:
+            self._chan.close()
+
+        index_task = getattr(self, "_index_task", None)
+        if index_task is not None and not index_task.done():
+            index_task.cancel()
+            with suppress(Exception):
+                await index_task
+
+        await SingleRoomAgent.stop(self)
+
 asyncio.run(service.run())
-
-```
-
