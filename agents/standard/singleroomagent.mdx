@@ -43,24 +43,42 @@ This example shows how to subclass SingleRoomAgent and override its lifecycle ho
 
 ```python
 from meshagent.agents import RequiredToolkit, SingleRoomAgent
+from meshagent.otel import otel_config
 
-class WelcomeAgent(SingleRoomAgent):
+otel_config(service_name="sample-service")
+log = logging.getLogger("sample-service")
+
+service = ServiceHost()
+@service.path(path="/startupagent", identity="start-agent")
+class StartAgent(SingleRoomAgent):
     def __init__(self):
         super().__init__(
-            name="welcome-agent",
-            title="Welcome Agent",
-            description="Posts a greeting when the room starts",
+            name="start-agent",
+            title="Start Agent",
+            description="An example of extending the SingleRoomAgent Class",
             requires=[RequiredToolkit(name="ui")],
         )
 
     async def start(self, *, room):
         await super().start(room=room)
-        await self.room.messaging.send_text("welcome-agent", "Welcome to the room.")
+        # add any custom logic for room startup
+        log.info("The room has started...")
 
     async def stop(self):
-        if self.room is not None:
-            await self.room.messaging.send_text("welcome-agent", "Shutting down.")
+        # add any extra logic for room stop
+        log.info("The room is stopping...)
         await super().stop()
 ```
 
 Inherit from `SingleRoomAgent` any time you need a room-aware agent with predictable lifecycle hooks, automatic toolkit installation, and helpers for resolving tools. Higher-level agent types simply build on these capabilities to add task orchestration, chat management, or specialized behaviors.
+
+## Next Steps
+Learn about other MeshAgent agent types: 
+- [ChatBot](./chatbot): Interact with a conversational agent via chat/text. 
+- [VoiceBot](./voicebot): Interact with an agent through voice/speech.
+- [Worker](./worker) and [TaskRunner](./taskrunner): Perform background or task-based actions that don't require a conversation with a user.
+- [MailWorker](./mailworker): Interact with an agent via email.
+
+Learn how to deploy agents with MeshAgent
+- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
+- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment

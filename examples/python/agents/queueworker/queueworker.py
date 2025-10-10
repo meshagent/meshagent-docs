@@ -11,17 +11,13 @@ from meshagent.api import RequiredToolkit
 from meshagent.api.services import ServiceHost
 from meshagent.tools.storage import StorageToolkit
 
-logging.basicConfig(level=logging.INFO)
-
-otel_config(service_name="my-service")
+otel_config(service_name="worker")
+log = logging.getLogger("worker")
+log.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
 
 host = ServiceHost()  # port defaults to an available port if not assigned
 
-logger = logging.getLogger("worker")
-logger.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
-
-
-@host.path("/worker")
+@host.path(path="/worker", identity="storage-worker")
 class StorageWorker(Worker):
     def __init__(self):
         super().__init__(
@@ -39,11 +35,11 @@ class StorageWorker(Worker):
         )
 
     async def process_message(self, *, chat_context, room, message, toolkits):
-        logger.info(f"processing {message}")
+        log.info(f"processing {message}")
         response = await super().process_message(
             chat_context=chat_context, room=room, message=message, toolkits=toolkits
         )
-        logger.info(f"response {response}")
+        log.info(f"response {response}")
 
 
 asyncio.run(host.run())
