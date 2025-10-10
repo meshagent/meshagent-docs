@@ -7,11 +7,10 @@ from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
 
-otel_config(service_name="llm-taskrunner")
+otel_config(service_name="llm-taskrunners")
 service = ServiceHost()
 
-
-@service.path("/llmtaskrunner")
+@service.path(path="/llmtaskrunner", identity="llmtaskrunner")
 class LLMRunner(LLMTaskRunner):
     def __init__(self):
         super().__init__(
@@ -30,8 +29,7 @@ class LLMRunner(LLMTaskRunner):
             },
         )
 
-
-@service.path("/dynamicllmtaskrunner")
+@service.path(path="/dynamicllmtaskrunner", identity="dynamicllmtaskrunner")
 class DynamicLLMRunner(DynamicLLMTaskRunner):
     def __init__(self):
         super().__init__(
@@ -41,6 +39,4 @@ class DynamicLLMRunner(DynamicLLMTaskRunner):
             llm_adapter=OpenAIResponsesAdapter(),
         )
 
-
-print(f"Running on port {service.port}")
 asyncio.run(service.run())

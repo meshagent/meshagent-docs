@@ -8,19 +8,15 @@ from meshagent.api import (
     ApiScope,
     ParticipantGrant,
 )
-from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+from meshagent.api.helpers import websocket_room_url
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-
 # make sure you have set your env variables for MeshAgent
-# you can do this by running meshagent env from the CLI then copying the values
-def env(name: str) -> str:
-    val = os.getenv(name)
-    if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}.")
-    return val
+api_key = os.getenv("MESHAGENT_API_KEY")
+if not api_key:
+    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
 async def run_dynamic_llm_taskrunner(
@@ -36,25 +32,21 @@ async def run_dynamic_llm_taskrunner(
         output_schema: The structured output schema to use in the response
         participant_name: Name to use as participant (defaults to "test_user")
     """
+    token = ParticipantToken(
+        name="sample-participant",
+        grants=[
+            ParticipantGrant(name="room", scope=room_name),
+            ParticipantGrant(name="role", scope="agent"),
+            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+        ],
+    ).to_jwt(api_key=api_key)
+
+    protocol = WebSocketClientProtocol(
+        url=websocket_room_url(room_name=room_name), token=token
+    )
     try:
-        async with RoomClient(
-            protocol=WebSocketClientProtocol(
-                url=websocket_room_url(
-                    room_name=room_name, base_url=meshagent_base_url()
-                ),
-                token=ParticipantToken(
-                    name="participant",
-                    project_id=env("MESHAGENT_PROJECT_ID"),
-                    api_key_id=env("MESHAGENT_KEY_ID"),
-                    grants=[
-                        ParticipantGrant(name="room", scope=room_name),
-                        ParticipantGrant(name="role", scope="agent"),
-                        ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-                    ],
-                ).to_jwt(token=env("MESHAGENT_SECRET")),
-            )
-        ) as room:
-            log.info(f"Connected to room: {room_name}")
+        async with RoomClient(protocol=protocol) as room:
+            log.info(f"Connected to room: {room.room_name}")
             response = await room.agents.ask(
                 agent=agent_name,
                 arguments={"prompt": prompt, "output_schema": output_schema},
@@ -62,8 +54,8 @@ async def run_dynamic_llm_taskrunner(
             log.info(f"Response: {response}")
             return response
     except Exception as e:
-        print(f"Connection failed: {e}")
-
+        log.error(f"Connection failed:{e}")
+        raise
 
 product_schema = {
     "type": "object",

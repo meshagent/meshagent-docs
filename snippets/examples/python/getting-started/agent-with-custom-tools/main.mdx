@@ -22,7 +22,7 @@ from meshagent.tools import Tool, Toolkit, ToolContext
 
 
 # MeshAgent Service, Tools, and Agent
-service = ServiceHost(port=int(os.getenv("MESHAGENT_PORT", "7777")))
+service = ServiceHost()
 
 
 class WriteTask(Tool):
@@ -69,11 +69,11 @@ class GetTasks(Tool):
         )
 
 
-@service.path("/chat")
+@service.path(path="/chat", identity="chatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="mychatbot",
+            name="chatbot",
             title="chatbot",
             description="a simple chatbot",
             rules=[
@@ -104,12 +104,12 @@ class SimpleChatbot(ChatBot):
         )
 
 
-@service.path("/voice")
+@service.path(path="/voice", identity="voicebot")
 class SimpleVoicebot(VoiceBot):
     def __init__(self):
         super().__init__(
-            name="voice_agent",
-            title="voice_agent",
+            name="voicebot",
+            title="voicebot",
             description="a sample voicebot",
             rules=[
                 "Always respond to the user and include a fun fact at the end of your response.",

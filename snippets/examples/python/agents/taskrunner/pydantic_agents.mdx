@@ -91,19 +91,6 @@ class TranslationTaskRunner(TaskRunner):
         )
 
         return translations.output.model_dump()
-    
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api import RequiredToolkit
-from meshagent.agents.chat import ChatBot
-
-@service.path("/chatwithtools")
-class ChatBotAgentTools(ChatBot):
-    def __init__(self):
-        super().__init__(
-            name="mychatbot",
-            llm_adapter=OpenAIResponsesAdapter(),
-            requires=[RequiredToolkit(name="agents", tools=["translator"])],
-        )
 
 asyncio.run(service.run())
 

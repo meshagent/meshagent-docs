@@ -52,30 +52,59 @@ Here's how to implement both ``LLMTaskRunner`` and ``DynamicLLMTaskRunner``. The
 
 ### Service Implementation
 Now that we've defined our classes, let's wrap each of them with a MeshAgent ``ServiceHost`` so we can call them into the room as agents. 
-This example uses the  ``OpenAIResponsesAdapter`` with both the ``LLMTaskRunner`` which returns a fixed string response and ``DynamicLLMTaskRunner``which returns a schemas defined at runtime.
+This example uses the  ``OpenAIResponsesAdapter`` with both the ``LLMTaskRunner`` (returns a fixed string response) and ``DynamicLLMTaskRunner`` (returns a schema defined at runtime).
 
 <CodeGroup>
     <LLMTaskRunnerService />
 </CodeGroup>
 
-**Running the Custom TaskRunners**
+#### Running the Custom TaskRunners
 From the terminal use the MeshAgent CLI to run the service and call both agents into the room: 
 
-```bash bash
+```bash bash 
 meshagent setup #authenticate if not already connected
 meshagent service run "main.py" --room=myroom
 ```
 
-**Using the LLMTaskRunner from the Studio**
-1. Go to [studio.meshagent.com](https://studio.meshagent.com)
-2. Enter the room, myroom
-3. Click menu —> “Run Task”
-4. Select “LLM Task Runner” from the agent dropdown
-4a. Optionall click "add tools" and add tools to your new LLMTaskRunner
-5. Enter a prompt
-6. Results appear 
+Next you can invoke the agents using the MeshAgent CLI, from code, or in the MeshAgent Studio.
 
-**Using the DynamicLLMTaskRunner Programmatically**
+**Invoking from the CLI**
+<CodeGroup>
+    ```bash LLMTaskRunner
+    meshagent agents ask \
+    --room myroom \
+    --agent llmtaskrunner \
+    --input '{"prompt":"Write a poem about ai agents"}'
+    ```
+
+    ```bash DynamicLLMTaskRunner
+    REQUEST=$(cat <<'JSON'
+    {
+        "prompt": "Create a product listing for a bluetooth speaker",
+        "output_schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "price", "features", "description"],
+            "properties": {
+            "title": {"type": "string"},
+            "price": {"type": "number"},
+            "features": {"type": "array", "items": {"type": "string"}},
+            "description": {"type": "string"}
+            }
+        }
+    }
+    JSON
+    )
+
+    meshagent agents ask \
+    --room myroom \
+    --agent dynamicllmtaskrunner \
+    --input "$REQUEST"
+
+    ```
+</CodeGroup>
+
+**Invoking from Code**
 
 <CodeGroup>
     <InvokeLLMTaskRunner />
@@ -85,5 +114,13 @@ Now from your terminal run:
 ```bash bash
 python invoke_llm_taskrunner.py
 ```
+
+**Invoking the LLMTaskRunner from the Studio**
+1. Go to [studio.meshagent.com](https://studio.meshagent.com)
+2. Enter the room, ``myroom``
+3. Click menu —> **“Run Task”**
+4. Select **LLM Task Runner** from the agent dropdown. (Optional) Click "add tools" and add tools to your new LLMTaskRunner
+5. Enter a prompt
+6. Results appear 
 
 ## Next Steps
