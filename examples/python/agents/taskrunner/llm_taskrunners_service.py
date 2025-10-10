@@ -2,7 +2,7 @@ import os
 import asyncio
 
 # either import from other file or add this code to your existing file that defines the LLMTaskRunners
-from llm_taskrunner import LLMTaskRunner, DynamicLLMTaskRunner
+from llm_taskrunners import LLMTaskRunner, DynamicLLMTaskRunner
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter

@@ -8,7 +8,7 @@ import InvokeLLMTaskRunner from "/snippets/examples/python/agents/taskrunner/inv
 
 ``TaskRunner`` is a base class that lets you bring your own logic — whether that means calling another framework, running business rules, or integrating an LLM. Most often, you’ll extend ``TaskRunner`` with an LLM to build agents that can reason, use tools, and handle complex tasks.
 
-**LLM TaskRunners** are designed for focused execution — they start with a clean context each time, complete the task, and return a result. This makes them ideal when you have a defined workflow or process and simply want the agent to do the work. For example, generate content, process documents, run scheduled jobs, or handle batch operations.
+**LLM TaskRunners** are designed for focused execution — they start with a clean context each time, complete the task, and return a result. This makes them ideal when you have a defined workflow or process and simply want the agent to do the work. For example, generating content, processing documents, running scheduled jobs, or handling batch operations.
 
 This differs from chat-based agents (like ``ChatBot``), which maintain conversation history and support iterative, collaborative exchanges. Both can perform complex work and use the same toolkits, but LLM TaskRunners excel when:
 
@@ -59,7 +59,7 @@ This example uses the  ``OpenAIResponsesAdapter`` with both the ``LLMTaskRunner`
 </CodeGroup>
 
 #### Running the Custom TaskRunners
-From the terminal use the MeshAgent CLI to run the service and call both agents into the room: 
+From the terminal use the MeshAgent CLI to start the service and call both agents into the room: 
 
 ```bash bash 
 meshagent setup #authenticate if not already connected
@@ -68,7 +68,10 @@ meshagent service run "main.py" --room=myroom
 
 Next you can invoke the agents using the MeshAgent CLI, from code, or in the MeshAgent Studio.
 
-**Invoking from the CLI**
+**Option 1: Invoking from the CLI**
+
+You can use the MeshAgent CLI directly to connect to the room and invoke either TaskRunner. 
+
 <CodeGroup>
     ```bash LLMTaskRunner
     meshagent agents ask \
@@ -104,18 +107,23 @@ Next you can invoke the agents using the MeshAgent CLI, from code, or in the Mes
     ```
 </CodeGroup>
 
-**Invoking from Code**
+**Option 2: Invoking from Code**
+
+You can use the MeshAgent Python SDK directly to connect to the room and invoke either TaskRunner. Paste the following code into a file called ``invoke_llm_taskrunner.py`` and edit it as applicable. By default this will invoke both the LLMTaskRunner and DynamicLLMTaskRunner using a default output schema defined in the file. 
+
+Be sure you have already exported your ``MESHAGENT_API_KEY``. You can create and activate one by running ``meshagent api-key create <KEY_NAME> activate`` this will print the value of the key one time for you to copy. Then save it and export it ``export MESHAGENT_API_KEY=xxxxx``
 
 <CodeGroup>
     <InvokeLLMTaskRunner />
 </CodeGroup>
 
-Now from your terminal run: 
+Now run the file: 
 ```bash bash
 python invoke_llm_taskrunner.py
 ```
 
-**Invoking the LLMTaskRunner from the Studio**
+**Option 3 Invoking the LLMTaskRunner from the Studio**
+
 1. Go to [studio.meshagent.com](https://studio.meshagent.com)
 2. Enter the room, ``myroom``
 3. Click menu —> **“Run Task”**
@@ -124,3 +132,11 @@ python invoke_llm_taskrunner.py
 6. Results appear 
 
 ## Next Steps
+Dive Deeper into TaskRunners
+- [TaskRunner Overview](./taskrunner): Review what TaskRunners are and when to use them
+- [Use an existing agent with a MeshAgent TaskRunner](./taskrunner_agents_and_tools): Learn how to take an existing PydanticAI Agent, use it as a TaskRunner, then use the TaskRunner as a tool for a MeshAgent ``ChatBot``
+- [Prebuilt MeshAgent TaskRunners](./taskrunner_prebuilt): Learn how to use prebuilt TaskRunners that come out of the box with every MeshAgent room
+
+Learn how to deploy agents with MeshAgent
+- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
+- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment
