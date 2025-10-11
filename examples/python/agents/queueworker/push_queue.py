@@ -9,7 +9,7 @@ from meshagent.api import (
     ParticipantGrant,
 )
 from meshagent.api.helpers import websocket_room_url
-from meshagent.otel import otel_config 
+from meshagent.otel import otel_config
 
 otel_config(service_name="worker")
 log = logging.getLogger("worker")
@@ -18,8 +18,11 @@ api_key = os.getenv("MESHAGENT_API_KEY")
 if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
+
 async def push():
-    room_name = "queue-test" # make sure this matches the room your service is running in
+    room_name = (
+        "queue-test"  # make sure this matches the room your service is running in
+    )
     token = ParticipantToken(
         name="sample-participant",
         grants=[
@@ -37,10 +40,11 @@ async def push():
             log.info(f"Connected to room: {room.room_name}")
             await room.queues.send(
                 name=os.getenv("WORKER_QUEUE"),
-                message={"instructions": "save a poem about ai to poem.txt"}
+                message={"instructions": "save a poem about ai to poem.txt"},
             )
     except Exception as e:
         log.error(f"Connection failed:{e}")
         raise
+
 
 asyncio.run(push())

@@ -31,11 +31,9 @@ class CoderChatbot(ChatBot):
                         "display_document",
                     ],
                 ),
-                RequiredToolkit(name="storage")
+                RequiredToolkit(name="storage"),
             ],
-            toolkits=[
-                MarkItDownToolkit()
-            ]
+            toolkits=[MarkItDownToolkit()],
         )
 
 

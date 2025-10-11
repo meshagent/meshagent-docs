@@ -44,7 +44,7 @@ class RagChatBot(ChatBot):
                 RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
-                )
+                ),
             ],
             toolkits=[
                 MarkItDownToolkit(),
@@ -66,12 +66,14 @@ class RagChatBot(ChatBot):
         )
         await super().start(room=room)
 
+
 class _DeferredEmbedder(Embedder):
     def __init__(self):
         super().__init__(size=0, max_length=0)
 
     async def embed(self, *, text: str) -> list[float]:
         raise RuntimeError("Embedder not initialized yet")
+
 
 @service.path(path="/indexer", identity="storage_indexer")
 class MarkitDownFileIndexer(StorageIndexer):
@@ -131,5 +133,6 @@ class MarkitDownFileIndexer(StorageIndexer):
                 await index_task
 
         await SingleRoomAgent.stop(self)
+
 
 asyncio.run(service.run())

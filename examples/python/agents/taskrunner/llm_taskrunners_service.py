@@ -10,6 +10,7 @@ from meshagent.openai import OpenAIResponsesAdapter
 otel_config(service_name="llm-taskrunners")
 service = ServiceHost()
 
+
 @service.path(path="/llmtaskrunner", identity="llmtaskrunner")
 class LLMRunner(LLMTaskRunner):
     def __init__(self):
@@ -29,6 +30,7 @@ class LLMRunner(LLMTaskRunner):
             },
         )
 
+
 @service.path(path="/dynamicllmtaskrunner", identity="dynamicllmtaskrunner")
 class DynamicLLMRunner(DynamicLLMTaskRunner):
     def __init__(self):
@@ -38,5 +40,6 @@ class DynamicLLMRunner(DynamicLLMTaskRunner):
             description="Prompt + caller‑supplied JSON Schema → structured output.",
             llm_adapter=OpenAIResponsesAdapter(),
         )
+
 
 asyncio.run(service.run())

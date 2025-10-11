@@ -3,7 +3,11 @@ import asyncio
 import logging
 from typing import Optional, Dict, Any
 from meshagent.api import (
-    ApiScope, ParticipantGrant, ParticipantToken, RoomClient, WebSocketClientProtocol
+    ApiScope,
+    ParticipantGrant,
+    ParticipantToken,
+    RoomClient,
+    WebSocketClientProtocol,
 )
 from meshagent.api.helpers import websocket_room_url
 
@@ -21,6 +25,7 @@ API_KEY = os.getenv("MESHAGENT_API_KEY")
 if not API_KEY:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
+
 def default_product_schema() -> dict:
     return {
         "type": "object",
@@ -34,9 +39,8 @@ def default_product_schema() -> dict:
         },
     }
 
-async def ask_agent(
-    *, room_name: str, agent_name: str, arguments: Dict[str, Any]
-):
+
+async def ask_agent(*, room_name: str, agent_name: str, arguments: Dict[str, Any]):
     token = ParticipantToken(
         name="sample-participant",
         grants=[
@@ -56,6 +60,7 @@ async def ask_agent(
         log.info("Response from %s: %s", agent_name, resp)
         return resp
 
+
 async def main():
     # 1) Fixed-schema runner
     if RUN_LLMTASKRUNNER:
@@ -73,6 +78,7 @@ async def main():
             agent_name="dynamicllmtaskrunner",
             arguments={"prompt": PROMPT_TEXT, "output_schema": schema},
         )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

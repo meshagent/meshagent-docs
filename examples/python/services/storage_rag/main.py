@@ -36,7 +36,7 @@ class RagChatBot(ChatBot):
                 RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
-                )
+                ),
             ],
             toolkits=[
                 MarkItDownToolkit(),
@@ -44,10 +44,11 @@ class RagChatBot(ChatBot):
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
-                RagToolkit(table="rag-index")
+                RagToolkit(table="rag-index"),
             ],
             labels=["chatbot", "rag"],
         )
+
 
 @service.path(path="/indexer", identity="storage_indexer")
 class MarkitDownFileIndexer(StorageIndexer):
@@ -63,7 +64,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         table="rag-index",
     ):
         self._markitdown = MarkItDownToolkit()
-        
+
         super().__init__(
             name=name,
             title=title,
@@ -85,5 +86,6 @@ class MarkitDownFileIndexer(StorageIndexer):
             arguments={"path": path},
         )
         return getattr(response, "text", None)
+
 
 asyncio.run(service.run())

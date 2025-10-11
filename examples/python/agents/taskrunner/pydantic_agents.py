@@ -17,6 +17,7 @@ log = logging.getLogger("translator")
 
 service = ServiceHost()  # port defaults to an available port if not assigned
 
+
 # Define Inputs, Outputs, and Pydantic AI Agent for Translation
 class TranslationInput(BaseModel):
     text: str = Field(..., description="Text to translate")
@@ -90,5 +91,6 @@ class TranslationTaskRunner(TaskRunner):
         )
 
         return translations.output.model_dump()
+
 
 asyncio.run(service.run())

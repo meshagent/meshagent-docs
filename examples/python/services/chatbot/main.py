@@ -18,9 +18,7 @@ class SimpleChatbot(ChatBot):
             description="an simple chatbot",
             rules=[],
             llm_adapter=OpenAIResponsesAdapter(),
-            toolkits=[
-                MarkItDownToolkit()
-            ],
+            toolkits=[MarkItDownToolkit()],
         )
 
 

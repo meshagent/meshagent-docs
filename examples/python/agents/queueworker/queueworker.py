@@ -17,6 +17,7 @@ log.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
 
 host = ServiceHost()  # port defaults to an available port if not assigned
 
+
 @host.path(path="/worker", identity="storage-worker")
 class StorageWorker(Worker):
     def __init__(self):
