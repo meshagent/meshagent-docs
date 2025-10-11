@@ -1,8 +1,17 @@
 ---
-title: "Tool Context"
+title: "How Tools and Toolkits Work"
 ---
 
-MeshAgent tools are passed a ToolContext which contains a variety of information that may be of use to the tool:
+MeshAgent Tools aren’t just for agents — people can use them too. This guide explains how tools, toolkits, and rooms fit together so that both humans and AI agents can safely discover, call, and share capabilities. You’ll see how tools are defined, validated, executed, and connected to MeshAgent rooms. 
+
+## Mental Model (how tool concepts fit together)
+- ``Tool`` = one action your agent can take (e.g., WriteDocument, PresentForm).
+- ``Toolkit`` = a named bundle of tools plus optional rules (“how to use these tools”).
+- ``ToolContext`` = everything a tool needs at call time (the room handle, who called, optional “on behalf of”, extra caller context).
+- ``RemoteToolkit`` = a runtime wrapper that registers your toolkit with the room, listens for tool calls, validates inputs, runs the tool, and returns a structured Response.
+
+## `ToolContext`
+MeshAgent tools are passed a ``ToolContext`` which contains a variety of information that may be of use to the tool:
 
 
 | Property | Description |
