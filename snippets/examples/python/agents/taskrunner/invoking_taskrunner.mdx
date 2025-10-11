@@ -21,7 +21,9 @@ if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
-async def call_agent(room_name: str, agent_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+async def call_agent(
+    room_name: str, agent_name: str, arguments: Dict[str, Any]
+) -> Dict[str, Any]:
     """Call a MeshAgent agent with the given arguments."""
     token = ParticipantToken(
         name="sample-participant",
@@ -45,6 +47,7 @@ async def call_agent(room_name: str, agent_name: str, arguments: Dict[str, Any])
         log.error(f"Connection failed:{e}")
         raise
 
+
 async def main():
     # Call your translator
     result = await call_agent(
@@ -55,6 +58,7 @@ async def main():
 
     print("Translation result:")
     print(json.dumps(result, indent=2, ensure_ascii=False))
+
 
 if __name__ == "__main__":
     asyncio.run(main())
