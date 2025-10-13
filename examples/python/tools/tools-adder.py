@@ -54,7 +54,7 @@ class Subtract(Tool):
         return result
 
 
-@service.path("/math")
+@service.path(path="/math", identity="math-toolkit")
 class MathToolkit(RemoteToolkit):
     def __init__(self):
         super().__init__(

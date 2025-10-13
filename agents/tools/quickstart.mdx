@@ -32,43 +32,51 @@ When we call the tools into the room either with ``meshagent call tool`` or ``me
 
 ### Step 2: Calling custom tools into a MeshAgent Room
 
-From the terminal inside our activated virtual environment we'll run our file. First run the file where your tool is written, for example, run ``python tools.py`` if your file is named tools.py. 
-
-In a separate tab in your terminal use the MeshAgent CLI to call the toolkit into the room. Pass in the room you want to run the toolkit in and the appropriate service path. 
-
-Don't forget to authenticate and connect to MeshAgent before you call the toolkit into the room!
+From the terminal inside our activated virtual environment we'll use the MeshAgent CLI to call the toolkit into the room.
 
 <CodeGroup>
 ```bash bash
-meshagent setup # connect to MeshAgent
+meshagent setup # authenticate to MeshAgent
+meshagent service run "main.py" --room=toolsroom
 ```
 </CodeGroup>
 
-Call the Toolkit into the Room:
+This command will start the toolkit on an available port at the path ``/math``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents and toolkits. The ``service run`` command automatically detects the different paths and identities (this is the recommended way to test your agents and tools).
+
+As an alternative to the ``service run`` command you can also run the service locally by running ``python main.py`` in one tab in your terminal, then from another tab you can call individual toolkits into the room using the ``meshagent call tool`` command. For example:
 
 <CodeGroup>
 ```bash bash
-meshagent call tool --room=toolsroom --participant-name=agent --url=http://localhost:7777/math
+meshagent setup # authenticate to MeshAgent
+meshagent call tool --room=toolsroom --participant-name=math-toolkit --url=http://localhost:8081/math
 ```
 </CodeGroup>
+
+In either case, the toolkit will be available in the room at the ``/math`` path with the name ``math-toolkit``. Once the toolkit joins the room, you can invoke it directly from the [MeshAgent Studio](https://studio.meshagent.com) UI, the MeshAgent CLI, or through code. 
 
 ### Step 3: Invoking a MeshAgent Tool
-#### Running custom tools in the MeshAgent Studio
-Now that our tool is running, let's go to [studio.meshagent.com](https://studio.meshagent.com) to try it out!
+#### Invoking tools in MeshAgent Studio
 
-1. Navigate to the ``toolsroom`` inside the Studio. 
-2. Select the menu button in the upper left and click "Run Task". This will allow you to run a TaskRunner and give it our custom tool.
-3. Click the "Add Tools" button. Now you'll see our math-toolkit with both the "add" and "subtract" tools. On both of the tools you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool, the invoke button will invoke the tool directly, and the add button will add the tool to a TaskRunner in the Room (if you want to use multiple tools at a time then select the add button, otherwise to test a single tool click invoke). Select either the "Invoke" or "Add Tool" option for either the "add" or "subtract" tool and an agent will launch and run your tool. 
-4. The agent will likely ask you for information so it can complete the task. In this case, it will ask you for the values of "a" and "b" so it can proceed with the adding task.
+1. Go to [studio.meshagent.com](https://studio.meshagent.com) and login
+1. From the **Sessions** tab enter the ``toolsroom``
+2. From the Menu in the upper left you can either invoke the tool directly through **Toolkits** or add it to a **TaskRunner** through **Run Task**
+    - Using the **Toolkit** directly: Click **Toolkits...**, find the tool you want to run then click **Invoke**. This will collect the parameters needed from you (if any) and display a dialogue for you to enter any required values. Once finished click **Ok**. The tool will execute and display the result in the Studio UI.
+    - Using A **TaskRunner**: Click **Run Task...**, then select the **Generic Task Runner** as the agent, next click the "Add Tools" button. Now you'll see our math-toolkit with both the "add" and "subtract" tools. On both of the tools you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool, the invoke button will invoke the tool directly, and the add button will add the tool(s) to the TaskRunner. Select either the "Invoke" or "Add Tool" option for either the "add" or "subtract" tool and an agent will collect the required values and execute the tool. 
 
-If you want to watch the logs to see the status of the tool call you can click the menu button in the Room again and turn on the "Developer Console". This will allow you to see logs, traces, and metrics as they happen in the Room.
+From the "Developer Console" on the bottom half of the screen you'll be able to see logs, traces, and metrics from tool calls as they happen in the room.
 
-**Note**: Remember if you leave the Room and go back into it later you will need to call the tool back into the Room unless the tool is deployed as a MeshAgent service (meaning you will need to rerun python tools.py and the CLI command to call in the tool to the Room).
+**Note**: Remember if you leave the Room and go back into it later you will need to call the tool back into the Room unless the tool is deployed as a MeshAgent service (meaning you will need to rerun the CLI command to call in the tool to the Room).
 
+#### Invoking tools from the MeshAgent CLI
+While the service is running, from a new tab in your terminal invoke the tool. The result will print to the terminal.
 
-#### Running custom tools from code
+```bash bash 
+meshagent agents invoke-tool --room=toolsroom --tool=add --arguments='{"a": "5", "b":"7"}'
+```
 
-As an alternative to running the tool in the studio, you can also call the tool directly from code. Assuming your room is still up and the tool is running in it, we can also invoke the tool using the MeshAgent ``RoomClient``. 
+#### Invoking tools from code
+
+You can also call the tool directly from code. Assuming your service is still running, we can also invoke the tool using the MeshAgent ``RoomClient``. 
 
 <CodeGroup>
     <ToolsCalling />
