@@ -8,28 +8,29 @@ import ToolsDiscovery from "/snippets/examples/python/tools/tools-discovery.mdx"
 import ToolsCallingCs from "/snippets/examples/dotnet/tools-calling.mdx"
 import ToolsDiscoveryCs from "/snippets/examples/dotnet/tools-discovery.mdx"
 
-MeshAgent tools can be run either independently or within a custom agent. Tools are centrally managed like agents meaning they can be deployed as a MeshAgent service and used by people or agents that have access to your Room. Toolkits allow you to group related Tools together so that they can be used seamlessly by any person or agent in the Room. 
+MeshAgent tools can be **run by both agent and human participants**. Tools are centrally managed like agents meaning they can be deployed as a MeshAgent service and used by people or agents that have access to your Room. A ``Toolkit`` allows you to group related ``Tool``s together so that they can be used seamlessly by any person or agent in the Room. 
 
 In this quickstart we'll walk through how to: 
 - Write custom tools 
 - Create a toolkit to group your related tools 
-- Calling a toolkit and it's related tools into a MeshAgent Room
-- Running tools from the MeshAgent Studio UI
-- Running tools from code
-- Discovering available tools in a Room
+- Call a toolkit into a MeshAgent Room
+- Invoke tools using the MeshAgent Studio UI, MeshAgent CLI, and code
+- Discover available tools in a Room
 
 ## Creating a custom toolkit
 
-### Writing custom tools
+### Step 1: Writing custom tools
 Let's create a simple toolkit with two tools, one that can add two numbers, and one that can subtract two numbers. 
 
-First we'll write the logic for the Add and Subtract tools. Next, we'll create a ``RemoteToolkit`` which allows us to run both of our tools as a MeshAgent Service.
+First we'll write the logic for the Add and Subtract tools. Next, we'll bundle them into a ``RemoteToolkit`` that the ``ServiceHost`` can register for room calls. 
+
+When we call the tools into the room either with ``meshagent call tool`` or ``meshagent service run``, the ser
 
 <CodeGroup>
     <ToolsAdder />
 </CodeGroup>
 
-### Calling custom tools into a MeshAgent Room
+### Step 2: Calling custom tools into a MeshAgent Room
 
 From the terminal inside our activated virtual environment we'll run our file. First run the file where your tool is written, for example, run ``python tools.py`` if your file is named tools.py. 
 
@@ -51,6 +52,7 @@ meshagent call tool --room=toolsroom --participant-name=agent --url=http://local
 ```
 </CodeGroup>
 
+### Step 3: Invoking a MeshAgent Tool
 #### Running custom tools in the MeshAgent Studio
 Now that our tool is running, let's go to [studio.meshagent.com](https://studio.meshagent.com) to try it out!
 

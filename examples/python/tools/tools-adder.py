@@ -2,7 +2,9 @@ import os
 import asyncio
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.otel import otel_config
 
+otel_config(service_name="math_tools")
 service = ServiceHost()
 
 
