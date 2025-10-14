@@ -18,6 +18,7 @@ api_key = os.getenv("MESHAGENT_API_KEY")
 if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
+
 async def main():
     room_name = "toolsroom"
 
@@ -52,5 +53,6 @@ async def main():
     except Exception as e:
         log.error(f"Error listing available toolkits:{e}")
         raise
+
 
 asyncio.run(main())
