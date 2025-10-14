@@ -1,0 +1,62 @@
+---
+title: "How Observability Works"
+---
+
+MeshAgent automatically instruments agents, tools, and rooms with [OpenTelemetry](https://opentelemetry.io/) giving you detailed traces, logs, and metrics so you can understand and track every interaction without extra setup. Once enabled, you can see everything happening inside your system in real time, directly in MeshAgent Studio.
+
+## Enabling Observability
+Turn on telemetry in MeshAgent with just two lines of code:
+
+```python Python
+from meshagent.otel import otel_config
+otel_config(service_name="my-service")
+```
+
+You’ll immediately see live traces, logs, and metrics in MeshAgent Studio from the room's Session Viewer and Developer Console.
+
+Call this function once at startup, before creating your service or room client. To adjust the verbosity, you can change the log level, (default is ``INFO``):
+
+```python Python
+otel_config(service_name="my-service", level="DEBUG")
+```
+
+## What It Does
+
+``otel_config()`` automatically:
+- Initializes OpenTelemetry for tracing, logging, and metrics
+- Tags all telemetry with your project, room, and session IDs
+- Streams telemetry directly to MeshAgent Studio in real time
+- Ensures all standard ``logging`` calls (e.g. ``logging.info``) are captured
+
+## How It’s Scoped
+
+MeshAgent automatically tags telemetry so data appears in the correct room and aggregates cleanly at the project level:
+
+| Tag            | Description                          |
+| -------------- | ------------------------------------ |
+| `project`      | The project this service belongs to  |
+| `room`         | The current room                     |
+| `session`      | The active session ID                |
+| `service.name` | The name you passed to `otel_config` |
+
+
+## What MeshAgent Captures
+
+- **Traces:** The full path of a task through your agents and tools
+- **Spans:** The individual steps inside that path (TaskRunner.ask, Tool.execute, etc.)
+- **Metrics:** Usage and performance data (response time, token and cost tracking)
+- **Logs & events:** Contextual messages for debugging and analysis
+
+For example, MeshAgent automatically tracks observability data for tool invocations — including who called a tool, how long it took to complete, and which room it ran in.
+
+This information gives you a clear picture of how your system behaves, how tasks flow through agents and tools, and where performance or cost optimizations can be made.
+
+## Where You See It
+
+- **Developer Console:** Located in the lower half of room's interface in MeshAgent Studio. Open it while chatting with an agent, uploading files, or running tasks in a room to see live logs, traces, and metrics as they happen. This provides insights into agent, tool, and room behavior as you interact. It's ideal for debugging, testing, and understanding what's happening behind the scenes while you work. 
+- **Session Viewer:** Displays the same telemetry information in a dedicated, focused view for each room session. View the results live while a session is running or after it ends to review what happened. 
+- **Usage Dashboard:** Provides an aggregated, project-level summary of cost, latency, and activity across rooms and participants. Use it to spot trends, compare performance, and understand overall trends and usage patterns.
+
+## Next Steps
+- [Introduction to Observability](./intro): Learn why telemetry matters and what MeshAgent captures automatically.
+- [Custom Traces, Logs, and Metrics](./custom_otel.mdx): Add your own spans, counters, or structured logs to capture custom behavior.
