@@ -9,49 +9,48 @@ from meshagent.api import (
     ApiScope,
     ParticipantGrant,
 )
-from meshagent.api.helpers import meshagent_base_url, websocket_room_url
+from meshagent.api.helpers import websocket_room_url
+from meshagent.otel import otel_config
 
-logging.basicConfig(level=logging.INFO)
+otel_config()
 log = logging.getLogger(__name__)
 
-
-def env(name: str) -> str:
-    val = os.getenv(name)
-    if not isinstance(val, str) or not val:
-        raise RuntimeError(f"Missing required environment variable: {name}.")
-    return val
+api_key = os.getenv("MESHAGENT_API_KEY")
+if not api_key:
+    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
 async def main():
     room_name = "toolsroom"
 
-    async with RoomClient(
-        protocol=WebSocketClientProtocol(
-            url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
-            token=ParticipantToken(
-                name="participant",
-                project_id=env("MESHAGENT_PROJECT_ID"),
-                api_key_id=env("MESHAGENT_KEY_ID"),
-                grants=[
-                    ParticipantGrant(name="room", scope=room_name),
-                    ParticipantGrant(name="role", scope="agent"),
-                    ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-                ],
-            ).to_jwt(token=env("MESHAGENT_SECRET")),
-        )
-    ) as room:
-        log.info(f"Connected to room: {room.room_name}")
+    token = ParticipantToken(
+        name="sample-participant",
+        grants=[
+            ParticipantGrant(name="room", scope=room_name),
+            ParticipantGrant(name="role", scope="agent"),
+            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
+        ],
+    ).to_jwt(api_key=api_key)
 
-        add_result = await room.agents.invoke_tool(
-            toolkit="math-toolkit", tool="add", arguments={"a": 1, "b": 2}
-        )
-        log.info(f"The result from adding the numbers is: {add_result}")
+    protocol = WebSocketClientProtocol(
+        url=websocket_room_url(room_name=room_name), token=token
+    )
+    try:
+        async with RoomClient(protocol=protocol) as room:
+            log.info(f"Connected to room: {room.room_name}")
 
-        subtract_result = await room.agents.invoke_tool(
-            toolkit="math-toolkit", tool="subtract", arguments={"a": 1, "b": 2}
-        )
-        log.info(f"The result from subtracting the numbers is: {subtract_result}")
+            add_result = await room.agents.invoke_tool(
+                toolkit="math-toolkit", tool="add", arguments={"a": 1, "b": 2}
+            )
+            log.info(f"The result from adding the numbers is: {add_result}")
 
+            subtract_result = await room.agents.invoke_tool(
+                toolkit="math-toolkit", tool="subtract", arguments={"a": 1, "b": 2}
+            )
+            log.info(f"The result from subtracting the numbers is: {subtract_result}")
+    except Exception as e:
+        log.error(f"Error invoking tool:{e}")
+        raise
 
 asyncio.run(main())
 

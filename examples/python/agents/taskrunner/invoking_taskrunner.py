@@ -11,8 +11,9 @@ from meshagent.api import (
     ParticipantGrant,
 )
 from meshagent.api.helpers import websocket_room_url
+from meshagent.otel import otel_config
 
-logging.basicConfig(level=logging.INFO)
+otel_config()
 log = logging.getLogger(__name__)
 
 api_key = os.getenv("MESHAGENT_API_KEY")

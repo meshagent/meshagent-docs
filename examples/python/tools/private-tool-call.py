@@ -148,7 +148,7 @@ class Survey(Tool):
         return TextResponse(text=summary_text)
 
 
-@service.path("/survey")
+@service.path(path="/survey", identity="survey-toolkit")
 class SurveyToolkit(RemoteToolkit):
     def __init__(self):
         super().__init__(

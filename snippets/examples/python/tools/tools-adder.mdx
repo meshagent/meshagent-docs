@@ -3,9 +3,10 @@ import os
 import asyncio
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.otel import otel_config
 
+otel_config(service_name="math_tools")
 service = ServiceHost()
-
 
 class Add(Tool):
     def __init__(self):
@@ -53,7 +54,7 @@ class Subtract(Tool):
         return result
 
 
-@service.path("/math")
+@service.path(path="/math", identity="math-toolkit")
 class MathToolkit(RemoteToolkit):
     def __init__(self):
         super().__init__(

@@ -7,7 +7,6 @@ from meshagent.otel import otel_config
 otel_config(service_name="math_tools")
 service = ServiceHost()
 
-
 class Add(Tool):
     def __init__(self):
         super().__init__(

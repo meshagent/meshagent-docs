@@ -10,8 +10,9 @@ from meshagent.api import (
     WebSocketClientProtocol,
 )
 from meshagent.api.helpers import websocket_room_url
+from meshagent.otel import otel_config
 
-logging.basicConfig(level=logging.INFO)
+otel_config(service_name="llm-taskrunner-demo")
 log = logging.getLogger("llm-taskrunner-demo")
 
 # ---- Simple configuration knobs (edit these) ----
