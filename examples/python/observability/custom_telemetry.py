@@ -1,6 +1,7 @@
 import os
 import asyncio
 import httpx
+import logging
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
 from meshagent.otel import otel_config
@@ -9,8 +10,7 @@ from opentelemetry import trace
 # Configure OpenTelemetry
 otel_config(service_name="weather_tools")
 service = ServiceHost()
-
-# Get a tracer for custom spans
+log = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
 
@@ -23,16 +23,17 @@ class WeatherTool(Tool):
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["city"],
+                "required": ["city", "units"],
                 "properties": {
-                    "city": {"type": "string", "description": "City name"}
+                    "city": {"type": "string", "description": "City name"},
+                    "units": {"type": "string", "enum": ["metric", "imperial"], "description":"Units the temperature will be returned in"}
                 },
             },
         )
         # Simple in-memory cache for demonstration
         self.cache = {}
 
-    async def execute(self, context: ToolContext, *, city: str):
+    async def execute(self, context: ToolContext, *, city: str, units:str):
         """
         This shows custom instrumentation that meshagent doesn't do automatically:
         1. Separate spans for validation, cache check, API call, parsing
@@ -40,8 +41,6 @@ class WeatherTool(Tool):
         3. Events for important moments (cache hit/miss, rate limits)
         4. Error handling with span status
         """
-        
-        units = "metric"  # Fixed to metric for simplicity
         
         # Custom span for input validation
         with tracer.start_as_current_span("validate_input") as span:
@@ -112,11 +111,21 @@ class WeatherTool(Tool):
                 current = data['current_condition'][0]
                 location = data['nearest_area'][0]
                 
+                if units == "metric":
+                    temperature = current["temp_C"]
+                    degrees_in = "°C"
+                elif units == "imperial":
+                    temperature = current["temp_F"]
+                    degrees_in = "°F"
+                else:
+                    log.warning(f"Units {units} is not a valid unit. Must use metric or imperial")
+                    return "Invalid units"
+
                 result = {
                     "city": location['areaName'][0]['value'],
                     "country": location['country'][0]['value'],
-                    "temperature": current['temp_C'],
-                    "units": "°C",
+                    "temperature": temperature,
+                    "units": degrees_in,
                     "description": current['weatherDesc'][0]['value'],
                     "humidity": current['humidity'],
                     "wind_speed": current['windspeedKmph'],
