@@ -1,129 +1,153 @@
+import os
 import asyncio
-import logging
-import time
-
-from meshagent.otel import otel_config
+import httpx
 from meshagent.api.services import ServiceHost
-from meshagent.agents.chat import ChatBot, ChatThreadContext
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api import RemoteParticipant, MeshDocument
+from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.otel import otel_config
+from opentelemetry import trace
 
-from opentelemetry import trace, metrics
-
-
-otel_config(service_name="instrumented-chatbot")
-
-tracer = trace.get_tracer("examples.custom_telemetry")
-meter = metrics.get_meter("examples.custom_telemetry")
-response_counter = meter.create_counter(
-    "chatbot.responses", unit="1", description="Assistant messages sent"
-)
-context_histogram = meter.create_histogram(
-    "chatbot.context.prepare_ms",
-    unit="ms",
-    description="Latency while preparing the chat context",
-)
-
-logger = logging.getLogger("examples.custom_telemetry")
-
+# Configure OpenTelemetry
+otel_config(service_name="weather_tools")
 service = ServiceHost()
 
-
-def _latest_user_message(context: ChatThreadContext) -> str | None:
-    for message in reversed(context.chat.messages):
-        if message.get("role") == "user" and isinstance(message.get("content"), str):
-            return message["content"]
-    return None
+# Get a tracer for custom spans
+tracer = trace.get_tracer(__name__)
 
 
-@service.path(path="/chat", identity="chatbot")
-class InstrumentedChatbot(ChatBot):
+class WeatherTool(Tool):
     def __init__(self):
         super().__init__(
-            name="chatbot",
-            title="Instrumented Chatbot",
-            description="Adds custom traces, logs, and metrics",
-            rules=[
-                "Always greet the user and include a friendly fun fact at the end of the reply."
-            ],
-            llm_adapter=OpenAIResponsesAdapter(),
-        )
-
-    async def prepare_llm_context(self, *, thread_context: ChatThreadContext):
-        start = time.perf_counter()
-        with tracer.start_as_current_span("chatbot.prepare_context") as span:
-            message_count = len(thread_context.chat.messages)
-            span.set_attribute("meshagent.chat.messages", message_count)
-            span.set_attribute("meshagent.thread.path", thread_context.path)
-
-            last_user_message = _latest_user_message(thread_context)
-            if last_user_message:
-                span.add_event(
-                    "user_message.preview",
-                    {"preview": last_user_message[:120]},
-                )
-
-            logger.info(
-                "preparing context",
-                extra={
-                    "path": thread_context.path,
-                    "message_count": message_count,
+            name="get_weather",
+            title="Weather Tool",
+            description="Get current weather for a city using wttr.in API",
+            input_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["city"],
+                "properties": {
+                    "city": {"type": "string", "description": "City name"}
                 },
-            )
-
-            await super().prepare_llm_context(thread_context=thread_context)
-
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        context_histogram.record(
-            elapsed_ms,
-            attributes={"meshagent.thread.path": thread_context.path},
+            },
         )
+        # Simple in-memory cache for demonstration
+        self.cache = {}
 
-    async def _send_and_save_chat(
-        self,
-        thread: MeshDocument,
-        path: str,
-        to: RemoteParticipant,
-        id: str,
-        text: str,
-        thread_attributes: dict,
-    ):
-        with tracer.start_as_current_span("chatbot.send_response") as span:
-            span.set_attribute("meshagent.thread.path", path)
-            span.set_attribute("meshagent.response.id", id)
-            span.set_attribute("meshagent.recipient.id", to.id)
-            span.set_attribute("meshagent.response.length", len(text))
+    async def execute(self, context: ToolContext, *, city: str):
+        """
+        This shows custom instrumentation that meshagent doesn't do automatically:
+        1. Separate spans for validation, cache check, API call, parsing
+        2. Custom attributes (cache status, API endpoint, response size)
+        3. Events for important moments (cache hit/miss, rate limits)
+        4. Error handling with span status
+        """
+        
+        units = "metric"  # Fixed to metric for simplicity
+        
+        # Custom span for input validation
+        with tracer.start_as_current_span("validate_input") as span:
+            span.set_attribute("city", city)
+            
+            if not city or len(city) < 2:
+                span.set_status(trace.Status(trace.StatusCode.ERROR, "Invalid city name"))
+                span.add_event("validation_failed", {"reason": "city too short"})
+                return {"error": "City name must be at least 2 characters"}
+            
+            span.add_event("validation_passed")
+        
+        # Custom span for cache check
+        cache_key = f"{city.lower()}"
+        with tracer.start_as_current_span("check_cache") as span:
+            span.set_attribute("cache_key", cache_key)
+            
+            if cache_key in self.cache:
+                span.set_attribute("cache_hit", True)
+                span.add_event("cache_hit", {"ttl_remaining": "5m"})
+                return self.cache[cache_key]
+            else:
+                span.set_attribute("cache_hit", False)
+                span.add_event("cache_miss")
+        
+        # Custom span for external API call (this is what meshagent can't instrument)
+        with tracer.start_as_current_span("fetch_weather_api") as span:
+            # Add attributes about the API call
+            api_url = f"https://wttr.in/{city}?format=j1"
+            span.set_attribute("http.url", api_url)
+            span.set_attribute("http.method", "GET")
+            span.set_attribute("api.provider", "wttr.in")
+            
+            span.add_event("api_request_start")
+            
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(api_url)
+                    
+                    # Record response attributes
+                    span.set_attribute("http.status_code", response.status_code)
+                    span.set_attribute("http.response_size", len(response.content))
+                    
+                    if response.status_code == 429:
+                        span.add_event("rate_limit_exceeded")
+                        span.set_status(trace.Status(trace.StatusCode.ERROR, "Rate limited"))
+                        return {"error": "Rate limit exceeded, try again later"}
+                    
+                    response.raise_for_status()
+                    data = response.json()
+                    
+                    span.add_event("api_request_success", {
+                        "data_keys": list(data.keys()),
+                    })
+                    
+            except httpx.TimeoutException:
+                span.set_status(trace.Status(trace.StatusCode.ERROR, "API timeout"))
+                span.add_event("api_timeout")
+                return {"error": "Weather service timeout"}
+            except Exception as e:
+                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                span.add_event("api_error", {"error_type": type(e).__name__})
+                return {"error": f"Failed to fetch weather: {str(e)}"}
+        
+        # Custom span for parsing and formatting
+        with tracer.start_as_current_span("parse_response") as span:
+            try:
+                current = data['current_condition'][0]
+                location = data['nearest_area'][0]
+                
+                result = {
+                    "city": location['areaName'][0]['value'],
+                    "country": location['country'][0]['value'],
+                    "temperature": current['temp_C'],
+                    "units": "°C",
+                    "description": current['weatherDesc'][0]['value'],
+                    "humidity": current['humidity'],
+                    "wind_speed": current['windspeedKmph'],
+                }
+                
+                # Record what we parsed
+                span.set_attribute("parsed_fields", len(result))
+                span.add_event("parse_success")
+                
+                # Cache the result
+                with tracer.start_as_current_span("cache_result") as cache_span:
+                    self.cache[cache_key] = result
+                    cache_span.set_attribute("cache_key", cache_key)
+                    cache_span.add_event("cached", {"entry_count": len(self.cache)})
+                
+                return result
+                
+            except (KeyError, IndexError) as e:
+                span.set_status(trace.Status(trace.StatusCode.ERROR, "Parse failed"))
+                span.add_event("parse_error", {"error": str(e)})
+                return {"error": "Failed to parse weather data"}
 
-            span.add_event(
-                "response.preview",
-                {"preview": text[:120]},
-            )
 
-            logger.info(
-                "sending response",
-                extra={
-                    "path": path,
-                    "response_id": id,
-                    "characters": len(text),
-                },
-            )
-
-            response_counter.add(
-                1,
-                attributes={
-                    "meshagent.thread.path": path,
-                    "meshagent.recipient.id": to.id,
-                },
-            )
-
-        return await super()._send_and_save_chat(
-            thread=thread,
-            path=path,
-            to=to,
-            id=id,
-            text=text,
-            thread_attributes=thread_attributes,
+@service.path(path="/weather", identity="weather-toolkit")
+class WeatherToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="weather-toolkit",
+            title="Weather Toolkit",
+            description="Tools for getting weather information",
+            tools=[WeatherTool()],
         )
-
 
 asyncio.run(service.run())
