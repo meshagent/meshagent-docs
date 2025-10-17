@@ -1,0 +1,9 @@
+ARG MESHAGENT_SDK_IMAGE="meshagent/python-sdk-slim:latest"
+
+FROM ${MESHAGENT_SDK_IMAGE}
+
+WORKDIR /src
+RUN python3 -m pip install --no-cache-dir httpx
+COPY . /src
+
+ENTRYPOINT [ "python3", "main.py" ] 

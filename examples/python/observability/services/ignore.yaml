@@ -1,0 +1,16 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: otel-example
+  description: "An example weather tool with otel instrumentation"
+ports:
+- num: "*"
+  liveness: "/"
+  endpoints:
+  - path: /weather
+    identity: weather-toolkit
+    role: tool
+    type: meshagent.callable
+container: 
+  image: "tulamasterman/otel-example:0.0.1"
+  command: python3 main.py

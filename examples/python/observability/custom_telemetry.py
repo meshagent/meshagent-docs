@@ -9,7 +9,7 @@ from opentelemetry import trace
 
 # Configure OpenTelemetry
 otel_config(service_name="weather_tools")
-service = ServiceHost()
+service = ServiceHost(port=7777)
 log = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
