@@ -9,10 +9,9 @@ from opentelemetry import trace
 
 # Configure OpenTelemetry
 otel_config(service_name="weather_tools")
-service = ServiceHost(port=7777)
+service = ServiceHost()
 log = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
-
 
 class WeatherTool(Tool):
     def __init__(self):
@@ -41,7 +40,7 @@ class WeatherTool(Tool):
         3. Events for important moments (cache hit/miss, rate limits)
         4. Error handling with span status
         """
-        
+        log.info(f"Weather tool is running for city: {city} with units: {units}")
         # Custom span for input validation
         with tracer.start_as_current_span("validate_input") as span:
             span.set_attribute("city", city)
