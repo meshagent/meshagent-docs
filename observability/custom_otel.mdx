@@ -1,53 +1,153 @@
 ---
-title: "Custom Traces, Logs, and Metrics"
+title: "Custom Logs, Traces, and Metrics"
 ---
 
-MeshAgent emits OpenTelemetry signals by default, but you can layer in your own spans, logs, and metrics using the standard OTEL SDKs. This guide extends a ChatBot with custom instrumentation so you can see how the pieces fit together.
+import OtelExample from "/snippets/examples/python/observability/main.mdx"
 
-> **Prerequisites:** Call `meshagent.otel.otel_config()` at startup and point `OTEL_ENDPOINT` at an OTLP/HTTP collector (for local testing you can run `otel/opentelemetry-collector:latest` or reuse the collector URL from your MeshAgent deployment).
+MeshAgent emits OpenTelemetry signals out of the box. When you need deeper insight, you can add your own spans, logs, and metrics using standard OTEL SDKs. This guide walks through a Weather Toolkit with custom intstrumentation so you can see the pieces in action. 
 
-## Example: Instrumented ChatBot
+## Enable telemetry in your service
+Add two lines at startup before you create your ``ServiceHost``: 
 
-The sample `meshagent-sdk/meshagent-docs/examples/python/observability/custom_telemetry.py` registers an `InstrumentedChatbot` that adds:
+```python Python
+from meshagent.otel import otel_config
+otel_config(service_name="weather-service")
+```
 
-- A span around context preparation with user message previews.
-- Structured logs before the LLM call and before the response is sent.
-- Counter and histogram metrics for response throughput and context latency.
+This initializes tracing, logging, and metrics and tags everything with your project/room/session so it shows up live in MeshAgent Studio.
 
-Run the service in a project where the ChatBot can reach your collector:
+## Example: Weather Toolkit with custom instrumentation
+The example adds custom spans around validation, the external HTTP call, and response parsing. It also adds logs and metrics.
 
-Open the bot in MeshAgent Studio (or any client) and chat—it will emit custom telemetry alongside the platform defaults.
-
-## Key Instrumentation Points
+<CodeGroup>
+    <OtelExample />
+</CodeGroup>
 
 ### Custom Spans
+Use spans to track a specific operation in trace. Spans can help you understand timing for each step and attach attributes/events to make debugging easier.
 
-```python
-with tracer.start_as_current_span("chatbot.prepare_context") as span:
-    message_count = len(thread_context.chat.messages)
-    span.set_attribute("meshagent.chat.messages", message_count)
-    span.set_attribute("meshagent.thread.path", thread_context.path)
-    if last_user_message:
-        span.add_event("user_message.preview", {"preview": last_user_message[:120]})
+This example records: 
+- ``toolkit.execute`` (created by MeshAgent) this is the high-level tool call including information about which tool was called and what information was passed to the tool
+    - `validate_input` – checks city/units, adds events for pass/fail
+    - `fetch_weather_api` – the external HTTP call with:
+        - `http.url`, `http.method`, `http.status_code`, `http.response_size`
+        - events like `api_request_start`, `api_request_success`, `api_timeout`, `rate_limit_exceeded`
+    - `parse_response` – extracts the fields you return to the caller
+
+Capturing additional information inside the (span/trace) created by MeshAgent allows us to capture finer-grained information about our process. 
+
+**Pattern:**
+```python Python
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
+tracer = trace.get_tracer(__name__)
+with tracer.start_as_current_span("fetch_weather_api") as span:
+    span.set_attribute("http.url", api_url)
+    span.add_event("api_request_start")
+    ...
+    if resp.status_code == 429:
+        span.set_status(Status(StatusCode.ERROR, "Rate limited"))
+```
+These show up in the room’s **Traces** tab.
+
+### Custom Logs
+``otel_config()`` sets up an OTEL logging handler so your normal logging.info() lines are captured. Add extra logs to make it easier to debug and understand...
+
+```python Python
+import logging
+log = logging.getLogger(__name__)
+
+log.info(f"Weather tool is running for city: {city} with units: {units}")
 ```
 
-`prepare_llm_context` runs before the LLM request, so the span captures how much chat history will be sent and a short preview of the user input. The span name, attributes, and events show up in any trace explorer that ingests OTLP data.
+These show up in the room’s **Logs** tab.
 
-### Structured Logs
+### Custom Metrics
+You can also add additional counters and historgrams to help track trends over time.
 
-```python
-log.info(
-    "sending response",
-    extra={"path": path, "response_id": id, "characters": len(text)},
-)
+```python Python
+from opentelemetry import metrics
+meter = metrics.get_meter("weather.tools")
+
+calls = meter.create_counter("weather.calls", unit="1",
+                             description="Total weather tool invocations")
+
+# When a call starts
+calls.add(1, attributes={"city": city.lower(), , "units": units})
 ```
 
-`otel_config` installs an OTEL logging handler, so ordinary Python logs flow into your collector with the attached key/value pairs. Use this pattern for breadcrumbs you want to correlate with spans.
+These show up in the room’s **Metrics** tab.
 
-### Metrics
+## Running the sample
+You can run this toolkit as a service and invoke the weather tool, `get_weather()`, from Studio or the CLI.
 
-Need to add Metrics
+### Step 1: Creating the room service 
+First build and push the container, then add the service to your room. You'll need a ``Dockerfile`` and ``meshagent.yaml`` file to do so. 
 
-## Viewing the Results
+```Dockerfile Dockerfile
+FROM "meshagent/python-sdk-slim:latest"
 
-In MeshAgent Studio, check the developer console to watch the new spans and logs stream in as you chat. 
+WORKDIR /src
+RUN python3 -m pip install --no-cache-dir httpx
+COPY . /src
+
+ENTRYPOINT [ "python3", "main.py" ] 
+```
+
+```yaml yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: otel-example
+  description: "An example weather tool with otel instrumentation"
+ports:
+- num: "*"
+  liveness: "/"
+  endpoints:
+  - path: /weather
+    identity: weather-toolkit
+    type: meshagent.callable
+container: 
+  image: "YOUR_IMAGE_DETAILS" #example: myregistry/otel-example:0.0.1
+  command: python3 main.py
+
+```
+
+Adding the Service to a room using the MeshAgent Studio UI: 
+1. Click the menu icon for the room --> **Services** --> **New Service**
+2. Fill in name, image details, and port details. For **Ports** you can put `*` to let MeshAgent assign an available port.
+    - Add the port endpoint information e.g. Port Type: `meshagent.callable`, Endpoint: `/weather`, Participant Name" `weather-toolkit`. 
+4. Create the service
+
+### Step 2: Invoking the tool 
+Once you've created the service you can invoke the tool directly from MeshAgent Studio by going into the room, clicking the menu icon, selecting **Toolkits**, then select the **Weather Tool** and click **Invoke**. The UI will display a dialog for you to input the city and units you want to get the weather from. 
+
+You can also invoke the tool using the MeshAgent CLI:
+
+```bash bash 
+meshagent agents invoke-tool \
+  --room=otel \
+  --toolkit=weather-toolkit \
+  --tool=get_weather \
+  --arguments='{"city":"Costa Mesa","units":"imperial"}'
+```
+
+## Viewing telemetry 
+From [MeshAgent Studio](https://studio.meshagent.com) you will see Logs, Traces, and Metrics both from the **Session** view of the room and from the **Developer Console**. The **Session** viewer provides a focused view of session details which are accessible during and after each session. The **Developer Console** appears on the lower part of the screen once you're inside a room and shows live traces, logs, and metrics as you interact with your services inside a room.
+
+After invoking the weather tool in this example you should see a trace tree appear in the **Traces** tab with a structure like this: 
+
+```
+toolkit.execute (get_weather)
+ ├─ validate_input
+ ├─ fetch_weather_api
+ └─ parse_response
+```
+
+Applicable logs and metrics will appear under their respective tabs. 
+
+## Next Steps
+- [Agents](../agents/standard/intro): Understand how agents work in MeshAgent and start building your first one!
+- [Tools](../agents/tools/intro): Learn how to build tools human and agent participants can use inside a MeshAgent room. 
+- [Services & Containers](../services_room_containers/overview): Learn how to deploy instrumented agents and tools as project wide or room specific services in MeshAgent
