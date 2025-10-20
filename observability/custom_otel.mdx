@@ -36,7 +36,7 @@ with tracer.start_as_current_span("chatbot.prepare_context") as span:
 ### Structured Logs
 
 ```python
-logger.info(
+log.info(
     "sending response",
     extra={"path": path, "response_id": id, "characters": len(text)},
 )
@@ -46,26 +46,8 @@ logger.info(
 
 ### Metrics
 
-```python
-response_counter.add(
-    1,
-    attributes={
-        "meshagent.thread.path": path,
-        "meshagent.recipient.id": to.id,
-    },
-)
-
-context_histogram.record(
-    elapsed_ms,
-    attributes={"meshagent.thread.path": thread_context.path},
-)
-```
-
-`chatbot.responses` counts every assistant message, while `chatbot.context.prepare_ms` captures how long the context builder ran. Both are exported over OTLP along with the built-in MeshAgent metrics.
+Need to add Metrics
 
 ## Viewing the Results
 
-- In MeshAgent Studio, enable the developer console to watch the new spans and logs stream in as you chat.
-- In your collector or APM (Grafana, Honeycomb, New Relic, etc.), filter by span name `chatbot.prepare_context` or the `chatbot.` metric namespace to build dashboards and alerts.
-
-Feel free to borrow the same pattern for your own agents and tools—MeshAgent handles the exporters so you can focus on capturing the business signals that matter.
+In MeshAgent Studio, check the developer console to watch the new spans and logs stream in as you chat. 
