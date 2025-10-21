@@ -2,30 +2,233 @@
 title: Packaging a Service
 ---
 
-MeshAgent can run your code as a Project Service (available in every room) or a Room Service (scoped to a specific room). To deploy either, you'll create a YAML configuration file that defines your service. If you're running a containerized service, you'll also need to package your code as a container image. If you're using an external service, you just point to the URL where it's already running. 
+Packaging a service means creating the configuration files that tell MeshAgent how to run your code. For containerized services, you'll create a YAML configuration file and a Dockerfile. For external services, you just need a YAML configuration file with a URL pointing to where your service is already running.
+
+MeshAgent can run your code as a Project Service (available in every room) or a Room Service (scoped to a specific room). The packaging process is the same for both.
 
 ## Defining the Service
 You'll write one of two types of configuration files depending on whether the service requires configuration at runtime:
-- `ServiceSpec` (`kind: Service`): A concrete spec of what runs 
-- `ServiceTemplateSpec` (`kind: ServiceTemplate`): A parameterized template that collects runtime inputs and renders a `ServiceSpec`
+- `ServiceSpec` (`kind: Service`): A concrete spec of what runs. Use it when configuration is fixed and does not need user input. This is useful when deploying via CI/CD. 
+- `ServiceTemplateSpec` (`kind: ServiceTemplate`): A parameterized template that collects runtime inputs and renders a `ServiceSpec`. Use it when you're packaging a service for others to customize. For example, if users need to supply their own API keys, prompts, or other settings.
 
 **The key difference**
 
 A ``ServiceSpec`` maps directly to what will run. A ``ServiceTemplateSpec`` needs configuration first — when you provide values for its variables, MeshAgent calls ``to_service_spec()`` to generate the actual ``ServiceSpec`` that runs.
 
-**When to Use Each**
-- Use ``kind: Service`` when configuration is fixed and does not need user input. This is useful when deploying via CI/CD. 
-- Use ``kind: ServiceTemplate`` when you're packaging a service for others to customize. For example, if users need to supply their own API keys, prompts, or other settings.
-
 Both can be used for project services or room services. The choice depends on whether you need runtime configuration, not on the deployment scope.
 
-## ``ServiceSpec`` Configuration ``(kind: Service)``
-Use this when your service configuration is fully specified and doesn't need customization by users.
+## Configuration Overview
+| Field | Required | Used By | Description |
+|-------|----------|---------|-------------|
+| `version` | Yes | Both | Always "v1" |
+| `kind` | Yes | Both | "Service" or "ServiceTemplate" |
+| `metadata` | Yes | Both | Service identity and display information |
+| `ports` | Yes | Both | Endpoints MeshAgent can call |
+| `container` | * | Both | Container configuration (mutually exclusive with `external`) |
+| `external` | * | Both | External service URL (mutually exclusive with `container`) |
+| `variables` | No | ServiceTemplate only | User inputs for templating (used with `container` services only) |
 
-## ``ServiceTemplateSpec`` Configuration ``(kind: ServiceTemplate)``
-Use this when you want users to provide values to the service when they use it.
+\* Either `container` or `external` is required, but not both.
+
+## ``ServiceSpec`` Configuration
+A ``ServiceSpec`` is a complete definition of a service ready to run. Use this when your service configuration is fully specified and doesn't need customization by users. It contains: 
+
+- **version:** Always `v1`
+- **kind:** Always ``Service``
+- **metadata:** Service identity and display information
+- **ports:** Endpoints MeshAgent can call into your service
+- **container** OR **external**: Either a container image to run OR a URL to an externally-hosted service
+
+## ``ServiceTemplateSpec`` Configuration
+A `ServiceTemplateSpec` allows you to provide values to the service when it's deployed. It contains the same fields as the ``ServiceSpec`` but adds a section for ``variables``. Variables only work with container based services and are used to pass environment variables to the container. The fields for the ``ServiceTemplate`` are: 
+
+- **version:** Always `v1`
+- **kind:** Always ``ServiceTemplate``
+- **metadata:** Service identity and display information
+- **ports:** Endpoints MeshAgent can call into your service
+- **container** OR **external**: Either a container image to run OR a URL to an externally-hosted service
+- **variables**: User inputs collected at deployment time. These will be mapped to environment variables in the container.
+
+When deployed, MeshAgent collects variable values and calls `to_service_spec()` to generate the final ServiceSpec.
+
+## Field Reference 
+
+### Metadata
+The metadata section identifies your service and provides information displayed in the UI.
+
+```yaml yaml
+metadata:
+  name: my-service          # Required: Unique service name
+  description: "..."        # Optional: Description shown in UI
+  repo: "https://..."       # Optional: Source code repository
+  icon: ""                  # Optional: Icon for UI
+  annotations:              # Optional: Custom key-value metadata, could also be links to external paths
+    team: "platform"
+```
+
+### Ports
+Define how MeshAgent connects to your service. Each port can have multiple endpoints.
+
+```yaml yaml
+ports:
+  - num: "*"               # Port number or "*" for auto-assignment
+    type: http             # Optional: http or tcp
+    liveness: "/"          # Optional: Health check path
+    endpoints:             # Each endpoint must specify a path and kind (meshagent or mcp)
+      - path: /agent
+        meshagent:
+          identity: my-agent
+ ```       
+
+**Port Fields**
+
+- ``num``: Port number or `"*"` to let MeshAgent auto-assign an available port
+- ``type``: Protocol type, either `http` or `tcp` 
+- ``liveness``: Path for health checks to ensure service is ready
+- ``endpoints``: A list of endpoints for the service 
+
+#### Endpoint Kind
+Each endpoint must specify a path and a kind, either ``meshagent`` or ``mcp``. 
+
+**MeshAgent Endpoints**
+
+For MeshAgent native services built with ``ServiceHost``. See [API Scopes](../../room_api/api_scopes) for complete reference on what your service can access.
+
+```yaml yaml
+endpoints:
+  - path: /agent
+    meshagent:              # For MeshAgent-native services
+      identity: my-agent    # Required: Identity for the service
+      api:                  # Optional: API scope overrides
+        queues:
+          send: ["notifications"]
+        storage:
+          paths:
+            - path: "/data"
+              read_only: true
+```
+
+**MCP Endpoints**
+
+For Model Context Protocol (MCP) servers 
+```yaml yaml
+endpoints:
+  - path: /mcp
+    mcp:
+      label: "mcp-tools"                     # Required: Display name
+       description: "MCP Tools"               # Required: Description
+       allowed_tools:                         # Optional: Filter which tools are available
+         - tool_names: ["tool_1", "tool_2"]
+           read_only: false
+       headers:                               # Optional: Custom key-value metadata
+         key: value
+       require_approval: "never"              # Optional: "always" or "never"
+       oauth:                                 # Optional: OAuth configuration
+         client_id: "..."
+         client_secret: "..."
+         authorization_endpoint: "https://..."
+         token_endpoint: "https://..."
+         no_pkce: false                       # Optional: depends on if pkce is used
+         scopes: ["scope1", "scope2"]
+       openai_connector_id: "..."             # Optional: OpenAI connector ID
+```
+
+### External 
+Use ``external`` when your service is already running elsewhere. MeshAgent will route calls to the URL you provide.
+
+```yaml yaml
+external:
+  url: "https://api.example.com"  # Required: URL where service is running
+```
+
+### Container
+Use ``container`` when MeshAgent should run your service in a container. Specify the image, optional command override, environment variables, secrets, and storage mounts.
+
+```yaml yaml
+container:
+  image: registry/image:tag             # Required: Container image
+  command: "python main.py"             # Optional: Override entrypoint
+  environment:                          # Optional: Environment variables
+    - name: VAR_NAME
+      value: "{var_name}"
+  secrets: ["secret-id"]                # Optional: Secret IDs to inject
+  pull_secret: "image-pull-secret-id"   # Optional: Secret ID for private registries
+  storage:                              # Optional: Mount storage
+    room:
+      - path: /data
+        subpath: "uploads"
+        read_only: false
+    project:
+      - path: /shared
+        read_only: true
+  api_key:                              # Optional: Auto-provision API key for service
+    role: "admin"                       # Required: Role for the API key (always admin)
+    name: "name"                        # Required: Name for the API key
+    auto_provision: true                # Optional: Auto-provision on deployment (default: True)
+```
+
+**Storage types:**
+
+- Room storage: Per-room files, read/write by default
+- Project storage: Shared across all rooms, read-only by default
+
+**API Key Provisioning:**
+
+The api_key field allows your service to request an admin API key be automatically provisioned and injected. This is useful when your service needs to call MeshAgent APIs directly (e.g., to manage participants, create resources, etc.).
+
+### Variables (only for ServiceTemplate)
+Variables define what values users can provide when a container based service launches. You can restrict inputs or hide sensitive ones. Variables from the ServiceTemplate will be mapped to environment variables in the container. 
+
+For example, if you need to pass a system prompt or api key you can setup the variables section like this:
+
+```yaml yaml
+variables:
+- name: "system_prompt"
+  description: "The system prompt for the chatbot"
+- name: "tone"
+  description: "Tone of the model"
+  enum: ["formal", "casual", "enthusiastic"]
+  optional: true
+- name: "api_key"
+  description: "External API key"
+  obscure: true  # Hide value in UI
+```
+
+**Variable Fields**
+- `name`: (Required) Variable identifier used when mapping variables to environment variables in the container
+- `description`: (Optional) Help text shown in the UI
+- `enum`: (Optional) List of allowed values
+- `optional`: (Optional) Whether the variable is required
+- `obscure`: (Optional) Hide the value in the UI (for sensitive data)
+- `type`: (Optional) Type for the field. Important to set type as `email` if creating an email.
+
+**Mapping Variables to Environment Variables**
+Use {variable_name} syntax anywhere in your template's container.environment values to substitute user-provided values. For example: 
+
+```yaml
+environment:
+- name: SYSTEM_PROMPT
+  value: "{system_prompt}"
+- name: TONE
+  value: "{tone}"
+- name: OPENAI_API_KEY
+  value: "{api_key}"
+```
+
+## Creating a ``Dockerfile`` for your Service
+If you are using a container for your service, you will need to create a ``Dockerfile`` that installs all the libraries required to run your service.  You can use MeshAgent provided base images as a starting point. These images install the MeshAgent packages automatically.
+
+For example:
+```Dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
 
 
+COPY . /src
+
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "main.py" ]
+```
 
 ## Next Steps
 - [Deploy Services](./deployment): Deploy a project or room service
