@@ -1,0 +1,57 @@
+---
+title: Packaging a Service
+---
+
+MeshAgent can run your code as a Project Service (available in every room) or a Room Service (scoped to a specific room). To deploy either, you'll create a YAML configuration file that defines your service. If you're running a containerized service, you'll also need to package your code as a container image. If you're using an external service, you just point to the URL where it's already running. 
+
+## Defining the Service
+You'll write one of two types of configuration files depending on whether the service requires configuration at runtime:
+- `ServiceSpec` (`kind: Service`): A concrete spec of what runs 
+- `ServiceTemplateSpec` (`kind: ServiceTemplate`): A parameterized template that collects runtime inputs and renders a `ServiceSpec`
+
+**The key difference**
+
+A ``ServiceSpec`` maps directly to what will run. A ``ServiceTemplateSpec`` needs configuration first — when you provide values for its variables, MeshAgent calls ``to_service_spec()`` to generate the actual ``ServiceSpec`` that runs.
+
+**When to Use Each**
+- Use ``kind: Service`` when configuration is fixed and does not need user input. This is useful when deploying via CI/CD. 
+- Use ``kind: ServiceTemplate`` when you're packaging a service for others to customize. For example, if users need to supply their own API keys, prompts, or other settings.
+
+Both can be used for project services or room services. The choice depends on whether you need runtime configuration, not on the deployment scope.
+
+## ``ServiceSpec`` Configuration ``(kind: Service)``
+Use this when your service configuration is fully specified and doesn't need customization by users.
+
+## ``ServiceTemplateSpec`` Configuration ``(kind: ServiceTemplate)``
+Use this when you want users to provide values to the service when they use it.
+
+
+
+## Next Steps
+- [Deploy Services](./deployment): Deploy a project or room service
+- [Manage Secrets](../../secrets/secrets_overview): Inject credentials securely
+- [API Scopes Reference](../../room_api/api_scopes): Control service permissions
+- Containers API: Run a container on demand in a room
+
+## REMOVE LATER
+```
+class ServiceSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    version: Literal["v1"]
+    kind: Literal["Service"]
+    id: Optional[str] = None
+    metadata: ServiceMetadata
+    ports: Optional[list["ServicePortSpec"]] = []
+    container: Optional[ContainerSpec] = None
+    external: Optional[ExternalServiceSpec] = None
+
+class ServiceTemplateSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    version: Literal["v1"]
+    kind: Literal["ServiceTemplate"]
+    metadata: ServiceTemplateMetadata
+    variables: Optional[list[ServiceTemplateVariable]] = None
+    ports: list[ServicePortSpec] = []
+    container: Optional[ContainerTemplateSpec] = None
+    external: Optional[ExternalServiceTemplateSpec] = None
+```
