@@ -31,10 +31,6 @@ These arguments are stored on the instance and serialized through `Agent.to_json
 `SingleRoomAgent` installs requirements automatically, but you can call the helper when you need the same logic elsewhere.
 - `await install_requirements(participant_id: str | None = None)`: Collects existing schemas (`room.storage.list(path=".schemas")`) and visible toolkits (`room.agents.list_toolkits`). Missing `RequiredToolkit` or `RequiredSchema` entries are fetched via `room.agents.make_call`. Built-in resources are resolved to `http://localhost:8080/toolkits/<name>` or `/schemas/<name>`; explicit URLs are respected. The method waits briefly after new installs so subsequent operations can rely on them. Passing `participant_id` lets you provision resources on behalf of another participant.
 
-## Toolkit Helpers
-- `await get_toolkits(context: ToolContext, remote_toolkits: list[RequiredToolkit])`: Resolves toolkit declarations into actual `Toolkit` objects. Toolkit factories registered with `register_toolkit_factory()` are preferred; otherwise the tools are wrapped in `RoomTool` proxies that invoke the toolkit through the room. Errors raise `RoomException` when a required toolkit or tool is unavailable.
-- `await get_required_toolkits(context: ToolContext)`: Convenience wrapper that calls `get_toolkits()` using `self.requires`. Most agents use this when building the tool list for an LLM invocation or other task execution.
-
 Both helpers honor `context.on_behalf_of`, ensuring tools execute with the correct participant identity.
 
 ## Minimal Example

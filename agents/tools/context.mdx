@@ -36,29 +36,6 @@ async def execute(self, context:ToolContext, **kwargs) -> Response:
     ...
 ```
 
-### `RequestTool`
-The `RequestTool` is designed for when you need the raw `Request` as input instead of JSON-validated arguments. This is useful for tools that perform file uploads or require binary payloads. 
-
-**Constructor Parameters**
-
-| Parameter           | Type                  | Default | Description                                                |
-| ------------------ | --------------------- | ------: | ---------------------------------------------------------- |
-| `name`             | `str`                 |       — | Unique tool name within a toolkit.                         |
-| `title`            | `Optional[str]`       |  `name` | Human-readable display name.                               |
-| `description`      | `Optional[str]`       |    `""` | Short description of the tool.                             |
-| `rules`            | `Optional[list[str]]` |  `None` | Behavioral guidance/prompts for LLMs.                      |
-| `thumbnail_url`    | `Optional[str]`       |  `None` | Icon/thumbnail shown in UIs.                               |
-| `supports_context` | `Optional[bool]`      | `False` | Indicates the tool can use `caller_context` when provided. |
-
-**Methods**
-
-These tools must have an ``execute()`` method where its logic is implemented
-```python Python
-from meshagent.tools import ToolContext
-async def execute(self, *, context: ToolContext, request: Request) -> Response: 
-    ...
-```
-
 ### Tool Return Types
 Tools return subclasses of `Response` declared in `meshagent.api.messaging`. Use these helpers so the room can transport the result (and any usage metrics) in the proper format.
 
@@ -95,7 +72,7 @@ A ``Toolkit`` bundles related tools under a single name so callers can discover,
 | Parameter        | Type             |       Default | Description                                                              |
 | --------------- | ---------------- | ------------: | ------------------------------------------------------------------------ |
 | `name`          | `str`            |             — | Toolkit identifier used for discovery/invocation.   |
-| `tools`         | `list[BaseTool]` |             — | The tools this toolkit exposes (`Tool` and/or `RequestTool`).            |
+| `tools`         | `list[BaseTool]` |             — | The tools this toolkit exposes.            |
 | `rules`         | `list[str]`      | `list[str]` | Optional global guidance/prompts that apply to all tools in the toolkit. |
 | `title`         | `Optional[str]`  |        `name` | Human-readable toolkit name.                                             |
 | `description`   | `Optional[str]`  |          `""` | Description of the toolkit which can aid discovery and appears in MeshAgent Studio.                                    |
@@ -105,7 +82,6 @@ A ``Toolkit`` bundles related tools under a single name so callers can discover,
 
 - `get_tool(name)`: returns the named tool or raises a `RoomException` if it is not present.
 - `execute(context, name, arguments, optional attachment)`:
-    - For a `RequestTool`, combines the header and payload into a `Request` object, invokes the tool, then returns the response.
     - For a `Tool`, validates the arguments with `input_schema`/`$defs`, invokes the tool, and returns a response.
 
 > **Note:** Toolkits emit OpenTelemetry spans out of the box. This will automatically track information like who called a tool, how long the tool took to return a result, and what room the tool was used in. You can set additional span attributes or usage meters in your tool implementation to enrich observability.
