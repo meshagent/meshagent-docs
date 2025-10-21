@@ -4,7 +4,7 @@ title: Run Your Service Locally
 
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 
-Build and test services on your machine, then deploy them as either a project service or a run it as a room service through the Containers API.
+Build and test services on your machine, then deploy them as either a project or room service or a run dynamically via the Containers API. 
 
 ## ServiceHost Basics
 MeshAgent's ``ServiceHost`` exposes your agents or tools as HTTP webhook endpoints. When you create a ``ServiceHost``, it starts an HTTP server that listens for incoming webhook requests from MeshAgent. When a webhook call arrives, the ``ServiceHost`` automatically spins up your agent or tool, connects it to the requested room, and manages its lifecycle until the session ends. 
@@ -69,7 +69,21 @@ class HelperAgent(TaskRunner):
 
 Using ``meshagent service run "main.py" --room=myroom`` will automatically detect and call all three endpoints into the room with their respective identities.
 
+
+## From Local Development to Deployment
+In this tutorial we covered how to use ``ServiceHost`` and the MeshAgent CLI, (e.g.,``meshagent service run main.py --room=myroom``) to test your service before containerizing it. 
+
+Once your service works locally here's the path to deployment: 
+1. **Package your code**: Create a Dockerfile with the required libraries. MeshAgent provides a variety of base images for your use.
+2. **Author a manifest**: Use ``kind: Service`` when deploying a project service or ``kind: ServiceTemplate`` for room services. 
+3. **Push to a registry**: Make sure your image is available for MeshAgent to use as a service. 
+4. **Deploy*: Use the MeshAgent Studio UI or the CLI to configure, deploy, and monitor services.
+
+The details depend on whether you're deploying a project service or room service — see the configuration guides below.
+
 ## Next Steps
-- Determine if you want to deploy your service at the project level or run it in a specific room with the Containers API. See [intro to services and containers](./overview) for details.
-- Create a Dockerfile and service manifest for either a [project service](./project_services/configuration) or a [room service](./room_containers/configuration).
+- [Intro to services and containers](./overview): Understand deployment options
+- [Configure](./project_services/configuration) and [Deploy](./project_services/deployment) a Project Service to make the service available in every room.
+- [Configure](./room_services/configuration) and [Deploy](./room_services/deployment) a Room Service to make the service available in a specific room.
+- Run a service as a container via the Containers API
 - Create any required secure credentials before deployment via [secrets & registry access](../secrets/secrets_overview).
