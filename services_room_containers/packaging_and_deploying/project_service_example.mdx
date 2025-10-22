@@ -4,11 +4,16 @@ title: Example Deploying a Chatbot as a Project Service
 
 Static services that should be the same across the project should be deployed as a project-wide service. These services are meant to be generic and not customized by room, they're designed to provide shared functionality across rooms in a project.  
 
-To learn more about project vs room level services and understand when to use each see [intro to services and containers](../overview).
+To learn more about project vs room services and understand when to use each see [intro to services and containers](../overview).
 
 ## Example
 
-Let's create a simple chatbot that can be deployed to all the rooms in our project. This will ensure everyone always has access to an LLM in any room inside the project. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+Let's create a simple chatbot that can be deployed to all the rooms in our project. This will ensure everyone always has access to an LLM in any room inside the project. 
+
+To deploy this we'll create three files: 
+- **main.py:** A MeshAgent-native chatbot service using ServiceHost
+- **Dockerfile:** Packages the service as a container
+- **meshagent.yaml**: A ServiceSpec that defines how to run the service
 
 ### main.py
 
@@ -85,7 +90,7 @@ From the terminal in the directory with your yaml file simply run:
 
 ```bash bash
 meshagent setup # authenticate to MeshAgent if not already done
-meshagent service create "meshagent.yaml"
+meshagent service create --file="meshagent.yaml"
 ```
 
 For more details on deployment see the [deploying services](./deployment) documentation. 
@@ -98,3 +103,4 @@ Now that your service is deployed try it out in [MeshAgent Studio](https://studi
 - [Packaging Services](./packaging): Understand how to package a service for deployment.
 - [Deploying Services](./deployment): Learn how to deploy and update a project or room service through the MeshAgent CLI or Studio UI. 
 - [Deploying a Chatbot as a Room Service](./room_services_example): Learn how to deploy a room specific service that can be customized to each room.
+- [Containers API](../containers/containers_api): Run containers on-demand without saving them as services

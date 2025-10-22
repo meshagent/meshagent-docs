@@ -3,13 +3,18 @@ title: Example Deploying a Chatbot as a Room Service
 ---
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 
-Room services are scoped to a specific room. Typically services that require customization by room like allowing users to pass a custom system prompt to an agent or bringing an API key should be run as a room service. 
+Room services are scoped to a specific room and persist across sessions. They're ideal when users need to customize services for example, providing their own system prompt or API key. 
 
-To learn more about project vs room level services and understand when to use each see [intro to services and containers](../overview).
+This example shows how to create a simple chatbot that lets users provide a custom system prompt when they add it to their room. We'll create a containerized MeshAgent-native service using a `ServiceTemplate` so users can configure the system prompt when they add it to their room.
+
+To learn more about project vs room services and understand when to use each see [intro to services and containers](../overview).
 
 ## Example
 
-Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll need the main.py file, a Dockerfile, and a meshagent.yaml file.
+Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll create three files: 
+- **main.py:** A MeshAgent-native chatbot service using ServiceHost
+- **Dockerfile:** Packages the service as a container
+- **meshagent.yaml**: A ServiceTemplateSpec that collects a system prompt variable from users when they add the service to their room
 
 ### main.py
 
@@ -37,52 +42,70 @@ version: v1
 metadata:
   name: chatbot
   description: "A chatbot that takes a system prompt at runtime"                 
-command: python3 main.py      # command executed inside the container
-variables:                    # exposed in MeshAgent Studio UI as form fields when someone launches the service (parameters collected when launching service)
-- name: "system_prompt"
-environment:                  # passes variables into the container
-- name: SYSTEM_PROMPT
-  value: "{system_prompt}"
 ports:
 - num: "*"                    # automatically assign an available MESHAGENT_PORT for the agent to run on 
+  type: http
   liveness: "/"               # ensure the service is alive before connecting to the room
   endpoints:
   - path: /agent              # service path to call and run the agent on
-    identity: chatbot         # name of the agent as it shows up in the Room
-    type: meshagent.callable  # instructs the room server to call this endpointx
+    meshagent:
+      identity: chatbot         # name of the agent as it shows up in the Room
+container:
+  image: "myrepository/chatbot-image:1"
+  command: python3 main.py      # command executed inside the container
+  environment:                  # passes variables into the container
+    - name: SYSTEM_PROMPT
+      value: "{system_prompt}"
+variables:                    # exposed in MeshAgent Studio UI as form fields when someone launches the service (parameters collected when launching service)
+    - name: "system_prompt"
+      description: "Custom instructions for the agent to follow"
 ```
 
-## Build and Run the Container
-Now that we've defined our agent and written the applicable Dockerfile and meshagent.yaml we can build and push the docker container. 
+## Build and Push the Container
+Build and push your container to a registry:
 
-You can build and run the container in a MeshAgent room directly using the MeshAgent CLI commands. You can also build and push to a docker repo you have access to then pull and run the image. 
+```bash bash
+docker buildx build . \
+  -t "myrepository/chatbot-image:1" \
+  --platform linux/amd64 \
+  --push
+``` 
 
-**Using the MeshAgent CLI**
-From the directory with your code, Dockerfile, and meshagent.yaml run: 
+> **Note**: We recommend docker buildx because it supports cross-platform builds, pushes directly to your registry in one step, and enables optional layer caching for much faster CI builds.
 
-```bash 
-meshagent setup # authenticate to MeshAgent if not already connected
-# build and push your container to a registry 
-# e.g. docker buildx build -t "$IMAGE:$TAG" --platform linux/amd64 --push
-meshagent container run --room=myroom --image=chatbot:0.1 --var system_prompt="Always respond with a fun fact"
+## Deploy the Room Specific Service
+From the terminal in the directory with your yaml file run:
+
+```
+meshagent setup # authenticate to MeshAgent if not already
+meshagent service create --file meshagent.yaml --room=myroom
 ```
 
-**To test the agent**: 
-1. Go to [MeshAgent Studio](https://studio.meshagent.com)
-2. Select the **Sessions** tab then open ``myroom``
-3. You'll see the chatbot in the participants tab. 
- 
-**Troubleshooting**: 
-Inside your room in the studio look at the **Developer Console** on the bottom of the screen. Here you'll see images in the room, containers running, and builds. From the images tab you should see the image you built "chatbot:0.1", this should be green. If it is not green that means the image did not build properly and could indicate that you are missing the meshagent.yaml file. From the containers tab you should see the image running and who started it, you can also click into the container logs from this view. 
+You can also deploy the service to a specific room through [MeshAgent Studio](https://studio.meshagent.com) by selecting the room menu, selecting **Service**, then **New Service**, and filling in the details. 
 
+For more details on deployment see the [deploying services](./deployment) documentation.
 
-## Next Steps
+## Use the Service
+
+1. Open your room in [MeshAgent Studio](https://studio.meshagent.com)
+2. You'll be prompted to provide a system prompt for the chatbot
+3. Once provided the service will start and the chatbot will appear in the participants tab
+
+### Verify the Service is Running
+From the Developer Console at the bottom half of the room UI
+- Check the **Containers** tab, you'll see your container with MeshAgent as the starter
+- Check the **Logs** tab for startup messages from your service
+
+Now that your service is deployed try it out in [MeshAgent Studio](https://studio.meshagent.com). Enter the room you deployed the service to, you will be prompted to supply a system prompt for the agent, once you do the service will start and you'll see the chatbot in the participants tab. 
+
+**Room services are managed by MeshAgent:** If you update the service configuration during the session, MeshAgent automatically updates the running service. If you delete the room service, it's removed from the room. Whatever room services you have saved will match what's running - MeshAgent keeps them in sync.
+
+## Related Topics
 Containers run on demand, and will not automatically restart the next time you go into the room. If you want a container with your configuration to save and start automatically the next time the room starts, you will need to deploy a project wide service to manage the containers. Otherwise you can start containers as needed through the CLI/API. 
 
 For more information on room and project services see: 
-- [Intro to Services & Containers](../overview): Understand when to use project service and room services.
-- [Room Service Configuration](./configuration): Learn how to structure a ``ServiceTemplate`` manifest and Dockerfile for your service.
-- [Running a Room Service](./running): Learn how to run a room service from the MeshAgent CLI or Studio UI. 
-- [Project Service Configuration](../project_services/configuration): Create a ``Service`` meshagent.yaml for a project-wide service.
-- [Project Service Deployment](../project_services/deployment): Learn how to deploy project-wide services via the MeshAgent Studio or CLI.
-- [Project Service Example](../project_services/project_service_example): Create and deploy a chatbot as a project service.
+- [Introduction to Services & Containers](../overview): Understand when to use project services, room services, and the Containers API.
+- [Packaging Services](./packaging): Learn how to package services for deployment 
+- [Deploying Services](./deployment): Learn how to deploy services using the MeshAgent CLI or MeshAgent Studio UI
+- [Project Service Example](../project_services/project_service_example): Create and deploy a chatbot as a project service available in all rooms.
+- [Containers API](../containers/containers_api): Run containers on-demand without saving them as services
