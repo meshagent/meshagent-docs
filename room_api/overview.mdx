@@ -11,11 +11,13 @@ Rooms also serve as gateways to several additional APIs accessible through the r
 - **[Agents API](./agents) `AgentsClient`:** Manages agent interactions. 
 - **[Containers API](./containers) `ContainersClient`:** Interact with containers on demand in a room.
 - **[Database API](./database) `DatabaseClient`:** Provides a simple relational-like API for data storage and retrieval through tables.
-- **[Queues API](./queue) `QueuesClient`:** Facilitates reliable data/message exchange with other agents or participants.
 - **[Messaging API](./messaging) `MessagingClient`:** Enables real-time chat messaging among participants.
+- **[Queues API](./queue) `QueuesClient`:** Facilitates reliable data/message exchange with other agents or participants.
 - **[Secrets API](./secrets) `SecretsClient`:** Create and manage oauth tokens and user secrets.
-- **[Sync API](./sync) `SyncClient`:** Offers document synchronization capabilities, listing remote participants, allowing participants to collaborate on shared documents.
 - **[Storage API](./storage) `StorageClient`:** Manages file storage and retrieval.
+- **[Sync API](./sync) `SyncClient`:** Offers document synchronization capabilities, listing remote participants, allowing participants to collaborate on shared documents.
+
+For information on how to create and manage rooms and their permissions in a project check out the [REST API](../rest_api/overview) documentation. 
 
 ### Let's connect to a room
 
@@ -48,27 +50,31 @@ Now run the code to connect to a MeshAgent room.
 
 Rooms expose the same capabilities in every SDK, but the exact API mirrors the host language. Use the section below that matches your client library.
 
-#### Python (`meshagent.api.room_server_client.RoomClient`)
+#### Python 
+`from meshagent.api import RoomClient`
 - Connect with `async with RoomClient(protocol=...) as room:`; the async context manager starts and stops the connection for you.
 - Issue requests with `await room.send_request(...)`; session metadata is available via `room.session_id`, `room.room_url`, and `room.room_name`.
 - Register event handlers with `room.on("room.status", handler)`; use `room.emit(...)` to publish custom events.
 - Access sub-clients through snake_case attributes such as `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, `room.secrets`, `room.storage`, `room.developer`, and `room.livekit`.
 
-#### TypeScript / JavaScript (`RoomClient` in `@meshagent/...`)
+#### TypeScript / JavaScript 
+`RoomClient` in `@meshagent/...`
 - Instantiate the client with `{ protocol }` and call `await room.start({ onDone, onError })` to wait for `room_ready`.
 - Clean up with `room.dispose()` when you are finished.
 - Send RPCs with `await room.sendRequest(type, payload, data?)`; readiness is exposed via `await room.ready`.
 - Emit events with `room.emit(event)` and consume them using `for await (const evt of room.listen())`.
 - Sub-clients are camelCase properties: `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, and `room.storage`.
 
-#### Dart / Flutter (`RoomClient` in `package:meshagent/room_server_client.dart`)
+#### Dart / Flutter 
+`RoomClient` in `package:meshagent/room_server_client.dart`
 - Call `await room.start(onDone: ..., onError: ...)` after constructing the client; `room.ready` completes when the server sends `room_ready`.
 - Dispose resources with `room.dispose()`; use `await room.exec(...)` for container execution helpers.
 - Send requests with `await room.sendRequest(type, payload, data: ...)`.
 - Observe room activity with `room.events.listen(handler)` or by keeping the `StreamSubscription` returned from `room.listen(...)`.
 - Access sub-clients via camelCase getters: `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, `room.secrets`, `room.storage`, `room.developer`, and `room.livekit`.
 
-#### .NET (`Meshagent.RoomClient`)
+#### .NET 
+`Meshagent.RoomClient`
 - Construct `var room = new RoomClient(protocol);` and call `await room.ConnectAsync();` to wait for readiness.
 - Dispose with `await room.DisposeAsync();` or `await using var room = new RoomClient(protocol);`.
 - Send RPCs using `await room.SendRequest(type, payload, data);`; session metadata is available via `room.SessionId`, `room.RoomUrl`, and `room.RoomName`.

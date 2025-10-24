@@ -2,22 +2,23 @@
 title: REST API
 ---
 
-The Meshagent REST API allows you to create and manage projects, rooms, members, and the room-level permissions that become participant tokens. 
+The Meshagent REST API allows you to create and manage projects, rooms, members, and the room-level permissions that become [participant tokens](./participant_tokens). 
+
+Use the REST API for project and identity lifecycle tasks—provisioning rooms, assigning scopes, and managing membership. For real-time collaboration inside an active room, call the [Room APIs](../room_api/overview).
 
 ## Getting started
 ```python
 from meshagent.api.client import Meshagent
 
-client = Meshagent(
-    # optional; defaults to MESHAGENT_API_URL
-    base_url="https://api.meshagent.com", 
-    # optional; defaults to MESHAGENT_API_KEY
-    token="<bearer-access-token>"
-)
-
-# ...use the client...
-
-await client.close()
+async def main():
+    async with Meshagent(
+        # optional; defaults to MESHAGENT_API_URL
+        base_url="https://api.meshagent.com",
+        # optional; defaults to MESHAGENT_API_KEY
+        token="<bearer-access-token>",
+    ) as client:
+        # ...use the client...
+        ...
 ```
 
 - `base_url` If set, environment variable `MESHAGENT_API_URL` is used. Default `https://api.meshagent.com`.
@@ -26,7 +27,7 @@ await client.close()
 Every method raises `meshagent.api.RoomException` on non-2xx responses and validates responses with Pydantic models, so malformed payloads surface as rich errors.
 
 ## Managing project room grants
-Project room grants store a user's allowed `ApiScope` for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and later copied into the runtime [`ParticipantToken`](../room_api/participant_tokens).
+Project room grants store a user's allowed `ApiScope` for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and later copied into the runtime [`ParticipantToken`](./participant_tokens).
 
 Key methods:
 
@@ -69,6 +70,7 @@ The client also exposes utilities for day-to-day project administration:
 - **Storage helpers**: upload and download files under `/accounts/projects/{project_id}/storage/*`.
 - **OAuth clients**: create, update, list, and delete OAuth client records for project integrations.
 
-## Related topics
-- [`ApiScope` reference](../room_api/api_scopes)
-- [Participant tokens](../room_api/participant_tokens)
+## What’s next?
+- Explore the [Room API overview](../room_api/overview) to work with live collaborative rooms.
+- Review the [`ApiScope` reference](./api_scopes) for details on permission shape.
+- Learn how room connections inherit grants in [participant tokens](./participant_tokens).
