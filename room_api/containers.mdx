@@ -22,6 +22,10 @@ images = await room.containers.list_images()
 for image in images:
     print(image.tags, image.size)
 ```
+```bash CLI
+meshagent container images list \
+  --room myroom
+```
 </CodeGroup>
 
 ---
@@ -36,6 +40,11 @@ for image in images:
 <CodeGroup>
 ```python Python
 await room.containers.delete_image(image="chatbot:old")
+```
+```bash CLI
+meshagent container images delete \
+  --room myroom \
+  --image chatbot:old
 ```
 </CodeGroup>
 
@@ -52,6 +61,11 @@ await room.containers.delete_image(image="chatbot:old")
 <CodeGroup>
 ```python Python
 await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
+```
+```bash CLI
+meshagent container images pull \
+  --room myroom \
+  --tag registry.example.com/agents/chatbot:0.2
 ```
 </CodeGroup>
 
@@ -80,6 +94,13 @@ container_id = await room.containers.run(
     name="chatbot-demo",
 )
 print(f"Container launched: {container_id}")
+```
+```bash CLI
+meshagent container run \
+  --room myroom \
+  --image registry.example.com/agents/chatbot:0.2 \
+  --var SYSTEM_PROMPT="Always respond with a fun fact." \
+  --container-name chatbot-demo
 ```
 </CodeGroup>
 
@@ -135,6 +156,12 @@ async for line in stream.logs():
 
 await stream  # optional: wait for the request to finish
 ```
+```bash CLI
+meshagent container logs \
+  --room myroom \
+  --id "$CONTAINER_ID" \
+  --follow
+```
 </CodeGroup>
 
 ---
@@ -152,6 +179,11 @@ containers = await room.containers.list(all=True)
 for container in containers:
     print(container.id, container.state, container.started_by.name)
 ```
+```bash CLI
+meshagent container ps \
+  --room myroom \
+  --output table
+```
 </CodeGroup>
 
 ---
@@ -167,6 +199,11 @@ for container in containers:
 <CodeGroup>
 ```python Python
 await room.containers.stop(container_id=container_id, force=False)
+```
+```bash CLI
+meshagent container stop \
+  --room myroom \
+  --id "$CONTAINER_ID"
 ```
 </CodeGroup>
 
