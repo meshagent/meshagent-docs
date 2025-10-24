@@ -1,0 +1,79 @@
+---
+title: Using Containers
+---
+
+The [Containers API](../room_api/containers) lets you run containerized workloads inside a Room. With it, you can:
+- Run containers on demand (ad-hoc jobs, one-off commands)
+- Get logs from a running container 
+- Exec/TTY into a container for interactive debugging
+- Stop and delete containers
+- Manage images (pull, list, delete) and containers (run, list, stop)
+
+## When to use the Containers API
+Use the Containers API any time you want to run code inside a Room on demand. This can be useful for activities like: 
+
+- **Ad-hoc tasks:** Run arbitrary code/scripts to explore data, test libraries, or perform batch work.
+- **Pre-deployment testing:** Validate behavior in the Room environment before promoting to a Room Service or Project Service.
+- **Scheduled/ephemeral jobs:** Kick off work at specific times without maintaining a long-lived service.
+
+> **Note:** If you later decide to deploy a containerized Room or Project Service, the running of that service is powered by the Containers API under the hood. External services (non-containerized endpoints you call over HTTP) do not use the Containers API.
+
+## Lifecycle
+- Containers start with the parameters supplied at launch.
+- They can be long running, but if the room becomes inactive or you explicitly stop them, MeshAgent cleans them up.
+- Containers remain scoped to the room that launched them.
+
+## Permissions
+When a service or participant joins a room, it does so with a [participant token](../room_api/participant_tokens) that declares which APIs it may call. Part of that scope is the `ContainersGrant` which indicates what activities that service or participant can perform. 
+
+## How to Run a Container in MeshAgent Studio
+MeshAgent Studio allows you to pull an image from a registry and run a container for it without writing any code. 
+
+1. Go to [MeshAgent Studio](https://studio.meshagent.com).
+2. Create a new session ``myroom`` and go to the room. 
+3. From the developer console on the bottom of the screen select **Images**. 
+4. Select **Pull Image** and supply the required information to pull the image from a docker registry.
+5. Click the play icon next to the image once it's pulled. If any variables are required to run the container you'll be prompted to input the values. (The image should appear green under the **Images** tab if it was pulled correctly. If the image is showing up in white text it was not able to pull properly. Check the image and try again.)
+6. Your service should now be running in a container. Click the **Containers** tab to see the status and logs for the container, or to stop the container. 
+
+## How to Run a Container using the CLI 
+From the directory with your code, Dockerfile, and meshagent.yaml run: 
+
+```bash 
+meshagent setup # authenticate to MeshAgent if not already connected
+# build and push your container to a registry 
+# e.g. docker buildx build -t "$IMAGE:$TAG" --platform linux/amd64 --push
+meshagent container images pull --room=myroom --tag=myregistry/chatbot:0.1
+meshagent container run --room=myroom --image=myregistry/chatbot:0.1 --var system_prompt="Always respond with a fun fact"
+```
+
+If you want to verify the container is running you can check the list of active containers as well as what images are in the room
+```bash
+meshagent container images list
+meshagent container list
+```
+
+**To test the agent**: 
+1. Go to [MeshAgent Studio](https://studio.meshagent.com)
+2. Select the **Sessions** tab then open ``myroom``
+3. You'll see the chatbot in the participants tab. 
+
+If you are done running the container simply run 
+```bash 
+meshagent container stop --room=myroom --id=<container_id>
+```
+
+## How to Run a Container from Code
+
+
+
+## Troubleshooting
+Inside your room in the studio look at the **Developer Console** on the bottom of the screen. Here you'll see images and containers in the room. From the images tab you should see the image you pulled (e.g., "chatbot:0.1"), this should be green. If it is not green that means the image did not build properly and could indicate that you are missing the meshagent.yaml file that defines how the container and service should run. From the containers tab you should see the image running and who started it. You can also click into the container logs from this view or stop the container. 
+
+## Next Steps
+Containers run on demand and will not automatically restart the next time you enter the room. If you want a container to start automatically, deploy it as a Project Service or Room Service.
+
+For more information on room and project services see: 
+- [Intro to Services & Containers](../overview): Understand when to use project service and room services.
+- [Packaging Services](services_room_containers/packaging_and_deploying/deployment): Learn how to create a manifest and applicable Dockerfile for the service you want to deploy.
+- [Deploying Services](services_room_containers/packaging_and_deploying/deployment): Learn how to deploy a project or room service.
