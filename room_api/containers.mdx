@@ -1,6 +1,189 @@
 ##  Overview
 
-The `ContainersClient` makes it
+The Containers API through the `ContainersClient` lets you run containers on demand inside a Room via the `RoomClient`. This is particularly useful for ad-hoc tasks or testing code before deploying it as a Project or Room Service. With the Containers API you can:
+
+- Pull an image from a public or private registry
+- Run a container from an image
+- Stream logs for containers
+- Open an interactive terminal in a running container
+- Manage containers and images (list/stop/delete)
 
 ## API Methods
 
+### list_images
+
+- **Description**: List images currently available to the room (built or pulled previously).
+- **Parameters**: None.
+- **Returns**: `list[Image]` including tags, size, labels, and manifest metadata.
+
+<CodeGroup>
+```python Python
+images = await room.containers.list_images()
+for image in images:
+    print(image.tags, image.size)
+```
+</CodeGroup>
+
+---
+
+### delete_image
+
+- **Description**: Delete an unused image from the room.
+- **Parameters**:
+  - `image`: Tag or digest string to delete.
+- **Returns**: `None`.
+
+<CodeGroup>
+```python Python
+await room.containers.delete_image(image="chatbot:old")
+```
+</CodeGroup>
+
+---
+
+### pull_image
+
+- **Description**: Pull an image into the room. Supports passing registry credentials when needed.
+- **Parameters**:
+  - `tag`: Image reference (e.g. `myrepo/app:latest`).
+  - `credentials`: Optional list of `DockerSecret` credentials for private registries.
+- **Returns**: `None` once the pull completes.
+
+<CodeGroup>
+```python Python
+await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
+```
+</CodeGroup>
+
+---
+
+### run
+
+- **Description**: Start a container in the room.
+- **Parameters** (all optional except `image`):
+  - `image`: Container image to run.
+  - `command`: Override the default command (`str`).
+  - `env`: Environment variables injected as `dict[str, str]`.
+  - `mount_path`, `mount_subpath`: Mount configuration when using storage.
+  - `role`, `participant_name`: Launch on behalf of a specific room identity.
+  - `ports`: Port mappings `{container_port: host_port}`.
+  - `variables`: Additional runtime variables (often MeshAgent-specific).
+  - `credentials`: Registry secrets for the image.
+  - `name`: Friendly name for the container.
+- **Returns**: Container ID string.
+
+<CodeGroup>
+```python Python
+container_id = await room.containers.run(
+    image="registry.example.com/agents/chatbot:0.2",
+    variables={"SYSTEM_PROMPT": "Always respond with a fun fact."},
+    name="chatbot-demo",
+)
+print(f"Container launched: {container_id}")
+```
+</CodeGroup>
+
+---
+
+### exec
+
+- **Description**: Attach an interactive command to an existing container and stream its output.
+- **Parameters**:
+  - `container_id`: Target container.
+  - `command`: Optional command list; defaults to the container's shell.
+  - `tty`: Request a TTY session (`True` for interactive).
+  - `detach`: Leave the session running in the background (`True` by default).
+- **Returns**: A `Container` object exposing async helpers to read output, send input, resize the terminal, and await completion.
+
+<CodeGroup>
+```python Python
+session = await room.containers.exec(
+    container_id=container_id,
+    command=["bash"],
+    tty=True,
+    detach=False,
+)
+
+async for chunk in session.output():
+    print(chunk.decode(), end="")
+
+# (Optional) Send input; for example, list files then exit the shell
+await session.write(b'ls -la\n')
+await session.write(b'exit\n')  # end the interactive session
+
+status = await session.result
+print(f"Exec finished with status: {status}")
+```
+</CodeGroup>
+
+---
+
+### logs
+
+- **Description**: Stream container logs and optionally follow until exit.
+- **Parameters**:
+  - `container_id`: Target container.
+  - `follow`: `True` to keep streaming until the container exits.
+- **Returns**: `LogStream[None]`, which you can iterate for log lines or await for completion.
+
+<CodeGroup>
+```python Python
+stream = room.containers.logs(container_id=container_id, follow=True)
+
+async for line in stream.logs():
+    print(line)
+
+await stream  # optional: wait for the request to finish
+```
+</CodeGroup>
+
+---
+
+### list
+
+- **Description**: List containers in the room, optionally including exited ones.
+- **Parameters**:
+  - `all`: `True` to include stopped containers.
+- **Returns**: `list[RoomContainer]` with name, image, state, status, applicable manifest, and metadata about who started it.
+
+<CodeGroup>
+```python Python
+containers = await room.containers.list(all=True)
+for container in containers:
+    print(container.id, container.state, container.started_by.name)
+```
+</CodeGroup>
+
+---
+
+### stop
+
+- **Description**: Request a graceful stop (or force stop) of a running container.
+- **Parameters**:
+  - `container_id`: Target container.
+  - `force`: Send a forceful termination signal when `True`.
+- **Returns**: `None`.
+
+<CodeGroup>
+```python Python
+await room.containers.stop(container_id=container_id, force=False)
+```
+</CodeGroup>
+
+---
+
+### delete
+
+- **Description**: Remove container metadata after it has stopped. Useful for cleaning up history.
+- **Parameters**:
+  - `container_id`: Container to delete.
+- **Returns**: `None`.
+
+<CodeGroup>
+```python Python
+await room.containers.delete(container_id=container_id)
+```
+</CodeGroup>
+
+## Conclusion
+The Containers API makes it easy to run code ad-hoc inside a MeshAgent room. Containerized services rely on the Containers API behind the scenes to manage deployed Room and Project Services.
