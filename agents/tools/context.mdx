@@ -2,13 +2,15 @@
 title: "How Tools and Toolkits Work"
 ---
 
-MeshAgent Tools aren’t just for agents — people can use them too. This guide explains how tools, toolkits, and rooms fit together so that both humans and AI agents can safely discover, call, and share capabilities. You’ll see how tools are defined, validated, executed, and connected to MeshAgent rooms. 
+MeshAgent Tools aren’t just for agents — people can use them too. This guide explains how tools, toolkits, and rooms fit together so that both humans and AI agents can safely discover, call, and share capabilities. You’ll see how tools are defined, validated, executed, and connected to MeshAgent rooms. MeshAgent supports both static toolkits (always-on) for agents and dynamic toolkits built per message/thread via `ToolkitBuilder` + `ToolkitConfig`, so agents only enable the tools they need when they need them.
 
 ## Mental Model (how tool concepts fit together)
 - ``Tool`` = one discrete action an agent (or human participant) can take (e.g., WriteDocument, PresentForm).
 - ``ToolContext`` = everything a tool needs when it runs (the active room, who called, optional “on behalf of”, extra caller context).
 - ``Toolkit`` = a named bundle of tools plus optional rules (e.g., DocumentWritingToolkit with tools to ``read_document`` and ``summarize_document`` along with instructions for how to use these tools).
 - ``RemoteToolkit`` = a runtime wrapper that registers your toolkit with the room, listens for tool calls, validates inputs, runs the tool, and returns a structured Response.
+- ``ToolkitConfig`` = the options for constructing a toolkit (from simple `name` to rich per-toolkit settings).
+- ``ToolkitBuilder`` = factory that turns a ``ToolkitConfig`` into a concrete ``Toolkit`` (used for dynamic, per-message toolkits).
 
 ## Tools
 ### `Tool`
@@ -41,7 +43,7 @@ Tools return subclasses of `Response` declared in `meshagent.api.messaging`. Use
 
 | Response type | When to use it |
 | ------------- | -------------- |
-| `JsonResponse` | Structured JSON output (e.g., API payloads, summarised data). |
+| `JsonResponse` | Structured JSON output (e.g., API payloads, summarized data). |
 | `TextResponse` | Plain-text answers or status messages. |
 | `FileResponse` | Binary content such as generated documents, images, or archives. |
 | `LinkResponse` | Share a URL pointing to an external resource (e.g., dashboard link). |
@@ -52,10 +54,10 @@ MeshAgent tools are passed a ``ToolContext`` when the tool is executed. This obj
 **Constructor Parameters**
 | Property | Description |
 |---|---|
-|**room** | a room client that can be used to interact with the room or other participants in the room|
-|**caller** | the participant who called the tool|
-|**on_behalf_of** | if the tool was called by an agent that was acting on behalf of a user, the participant who invoked the agent|
-|**caller_context** | an optional dictionary of caller specific context data, this can be used to provide custom context data to the tool. For instance, this can be used for allowing agent based tools to receive the current chat context for implementing patterns such as handoffs.|
+|**room** | A room client that can be used to interact with the room or other participants in the room.|
+|**caller** | The participant who called the tool.|
+|**on_behalf_of** | If the tool was called by an agent that was acting on behalf of a user, the participant who invoked the agent.|
+|**caller_context** | An optional dictionary of caller specific context data, this can be used to provide custom context data to the tool. For instance, this can be used for allowing agent based tools to receive the current chat context for implementing patterns such as handoffs.|
 
 ## Toolkits
 
@@ -99,6 +101,23 @@ A `RemoteToolkit` adds lifecycle management around a ``Toolkit`` so it can be di
     - Stops child ``RemoteTool``safely
     - Unregisters the toolkit 
 
+## ToolkitBuilder and ToolkitConfig (dynamic toolkits)
+
+Static toolkits are great when you always need the same tools. But many capabilities are situational (e.g., only enable MCP when the user asks for a connector, only enable storage when a file is attached, allow a user to add and remove tools through a UI). `ToolkitBuilder` + `ToolkitConfig` let you construct a toolkit on demand, even per message, so you don’t have to declare every tool up front.
+
+- `ToolkitConfig`: Captures the definition/options for a toolkit. Simple toolkits can just use a `name`. Complex ones add fields (e.g., which MCP servers to expose, whether storage writes are allowed, what model and image size to use for an image generation tool).
+- `ToolkitBuilder`: A tiny factory that says “I can build toolkits named X from config type Y” and implements `make(model, config) → Toolkit`.
+
+ > **Note** :You can still instantiate `Toolkit(...)` directly for always-on tools. Builders are for the dynamic cases.
+
+**How it works**
+1. The caller provides any applicable `ToolkitConfig`s for this turn / thread. For example, adding tools to a ChatBot through the MeshAgent Studio UI, or passing tools to the `meshagent chatbot join` CLI command. 
+2. Call `make_tools(model, providers, tools=configs)` (*in standard `ChatBot` flows this is called for you; if you’re integrating directly, call it yourself*). It:
+    - Matches each config's `name` to a `ToolkitBuilder.name` in `providers`
+    - Validates the config 
+    - Calls `builder.make(model, config)` to create the `Toolkit` which exposes applicable `Tool`s for the agent
+3. The agent receives both the dynamically constructed toolkits and statically declared ones. 
+
 ## Tool Access and Availability
 
 ### `RequiredToolkit` 
@@ -124,3 +143,4 @@ Public toolkits are visible to any participant with `use_tools`. Private toolkit
 ## Next Steps
 - [Tools Quickstart](./quickstart): Try creating and running your first tool. 
 - [Dynamic UI Tools](./dynamic_ui_tools): Understand what dynamic UI tools are, why they matter, and how to build them. 
+- [Tool Usage Patterns](./tool_usage_patterns): Compare static toolkits with dynamic builder-driven toolkits and see how message-level selection works.
