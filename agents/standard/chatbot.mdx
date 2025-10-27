@@ -4,7 +4,7 @@ title: "Chatbot Overview"
 
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
 
-`ChatBot` builds on [`SingleRoomAgent`](./singleroomagent) to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful, interactive chat-based agent.
+`ChatBot` builds on [`SingleRoomAgent`](./singleroomagent) to deliver a ready-to-use conversational agent. It joins a MeshAgent room, manages per-participant chat threads, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. Toolkit integration, thread storage, and auto-greeting are all handled for you, which makes `ChatBot` the fastest path to creating a helpful, interactive chat-based agent. The MeshAgent `ChatBot` supports both static and dynamic toolkits built per message. This allows you to define tools the agent should always have access to as well as add and remove tools on demand as a conversation progresses. 
 
 ## When to Use It
 - You want to build an agent that is **seamlessly connected to the room** and **responds conversationally** to user messages.
@@ -48,8 +48,8 @@ When a participant sends a message:
 2. It identifies or spawns a chat thread corresponding to that conversation path.
 3. A chat context (``AgentChatContext``) is initialized using the ``llm_adapter``.
 4. The message history is synchronized with the room’s ``"thread"`` document.
-5. The chatbot invokes the LLM, streams back tokens, and appends responses to the thread document.
-6. Toolkits or reasoning tools can be used mid-conversation when invoked by the LLM.
+5. ChatBot resolves this turn’s toolkits: it collects `ToolkitBuilder`s from `get_thread_tool_providers(...)`, merges per-turn `ToolkitConfig`s (from MeshAgent Studio/CLI/App UI), calls `make_tools(...)` to create any dynamic toolkits, and combines the result with any static toolkits.
+6. The LLM is invoked with the prepared chat context and the resolved toolkits; tool calls are routed back into those toolkits, tokens are streamed, and the results are appended to the thread document.
 
 All of this happens automatically once your bot is started.
 
