@@ -1,0 +1,54 @@
+---
+title: "OpenAI Responses Adapter"
+---
+
+The OpenAI Responses adapter is our reference `LLMAdapter` implementation. It enables MeshAgent agents to use the [OpenAI Responses API](https://platform.openai.com/docs/guides/responses), handling streaming, tool calls, and model-specific settings.
+
+## Key features
+- **Model defaults:** Reads the model name from the constructor (`model=`) or the `OPENAI_MODEL` environment variable. Override per message by passing `model` in the chat payload; `ChatBot` forwards it to `next()`.
+- **System role selection:** Adjusts the initial chat role (`system`, `developer`, etc.) based on the model name (o1, o3, computer-use, etc.).
+- **Tool bundling:** Converts the supplied toolkits into OpenAI tool definitions  (both standard JSON function tools and OpenAI-native tools like `computer_use_preview`, `web_search_preview`, `image_generation`).
+- **Streaming support:** Consumes the streaming response API, emitting events such as reasoning summaries, partial content, and tool call updates to the chat agent.
+- **Parallel tool calls:** Optionally enables OpenAI’s `parallel_tool_calls` setting (disabled automatically for models that do not support it).
+
+## Constructor parameters
+```python Python
+OpenAIResponsesAdapter(
+    model: str = "gpt-5",
+    parallel_tool_calls: Optional[bool] = None,
+    client: Optional[AsyncOpenAI] = None,
+    response_options: Optional[dict] = None,
+    reasoning_effort: Optional[str] = None,
+    provider: str = "openai",
+)
+```
+- `model` – default model name; can be overridden per message.
+- `parallel_tool_calls` – request parallel tool execution when supported.
+- `client` – reuse an existing `AsyncOpenAI` client; otherwise the adapter creates one via `meshagent.openai.proxy.get_client`.
+- `response_options` – extra parameters passed to `responses.create`.
+- `reasoning_effort` – populates the Responses API `reasoning` options.
+- `provider` – label emitted in telemetry and logs.
+
+## Tool provider integration
+The adapter includes several sets of `ToolkitBuilder`, `ToolkitConfig`, and `Tool` definitions to expose OpenAI native tools.  Agents can use them directly, or override them with agent-specific wrappers that add persistence (for example, the ChatBot’s thread-aware image generation builder that saves partial/final images to room storage and updates the thread document).
+
+- **Image generation** – `ImageGenerationConfig`, `ImageGenerationToolkitBuilder`, `ImageGenerationTool`
+- **Local shell** – `LocalShellConfig`, `LocalShellToolkitBuilder`, `LocalShellTool`
+- **MCP** – `MCPConfig`, `MCPToolkitBuilder`, `MCPTool`
+- **Web search preview** – `WebSearchConfig`, `WebSearchToolkitBuilder`, `WebSearchTool`
+
+> **Note:** The adapter doesn’t “auto-register” these builders. Your agent decides which builders to expose each turn (e.g., ChatBot.get_thread_tool_providers(...)). This lets ChatBot substitute its thread-aware wrappers (like ChatBotThreadOpenAIImageGenerationToolkitBuilder).
+
+## Handling a turn
+When `next()` runs it:
+1. Creates a `ResponsesToolBundle` from the toolkits provided.
+2. Calls `openai.responses.create(...)` with the current chat messages, tool definitions, and optional response formatting.
+3. Streams each event to the provided `event_handler` so the chatbot can log reasoning progress, tool call status, and final messages.
+4. Executes tool calls by delegating back to the `Toolkit` that owns the tool name.
+5. Converts tool responses into text via the `ToolResponseAdapter` (defaults to `OpenAIResponsesToolResponseAdapter`).
+6. Returns the final model output for the turn.
+
+## Related Topics
+- [LLM Adapters](./llm_adapters): Base interface and lifecycle.
+- [OpenAI Tool Response Adapter](./openai_tool_response_adapter): How tool outputs are rendered back into the chat transcript.
+- [ChatBot Overview](../standard/chatbot): Shows where the adapter is invoked in the overall agent flow.
