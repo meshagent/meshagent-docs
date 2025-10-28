@@ -1,0 +1,66 @@
+---
+title: "Tool Usage Patterns"
+---
+
+MeshAgent supports two complementary ways to bring tools into an agent turn. Static toolkits stay attached to the agent for its entire lifetime, while dynamic toolkits are created on demand from `ToolkitBuilder`/`ToolkitConfig` pairs. This guide walks through both patterns, explains why you might pick one over the other, and maps out the runtime flow for message-specific tool selection.
+
+## Static Toolkits (Always On)
+- Construct the toolkit up front (for example `StorageToolkit()` or a custom bundle) and pass it in the agent’s `toolkits` list.
+- The toolkit is instantiated exactly once and participates in every LLM turn; no additional configuration is required.
+- Choose this when the agent must always provide a capability.
+
+```python Python
+chatbot = ChatBot(
+    name="support-assistant",
+    llm_adapter=OpenAIResponsesAdapter(),
+    toolkits=[
+        StorageToolkit(),         # always allow room storage
+        DocumentAuthoringToolkit()
+    ],
+)
+```
+
+## Dynamic Toolkits (Builder Driven)
+- Register one or more `ToolkitBuilder` instances so the agent can materialise toolkits from configs at runtime.
+- The UI (or calling service) requests the builder list via `get_thread_tool_providers`, lets the user pick tools, then sends a `tools` array where each entry matches a builder `name` and config schema.
+- During the turn, `make_tools(model, providers, tools)` validates each config against the builder’s `ToolkitConfig` and instantiates only the requested toolkits.
+- Perfect for capabilities that should be opt-in or short lived: MCP connectors, local shell access, or storage uploads that only appear when the user adds an attachment.
+
+```python Python
+message = {
+    "path": thread_path,
+    "text": "Generate a hero image for the landing page and pull the latest market stats.",
+    "tools": [
+        {
+            "name": "image_generation",
+            "model": "gpt-image-1",
+            "size": "1024x1024",
+        },
+        {
+            "name": "mcp",
+            "servers": [
+                {
+                    "server_label": "research-bot",
+                    "server_url": "https://mcp.example.com",
+                    "authorization": "Bearer ${TOKEN}",
+                },
+            ],
+        },
+    ],
+}
+```
+
+## Message Flow for Dynamic Tools
+1. **Discover providers**: the client sends `get_thread_tool_providers`; the chatbot replies with the builders it supports.  
+2. **User picks tools**: the client shows those builders as toggles and builds a JSON payload that matches the selected configs.  
+3. **Agent turn**: `ChatBot` collects static thread toolkits, calls `make_tools` with the selected configs, and flattens the combined toolkit list.  
+4. **LLM execution**: `OpenAIResponsesAdapter.next` converts those toolkits into OpenAI tool definitions for that single request.  
+5. **Tool call routing**: when the LLM calls a tool, `ResponsesToolBundle` looks up the owning toolkit (static or dynamic) and executes it. On the next message, the list resets and the process repeats.
+
+## Motivations and Use Cases
+- **Granular capabilities**: enable heavier tools—like image generation or shell access—only when the user opts in for that specific message.  
+- **User-selected connectors**: let people opt into MCP servers, web search, or proprietary APIs on a per-conversation or per-message basis.  
+- **Parity with consumer chat UIs**: deliver a ChatGPT-style experience where tools appear as checkboxes the user can toggle.  
+- **Operational safety**: avoid instantiating heavy or privileged toolkits unless they are explicitly requested.
+
+Static and dynamic patterns can be mixed freely—keep always-on defenses in the constructor, then layer builder-driven toolkits on top for anything optional or contextual.
