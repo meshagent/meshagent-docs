@@ -1,5 +1,5 @@
 ---
-title: "Chatbot Overview"
+title: "ChatBot Overview"
 ---
 
 import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
@@ -27,7 +27,7 @@ If your agent only needs to perform background tasks or doesn’t interact with 
 | `requires`           | `list[Requirement] \| None`   | Dependencies such as `RequiredSchema` or `RequiredToolkit`. Automatically ensures the `"thread"` schema exists. |
 | `llm_adapter`        | `LLMAdapter`                  |  Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies chat contexts and translates responses into MeshAgent events.                                      |
 | `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter for translating tool call outputs.                                                             |
-| `toolkits`           | `list[Toolkit] \| None`       | Extra toolkits that are always available to the chatbot beyond what `requires` installs. Defaults to `[]`.                                                     |
+| `toolkits`           | `list[Toolkit] \| None`       | Extra toolkits that are always available to the ChatBot beyond what `requires` installs. Defaults to `[]`.                                                     |
 | `rules`              | `list[str] \| None`           | List of system or behavior rules appended to each chat context.                                                 |
 | `auto_greet_message` | `str \| None`                 | Optional greeting message sent automatically by the agent when a new thread starts.                                                     |
 | `empty_state_title`  | `str \| None`                 | Title text shown in the Studio chat pane before the first user message. Defaults to `"How can I help you?"`.                                        |
@@ -44,7 +44,7 @@ If you do not pass a `requires` list, `ChatBot` automatically injects `RequiredS
 
 ## Conversation Flow 
 When a participant sends a message:
-1. The chatbot receives the message via ``room.messaging.on("message")``.
+1. The ChatBot receives the message via ``room.messaging.on("message")``.
 2. It identifies or spawns a chat thread corresponding to that conversation path.
 3. A chat context (``AgentChatContext``) is initialized using the ``llm_adapter``.
 4. The message history is synchronized with the room’s ``"thread"`` document.
@@ -54,10 +54,10 @@ When a participant sends a message:
 All of this happens automatically once your bot is started.
 
 ## Key Behaviors and Hooks
-- **Thread management:** Every conversation lives inside a MeshDocument thread. The chatbot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
+- **Thread management:** Every conversation lives inside a MeshDocument thread. The ChatBot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
 - **Context building:** `init_chat_context()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
 - **Static tool resolution:** `get_thread_toolkits()` gathers toolkits declared in `requires`, and any always-on toolkits passed through `toolkits`.
-- **Dynamic tool providers:** `get_thread_tool_providers()` lists the `ToolkitBuilder` factories the chatbot is willing to spin up on demand (MCP, storage uploads, local shell, image generation, etc.). The chat UI calls this hook first to learn which tool toggles to display, and later sends back matching configs so the chatbot can hydrate those toolkits with `make_tools()`.
+- **Dynamic tool providers:** `get_thread_tool_providers()` lists the `ToolkitBuilder` factories the ChatBot is willing to spin up on demand (MCP, storage uploads, local shell, image generation, etc.). The chat UI calls this hook first to learn which tool toggles to display, and later sends back matching configs so the ChatBot can hydrate those toolkits with `make_tools()`.
 - **Message-specific toolkits:** When the user sends a message with a `tools` payload, `make_tools()` combines the selected configs with the provider list to hydrate just the toolkits needed for that turn before the LLM is invoked. (For example, in MeshAgent Studio, when the user selects which tools to add to an agent, these tools are added to the `tools` payload so the agent can use them.)
 - **Thread helpers:** Use `open_thread()` and `close_thread()` to work with the underlying document, or `load_thread_context()` to replay the stored messages into an existing chat context (for example, when resuming a conversation).
 - **LLM customization:** Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to provide additional background context for the agent outside of the system prompt).
@@ -88,7 +88,7 @@ These can be extended or replaced with your own toolkit factories.
 </CodeGroup>
 
 
-This subclass uses the OpenAI Responses API and applies a a system prompt. You can call the chatbot into a room directly from your terminal by running: 
+This subclass uses the OpenAI Responses API and applies a a system prompt. You can call the ChatBot into a room directly from your terminal by running: 
 
 ```bash bash 
 meshagent service run "main.py" --room=gettingstarted
@@ -98,7 +98,7 @@ Next from the [MeshAgent Studio](https://studio.meshagent.com) you can go to the
 
 To extend the Chatbot with Tools see the next article on [building a chat agent](./buildanddeploychatbot).
 
-MeshAgent Studio and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand chatbot threads. This means any conversation started in the Studio can be displayed properly or continued inside your own application without extra integration work.
+MeshAgent Studio and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand ChatBot threads. This means any conversation started in the Studio can be displayed properly or continued inside your own application without extra integration work.
 
 ## Next Steps
 
@@ -106,7 +106,7 @@ MeshAgent Studio and the Flutter SDK include built-in chat UI components (such a
 
 To continue learning about MeshAgent agents check out:
 
-- [Build a ChatBot](./buildanddeploychatbot): Step-by-step guide to configuring adapters, adding toolkits, and running your chatbot in a MeshAgent room.
+- [Build a ChatBot](./buildanddeploychatbot): Step-by-step guide to configuring adapters, adding toolkits, and running your ChatBot in a MeshAgent room.
 - [Adapters](../adapters/index): Understand how LLM adapters and tool response adapters plug into the chat loop.
 - [VoiceBot](./voicebot): Adds streaming audio input/output for speech interactions.
 - [Worker](./worker) and [TaskRunner](./taskrunner): Perform background or task-based actions.

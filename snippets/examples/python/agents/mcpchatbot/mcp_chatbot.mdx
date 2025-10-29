@@ -1,18 +1,20 @@
+```python Python
+
+import asyncio
+import logging
 from meshagent.tools import Toolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import MCPServer, MCPTool
-
-
-import asyncio
-import os
-
+from meshagent.openai.tools.responses_adapter import MCPConfig, MCPServer, MCPTool
 from meshagent.api.services import ServiceHost
+from meshagent.otel import otel_config
 
+otel_config(service_name="mcp-chatbot")
+log = logging.getLogger(__name__)
 service = ServiceHost()
 
 
-@service.path("/agent")
+@service.path(path="/agent", identity="mcp-chatbot")
 class MCPChatbot(ChatBot):
     def __init__(self):
         super().__init__(
@@ -34,16 +36,15 @@ class MCPChatbot(ChatBot):
                 name="builtin",
                 tools=[
                     MCPTool(
-                        servers=[
-                            MCPServer(
-                                server_label="mcp",
-                                server_url="https://mcp.zapier.com/api/mcp/mcp",
-                                headers={
-                                    "Authorization": "Bearer "
-                                    + os.getenv("ZAPIER_API_KEY")
-                                },
-                            )
-                        ]
+                        config=MCPConfig(
+                            name="mcp",
+                            servers=[
+                                MCPServer(
+                                    server_label="mcp",
+                                    server_url="https://mcp.deepwiki.com/mcp"
+                                )
+                            ],
+                        )
                     )
                 ],
             )
@@ -51,3 +52,6 @@ class MCPChatbot(ChatBot):
 
 
 asyncio.run(service.run())
+
+```
+
