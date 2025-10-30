@@ -1,4 +1,3 @@
-import os
 import asyncio
 from datetime import date
 from openai import AsyncOpenAI

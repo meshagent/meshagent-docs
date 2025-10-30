@@ -1,4 +1,3 @@
-import os
 import asyncio
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit

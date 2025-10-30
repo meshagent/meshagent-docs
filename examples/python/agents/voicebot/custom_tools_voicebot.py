@@ -1,7 +1,6 @@
-import os
 import uuid
 import asyncio
-from datetime import datetime, date
+from datetime import date
 from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero

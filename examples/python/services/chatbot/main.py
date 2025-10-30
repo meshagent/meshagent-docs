@@ -1,4 +1,3 @@
-from meshagent.api import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.api.services import ServiceHost

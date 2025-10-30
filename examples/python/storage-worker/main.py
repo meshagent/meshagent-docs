@@ -3,7 +3,6 @@ from meshagent.openai.tools import (
     OpenAIResponsesAdapter,
     OpenAIResponsesToolResponseAdapter,
 )
-from meshagent.api import RequiredToolkit
 from meshagent.api.services import ServiceHost
 from meshagent.tools.storage import StorageToolkit
 import asyncio

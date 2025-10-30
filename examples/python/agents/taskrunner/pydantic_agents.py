@@ -1,4 +1,3 @@
-import os
 import json
 import asyncio
 import logging
@@ -75,7 +74,7 @@ class TranslationTaskRunner(TaskRunner):
         log.info(f"Translation Result: {translations.output}")
 
         # save results to room storage
-        log.info(f"Translation completed, writing raw results to Room storage.")
+        log.info("Translation completed, writing raw results to Room storage.")
 
         await save_to_storage(
             room=room,
