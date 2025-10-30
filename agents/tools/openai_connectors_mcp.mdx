@@ -1,5 +1,5 @@
 ---
-title: "OpenAI Connectors & MCP Tools"
+title: "Using OpenAI Connectors & MCP Servers"
 ---
 
 import MCPChatBot from "/snippets/examples/python/agents/mcpchatbot/mcp_chatbot.mdx"
@@ -9,15 +9,23 @@ In addition to MeshAgent Tools, agents can also use external tools through [Open
 - **OpenAI Connectors**: OpenAI-maintained MCP wrappers for third party services that don't have official MCP servers (Gmail, Google Drive, Outlook, Microsoft Teams, Dropbox etc.). Using these connectors requires OAuth client registration and authorization with the provider. 
 - **Remote MCP servers**: Any MCP server operated by you or a third party. You provide the server URL and any required authentication details, and the agent can call the server's MCP tools. 
 
-## Ways to Use Connectors & MCP Servers
-- **Always-available toolkits**: Create an agent and explicitly pass these tools via the agent's `toolkits` parameter (easiest way to get started).
-- **Dynamically-available toolkits**: Package the Connector or MCP Server as a MeshAgent [Service](../../services_room_containers/overview) and use UI hooks to let users enable/disable specific tools per conversation or message. This is automatically supported in MeshAgent Studio when running the CLI chatbot with the mcp flag (`meshagent chatbot join --room=myroom --mcp`). 
+## Using OpenAI Connectors & MCP Tools with Agents
+
+The simplest way to give your agent access to MCP tools is to pass them directly to the `toolkits` parameter when creating the agent (see example below). This will ensure the agent always has access to the tools.  
+
+For more advanced use cases, you can also let users dynamically enable/disable specific connectors per message - see [Dynamic MCP Tools](./dynamic_openai_connectors_mcp) for details.
 
 In both cases, MeshAgent talks to OpenAI via the [`OpenAIResponsesAdapter`](../adapters/openai_responses_adapter). This adapter gathers the toolkits available to the agent on that turn, manages tool execution, streaming responses, and returning the final result. 
 
 ## Example: Create an Agent with MCP Tools
 
 Let's create a [`ChatBot`](../agents/chatbot) that can use the public [DeepWiki MCP Server](https://docs.devin.ai/work-with-devin/deepwiki-mcp) which does not require an access token or OAuth. 
+
+For this ChatBot we'll define: 
+- A `Toolkit`: a collection of related tools the agent can use
+- An `MCPTool`: connects to an MCP server
+- `MCPConfig`: configuration for the MCP connection
+- `MCPServer`: the actual server details (URL, authentication details)
 
 <CodeGroup>
   <MCPChatBot />
@@ -29,10 +37,10 @@ Run it locally and try it in MeshAgent Studio:
 meshagent service run "main.py" --room=myroom
 ```
 
-From [MeshAgent Studio](https://studio.meshagent.com), enter `myroom`, and start talking to the agent. Ask it about public GitHub repositories and it will use the DeepWiki MCP tools to respond. 
+From [MeshAgent Studio](https://studio.meshagent.com), enter `myroom`, and start talking to the agent. Ask it about public GitHub repositories and it will use the DeepWiki MCP tools to respond. For example you can ask "What's in the README on the Pydantic AI repository?". 
 
 ### Package and deploy the agent
-Once satisfied with the agent, we can package and deploy it as a project service so it's automatically available to all the rooms in a project, or as a room service so it's always available in a specific room. To do so we'll create a Dockerfile, build/push the image, create a yaml file that defines the service, then deploy it using the MeshAgent CLI. 
+Once satisfied with the agent, we can [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project service so it's automatically available to all the rooms in a project, or as a room service so it's always available in a specific room. To do so we'll create a Dockerfile, build/push the image, create a yaml file that defines the service, then deploy it using the MeshAgent CLI. 
 
 **Step 1: Create the Dockerfile**
 
@@ -67,7 +75,7 @@ ports:
   endpoints:
   - path: /mcp-deepwiki-chatbot
     meshagent:
-      identiy: "mcp-deepwiki-chatbot"
+      identity: "mcp-deepwiki-chatbot"
 container:
   image: "IMAGE:TAG"
 ```
@@ -78,17 +86,20 @@ container:
 meshagent service create --file "meshagent.yaml" # optional --room=myroom 
 ```
 
-**Step 5: Try it out!**
+**Step 5: Use Your Deployed Agent**
 
 Next open [MeshAgent Studio](https://studio.meshagent.com), go to a room where the service is deployed, and begin talking to the ChatBot.
 
 ## Conclusion
 
-Adding OpenAI Connectors and MCP Servers to your agent is a great way to give them access to third party services. As you enable these services for your agents be mindful of what information you are sharing with the services, who is hosting the servers, and whether you want to require approval or limit the allowed tools for agent use. 
+OpenAI Connectors and MCP Servers extend your agents with third-party capabilities. When adding these tools, consider:
+- What data you're sharing with external services
+- Who operates the MCP servers you connect to  
+- Whether agents should require approval before using certain tools
 
-For agents that should always have certain capabilities, (e.g., a support agent with access to an internal ticketing MCP server), the always-available toolkit approach outlined on this page is ideal. 
+**Use always-available toolkits** (like this example) when agents need consistent access to specific capabilities, such as a support agent with internal ticketing tools.
 
-If you want a ChatGPT/Claude style experience where users can add or remove tools as needed see the [Dynamic Toolkits](./dynamic_openai_connectors_mcp) documentation. 
+**Use dynamic toolkits** when you want users to control which tools are available per message, this is particularly helpful if you are trying to build a ChatGPT/Claude style experience where users can toggle tools on and off. See [Dynamic Toolkits](./dynamic_openai_connectors_mcp) for details.
 
 ## Related Topics
 - [Dynamic Connectors and MCP Servers](dynamic_openai_connectors_mcp): Configure your agent and UI so users can dynamically select tools for the agent per message. 
