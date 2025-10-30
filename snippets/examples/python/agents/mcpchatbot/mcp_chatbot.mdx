@@ -9,47 +9,42 @@ from meshagent.openai.tools.responses_adapter import MCPConfig, MCPServer, MCPTo
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 
-otel_config(service_name="mcp-chatbot")
+otel_config(service_name="mcp-deepwiki-chatbot")
 log = logging.getLogger(__name__)
 service = ServiceHost()
 
-
-@service.path(path="/agent", identity="mcp-chatbot")
+@service.path(path="/agent", identity="mcp-deepwiki-chatbot")
 class MCPChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="meshagent.mcp-chatbot",
-            title="image designer",
-            description="an agent that can use MCP servers",
-            empty_state_title="what can I do for you",
+            name="mcp-deepwiki-chatbot",
+            title="ChatBot that can use DeepWiki MCP Server",
+            description="An agent that can use the DeepWiki MCP server",
             rules=["you are an assistant for trying out MCP servers"],
             llm_adapter=OpenAIResponsesAdapter(
-                parallel_tool_calls=True, model="gpt-4o"
+                parallel_tool_calls=True
             ),
             auto_greet_message="What can I help you with?",
+            toolkits=[
+                Toolkit(
+                    name="mcp-deepwiki",
+                    tools=[
+                        MCPTool(
+                            config=MCPConfig(
+                                name="mcp",
+                                servers=[
+                                    MCPServer(
+                                        server_label="mcp",
+                                        server_url="https://mcp.deepwiki.com/mcp"
+                                    )
+                                ]
+                            )
+                        )
+                    ]
+                )
+            ],
             labels=["tasks", "mcp"],
         )
-
-    async def get_thread_toolkits(self, *, thread_context, participant):
-        return [
-            Toolkit(
-                name="builtin",
-                tools=[
-                    MCPTool(
-                        config=MCPConfig(
-                            name="mcp",
-                            servers=[
-                                MCPServer(
-                                    server_label="mcp",
-                                    server_url="https://mcp.deepwiki.com/mcp"
-                                )
-                            ],
-                        )
-                    )
-                ],
-            )
-        ]
-
 
 asyncio.run(service.run())
 

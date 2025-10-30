@@ -24,27 +24,25 @@ class MCPChatbot(ChatBot):
                 parallel_tool_calls=True
             ),
             auto_greet_message="What can I help you with?",
+            toolkits=[
+                Toolkit(
+                    name="mcp-deepwiki",
+                    tools=[
+                        MCPTool(
+                            config=MCPConfig(
+                                name="mcp",
+                                servers=[
+                                    MCPServer(
+                                        server_label="mcp",
+                                        server_url="https://mcp.deepwiki.com/mcp"
+                                    )
+                                ]
+                            )
+                        )
+                    ]
+                )
+            ],
             labels=["tasks", "mcp"],
         )
-
-    async def get_thread_toolkits(self, *, thread_context, participant):
-        return [
-            Toolkit(
-                name="mcp-deepwiki",
-                tools=[
-                    MCPTool(
-                        config=MCPConfig(
-                            name="mcp",
-                            servers=[
-                                MCPServer(
-                                    server_label="mcp",
-                                    server_url="https://mcp.deepwiki.com/mcp"
-                                )
-                            ],
-                        )
-                    )
-                ],
-            )
-        ]
 
 asyncio.run(service.run())
