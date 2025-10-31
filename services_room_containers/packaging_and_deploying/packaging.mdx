@@ -24,7 +24,8 @@ Both can be used for project services or room services. The choice depends on wh
 | `version` | Yes | Both | Always "v1" |
 | `kind` | Yes | Both | "Service" or "ServiceTemplate" |
 | `metadata` | Yes | Both | Service identity and display information |
-| `ports` | Yes | Both | Endpoints MeshAgent can call |
+| `agents` | No | Both | Register the agent identities exposed by the service |
+| `ports` | No | Both | Endpoints MeshAgent can call |
 | `container` | * | Both | Container configuration (mutually exclusive with `external`) |
 | `external` | * | Both | External service URL (mutually exclusive with `container`) |
 | `variables` | No | ServiceTemplate only | User inputs for templating (used with `container` services only) |
@@ -53,6 +54,24 @@ metadata:
   icon: "🤖"                   # Optional: Icon for UI
   annotations:                 # Optional: Custom key-value metadata, could also be links to external paths
     team: "platform"
+```
+
+### Agents
+Use the `agents` list to declare the MeshAgent identities your service provides. This helps MeshAgent route requests, apply agent-specific policies, and present the right agents in the UI.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Unique agent identity within the service |
+| `description` | string | No | Display text describing the agent |
+| `annotations` | object | No | Key-value metadata about the agent (for example `meshagent.agent.type`) |
+
+Example Syntax:
+```yaml yaml
+agents:
+  - name: assistant
+    description: "Conversational agent for the room"
+    annotations:
+      meshagent.agent.type: "ChatBot"
 ```
 
 ### Ports
