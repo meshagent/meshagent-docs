@@ -34,13 +34,13 @@ Before you start, make sure your machine matches the appropriate requirements. I
 ### Key Concepts
 - **Projects**: Groups related Rooms and the Agents that serve them. It is best to create a different Project for each use case.
 - **Rooms**: A dedicated space for humans and Agents to collaborate in real time. 
-- **Agents**: ChatBots, VoiceBots, TaskRunners, and Workers that you build and deploy with custom tools or out of the box MeshAgent tools. Once deployed, Agents are automatically available in every Room under that Project. 
+- **Agents**: [ChatBots](../agents/standard/chatbot), [VoiceBots](../agents/standard/voicebot), [TaskRunners](../agents/standard/taskrunner), and [Workers](../agents/standard/worker) that you build and deploy with custom tools or out of the box MeshAgent tools. Once deployed, Agents are automatically available as a project service (available in all rooms in the project) or a room service (available only in the room they're deployed to). 
 
 ## Setup Guide
 ### Step 1: Create an account and project:
 
 1. In a browser, go to [meshagent.com](https://www.meshagent.com/). Sign up or sign into MeshAgent Studio.
-2. Create a new project from the MeshAgent Studio UI or MeshAgent CLI ``meshagent project create my-new-project``
+2. Create a new project from [MeshAgent Studio](https://studio.meshagent.com) or using the MeshAgent CLI ``meshagent project create my-new-project``
 3. Ensure your project has credits to start a room. Go to the **Billing** page to check your credits in the project. All new accounts start with $5. 
 
 
@@ -67,7 +67,8 @@ Authenticate and activate a project.
 
 <CodeGroup>
 ```bash bash
-# A browser window will open for OAUTH.
+# A browser window will open for OAuth.
+# Next the terminal will ask you to select or create a project.
 meshagent setup
 ```
 </CodeGroup>
@@ -76,17 +77,17 @@ __Optional__: Alternatively, instead of running the `meshagent setup` command yo
 
 <CodeGroup>
 ```bash bash
-# A browser window will open for OAUTH.
+# A browser window will open for OAuth 
 meshagent auth login
-meshagent project activate -i
+meshagent project activate -i # Select a project to activate
 # create an api key if necessary. The key value will be displayed only once.
-meshagent api-key create --activate my-key
+meshagent api-key create --activate my-api-key
 ```
 </CodeGroup>
 
-You are now authenticated and ready to use the cli to perform operations involving a room. 
+You are now authenticated and ready to use the CLI to perform operations involving a Room. 
 
-### Step 4: Call an agent into a room using the MeshAgent CLI
+### Step 4: Call an agent into a Room using the MeshAgent CLI
 
 Let's call a chatbot and voicebot into a new room and talk to them in MeshAgent Studio. 
 
@@ -100,7 +101,9 @@ meshagent voicebot join --room gettingstarted --agent-name voiceagent
 
 Now open [studio.meshagent.com](https://studio.meshagent.com/) and join the ``gettingstarted`` session. In the participants tab you will see the ``chatagent`` and ``voiceagent`` appear. To talk to the agent, just select it from the participants list and begin chatting! 
 
-> Tip: Mute your mic after speaking to avoid background noise triggering the voice agent.
+These agents will be available in the Room while you're running them from the CLI. If you want the agents to persist in the room you will need to deploy them as a project or room service. 
+
+> **Tip**: Mute your mic after speaking to avoid background noise triggering the voice agent.
 
 ## Next Steps
 
