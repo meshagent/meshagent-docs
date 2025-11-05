@@ -1,0 +1,8 @@
+ARG MESHAGENT_SDK_IMAGE="meshagent/python-sdk-slim:latest"
+
+FROM ${MESHAGENT_SDK_IMAGE}
+
+COPY . /src
+WORKDIR /src
+
+ENTRYPOINT [ "python3", "mesh_tools_chatbot.py" ]
