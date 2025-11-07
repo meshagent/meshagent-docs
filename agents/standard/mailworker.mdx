@@ -3,6 +3,7 @@ title: "MailWorker Overview"
 ---
 
 import SimpleMailbot from "/snippets/examples/python/agents/mailbot/mailbot.mdx"
+import ProvisionMailbox from "/snippets/examples/python/agents/mailbot/provision_mailbox.mdx"
 
 The ``MailWorker`` lets your build an agent that communicates via email. It receives incoming messages, stores them in your room, generates replies using an LLM, and sends responses back out through SMTP — automatically turning your inbox into an intelligent, room-connected agent.
 
@@ -57,26 +58,45 @@ If you just need a background job, see [Worker](./worker). If you want real-time
 
 
 ## Example
-First create and allocate an available email address, then define a ``MailWorker`` that uses it.
+First create and allocate an available email address, then define a ``MailWorker`` that uses it. 
 
+### Create a Mailbox
+You can create a new mailbox in [MeshAgent Studio](https://studio.meshagent.com) from the **Mail** tab. You will need to choose an email address and email queue for the agent. 
+
+You can also provision the mailbox programatically. To do so you will need an active MeshAgent API key. Create and activate a new API key using the MeshAgent CLI if you do not already have an API key. 
+
+```bash bash
+meshagent api-key create --activate my-new-api-key
+```
+
+**Next provision your mailbox:**
+```bash bash
+export MESHAGENT_API_KEY="<your-api-key>"
+export MESHAGENT_PROJECT_ID="<your-project-id>" # get this from meshagent project list
+export ROOM_NAME="my-room"
+export EMAIL_ADDRESS="<your_email>@mail.meshagent.com"
+export EMAIL_QUEUE="<your_queue_name>"
+```
+
+<CodeGroup>
+    <ProvisionMailbox />
+</CodeGroup>
+
+```bash bash
+python provision_mailbox.py
+```
+
+
+### Create and run the email agent
 <CodeGroup>
     <SimpleMailbot />
 </CodeGroup>
 
-Set env vars, pick a queue, and choose a unique email address. If you’re self-hosting, you can override the default mail domain.
-You'll also need to export the MeshAgent Project ID you can run ``meshagent project list`` from the CLI to get the IDs associated with the MeshAgent projects you have access to. 
+Be sure you have set your environment variables for the queue and email address for the agent. Then run the service:
 
 ```bash
-export EMAIL_QUEUE="test_email"
-export EMAIL_ADDRESS="myemail@mail.meshagent.com" # come up with a unique email
-export MESHAGENT_PROJECT_ID="<your-project-id>"
-# If self-hosting, you can also set:
-# export MESHAGENT_MAIL_DOMAIN="mail.meshagent.com" # this would be your custom domain instead of the default mail.meshagent.com
-```
-
-Next, run the service:
-
-```bash
+export EMAIL_ADDRESS="my_email@mail.meshagent.com"
+export EMAIL_QUEUE="my_email"
 meshagent service run "main.py" --room=maildemo
 ```
 
