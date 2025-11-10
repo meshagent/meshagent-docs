@@ -1,7 +1,7 @@
 ---
 title: Example Deploying a Chatbot as a Room Service
 ---
-import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+import SystemPromptChatbot from "/snippets/examples/python/agents/chatbot/system_prompt_chatbot.mdx"
 
 Room services are scoped to a specific room and persist across sessions. They're ideal when users need to customize services for example, providing their own system prompt or API key. 
 
@@ -14,12 +14,12 @@ To learn more about project vs room services and understand when to use each see
 Let's create a simple chatbot that allows users to give it a system prompt when deploying. To deploy this we'll create three files: 
 - **main.py:** A MeshAgent-native chatbot service using ServiceHost
 - **Dockerfile:** Packages the service as a container
-- **meshagent.yaml**: A ServiceTemplateSpec that collects a system prompt variable from users when they add the service to their room
+- **meshagent.yaml**: A ServiceSpec that allows users to set a custom system prompt for the agent when deploying it to their room.
 
 ### main.py
 
 <CodeGroup>
-    <SimpleChatbot />
+    <SystemPromptChatbot />
 </CodeGroup>
 
 ### Dockerfile
@@ -37,7 +37,7 @@ ENTRYPOINT [ "python3", "main.py" ]
 ### meshagent.yaml
 
 ```yaml yaml
-kind: ServiceTemplate
+kind: Service
 version: v1
 metadata:
   name: chatbot
@@ -60,10 +60,7 @@ container:
   command: python3 main.py      # command executed inside the container
   environment:                  # passes variables into the container
     - name: SYSTEM_PROMPT
-      value: "{system_prompt}"
-variables:                    # exposed in MeshAgent Studio UI as form fields when someone launches the service (parameters collected when launching service)
-    - name: "system_prompt"
-      description: "Custom instructions for the agent to follow"
+      value: "Always reply to the user with a fun fact" # customize the system prompt before deploying
 ```
 
 ## Build and Push the Container
@@ -93,8 +90,7 @@ For more details on deployment see the [deploying services](./deployment) docume
 ## Use the Service
 
 1. Open your room in [MeshAgent Studio](https://studio.meshagent.com)
-2. You'll be prompted to provide a system prompt for the chatbot
-3. Once provided the service will start and the chatbot will appear in the participants tab
+2. The chatbot will appear in the participants tab and you can begin talking to the agent
 
 ### Verify the Service is Running
 From the Developer Console at the bottom half of the room UI
