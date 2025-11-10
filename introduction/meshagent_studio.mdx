@@ -2,101 +2,129 @@
 title: MeshAgent Studio
 ---
 
-[MeshAgent Studio](https://studio.meshagent.com) is the browser-based control plane for MeshAgent. Use it to create projects, spin up rooms, invite teammates, deploy services, and monitor usage without leaving your browser. Studio mirrors the MeshAgent CLI, so anything you configure in one surface is immediately reflected in the other. 
+[MeshAgent Studio](https://studio.meshagent.com) is the browser-based developer workspace for MeshAgent. Use it to test, share, and deploy your agents and tools as you build the front end for your agentic application.
+
+With MeshAgent Studio you can: 
+- Create projects and rooms and jump between them.
+- Inspect sessions (logs, traces, metrics) for live debugging.
+- Invite teammates and manage roles/permissions.
+- Create/rotate API Keys.
+- Deploy and manage services (project‑level and room‑scoped).
+- Manage Secrets and Image Pull Secrets.
+- Set up Webhooks.
+- Configure Integrations (bring your own OpenAI key/base URL; export OTEL telemetry).
+- Create OAuth clients for MeshAgent sign‑in to your apps.
+- Review Usage dashboards: active rooms, participants, cost, most‑used tools, and tool latency.
+- Create room‑scoped mailboxes.
+- Handle Billing: track spend, purchase credits, and enable auto‑reload.
 
 ## Project selector and account menu
 
 MeshAgent Studio opens to an active project. Use the dropdown in the upper-left corner to switch between projects you belong to or create a new one. Select the menu option in the upper-right corner to logout. 
 
 ## Rooms
+Use rooms to isolate agent runtime environments. Rooms are secure environments where humans and agents can collaborate and share context. Rooms can have their own set of services and mailboxes. 
 
-The Rooms view is the fastest path to collaborating with agents and teammates:
+From the MeshAgent Studio UI you can: 
+- **Create** a room with **New Room**
+- Toggle between **My Rooms** (filtered view of the rooms you've joined or been added to in the active project) and **All Rooms** which lists every room that exists in the project (subject to your project role). 
+- From the menu icon on a room you can select: 
+    - **Edit** to rename the room or add a description
+    - **Services** to view, add, remove, or edit room specific services
+    - **Permissions** to manange user access and grants to a specific room
+    - **Delete** to permanently delete the room
 
-- Create or join rooms by name; Studio provisions the room automatically when you land in it.
-- View active participants (humans, agents, services) plus their current scopes.
-- Inspect real-time logs, traces, and tool calls from the Developer Console without attaching a debugger.
-- Upload files, pin documents, and browse room storage so agents share the same context as humans.
-- Start/stop CLI-hosted agents from the Participants panel or convert them into always-on services.
+## Sessions 
+Monitor and debug live and recent room sessions. A session starts when a room starts and stops when the room stops. You can toggle between **Active Sessions** and **Recent Sessions** across rooms. 
+
+Select a session to see **Logs, Traces, and Metrics** for detailed insights into the activities that occurred during a given room session. This is helpful for debugging live and reviewing recent activities. 
+
+## Room Workspace (inside a Room)
+From both the **Rooms** and **Sessions** tabs you can select a room to enter the **Room Workspace**. The room workspace is where you will develop, test, and iterate on agents and tools. Opening a room starts a new Session; you can invite others to the session to observe behavior and collect feedback. When you deploy services, they remain available to the room beyond any single session.
+
+### Layout
+- **File Browser (left)**: Browse room files. Depending on your permissions, you can add, view, and remove files.
+- **File Previews (center)**: Open documents, code, and resources in tabs (e.g., tables, markdown notes, MeshDocuments).
+- **Messaging (right)**: Switch between human and agent participants and chat with them. 
+- **Developer Console (bottom)**: Real-time debugging tools: 
+    - **Logs, Traces, Metrics** to observe startup, tool calls, agent actions, and performance
+    - **Images** and **Containers** views to see what’s running in the room.
+    - **Terminal** for interactive commands (subject to your permissions).
+
+### Room Menu (upper left)
+- **Leave Room**: Exit the Room and return to MeshAgent Studio project view 
+- **Run Task**: Invoke a generic task runner (single turn agent) and optionally attach tools to it
+- **Toolkits**: View available tools and toolkits in the room and invoke them directly
+- **Queues**: View the queues in the rom and number of messages in each queue
+- **Database**: Create and update tables
+- **Room Services**: View, add, remove, and update services tied to this room (excludes project services)
+- **View Toggles**: Show/hide File Browser, File Previews, Messaging, and Developer Console
 
 ## Members
+Control project access and roles. Use this tab to invite collaborators via email, assign appropriate roles and scopes, and remove members who no longer need access to your project. 
 
-Members lists everyone with access to the current project. From here you can:
-
-- Invite collaborators via email and assign roles/scopes as they join.
-- Adjust permissions (e.g., limit who can deploy services or view billing data).
-- Remove members who no longer need access to sensitive rooms or data.
+**Roles**: 
+- Admin: Full project control, only admins can edit project settings, manage members/roles, and invite/remove users.
+- Developer: Build/test permissions without org-level admin power. Developers can perform operational tasks like creating mailboxes and deploying services. 
+- Room Creator: Limited role for collaborators who only need to spin up new rooms. Assign this when someone should make rooms but not deploy services, edit secrets, or manage other project resources.
 
 ## API Keys
-
-API keys let headless environments (CI, deployed services, scripting) authenticate against MeshAgent:
-
-- Generate project-scoped keys, optionally activating them immediately for CLI use.
-- Label keys with the owning service or automation so you know what to rotate later.
-- Revoke or rotate compromised keys and the change propagates instantly across the platform.
+Issue and rotate project‑scoped credentials used by automations, CI, and services that call MeshAgent APIs. You can: 
+- Create, relabel, and revoke keys
+- Track when a key was created for audiot and rotation
 
 ## Services
+Services turn your agents, toolkits, or connectors into reusable building blocks. Project-wide services are viewable from the Services tab. Room-scoped services are managed directly on the room they are deployed to either inside the **Room Workspace** view or by clicking the menu button on a room. 
 
-Services turn your agents, toolkits, or connectors into reusable building blocks:
-
-- View all project services plus room-scoped services at a glance.
-- Deploy new versions by pointing to a container image or CLI quickstart template.
-- Monitor health, recent logs, and deployment history to diagnose failures quickly.
+From the **Services** tab you can: 
+- Inspect what’s deployed to the project
+- Create, update, or remove deployed services
+- Change the Room Server Version if you need to pin a project to a specific version of MeshAgent or update it (defaults to latest)
 
 ## Secrets
-
-Secrets store encrypted credentials and configuration that services and tools can read at runtime:
-
-- Create key/value pairs or JSON blobs; values never reappear after you leave the page.
-- Scope secrets to specific rooms or keep them project-wide.
-- Audit which services have requested each secret to simplify compliance reviews.
+Store configuration securely. Use Secret Keys for app/runtime config and Image Pull Secrets for private registries.
+- Create a secret with key/value pairs; secret values never reappear after you leave the page.
+- Add image pull secrets to fetch private images. 
+- Remove secrets that are no longer needed.
 
 ## Webhooks
-
 Webhooks notify your systems when something interesting happens inside MeshAgent:
-
-- Subscribe to events like room created/ended, participant joined, tool invoked, or service failure.
-- Configure delivery URLs, shared secrets, and retry policies.
-- View recent deliveries and replay payloads when downstream systems were unavailable.
+- Subscribe to events like room started/ended, file updates/file deletes.
+- Configure the name, URL, and select event triggers.
 
 ## Integrations
+Bring your own LLM settings and observability: 
 
-Integrations connect MeshAgent to external providers (e.g., MCP servers, OpenAI Connectors, storage backends):
+**LLM Router**
+- By default, Studio uses the managed OpenAI configuration. You can override with your own OpenAI API key and Base URL.
 
-- Register providers once and reuse them across services and rooms.
-- Configure per-provider credentials, rate limits, and fallback behaviors.
-- Validate connections from Studio before handing the integration to an agent.
+**Telemetry (OTEL)**
+- Export room/runtime metrics and traces to your stack by providing an OTEL endpoint and optional bearer token.
 
 ## OAuth
-
-The OAuth tab manages first-party and custom OAuth clients:
-
-- Create clients with redirect URIs for Studio, staging, and production.
-- Define scopes and grant types to precisely control how agents or UIs authenticate.
-- Rotate client secrets and download metadata for your app configuration files.
+Create OAuth2/OIDC clients to enable MeshAgent to sign in for your apps. A client is used to identify a single app to MeshAgent's OAuth servers.  
+- Register a client with name, scopes (e.g., openid profile email offline_access), and Redirect URIs (one per line).
+- Choose Grant Types (authorization_code, refresh_token, client_credentials) and Response Types (code, token, id_token).
 
 ## Usage
-
-Usage surfaces observability and cost at the project level:
-
-- Track credits, minutes, and per-provider spend by day or billing cycle.
-- Drill into agent-level breakdowns to see who consumed tokens, storage, or container time.
-- Export CSVs for finance or connect dashboards via the MeshAgent APIs for automation.
+Understand cost, performance, and activity at the project level. Usage dashboards include: 
+- Active Rooms and Participants trends
+- Cost tracking by provider
+- Most used tools and rooms to see adoption and activity trends
+- Tool call latency for performance turning
 
 ## Mail 
-
-Mail is where you provision and monitor the mailbox queues used by MailBot-style workflows:
-
-- Create mailboxes, assign them to rooms, and pick the email address domain provided by MeshAgent.
-- Map incoming messages to queues so worker agents can process them asynchronously.
-- Inspect delivery status, retry counts, and recent messages for quick debugging.
+Provision room‑scoped mailboxes that agents can read from or send through: 
+- Create mailboxes, assign them to rooms, and pick the email address domain provided by MeshAgent
+- Map incoming messages to queues so worker agents can process them asynchronously
+- Delete mailboxes which are no longer needed
 
 ## Billing 
 The Billing tab provides credit information and can be used to: 
-- Add or update payment methods, set spend alerts, and track applied credits.
-- Download invoices, view upcoming charges, and share read-only billing access with finance teams.
-- Pause projects or downgrade plans if you need to stop consumption temporarily.
+- View current spend and historical usage
+- Purchase credits and enable auto‑reload to prevent interruptions
 
 ## Next Steps
 - Follow the [Getting Started guide](./get_started) to create your first project and room.
-- Use the [CLI quickstarts](../cli/getting_started) to complement what you configure in Studio.
-- When you are ready for production, read the [Services deployment docs](../services_room_containers/overview) to package agents and tools as managed services. 
+- Use the [CLI quickstarts](../cli/getting_started) to complement what you configure in MeshAgent Studio.
+- When you are ready for production, read the [Services deployment docs](../services_room_containers/overview) to package and deploy agents and tools as MeshAgent services. 
