@@ -42,6 +42,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `container`: Manage containers and images inside a room
 * `oauth2`: OAuth2 test commands
 * `helpers`: Join a mailbot to a room
+* `room`
 * `meeting-transcriber`: Join a meeting transcriber to a room
 
 ## `meshagent exec`
@@ -1972,6 +1973,113 @@ $ meshagent helpers service [OPTIONS]
 
 **Options**:
 
+* `--help`: Show this message and exit.
+
+## `meshagent room`
+
+**Usage**:
+
+```console
+$ meshagent room [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a room in the project.
+* `delete`: Delete a room by ID (or by name if --name...
+* `update`: Update a room&#x27;s name (ID is preferred;...
+* `list`: List rooms in the project.
+* `get`: Get a single room by name (handy for...
+
+### `meshagent room create`
+
+Create a room in the project.
+
+**Usage**:
+
+```console
+$ meshagent room create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--name TEXT`: Room name  [required]
+* `--if-not-exists / --no-if-not-exists`: Do not error if the room already exists  [default: no-if-not-exists]
+* `--metadata TEXT`: Optional JSON object for room metadata
+* `--help`: Show this message and exit.
+
+### `meshagent room delete`
+
+Delete a room by ID (or by name if --name is supplied).
+
+**Usage**:
+
+```console
+$ meshagent room delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--id TEXT`: Room ID (preferred)
+* `--name TEXT`
+* `--help`: Show this message and exit.
+
+### `meshagent room update`
+
+Update a room&#x27;s name (ID is preferred; name will be resolved to ID if needed).
+
+**Usage**:
+
+```console
+$ meshagent room update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--id TEXT`: Room ID (preferred)
+* `--name TEXT`
+* `--new-name TEXT`: New room name  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent room list`
+
+List rooms in the project.
+
+**Usage**:
+
+```console
+$ meshagent room list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--limit INTEGER RANGE`: Max rooms to return  [default: 50; 1&lt;=x&lt;=500]
+* `--offset INTEGER RANGE`: Offset for pagination  [default: 0; x&gt;=0]
+* `--order-by TEXT`: Order by column (e.g. &quot;room_name&quot;, &quot;created_at&quot;)  [default: room_name]
+* `--help`: Show this message and exit.
+
+### `meshagent room get`
+
+Get a single room by name (handy for resolving the ID).
+
+**Usage**:
+
+```console
+$ meshagent room get [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--name TEXT`
 * `--help`: Show this message and exit.
 
 ## `meshagent meeting-transcriber`
