@@ -27,7 +27,7 @@ The example below packages a ChatBot with a rules file and exposes it so Powerbo
 
 Example `agents/chatbot/rules.txt`:
 
-```text
+```text rules.txt
 You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-native collaboration app built entirely on MeshAgent, the operating layer for agentic AI. 
 - You can learn more about Powerboards and MeshAgent by using the web search tool and researching meshagent.com and docs.meshagent.com.
 - Use the same language the user is using; do not switch languages unless they do.
@@ -35,14 +35,14 @@ You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-nat
 ``` 
 
 ```Dockerfile Dockerfile
-FROM meshagent/python-sdk-slim:latest
+FROM meshagent/cli:latest
 COPY . /app
 WORKDIR /app
 # Optional: install extra deps here
 ENTRYPOINT ["/usr/bin/meshagent/meshagent", "chatbot", "service", "--agent-name=chatbot", "-rr=agents/chatbot/rules.txt", "--web-search"]
 ```
 
-> **Note**: `/usr/bin/meshagent/meshagent` is the CLI path baked into the base image; using the full path is explicit, but you could call `meshagent` if you prefer. The `--web-search` flag enables the built-in web search toolkit—remove it if you don’t want that capability.
+> **Note**: We use the CLI base image because the entrypoint runs the CLI `chatbot service` command. `/usr/bin/meshagent/meshagent` is the CLI path baked into that image; you can also call `meshagent` if you prefer. The `--web-search` flag enables the built-in web search toolkit—remove it if you don’t want that capability. If you’re packaging a custom Python chatbot instead of the CLI chatbot, use `meshagent/python-sdk-slim` and run your Python entrypoint.
 
 ```yaml meshagent.yaml
 kind: Service
@@ -65,7 +65,7 @@ ports:
 container:
   image: "myrepo/custom-chatbot:1.0.0"
 ```
-> **Note**: ``chatbot join`` vs ``chatbot service``: `meshagent chatbot join` is for local/dev sessions (e.g., running on your laptop). For deployed agents in Powerboards or Studio, use `meshagent chatbot service` in your container/entrypoint as shown above. See [CLI getting started](../../cli/getting_started) for examples of both.
+> **Note**: ``chatbot join`` vs ``chatbot service``: `meshagent chatbot join` is for local/dev sessions (e.g., running on your laptop). To deploy agents in Powerboards or Studio, use `meshagent chatbot service` in your container/entrypoint as shown above. See [CLI getting started](../../cli/getting_started) for examples of both.
 
 Build, push, and deploy as a project service:
 
@@ -75,11 +75,19 @@ meshagent setup
 meshagent service create --file meshagent.yaml # optional add --room=myroom
 ```
 
-Once deployed, the agent uses the bundled `agents/chatbot/rules.txt` when users add it to a room. In MeshAgent Studio it will appear automatically in the Participants tab to chat with; in Powerboards you can add it from **Agents → Manage agents**.
+Once deployed, the agent uses the `agents/chatbot/rules.txt` when users add it to a Room. In MeshAgent Studio it will appear automatically in the Participants tab to chat with; in Powerboards you can add it from **Agents → Manage agents**. 
+
+Deploying an agent with the `-rr` or ``--room-rules`` flag makes it so that the rules for that agent are publicly available and editable inside the Room, this is great if you want people who use the agent to be able to edit it's rules. If you want to deploy an agent with a specific non-editable set of rules you can use the ``--rules-file`` flag instead, this will keep the rules invisible and uneditable to users.
+
+> **Tip:** You can layer rules: keep non-editable base rules in the image with `--rules-file`, and add `--room-rules` so users can supply their own room-specific rules in Studio or Powerboards.
 
 ### Share your agent in Powerboards
 
+From [Powerboards](https://powerboards.com) you can now install agents and invite people to interact with them! To invite people to your room, select the room menu, permissions, and then invite users via email. They will be able to instantly join the room and work with you and your agents!
 
-
-
-## Next Steps
+## Related topics
+- [Packaging services](./packaging): Field reference for Service and ServiceTemplate manifests.
+- [Deploying services](./deployment): CLI and Studio workflows for project/room deployments.
+- [Project service example](./project_service_example): Deploy a chatbot as a project-wide service.
+- [Room services example](./room_services_example): Deploy a room-scoped chatbot with runtime inputs.
+- [CLI getting started](../../cli/getting_started): Quickstart and CLI flags (`chatbot join` vs `chatbot service`).
