@@ -137,7 +137,7 @@ Once the service is created it will be available in any of the rooms inside your
 
 | Tool                   | Version | Purpose                          |
 | ---------------------- | ------- | -------------------------------- |
-| **Python**             | ≥ 3.10  | Run the sample agents            |
+| **Python**             | ≥ 3.13  | Run the sample agents            |
 | **MeshAgent CLI**      | latest  | Interact with MeshAgent Studio and platform with ease |
 | **Docker**             | ≥ 24    | Containerise & deploy (Part 3)   |
 | **Container Registry** | n/a     | Where you’ll push your image     |

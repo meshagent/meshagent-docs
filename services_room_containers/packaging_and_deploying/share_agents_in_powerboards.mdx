@@ -1,0 +1,85 @@
+---
+title: Share Agents in Powerboards
+---
+
+[Powerboards](https://www.powerboards.com/) is an open-source, AI-native app built entirely on MeshAgent. You can use Powerboards as-is to share your agents today, or adapt the source code into your own MeshAgent-powered application.
+
+Powerboards is included in your MeshAgent account and gives teams a shared space to collaborate, create, and grow together. While [MeshAgent Studio](https://studio.meshagent.com) is a great tool for developers building agents with MeshAgent, Powerboards is designed for your end users so they can easily interact with the agents you build from day one. Since the app is open-source you can also adapt it to your needs!
+
+## How to share agents in Powerboards
+Conversational agents ([ChatBots](../../agents/standard/chatbot) and [VoiceBots](../../agents/standard/voicebot)) deployed with MeshAgent can be used immediately in Powerboards. Package and deploy your agent as a project service or ServiceTemplate, and include both of these fields in your `meshagent.yaml` so Powerboards can discover it:
+
+- In the `agents` list: set `annotations.meshagent.agent.type` to `ChatBot` or `VoiceBot`
+- In `ports[].endpoints[]`: add a `meshagent.identity` that matches the agent name
+
+After you deploy the service to your project, Powerboards lists it under **Agents → Manage agents** alongside the built-in defaults (assistant, voice, developer, transcriber). Your deployed agents show up in the same list for users to add to their rooms. 
+
+### Example: ChatBot with a custom rules file
+The example below packages a ChatBot with a rules file and exposes it so Powerboards and MeshAgent Studio can install it. Bundle your rules file into the image and point the CLI ChatBot at it with `-rr` or ``--room-rules``.
+
+````markdown
+├── Dockerfile
+├── meshagent.yaml
+└── agents/
+    └── chatbot/
+        └── rules.txt
+````
+
+Example `agents/chatbot/rules.txt`:
+
+```text
+You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-native collaboration app built entirely on MeshAgent, the operating layer for agentic AI. 
+- You can learn more about Powerboards and MeshAgent by using the web search tool and researching meshagent.com and docs.meshagent.com.
+- Use the same language the user is using; do not switch languages unless they do.
+- If you need context about the room or project, ask concise follow-up questions first.
+``` 
+
+```Dockerfile Dockerfile
+FROM meshagent/python-sdk-slim:latest
+COPY . /app
+WORKDIR /app
+# Optional: install extra deps here
+ENTRYPOINT ["/usr/bin/meshagent/meshagent", "chatbot", "service", "--agent-name=chatbot", "-rr=agents/chatbot/rules.txt", "--web-search"]
+```
+
+> **Note**: `/usr/bin/meshagent/meshagent` is the CLI path baked into the base image; using the full path is explicit, but you could call `meshagent` if you prefer. The `--web-search` flag enables the built-in web search toolkit—remove it if you don’t want that capability.
+
+```yaml meshagent.yaml
+kind: Service
+version: v1
+metadata:
+  name: custom-chatbot
+  description: "ChatBot with custom rules for Studio and Powerboards"
+agents:
+  - name: chatbot
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: "*"
+    type: http
+    liveness: "/"
+    endpoints:
+      - path: /agent
+        meshagent:
+          identity: chatbot
+container:
+  image: "myrepo/custom-chatbot:1.0.0"
+```
+> **Note**: ``chatbot join`` vs ``chatbot service``: `meshagent chatbot join` is for local/dev sessions (e.g., running on your laptop). For deployed agents in Powerboards or Studio, use `meshagent chatbot service` in your container/entrypoint as shown above. See [CLI getting started](../../cli/getting_started) for examples of both.
+
+Build, push, and deploy as a project service:
+
+```bash
+docker buildx build . -t myrepo/custom-chatbot:1.0.0 --platform linux/amd64 --push
+meshagent setup
+meshagent service create --file meshagent.yaml # optional add --room=myroom
+```
+
+Once deployed, the agent uses the bundled `agents/chatbot/rules.txt` when users add it to a room. In MeshAgent Studio it will appear automatically in the Participants tab to chat with; in Powerboards you can add it from **Agents → Manage agents**.
+
+### Share your agent in Powerboards
+
+
+
+
+## Next Steps
