@@ -1,0 +1,95 @@
+---
+title: Share Agents in Powerboards
+---
+
+[Powerboards](https://www.powerboards.com/) is an open-source, AI-native app built entirely on MeshAgent. You can use Powerboards as-is to share your agents today, or adapt the source code into your own MeshAgent-powered application.
+
+Powerboards is included in your MeshAgent account and gives teams a shared space to collaborate, create, and grow together. While [MeshAgent Studio](https://studio.meshagent.com) is a great tool for developers building agents with MeshAgent, Powerboards is designed for your end users so they can easily interact with the agents you build from day one. Since the app is open-source you can also adapt it to your needs!
+
+### Prerequisites
+Before sharing agents in Powerboards, you should understand:
+- How to [package](./packaging_and_deploying/packaging) services using service definition files
+- How to [deploy](./packaging_and_deploying/deployment) services using the MeshAgent CLI
+- The basics of [room services](./packaging_and_deploying/room_services_example) and [project services](./packaging_and_deploying/project_service_example)
+
+## How to share agents in Powerboards
+Conversational agents ([ChatBots](../../agents/standard/chatbot) - text based agents, and [VoiceBots](../../agents/standard/voicebot) - voice based agents) deployed with MeshAgent can be used immediately in Powerboards. 
+
+For the agent to appear in Powerboards you need to [package](./packaging_and_deploying/packaging) and [deploy](./packaging_and_deploying/deployment) it as a [room service](./packaging_and_deploying/room_services_example). After you deploy the service to your Room, Powerboards displays it under the agents dropdown alongside the built-in defaults (assistant, voice, developer, transcriber). From here you and your teammates can install and work with the agent!
+
+### Step 1: Package and deploy your agent
+First, create a service definition file (`meshagent.yaml`) that includes: 
+- A `meshagent.service.id` under `annotations` in the `metadata` section
+- An `agents` entry with a valid `meshagent.agent.type` annotation (either `ChatBot` or `VoiceBot`).
+- Expose a `meshagent` endpoint in the `ports` section
+
+Next deploy it to a specific room using the MeshAgent CLI: `meshagent service create --file meshagent.yaml --room my room`. Once deployed, the agent automatically appears in MeshAgent Studio where you can test it. It will also appear in Powerboards where room owners can choose to install it. 
+
+### Step 2: Install the agent in Powerboards
+After deploying the agent, room owners can install it in Powerboards: 
+
+1. Go to [Powerboards](https://www.powerboards.com/) 
+2. Select the agents dropdown --> Manage Agents --> Install agent
+3. Begin interacting with the agent
+
+### Step 3: Invite team members
+Once your agent is installed, invite people to your room: 
+1. Select the room menu --> Permissions
+2. Invite users via email 
+3. Invited users can instantly join the room and interact with your agents
+
+## Example: Deploy a simple ChatBot to Powerboards
+This example shows the simplest way to deploy a `ChatBot` to Powerboards using only a service definition pointing to the MeshAgent CLI image. You can pass tools and rules to the `ChatBot` by applying additional flags like `--web-search` and `--rule`.
+
+A key feature of Powerboards is the ability for room members to customize agent behavior together. Use the `--room-rules` flag to make your agent's rules editable by anyone in the room:
+
+**Rules options:**
+- `--rule`: Inline, non-editable rules baked into the service definition. Best for fixed instructions.
+- `--room-rules`: Path in room storage (e.g., agents/chatbot/rules.txt). The agent creates this file with a placeholder if it doesn't exist, and room members can edit it to customize agent behavior.
+- `--rules-file`: Reads a file baked into your Docker image (non-editable by room). Useful for custom images.
+
+Using `--room-rules` enables true collaboration - team members can refine the agent's instructions without redeploying the service.
+
+```yaml meshagent.yaml
+kind: Service
+version: v1
+metadata:
+  name: chatbot
+  description: "ChatBot with custom rules for Studio and Powerboards"
+  annotations:
+    meshagent.service.id: "meshagent.chatbot"  # required for agent to appear in Powerboards
+agents:                                        # section required for agent to appear in Powerboards
+  - name: chatbot
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: "*"
+    type: http
+    liveness: "/"
+    endpoints:
+      - path: /agent
+        meshagent:                             # section required for agent to appear in Powerboards
+          identity: chatbot
+container:
+  image: "meshagent/cli:latest"                # use MeshAgent CLI image
+  command: 
+    "/usr/bin/meshagent/meshagent chatbot service
+    --agent-name=chatbot
+    --rule="You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-native collaboration app built entirely on MeshAgent, the operating layer for agentic AI. Use the same language the user is using; do not switch languages unless they do. If you need context about the room or project, ask concise follow-up questions first."  # optional: applies base rules to agent
+    --room-rules=agents/chatbot/rules.txt   # optional: makes rules editable by room members
+    --web-search"                          # optional: enable web search tool
+```
+
+Deploy it: 
+```bash bash 
+`meshagent service create --file meshagent.yaml --room=myroom` 
+```
+
+The agent will appear in MeshAgent Studio for testing. Room owners can then install it into Powerboards (Agents → Manage agents → Install agent), and room members can edit agents/chatbot/rules.txt to customize its behavior.
+
+## Related topics
+- [Packaging services](./packaging_and_deploying/packaging): Field reference for Service and ServiceTemplate manifests.
+- [Deploying services](./packaging_and_deploying/deployment): CLI and Studio workflows for project/room deployments.
+- [Project service example](./packaging_and_deploying/project_service_example): Deploy a chatbot as a project-wide service.
+- [Room services example](./packaging_and_deploying/room_services_example): Deploy a room-scoped chatbot with runtime inputs.
+- [CLI getting started](../../cli/getting_started): Quickstart and CLI flags (`chatbot join` vs `chatbot service`).
