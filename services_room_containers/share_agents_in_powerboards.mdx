@@ -43,13 +43,14 @@ This example shows the simplest way to deploy a `ChatBot` to Powerboards using o
 
 A key feature of Powerboards is the ability for room members to customize agent behavior together. Use the `--room-rules` flag to make your agent's rules editable by anyone in the room:
 
-**Rules options:**
+### Rules options
 - `--rule`: Inline, non-editable rules baked into the service definition. Best for fixed instructions.
-- `--room-rules`: Path in room storage (e.g., agents/chatbot/rules.txt). The agent creates this file with a placeholder if it doesn't exist, and room members can edit it to customize agent behavior.
-- `--rules-file`: Reads a file baked into your Docker image (non-editable by room). Useful for custom images.
+- `--room-rules`: Allow team members to edit the agents rules as they work with it in the Room. Passing this flag will create a path in room storage (e.g., agents/chatbot/rules.txt) that room members can edit to customize agent behavior.
+- `--rules-file`: Reads a file baked into your Docker image (non-editable by room). Useful for custom images and fixed instructions.
 
-Using `--room-rules` enables true collaboration - team members can refine the agent's instructions without redeploying the service.
+Using `--room-rules` enables true collaboration - team members can refine the agent's instructions during the session without redeploying the ChatBot service.
 
+### Sample Service YAML 
 ```yaml meshagent.yaml
 kind: Service
 version: v1
@@ -80,12 +81,12 @@ container:
     --web-search"                          # optional: enable web search tool
 ```
 
-Deploy it: 
+**Deploy the ChatBot**
 ```bash bash 
 `meshagent service create --file meshagent.yaml --room=myroom` 
 ```
 
-The agent will appear in MeshAgent Studio for testing. Room owners can then install it into Powerboards (Agents → Manage agents → Install agent), and room members can edit agents/chatbot/rules.txt to customize its behavior.
+The agent will appear in MeshAgent Studio for testing. Room owners can then install it into [Powerboards](https://www.powerboards.com) (Agents → Manage agents → Install agent), and room members can edit `agents/chatbot/rules.txt` to customize its behavior.
 
 ## Related topics
 - [Packaging services](./packaging_and_deploying/packaging): Field reference for Service and ServiceTemplate manifests.
