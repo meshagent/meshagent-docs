@@ -20,10 +20,10 @@ Stargz improves startup time by enabling **lazy pulling**. This allows the conta
 - If you redeploy a **room service**, MeshAgent detects the change and reconciles the running container automatically.
 - If you redeploy a **project service**, restart the room for the change to take effect in that room.
 - If you are deploying a CLI ChatBot or VoiceBot, use the `meshagent/cli` base image. It is already optimized and supports the standard flags (tools, rules, room-rules, etc.), so you usually do not need to build a custom image.
-- If you reference an **external service** you host yourself, MeshAgent skips pulling/running a container and just routes to your endpoint—container optimizations only matter for services you package as images.
+- If you reference an **external service** you host yourself, MeshAgent skips pulling/running a container and just routes to your endpoint. Container optimizations only matter for services you package with a container image.
 
 ## What Stargz is and how we use it
-We publish images in an **eStargz/stargz** format and run with the **stargz snapshotter** (a containerd plugin). This makes image layers *seekable* (the runtime can jump directly to specific files instead of downloading the whole layer first):
+We publish images in an **eStargz/stargz** format and run with the [stargz snapshotter](https://github.com/containerd/stargz-snapshotter?tab=readme-ov-file) (a containerd plugin). This makes image layers *seekable* (the runtime can jump directly to specific files instead of downloading the whole layer first):
 - Instead of downloading and decompressing an entire layer before start, the runtime lazily fetches just the files that are actually touched at startup.
 - Startup is faster (lower cold-start latency) and data transfer is smaller, especially for larger Python/Node/ML stacks.
 - Lazy pulling requires the containerd stargz-snapshotter; if it is not present, the image pulls and runs like a normal OCI/Docker image (just without the lazy-pull speedup).
@@ -34,8 +34,8 @@ What we do on our images:
 - Build stargz variants alongside the normal tags.
 - Provide prefetch lists (the small set of files the agent touches during boot: entrypoint, deps, config) so the snapshotter pulls only what is needed up front.
 
-## If you build your own images
-1) Use MeshAgent base images when possible (they already include stargz builds with `-esgz` tag). If building your own image, we recommend optimizing it using stargz. 
+## When deploying custom services
+1) Use MeshAgent base images when possible (they already include stargz builds with `-esgz` tag). If building your own image, we recommend optimizing it using stargz so your service can start quickly. 
 2) Keep images slim: install only what you need, clean caches, and avoid large unused assets.  
 3) Build a normal image, then repack it to stargz with `nerdctl` or `ctr-remote`. Follow the instructions for installing [nerdctl here](https://github.com/containerd/nerdctl) and [ctr-remote here](https://github.com/containerd/stargz-snapshotter/blob/main/docs/ctr-remote.md).
 
