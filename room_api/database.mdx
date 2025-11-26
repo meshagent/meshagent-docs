@@ -1,10 +1,11 @@
-The database client serves as a high-level interface for interacting with a relational-like database. 
-
----
-
 ## Overview
 
-The database interface is designed to simplify common database operations in a room-based system. Each method in database client corresponds to a particular request sent to the server, handling tasks like table creation, updates, deletions, and searches. The client leverages `JsonResponse` objects and typed parameters to streamline the process.
+The `DatabaseClient`  serves as a high-level interface for interacting with a relational-like database. It lets you manage room-scoped tables and perform structured queries. Each method in the `DatabaseClient` corresponds to a particular request sent to the server, handling tasks like table creation, updates, deletions, and searches. The client leverages `JsonResponse` objects and typed parameters to streamline the process. Use it to:
+
+- List tables and create/drop them (with schema or from data, with create/overwrite/create_if_not_exists modes).
+- Modify schemas (add/drop columns) and data (insert, update, delete, merge/upsert).
+- Search with text filters, vector similarity, and indexed lookups; create indexes (scalar, vector, full-text) and drop them.
+- Optimize storage and (Python) inspect/restore table versions.
 
 ---
 
@@ -12,7 +13,7 @@ The database interface is designed to simplify common database operations in a r
 
 Below is a summary of the primary methods. Each method is asynchronous, so you should `await` the call.
 
-### 1. List Tables
+### List tables
 **Description**
 Retrieves a list of all table names currently present in the database.
 
@@ -50,7 +51,7 @@ Console.WriteLine(string.Join(", ", tables)); // ["users", "orders", "products",
 
 ---
 
-### 2. Create Table with Schema
+### Create table with schema
 - **Description**: Creates a new table with an optional schema and initial data. You can specify how the table should be created through the `mode` parameter.
   - **modes**:
     - `"create"`: Creates the table; fails if it already exists.
@@ -147,7 +148,7 @@ await room.Database.CreateTableWithSchema(
 
 ---
 
-### 3. Create Table from Data
+### Create table from data
 - **Description**: Creates a table using only data and an optional mode.
 - **Parameters**:
   - **name**: The table name to create.
@@ -213,7 +214,7 @@ await room.Database.CreateTableFromData(
 
 ---
 
-### 4. Drop Table
+### Drop table
 - **Description**: Drops (deletes) a table by name, optionally ignoring if it does not exist.
 - **Parameters**:
   - **name**: The name of the table to drop.
@@ -254,7 +255,7 @@ await room.Database.DropTable("temp_table", ignoreMissing: true);
 
 ---
 
-### 5. Add Columns
+### Add columns
 - **Description**: Adds one or more columns to an existing table, specifying default value expressions.
 - **Parameters**:
   - **table**: Name of the target table.
@@ -314,7 +315,7 @@ await room.Database.AddColumns(
 
 ---
 
-### 6. Drop Columns
+### Drop columns
 - **Description**: Drops (removes) one or more columns from an existing table.
 - **Parameters**:
   - **table**: Name of the target table.
@@ -359,7 +360,7 @@ await room.Database.DropColumns(
 
 ---
 
-### 7. Insert
+### Insert
 - **Description**: Inserts one or more new records into a table.
 - **Parameters**:
   - **table**: The name of the table to insert into.
@@ -418,7 +419,7 @@ await room.Database.Insert(
 
 ---
 
-### 8. Update
+### Update
 - **Description**: Updates existing records in a table.
 - **Parameters**:
   - **table**: Name of the table to update.
@@ -474,7 +475,7 @@ await room.Database.Update(
 
 ---
 
-### 9. Delete
+### Delete
 - **Description**: Deletes records from a table that match a specified condition.
 - **Parameters**:
   - **table**: The target table.
@@ -517,7 +518,7 @@ await room.Database.Delete(
 
 ---
 
-### 10. Merge
+### Merge (upsert)
 - **Description**: Performs an **upsert** (update/insert) by merging incoming records into an existing table. Records matching the `on` column are updated; otherwise, new rows are inserted.
 - **Parameters**:
   - **table**: The target table.
@@ -582,13 +583,14 @@ await room.Database.Merge(
 
 ---
 
-### 11. Search
+### Search
 - **Description**: Searches for records in a table. This can be used for plain text search, vector similarity search, or simple SQL filtering.
 - **Parameters**:
   - **table**: The target table name.
   - **text**: An optional search string (if using full-text indexes).
   - **vector**: An optional numeric array for vector-based similarity queries.
-  - **where**: Either an SQL `WHERE` clause string or an object representing key-value equals conditions.
+  - **where**: SQL `WHERE` clause string or an object representing key-value equals conditions.
+  - **offset**: Optional offset for pagination.
   - **limit**: Maximum number of matching records to return.
   - **select**: An array of column names to be returned.
 - **Returns**: An array of matching records.
@@ -644,7 +646,7 @@ Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@
 
 ---
 
-#### 12. Optimize
+### Optimize
 - **Description**: Optimizes a table (e.g., compacts its storage or rebuilds indexes if required).
 - **Parameters**:
   - **table**: Name of the table to optimize.
@@ -671,7 +673,7 @@ await room.Database.Optimize("users");
 
 ---
 
-### 13. Create Vector Index
+### Create vector index
 - **Description**: Creates a vector index on a specified column for vector similarity searches.
 - **Parameters**:
   - **table**: The target table name.
@@ -714,7 +716,7 @@ await room.Database.CreateVectorIndex(
 
 ---
 
-### 14. Create Scalar Index
+### Create scalar index
 - **Description**: Creates a scalar index (typical database index) on a specified column.
 - **Parameters**:
   - **table**: The target table name.
@@ -757,7 +759,7 @@ await room.Database.CreateScalarIndex(
 
 ---
 
-### 15. Create Full Text Search Index
+### Create full text search index
 - **Description**: Creates a full-text search index on a text column, useful for text-based queries.
 - **Parameters**:
   - **table**: The table name.
@@ -800,11 +802,30 @@ await room.Database.CreateFullTextSearchIndex(
 
 ---
 
-### 16. List Indexes
+### Drop index
+
+- **Description**: Drop an index by name.
+- **Parameters**:
+  - **table**: Table name.
+  - **name**: Index name to drop.
+- **Returns**: `None`.
+- **Availability**: Python SDK/server today; JS/TS/.NET may add a helper in a future release.
+
+<CodeGroup>
+```python Python
+await room.database.drop_index(table="users", name="email_idx")
+```
+</CodeGroup>
+
+---
+
+### List indexes
 - **Description**: Lists the indexes currently defined on a table.
 - **Parameters**:
   - **table**: The name of the table for which to list indexes.
-- **Returns**: A record object containing index information.
+- **Returns**:
+  - Python: `list[TableIndex]` (`name`, `columns`, `type`).
+  - JS/TS: `JsonResponse.json` object with index metadata.
 
 **Example**:
 <CodeGroup>
@@ -862,6 +883,24 @@ Console.WriteLine(indexes);
 //   "fullTextIndexes": ["username"],
 //   "vectorIndexes": ["profile_embedding"]
 // }
+```
+</CodeGroup>
+
+---
+
+### Table versions (Python)
+
+- **Description**: List historical versions of a table and restore/checkout a specific version.
+- **Methods**:
+  - `list_versions(table)` → list of versions (`version`, `timestamp`, `metadata`).
+  - `restore(table, version)` → restore table to a prior version.
+  - `checkout(table, version)` → load a version as the current working copy.
+- **Availability**: Python SDK/server today.
+
+<CodeGroup>
+```python Python
+versions = await room.database.list_versions(table="users")
+await room.database.restore(table="users", version=versions[-1].version)
 ```
 </CodeGroup>
 

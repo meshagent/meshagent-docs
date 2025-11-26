@@ -10,11 +10,14 @@ import DocumentsWritingTs from "/snippets/examples/typescript/documents-writing.
 import DocumentsWritingDart from "/snippets/examples/dart/documents-writing.mdx"
 import DocumentsWritingCs from "/snippets/examples/dotnet/documents-writing.mdx"
 
-`SyncClient` enables interacting with managed documents - `MeshDocument` and synchronizing local changes with all remote clients.
-
----
-
 ## Overview
+
+The `SyncClient` lets you create, open, describe, and synchronize MeshDocuments through a `RoomClient`. Use it to:
+
+- Create documents (with optional initial JSON) and infer schemas from file extensions.
+- Open documents (optionally creating them if missing) and auto-sync changes across participants.
+- Describe documents as JSON without opening a sync session.
+- Push raw sync payloads when you have pre-encoded changes.
 
 MeshDocuments enable your agents to share and synchronize information in real time across platforms. They resemble a web page's structure but offer much greater flexibility. For example, if you want to generate website content with your agents, you can start with a simple HTML-compatible document format:
 
@@ -167,7 +170,7 @@ The `SyncClient` class is responsible for coordinating document synchronization 
   An instance of `RoomClient`, which handles the underlying communication with the server.
 
 
-#### `create(path, json?)`
+#### `create(path, json=None)`
 
 <CodeGroup>
 ```python Python
@@ -190,10 +193,37 @@ await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = 
 
 - **Parameters**:
   - `path` – The path where the document will be created on the server.
-  - `schema` – A `MeshSchema` describing the structure of the document.
   - `json` – (Optional) Initial data or metadata to send along with the creation request.
 - **Description**  
-  Sends a request to create a new `MeshDocument` at the given path with a specified schema.
+  Sends a request to create a new `MeshDocument` at the given path. The server infers the schema from the document’s extension (for example, `.html` uses `.schemas/html.json`).
+
+#### `describe(path)`
+
+<CodeGroup>
+```python Python
+doc_json = await room.sync.describe(path="my/path")
+```
+```js NodeJs
+const docJson = await room.sync.describe("my/path");
+```
+```ts TypeScript
+const docJson = await room.sync.describe("my/path");
+```
+```dart Dart
+final docJson = await room.sync.describe("my/path");
+```
+```dotnet C#
+var docJson = await room.Sync.Describe("my/path");
+```
+</CodeGroup>
+
+- **Parameters**:
+  - `path` – The document path to describe.
+- **Returns**  
+  A JSON representation of the document root in a single response.
+- **Description**  
+  Fetches the current state of a MeshDocument without opening a sync session. If the document is already open, the in-memory state is returned; otherwise, it is read from storage (schema inferred from the document extension). This is what the storage `read_file` tool uses to read MeshDocument contents as JSON.
+  - Availability: Supported by the room server; the Python SDK exposes `room.sync.describe` today, while other SDKs may add a convenience wrapper in upcoming releases.
 
 #### `open(path, create = true)`
 
@@ -297,5 +327,3 @@ await room.Sync.Sync(path, Encoding.UTF8.GetBytes("some bytes"));
 
 - **Extensibility**  
   You can extend the `SyncClient` for specialized document operations—such as partial updates, conflict resolution logic, or customized schema handling—by adding new methods or composing it with other classes that also use `RoomClient`.
-
-

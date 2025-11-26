@@ -37,22 +37,44 @@ What we do on our images:
 ## When deploying custom services
 1) Use MeshAgent base images when possible (they already include stargz builds with `-esgz` tag). If building your own image, we recommend optimizing it using stargz so your service can start quickly. 
 2) Keep images slim: install only what you need, clean caches, and avoid large unused assets.  
-3) Build a normal image, then repack it to stargz with `nerdctl` or `ctr-remote`. Follow the instructions for installing [nerdctl here](https://github.com/containerd/nerdctl) and [ctr-remote here](https://github.com/containerd/stargz-snapshotter/blob/main/docs/ctr-remote.md).
+3) You can either publish only a stargz-optimized image (recommended -- avoids storing two images in your registry) or publish both a standard and an optimized version. To create stargz images we recommend using [nerdctl here](https://github.com/containerd/nerdctl) and [ctr-remote here](https://github.com/containerd/stargz-snapshotter/blob/main/docs/ctr-remote.md).
 
 **Sample Steps** 
 ```bash
-# Build and push your standard image (any tag)
+# Option 1:  Build → optimize → push only the eStargz image (recommended)
+# 1. Build your app image locally (no push yet)
 docker buildx build \
-  --tag YOUR_REPO/YOUR_IMAGE:latest \
-  --output=type=registry \
+  -t YOUR_REPO/YOUR_IMAGE:build-temp \
+  --load \
   .
 
-# Option 1: Convert to stargz with nerdctl
+# 2. Convert the image to eStargz
+nerdctl image convert --estargz --oci \
+  YOUR_REPO/YOUR_IMAGE:build-temp \
+  YOUR_REPO/YOUR_IMAGE:esgz
+
+# 3. Push only the optimized image
+nerdctl push YOUR_REPO/YOUR_IMAGE:esgz
+
+# MeshAgent manifest:
+# container:
+#   image: "YOUR_REPO/YOUR_IMAGE:esgz"
+```
+
+```bash 
+# Option 2: Build & push a standard image + a stargz-optimized version
+# 1. Build and push your standard image (any tag)
+docker buildx build \
+  --tag YOUR_REPO/YOUR_IMAGE:latest \
+  --platform linux/amd64 \
+  --push
+
+# 2a: Convert to stargz with nerdctl
 nerdctl image pull YOUR_REPO/YOUR_IMAGE:latest
 nerdctl image convert --estargz --oci YOUR_REPO/YOUR_IMAGE:latest YOUR_REPO/YOUR_IMAGE:esgz
 nerdctl push YOUR_REPO/YOUR_IMAGE:esgz
 
-# Option 2: Convert to stargz with ctr-remote 
+# OR 2b: Convert to stargz with ctr-remote 
 # Then optimize to eStargz and push (needs access to your containerd socket, e.g., /run/containerd/containerd.sock)
 ctr-remote image pull YOUR_REPO/YOUR_IMAGE:latest
 ctr-remote image optimize --oci YOUR_REPO/YOUR_IMAGE:latest YOUR_REPO/YOUR_IMAGE:esgz
@@ -62,8 +84,6 @@ ctr-remote image push YOUR_REPO/YOUR_IMAGE:esgz
 # container:
 #   image: "YOUR_REPO/YOUR_IMAGE:esgz"
 ```
-4) Optional: add a prefetch manifest (list the files your entrypoint touches at startup) to further reduce latency.
-5) (Optional) If you operate your own stargz-enabled nodes, you can sanity-check by running `nerdctl run --snapshotter=stargz YOUR_REPO/YOUR_IMAGE:esgz`. Otherwise, just publish and reference the tag you want in your service manifest.
 
 ## Related Topics
 - [Packaging services](./packaging_and_deploying/packaging): Field reference and examples for packaging a service.
