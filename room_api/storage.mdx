@@ -4,13 +4,10 @@ import StorageDownloadTs from "/snippets/examples/typescript/storage-download.md
 import StorageDownloadDart from "/snippets/examples/dart/storage-download.mdx"
 import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
+## Overview
 The storage API manages files and folders within a room’s remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
 
----
-
-## Overview
-
-The storage functionality provides a straightforward way to check if files exist, create or overwrite them, append data in multiple writes, download or get a direct URL to a file, list folder contents, and finally delete files when they are no longer needed.
+Use it to check for files, create or overwrite them, append data across writes, download or get a direct URL, list folder contents, and delete files when no longer needed.
 
 Key concepts include:
 
@@ -157,7 +154,7 @@ room.Storage.Off("file.deleted", OnFileDeleted);
 
 Below is a summary of the primary methods. Each method is asynchronous, so you should `await` the call.
 
-### 1. `exists(path)`
+### `exists(path)`
 
 **Description**  
 Checks if a file or folder exists at the given path.
@@ -213,7 +210,7 @@ else
 
 ---
 
-### 2. `open(path, overwrite=False)`
+### `open(path, overwrite=False)`
 
 **Description**  
 Opens a file for writing. Returns a handle used for subsequent write calls and closing.  
@@ -248,7 +245,7 @@ var handle = await room.Storage.Open("files/new.txt", overwrite: true);
 
 ---
 
-### 3. `write(handle, data)`
+### `write(handle, data)`
 
 **Description**  
 Writes binary data to an open file handle.
@@ -294,7 +291,7 @@ await room.Storage.Write(myHandle, dataToWrite);
 
 ---
 
-### 4. `close(handle)`
+### `close(handle)`
 
 **Description**  
 Closes an open file handle, ensuring all data has been written.
@@ -327,7 +324,7 @@ await room.Storage.Close(myHandle);
 
 ---
 
-### 5. `download(path)`
+### `download(path)`
 
 **Description**  
 Retrieves the content of a file from the remote storage.  
@@ -364,7 +361,7 @@ Console.WriteLine(fileResponse.Data);  // raw bytes
 
 ---
 
-### 6. `download_url(path)`
+### `download_url(path)`
 
 **Description**  
 Requests a downloadable URL for the specified file path, which can be used to fetch the file directly (e.g., via HTTP). The exact protocol or format of the returned URL may vary.
@@ -401,7 +398,7 @@ Console.WriteLine($"Download the file from: {url}");
 
 ---
 
-### 7. `list(path)`
+### `list(path)`
 
 **Description**  
 Lists the contents of a folder, returning file and subfolder names along with a flag indicating if each entry is a folder.
@@ -449,7 +446,7 @@ foreach (var e in entries)
 
 ---
 
-### 8. `delete(path)`
+### `delete(path)`
 
 **Description**  
 Deletes a file at the given path. A `file.deleted` event is typically emitted afterward.
@@ -511,4 +508,3 @@ This sequence demonstrates basic creation, reading, and deletion flows within a 
 ## Conclusion
 
 The storage interface offers asynchronous file operations, suitable for real-time collaboration scenarios. You can track file updates or deletions through event handlers and immediately sync or update your application. This design makes it easy to build experiences around shared data that are robust, flexible, and user-friendly.
-
