@@ -36,7 +36,7 @@ async def main():
     )
     try:
         async with RoomClient(protocol=protocol) as room:
-            toolkits = await room.secrets.request_oauth_token()
+            toolkits = await room.agents.list_toolkits()
 
             print("The tools connected to our room are:")
             for toolkit in toolkits:
