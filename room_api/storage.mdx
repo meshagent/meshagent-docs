@@ -5,7 +5,7 @@ import StorageDownloadDart from "/snippets/examples/dart/storage-download.mdx"
 import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
 ## Overview
-The storage API manages files and folders within a room’s remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
+The `StorageClient` manages files and folders within a room’s remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
 
 Use it to check for files, create or overwrite them, append data across writes, download or get a direct URL, list folder contents, and delete files when no longer needed.
 
@@ -21,8 +21,8 @@ Key concepts include:
 
 The storage system emits two types of events:
 
-1. **`file.updated`**  
-   Triggered when a file is created or updated. Handlers receive a `path` argument identifying the file's location in storage.
+- **`file.updated`**  
+  Triggered when a file is created or updated. Handlers receive a `path` argument identifying the file's location in storage.
 
 <CodeGroup>
 ```python Python
@@ -67,8 +67,8 @@ room.Storage.On("file.updated", OnFileUpdated);
 </CodeGroup>
 
 
-2. **`file_deleted`**  
-   Triggered when a file is deleted. Handlers receive a `path` argument identifying the file's location in storage.
+- **`file.deleted`**  
+  Triggered when a file is deleted. Handlers receive a `path` argument identifying the file's location in storage.
 
 
 <CodeGroup>
@@ -210,6 +210,32 @@ else
 
 ---
 
+### `stat(path)`
+
+**Description**  
+Fetch basic metadata (exists, folder flag, created/updated timestamps) for a file or folder.
+
+**Parameters**  
+- `path` *(str)*: The path to inspect.
+
+**Returns**  
+- `StorageEntry | None`: Entry when present; `None` if not found.
+
+**Example**:
+
+<CodeGroup>
+```python Python
+entry = await room.storage.stat(path="folder/data.json")
+if entry:
+    print(entry.name, entry.is_folder, entry.created_at, entry.updated_at)
+```
+</CodeGroup>
+
+- **Availability**: Python SDK exposes `stat`; other SDKs can call the same endpoint via a custom request until a helper is added.
+
+
+---
+
 ### `open(path, overwrite=False)`
 
 **Description**  
@@ -235,7 +261,7 @@ let handle = await room.storage.open("files/new.txt", { overwrite: true });
 let handle = await room.storage.open("files/new.txt", { overwrite: true });
 ```
 ```dart Dart
-var handle = await room.storage.open("files/new.txt", overwrite=true);
+var handle = await room.storage.open("files/new.txt", overwrite: true);
 ```
 ```dotnet C#
 var handle = await room.Storage.Open("files/new.txt", overwrite: true);
@@ -268,13 +294,13 @@ await room.storage.write(handle=my_handle, data=data_to_write)
 const encoder = new TextEncoder();
 const dataToWrite = encoder.encode("Sample data");
 
-await room.storage.write(myHandle, data=dataToWrite);
+await room.storage.write(myHandle, dataToWrite);
 ```
 ```typescript TypeScript
 const encoder = new TextEncoder();
 const dataToWrite = encoder.encode("Sample data");
 
-await room.storage.write(myHandle, data=dataToWrite);
+await room.storage.write(myHandle, dataToWrite);
 ```
 ```dart Dart
 final dataToWrite = utf8.encode("Sample data");
