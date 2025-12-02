@@ -20,11 +20,7 @@ Future<void> main() async {
         tagName: 'child',
         description: 'child',
         properties: [
-          ValueProperty(
-            name: 'prop',
-            description: 'desc',
-            type: 'number',
-          ),
+          ValueProperty(name: 'prop', description: 'desc', type: 'number'),
         ],
       ),
     ],
@@ -32,9 +28,7 @@ Future<void> main() async {
 
   // Create a registry and add the schema
   final server = SchemaRegistry(
-    schemas: [
-      SchemaRegistration(name: 'sample', schema: sample),
-    ],
+    schemas: [SchemaRegistration(name: 'sample', schema: sample)],
   );
 
   // Run the server

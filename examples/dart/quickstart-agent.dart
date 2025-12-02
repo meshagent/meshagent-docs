@@ -49,7 +49,8 @@ Future<void> main() async {
       agent: 'meshagent.document-writer',
       arguments: {
         'path': path,
-        'prompt': 'write a paragraph about AI and how agents are shaping the future',
+        'prompt':
+            'write a paragraph about AI and how agents are shaping the future',
       },
     );
 
