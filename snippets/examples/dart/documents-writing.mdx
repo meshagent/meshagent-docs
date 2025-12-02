@@ -2,36 +2,35 @@
 import 'package:meshagent/meshagent.dart';
 
 void main() async {
-    // Define a unique room name and chose your participant name
-    const String roomName = 'examples';
-    const String participantName = 'example-participant';
+  // Define a unique room name and chose your participant name
+  const String roomName = 'examples';
+  const String participantName = 'example-participant';
 
-    // Document name (the extension identifies the schema)
-    const String path = 'hello-world.document';
+  // Document name (the extension identifies the schema)
+  const String path = 'hello-world.document';
 
-    // Establish communication channel using participant token
-    final protocol = websocketProtocol(
-        roomName: roomName,
-        participantName: participantName,
-    );
+  // Establish communication channel using participant token
+  final protocol = websocketProtocol(
+    roomName: roomName,
+    participantName: participantName,
+  );
 
-    // Instantiate a new RoomClient for interacting with the room
-    final room = RoomClient(protocol: protocol);
+  // Instantiate a new RoomClient for interacting with the room
+  final room = RoomClient(protocol: protocol);
 
-    // Connect to the room
-    await room.start();
+  // Connect to the room
+  await room.start();
 
-    // Open our document
-    const meshDocument = await room.sync.open(path: path);
+  // Open our document
+  const meshDocument = await room.sync.open(path: path);
 
-    // Wait for the document to sync from the server
-    await meshDocument.synchronize;
+  // Wait for the document to sync from the server
+  await meshDocument.synchronize;
 
-    meshDocument.root.createChildElement(
-        tagName="body",
-        attributes={
-            "text": "hello world!"
-        });
+  meshDocument.root.createChildElement(
+    tagName = "body",
+    attributes = {"text": "hello world!"},
+  );
 }
 
 ```
