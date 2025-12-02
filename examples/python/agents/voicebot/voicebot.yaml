@@ -1,0 +1,20 @@
+kind: Service
+version: v1
+metadata:
+  name: voice1
+  description: "A voice powered agent that you can talk to."
+  annotations:
+    meshagent.service/id: meshagent.voicebot1
+agents:                                        # section required for agent to appear in Powerboards
+  - name: voice1
+    annotations:
+      meshagent.agent.type: "VoiceBot"
+ports:
+  - liveness: "/"
+    endpoints:
+      - path: /agent
+        meshagent:
+          identity: voice1
+container:
+  image: "meshagent/cli:latest"
+  command: "/usr/bin/meshagent/meshagent voicebot service --agent-name=voice1 --room-rules agents/voice1/rules.txt"
