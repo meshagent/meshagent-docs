@@ -1,12 +1,11 @@
 
-This module provides a client for interacting with server-managed queues. It contains two primary exports:
-
----
-
 ## Overview
 
-- **`Queue`** – A simple class that represents a queue instance, holding its name and current size.
-- **`QueuesClient`** – A high-level client that sends requests through a provided `RoomClient` to list, open, drain, close, send messages to, and receive messages from queues.
+The `QueuesClient` lets you manage lightweight room-scoped queues for simple task/message passing:
+
+- List queues with their current size.
+- Open/create queues (or auto-create via `send`/`receive` when `create=True`).
+- Send messages, receive messages (optionally waiting), and drain/close queues.
 
 ## API Methods
 
@@ -17,9 +16,6 @@ Below is an example of how you might use the `QueuesClient` in your code:
 # List existing Queues
 queues = await room.queues.list()
 print("Queues:", queues)
-
-# Open a Queues
-await room.queues.open("my-queue")
 
 # Send a messages
 await room.queues.send("my-queue", {"payload": "Hello World!"})
@@ -194,9 +190,13 @@ var queues = await room.Queues.List();
 
 #### `open(name)`
 
+<Alert type="note">
+Python SDK does not expose `open`; queues are created implicitly via `send`/`receive` when `create=True`. Use `open` in JS/TS/Dart/.NET.
+</Alert>
+
 <CodeGroup>
 ```python Python
-await room.queues.open("my-queue")
+# Not available in Python (queues are auto-created via send/receive)
 ```
 ```js NodeJs
 await room.queues.open("my-queue");
@@ -216,7 +216,7 @@ await room.Queues.Open("my-queue");
 - **Parameters**:
   - `name` – The name of the queue to open.
 - **Description**  
-  Sends a request to the server to open a queue with the specified name. If the queue already exists and is closed, it will be reopened. If it does not exist, it will be created and opened.
+  Creates (or reopens) the queue if it is not present. If the queue already exists and is open, the server will reject a duplicate open request.
 
 
 #### `drain(name)`
@@ -332,7 +332,7 @@ var received = await room.Queues.Receive("my-queue", create: true, wait: true);
   A JSON-serializable object if a message is received, or `null` if the queue was empty (represented by an `EmptyResponse`).
 
 - **Description**  
-  Tries to receive one message from the specified queue. If the response from the server is `EmptyResponse`, the method returns `null`. Otherwise, it returns the JSON object from the `JsonResponse`.
+  Tries to receive one message from the specified queue. With `wait=True`, the call blocks until a message arrives. With `wait=False`, it returns immediately: `null` if empty or the next message if available.
 
 ---
 
@@ -349,3 +349,5 @@ var received = await room.Queues.Receive("my-queue", create: true, wait: true);
 - **Extensibility**  
   You can add additional queue-related functionality (e.g., message peek, dead-letter queues, etc.) by extending `QueuesClient` or creating related classes that also use `RoomClient`.
 
+- **SDK availability**  
+  The server supports `queues.open`, but the Python SDK doesn’t expose an `open` helper today—queues are auto-created when `create=True` on `send`/`receive`. JS/TS/Dart/.NET expose `open`.

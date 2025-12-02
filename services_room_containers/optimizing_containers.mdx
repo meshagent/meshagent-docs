@@ -1,0 +1,92 @@
+---
+title: Optimizing Containers
+---
+
+MeshAgent runs room and project services as containers. You can also point to external services if you host them yourself. When you deploy a service that uses a container image, MeshAgent will pull, start, and keep that image in sync with the room or project it belongs to. 
+
+**How fast a service becomes available depends primarily on how quickly its container image can be pulled and started.** To make startup faster and more reliable, we publish [eStargz (“stargz”)](https://github.com/containerd/stargz-snapshotter?tab=readme-ov-file) optimized images that allow for **lazy pulling**, a technique that can reduce pull-to-start time by up to ~75% for common workloads. If you are deploying custom services with your own container image we highly encourage you to optimize them with stargz to ensure the services start as quickly as possible. 
+
+**Use MeshAgent base images when possible.** They are optimized and include eStargz variants:
+- [Docker Hub](https://hub.docker.com/r/meshagent/)
+- [Google Artifact Registry](https://console.cloud.google.com/artifacts/docker/meshagent-public/us-central1/images)
+
+## Why optimization matters (and how lazy pulling helps)
+How fast an agent or service starts is directly related to how long it takes to pull and start its container image. Images that are large, slow to decompress, have unnecessary files or dependencies can take significantly longer to start. 
+
+Stargz improves startup time by enabling **lazy pulling**. This allows the container to start before the full image is downloaded. Only the files needed during initial setup are fetched and the rest of the image is streamed on demand if/when needed. 
+
+## How MeshAgent uses your images
+- When a room starts, MeshAgent pulls and runs the images for every room service attached to that room. Pull time directly affects time-to-ready.
+- If you redeploy a **room service**, MeshAgent detects the change and reconciles the running container automatically.
+- If you redeploy a **project service**, restart the room for the change to take effect in that room.
+- If you are deploying a CLI ChatBot or VoiceBot, use the `meshagent/cli` base image. It is already optimized and supports the standard flags (tools, rules, room-rules, etc.), so you usually do not need to build a custom image.
+- If you reference an **external service** you host yourself, MeshAgent skips pulling/running a container and just routes to your endpoint. Container optimizations only matter for services you package with a container image.
+
+## What Stargz is and how we use it
+We publish images in an **eStargz/stargz** format and run with the [stargz snapshotter](https://github.com/containerd/stargz-snapshotter?tab=readme-ov-file) (a containerd plugin). This makes image layers *seekable* (the runtime can jump directly to specific files instead of downloading the whole layer first):
+- Instead of downloading and decompressing an entire layer before start, the runtime lazily fetches just the files that are actually touched at startup.
+- Startup is faster (lower cold-start latency) and data transfer is smaller, especially for larger Python/Node/ML stacks.
+- Lazy pulling requires the containerd stargz-snapshotter; if it is not present, the image pulls and runs like a normal OCI/Docker image (just without the lazy-pull speedup).
+- MeshAgent does not need a special tag or flag: the runtime decides. If the host has the stargz snapshotter, your stargz-compressed image is lazily pulled; if not, it is pulled normally.
+We publish **`-esgz` image variants** that are optimized for lazy pulling via the stargz snapshotter. On environments without the snapshotter, these `-esgz` images behave like normal images; they just don’t get the lazy-pull speedup.
+
+What we do on our images:
+- Build stargz variants alongside the normal tags.
+- Provide prefetch lists (the small set of files the agent touches during boot: entrypoint, deps, config) so the snapshotter pulls only what is needed up front.
+
+## When deploying custom services
+1) Use MeshAgent base images when possible (they already include stargz builds with `-esgz` tag). If building your own image, we recommend optimizing it using stargz so your service can start quickly. 
+2) Keep images slim: install only what you need, clean caches, and avoid large unused assets.  
+3) You can either publish only a stargz-optimized image (recommended -- avoids storing two images in your registry) or publish both a standard and an optimized version. To create stargz images we recommend using [nerdctl here](https://github.com/containerd/nerdctl) and [ctr-remote here](https://github.com/containerd/stargz-snapshotter/blob/main/docs/ctr-remote.md).
+
+**Sample Steps** 
+```bash
+# Option 1:  Build → optimize → push only the eStargz image (recommended)
+# 1. Build your app image locally (no push yet)
+docker buildx build \
+  -t YOUR_REPO/YOUR_IMAGE:build-temp \
+  --load \
+  .
+
+# 2. Convert the image to eStargz
+nerdctl image convert --estargz --oci \
+  YOUR_REPO/YOUR_IMAGE:build-temp \
+  YOUR_REPO/YOUR_IMAGE:esgz
+
+# 3. Push only the optimized image
+nerdctl push YOUR_REPO/YOUR_IMAGE:esgz
+
+# MeshAgent manifest:
+# container:
+#   image: "YOUR_REPO/YOUR_IMAGE:esgz"
+```
+
+```bash 
+# Option 2: Build & push a standard image + a stargz-optimized version
+# 1. Build and push your standard image (any tag)
+docker buildx build \
+  --tag YOUR_REPO/YOUR_IMAGE:latest \
+  --platform linux/amd64 \
+  --push
+
+# 2a: Convert to stargz with nerdctl
+nerdctl image pull YOUR_REPO/YOUR_IMAGE:latest
+nerdctl image convert --estargz --oci YOUR_REPO/YOUR_IMAGE:latest YOUR_REPO/YOUR_IMAGE:esgz
+nerdctl push YOUR_REPO/YOUR_IMAGE:esgz
+
+# OR 2b: Convert to stargz with ctr-remote 
+# Then optimize to eStargz and push (needs access to your containerd socket, e.g., /run/containerd/containerd.sock)
+ctr-remote image pull YOUR_REPO/YOUR_IMAGE:latest
+ctr-remote image optimize --oci YOUR_REPO/YOUR_IMAGE:latest YOUR_REPO/YOUR_IMAGE:esgz
+ctr-remote image push YOUR_REPO/YOUR_IMAGE:esgz
+
+# Reference the tag you prefer in your service manifest:
+# container:
+#   image: "YOUR_REPO/YOUR_IMAGE:esgz"
+```
+
+## Related Topics
+- [Packaging services](./packaging_and_deploying/packaging): Field reference and examples for packaging a service.
+- [Deploying services](./packaging_and_deploying/deployment): Ship and update services from the CLI or Studio.
+- [Room services example](./packaging_and_deploying/room_services_example): Deploy a service scoped to a specific room.
+- [Project service example](./packaging_and_deploying/project_service_example): Deploy a service for a project (available in all rooms in the project)
