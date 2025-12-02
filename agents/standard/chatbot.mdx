@@ -81,6 +81,22 @@ All of this happens automatically once your bot is started.
 
 These can be extended or replaced with your own toolkit factories.
 
+### Multi-user threads and reply logic
+
+ChatBot is multi-user aware out of the box. Conversation state is stored in a `thread` document (a room-synced XML-like structure) with two key sections:
+- `<members>`: participant names for this thread. The client UI (e.g., [MeshAgent Studio](https://studio.meshagent.com), [Powerboards](https://www.powerboards.com/), or your app) writes this list, the ChatBot only reads it.
+- `<messages>`: conversation history, attachments, tool output. The ChatBot appends messages here as it responds.
+
+When a message arrives:
+1. The UI opens a thread path (via `room.sync.open(path, create=true)`) and writes the `<members>` list for that conversation.
+2. ChatBot opens the same document and syncs changes.
+3. ChatBot cross-references `<members>` with the current online roster from `room.messaging.get_participants()` to see who is actually present.
+4. If more than one human is in the thread, ChatBot runs the `should_reply` function to determine whether the assistant is the intended next speaker. If not, it stays quiet. With a single human, the ChatBot always replies.
+
+Private vs group chats:
+- If the thread has one human in `<members>`, the chatbot treats it like a 1:1 and replies.
+- If the thread has more than one human in `<members>`, it automatically switches to multiplayer mode and uses `should_reply` to decide whether to speak.
+
 ## Beginner-Friendly Examples
 
 <CodeGroup>

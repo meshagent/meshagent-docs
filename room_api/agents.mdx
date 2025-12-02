@@ -18,15 +18,15 @@ The `AgentsClient` defines methods to call agents, ask questions, list available
 
 ## API Methods
 
-### 1. Call
+### Call
 
 - **Description**:  
-  - Allows you to send a request to an agent to perform a specific action or function.
+  Send a request to an agent to perform an action. (Python uses `make_call`; other SDKs use `call`.)
 - **Parameters**:
-  - `name`: The name of the agent you want to call.
-  - `url`: The URL endpoint or route on the agent side that you want to call.
-  - `arguments`: A record of arguments (payload) that you want to send to the agent.
-- **Returns**:  `Response` object (likely a `JsonResponse`), containing the output or result from the agent.
+  - `name`: The agent name.
+  - `url`: The route on the agent to call.
+  - `arguments`: Payload to send.
+- **Returns**: `None` (request is fire-and-forget; handle results in your agent).
 
 <CodeGroup>
 ```python Python
@@ -71,23 +71,22 @@ await room.Agents.MakeCall(
 
 ---
 
-### 2. Ask
+### Ask
 
 - **Description**:  
-  - Sends a question or prompt to the specified agent. You can optionally provide an array of `RequiredToolkit` objects indicating which toolkits (and which tools within them) are available for this agent to use. 
-  - The `ask` method allows you to send a question or prompt to an agent, specifying the agent's name, any toolkits you want to enable, and the arguments you want to pass.
-  - This is useful for getting responses from agents that can process natural language or perform specific tasks.
+  Send a prompt to an agent and get a JSON answer. Optionally allow specific toolkits for the request.
 - **Parameters**:
-  - `agent`: The name/identifier of the agent you want to ask.
-  - `requires`: An optional array of `RequiredToolkit` objects that specify which toolkits are allowed for this ask.
-  - `arguments`: A record of arguments (payload) that you want to send to the agent.
-- **Returns**:  `Response` object (likely a `JsonResponse`), containing the output or result from the agent.
+  - `agent`: Agent name.
+  - `arguments`: Payload for the agent.
+  - `requires` *(optional)*: List of allowed toolkits/tools.
+  - `on_behalf_of` / `onBehalfOf` *(optional)*: Act as another participant.
+- **Returns**: `JsonResponse` with an `answer` object.
 
 <CodeGroup>
 ```python Python
 answer = await room.agents.ask(
   agent="example-agent",
-  requires: [RequiredToolkit(name="example-toolkit", tools=["toolA", "toolB"])],
+  requires=[RequiredToolkit(name="example-toolkit", tools=["toolA", "toolB"])],
   arguments={
     "prompt": "Explain quantum computing in simple terms."
   }
@@ -142,13 +141,12 @@ Console.WriteLine(answer); // logs the JSON structure from the agent
 
 ---
 
-### 3. List Toolkits
+### List toolkits
 
-- **Description**:  
-  - Retrieves a list of all available toolkits and parses each one into a `ToolkitDescription`.
-  - This is useful for discovering which toolkits are available for use and what tools they contain.
-- **Parameters**: None
-- **Returns** An array of `ToolkitDescription` objects.
+- **Description**: Get all available toolkits and their tools.
+- **Parameters**:
+  - `participant_id` *(optional, Python)*: Filter toolkits for a given participant.
+- **Returns**: Array of `ToolkitDescription`.
 
 <CodeGroup>
 ```python Python
@@ -195,13 +193,11 @@ foreach (var toolkit in toolkits)
 
 ---
 
-### 4. List Agents
+### List agents
 
-- **Description**:  
-  - Lists the agents currently available. Each is converted into an `AgentDescription` object.
-  - This is useful for discovering which agents are available for use and what their capabilities are.
-- **Parameters**: None
-- **Returns** An array of `AgentDescription` objects.
+- **Description**: List agents available in the room.
+- **Parameters**: None.
+- **Returns**: Array of `AgentDescription`.
 
 <CodeGroup>
 ```python Python
@@ -242,16 +238,17 @@ foreach (var item in agents)
 
 ---
 
-### 5. Invoke Tool
+### Invoke tool
 
 - **Description**:  
-  - Invokes a specific tool within a toolkit in a given toolkit with the provided arguments.
-  - This is useful for directly interacting with tools without going through an agent.
+  Invoke a specific tool inside a toolkit directly (without going through an agent).
 - **Parameters**:
-  - `toolkit`: The name of the toolkit that contains the tool you want to invoke.
-  - `tool`: The name of the specific tool you want to invoke.
-  - `arguments`: A record of arguments (payload) that you want to send to the tool.
-**Returns** `Response` object (likely a `JsonResponse`), containing the output or result from the invoked tool.
+  - `toolkit`: Toolkit name.
+  - `tool`: Tool name.
+  - `arguments`: Payload for the tool.
+  - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
+  - `caller_context` *(optional, Python)*: Additional context metadata for the call.
+- **Returns**: `Response` (`JsonResponse` in most SDKs) with tool output.
 
 <CodeGroup>
 ```python Python
@@ -291,6 +288,34 @@ final response = await room.agents.invokeTool(
 ```dotnet C#
 var toolArgs = new Dictionary<string, object?> { { "param1", "value1" } };
 var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
+```
+</CodeGroup>
+
+---
+
+### Invoke tool (with request body)
+
+- **Description**:  
+  Send a `Request` object (with optional binary payload) directly to a tool.  
+- **Availability**: Python SDK (`invoke_request_tool`); other SDKs can send raw arguments via `invokeTool`.
+- **Parameters**:
+  - `toolkit`: Toolkit name.
+  - `tool`: Tool name.
+  - `request`: A `Request` object carrying headers/args and optional bytes via `get_data()`.
+  - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
+  - `caller_context` *(optional, Python)*: Extra context metadata.
+- **Returns**: `Response` (`JsonResponse` or stream) from the tool.
+
+<CodeGroup>
+```python Python
+from meshagent.api.messaging import Request
+
+req = Request(arguments={"param1": "value1"}, data=b"raw-bytes-if-needed")
+response = await room.agents.invoke_request_tool(
+    toolkit="example-toolkit",
+    tool="toolA",
+    request=req,
+)
 ```
 </CodeGroup>
 

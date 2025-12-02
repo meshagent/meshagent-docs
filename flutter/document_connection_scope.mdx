@@ -5,14 +5,12 @@ description: Learn how to set up a document connection for your MeshAgent.
 
 ## Description
 
-`DocumentConnectionScope` is a builder widget that manages the lifecycle of a document connection in a MeshAgent application.
+`DocumentConnectionScope` is a builder widget that manages opening and keeping a document connection alive (with simple retry and close-on-dispose).
 
-
-- **Parameters**:
-  - `path` (string): Path to the document.
-  - `room` (RoomClient): Instance of `RoomClient` to manage the connection.
-  - `builder` (function): A callback function that takes the current context, the loaded `MeshDocument`, and any error that occurred during loading.
-- **Returns**: `Widget`: A widget that builds based on the state of the document connection.
+- **path**: Document path to open (created if missing).
+- **room**: Connected `RoomClient`.
+- **builder**: `(BuildContext, MeshDocument?, Object?)` called with the current document (or null while loading) and any error.
+- **Returns**: `Widget` that rebuilds as the document loads/retries.
 
 
 ## Example
