@@ -24,6 +24,7 @@ host = ServiceHost()
 # “room.call” webhook on that path, it will spawn an instance of
 # MyChatBot and connect it to the calling room.
 
+
 @host.path(path="/agent", identity="chatbot")
 class MyChatBot(ChatBot):
     # ChatBot is a conversational, text-based agent that maintains context of the conversation and routes messages to a language model
@@ -33,6 +34,7 @@ class MyChatBot(ChatBot):
             rules=rules,
             llm_adapter=OpenAIResponsesAdapter(),  # Connect to an OpenAI model that uses the Responses API (e.g. GPT 4.1, o3)
         )
+
 
 # Run the host. It starts listening for webhook calls and gracefully
 # shuts down when the process receives a termination signal.
