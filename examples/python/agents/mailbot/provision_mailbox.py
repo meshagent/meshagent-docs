@@ -6,6 +6,7 @@ from meshagent.api import Meshagent
 
 log = logging.getLogger()
 
+
 async def provision_mailbox() -> None:
     meshagent = Meshagent()
     try:
@@ -15,7 +16,11 @@ async def provision_mailbox() -> None:
             room=os.environ["ROOM_NAME"],
             queue=os.environ["EMAIL_QUEUE"],
         )
-        log.info("Created mailbox %s for room %s", os.environ["EMAIL_ADDRESS"], os.environ["ROOM_NAME"])
+        log.info(
+            "Created mailbox %s for room %s",
+            os.environ["EMAIL_ADDRESS"],
+            os.environ["ROOM_NAME"],
+        )
     except aiohttp.ClientResponseError as exc:
         if exc.status == 409:
             raise RuntimeError(
@@ -24,5 +29,6 @@ async def provision_mailbox() -> None:
         raise
     finally:
         await meshagent.close()
+
 
 asyncio.run(provision_mailbox())
