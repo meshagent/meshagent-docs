@@ -164,5 +164,4 @@ class WeatherToolkit(RemoteToolkit):
             tools=[WeatherTool()],
         )
 
-
 asyncio.run(service.run())
