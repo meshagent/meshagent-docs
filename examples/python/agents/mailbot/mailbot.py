@@ -16,6 +16,7 @@ email_address = os.environ["EMAIL_ADDRESS"]
 
 service = ServiceHost()  # MeshAgent assigns a free port if you omit one
 
+
 @service.path(path="/mail", identity="mailbot")
 class ExampleMailbot(MailWorker):
     def __init__(self):
@@ -28,5 +29,6 @@ class ExampleMailbot(MailWorker):
             queue=queue,
             email_address=email_address,
         )
+
 
 asyncio.run(service.run())

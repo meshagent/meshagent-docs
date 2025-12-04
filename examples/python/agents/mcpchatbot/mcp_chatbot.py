@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 from meshagent.tools import Toolkit
@@ -12,6 +11,7 @@ otel_config(service_name="mcp-deepwiki-chatbot")
 log = logging.getLogger(__name__)
 service = ServiceHost()
 
+
 @service.path(path="/mcp-deepwiki-chatbot", identity="mcp-deepwiki-chatbot")
 class MCPChatbot(ChatBot):
     def __init__(self):
@@ -20,9 +20,7 @@ class MCPChatbot(ChatBot):
             title="ChatBot that can use DeepWiki MCP Server",
             description="An agent that can use the DeepWiki MCP server",
             rules=["you are an assistant for trying out MCP servers"],
-            llm_adapter=OpenAIResponsesAdapter(
-                parallel_tool_calls=True
-            ),
+            llm_adapter=OpenAIResponsesAdapter(parallel_tool_calls=True),
             auto_greet_message="What can I help you with?",
             toolkits=[
                 Toolkit(
@@ -34,15 +32,16 @@ class MCPChatbot(ChatBot):
                                 servers=[
                                     MCPServer(
                                         server_label="mcp",
-                                        server_url="https://mcp.deepwiki.com/mcp"
+                                        server_url="https://mcp.deepwiki.com/mcp",
                                     )
-                                ]
+                                ],
                             )
                         )
-                    ]
+                    ],
                 )
             ],
             labels=["tasks", "mcp"],
         )
+
 
 asyncio.run(service.run())
