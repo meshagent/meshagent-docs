@@ -1,0 +1,31 @@
+---
+title: MeshAgent Base Images
+---
+
+MeshAgent publishes base images so you can package and ship agents/services quickly without building every dependency from scratch.
+
+**Where to pull**
+- [Docker Hub](https://hub.docker.com/u/meshagent)
+- [Google Artifact Registry](https://console.cloud.google.com/artifacts/docker/meshagent-public/us-central1/images)
+
+For faster cold starts, every image has a stargz-optimized variant with an `-esgz` tag (e.g., `meshagent/python-sdk-slim:<tag>-esgz` or `meshagent/cli:{version}-esgz`). If you are building your own container we recommend creating a stargz-optimized image, this will make it much faster to pull and run your image. Learn more in [optimizing containers](./optimizing_containers).
+
+**Image catalog**
+
+| Image | Best for | What’s inside | Notes |
+| --- | --- | --- | --- |
+| `meshagent/cli` | Running or modifying the built-in CLI ChatBot or VoiceBot. Great starting point to set custom rules and add tools to an agent without writing custom code. | Prebuilt `meshagent` binary with all CLI flags | Typically use `meshagent chatbot service ...` or `meshagent voicebot service ...` with applicable flags as your command. |
+| `meshagent/python-sdk-slim` | Default Python services. Does not include livekit, so not suitable for voice agents. | Python 3.13 slim + MeshAgent API/Agents/Tools/OpenAI + OTEL; `uv` preinstalled | Recommended starting point for custom Python agents/tools. |
+| `meshagent/python-sdk` | Python services needing additional packages (e.g. livekit for voice agents) | Everything in `python-sdk-slim` **plus** LiveKit/audio, MCP, Computers, MarkItDown, etc. | Heavier; use if you need the extended deps out of the box. |
+| `meshagent/shell` | Shell-based tools/agents that need common Linux utilities | Python 3.13 slim + MeshAgent SDK + common CLI tools (curl, git, ripgrep, etc.) | Handy for “developer” style agents or shell-based utilities. |
+| `meshagent/nodejs-sdk` | JavaScript/TypeScript services | Node 22 + MeshAgent TS SDK workspace scaffold | Bring your own build/start command. |
+| `meshagent/dotnet-sdk` | .NET services | Latest .NET SDK + MeshAgent .NET SDK source | Use `dotnet publish` in your Dockerfile stage. |
+| `meshagent/flutter` | Flutter UI builds | Flutter SDK + MeshAgent Flutter/Dart workspaces | For building/publishing Flutter-based UIs. |
+
+**Tagging & architectures**
+- Tags: `latest`, versioned tags (e.g., `0.8.x`), and stargz variants (`*-esgz`). If you want lazy-pull startup speed, pick the `-esgz` tag; it falls back gracefully if the runtime doesn’t support stargz.
+- Platform: images are published for `linux/amd64`. 
+
+## Related Topics
+- [Using Containers](./containers_api): Learn how to run containers through the MeshAgent Containers API. This is very helpful for running code on demand inside a Room. 
+- [Optimizing Containers](./optimizing): Learn how to optimize your container when deploying a custom service. 
