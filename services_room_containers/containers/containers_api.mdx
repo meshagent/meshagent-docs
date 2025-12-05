@@ -2,7 +2,7 @@
 title: Using Containers
 ---
 
-The [Containers API](../room_api/containers) lets you run containerized workloads inside a Room. With it, you can:
+The [Containers API](../../room_api/containers) lets you run containerized workloads inside a Room. With it, you can:
 - Run containers on demand (ad-hoc jobs, one-off commands)
 - Get logs from a running container 
 - Exec/TTY into a container for interactive debugging
@@ -24,7 +24,7 @@ Use the Containers API any time you want to run code inside a Room on demand. Th
 - Containers remain scoped to the room that launched them.
 
 ## Permissions
-When a service or participant joins a room, it does so with a [participant token](../rest_api/participant_tokens) that declares which APIs it may call. Part of that scope is the `ContainersGrant`, which governs container operations. If a token omits the grant entirely, MeshAgent treats it as "allow everything"; otherwise each field tightens what that participant may do:
+When a service or participant joins a room, it does so with a [participant token](../../rest_api/participant_tokens) that declares which APIs it may call. Part of that scope is the `ContainersGrant`, which governs container operations. If a token omits the grant entirely, MeshAgent treats it as "allow everything"; otherwise each field tightens what that participant may do:
 
 - **`use_containers`** *(bool, default `true`)* — master switch. Setting it to `false` blocks every Containers API call regardless of the other fields.
 - **`pull`** *(list[str])* — allowlist of image tags/prefixes that may be pulled. Use a trailing `*` to permit a family of tags (e.g. `myrepo/agents/*`). When omitted, pulls are unrestricted.
@@ -32,7 +32,7 @@ When a service or participant joins a room, it does so with a [participant token
 - **`logs`** *(bool, default `true`)* — controls access to `containers.logs` and other log streaming helpers.
 
 ### Example: Scope a service to specific images
-When [packaging a service](./packaging_and_deploying/packaging) for deployment, include a ContainersGrant in the meshagent.yaml. For example, you can add something like this snippet to restrict pull and run permissions: 
+When [packaging a service](../packaging_and_deploying/packaging) for deployment, include a ContainersGrant in the meshagent.yaml. For example, you can add something like this snippet to restrict pull and run permissions: 
 
 ```yaml
 # meshagent.yaml 
@@ -61,7 +61,7 @@ MeshAgent Studio allows you to pull an image from a registry and run a container
 6. Your service should now be running in a container. Click the **Containers** tab to see the status and logs for the container, or to stop the container. 
 
 ## Working with Containers from the CLI or from Code
-To learn more about working with containers using the MeshAgent CLI or code check out the [Containers API](../room_api/containers) documentation. 
+To learn more about working with containers using the MeshAgent CLI or code check out the [Containers API](../../room_api/containers) documentation. 
 
 ## Troubleshooting
 Inside your room in the studio look at the **Developer Console** on the bottom of the screen. Here you'll see images and containers in the room. From the images tab you should see the image you pulled (e.g., "chatbot:0.1"), this should be green. If it is not green that means the image did not build properly and could indicate that you are missing the meshagent.yaml file that defines how the container and service should run. From the containers tab you should see the image running and who started it. You can also click into the container logs from this view or stop the container. 
@@ -70,7 +70,7 @@ Inside your room in the studio look at the **Developer Console** on the bottom o
 Containers run on demand and will not automatically restart the next time you enter the room. If you want a container to start automatically, deploy it as a Project Service or Room Service.
 
 Learn More: 
-- [Containers API](../room_api/containers): Understand the various API methods for working with containers in MeshAgent
-- [Intro to Services & Containers](./overview): Understand when to use project service and room services.
-- [Packaging Services](./packaging_and_deploying/deployment): Learn how to create a manifest and applicable Dockerfile for the service you want to deploy.
-- [Deploying Services](./packaging_and_deploying/deployment): Learn how to deploy a project or room service.
+- [Containers API](../../room_api/containers): Understand the various API methods for working with containers in MeshAgent
+- [Intro to Services & Containers](../overview): Understand when to use project service and room services.
+- [Packaging Services](../packaging_and_deploying/packaging): Learn how to create a manifest and applicable Dockerfile for the service you want to deploy.
+- [Deploying Services](../packaging_and_deploying/deployment): Learn how to deploy a project or room service.
