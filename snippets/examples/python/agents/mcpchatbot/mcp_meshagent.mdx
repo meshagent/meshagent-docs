@@ -1,0 +1,22 @@
+```yaml Yaml
+kind: Service
+version: v1
+metadata:
+  name: mcp-deepwiki-chatbot
+  description: "Expose a ChatBot with access to DeepWiki MCP server"
+agents:
+  - name: assistant
+    description: "Conversational agent for the room"
+ports:
+- num: "*" 
+  type: http
+  liveness: "/"
+  endpoints:
+  - path: /mcp-deepwiki-chatbot
+    meshagent:
+      identity: "MCP DeepWiki ChatBot"
+      # api: if you need to use secrets/OAuth with the agent you can add those permissions here
+container:
+  image: "IMAGE:TAG"
+```
+

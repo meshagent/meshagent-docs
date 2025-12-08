@@ -17,7 +17,9 @@ const extMap = {
     '.py': { 'language': 'python', 'tabname': 'Python' },
     '.sh': { 'language': 'bash', 'tabname': 'Bash' },
     '.ts': { 'language': 'typescript', 'tabname': 'TypeScript' },
-    '.yml': { 'language': 'yaml', 'tabname': 'Yaml' }
+    '.yml': { 'language': 'yaml', 'tabname': 'Yaml' },
+    '.yaml': { 'language': 'yaml', 'tabname': 'Yaml' },
+    // Dockerfiles have no extension; handle explicitly below
 };
 const ignore = [
     `${exampleDir}/**/node_modules`,
@@ -33,9 +35,12 @@ const ignore = [
 const map = through.obj((file, enc, cb) => {
 
     const parsed = path.parse(file.path);
-    const ext = extMap[parsed.ext];
+    // Special case for Dockerfile (no extension)
+    const isDockerfile = parsed.base === 'Dockerfile';
+    const ext = isDockerfile ? { language: 'dockerfile', tabname: 'Dockerfile' } : extMap[parsed.ext];
 
     if (ext) {
+        // For Dockerfile keep the name, otherwise use the original name
         parsed.base = `${parsed.name}.mdx`;
         parsed.ext = '.mdx';
 
