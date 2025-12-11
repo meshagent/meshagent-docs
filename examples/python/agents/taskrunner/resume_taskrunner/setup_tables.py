@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+from meshagent.api.helpers import meshagent_base_url, websocket_room_url
 from meshagent.api import ParticipantToken, ApiScope, RoomClient, WebSocketClientProtocol, ParticipantGrant
 from meshagent.api.room_server_client import TextDataType, FloatDataType
 from meshagent.otel import otel_config
@@ -18,7 +19,7 @@ async def create_resume_tables(room_name):
     api_key=env("MESHAGENT_API_KEY")
     async with RoomClient(
         protocol=WebSocketClientProtocol(
-            url=f"wss://api.meshagent.com/rooms/{room_name}",
+            url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
             token=ParticipantToken(
                 name="participant",
                 grants=[
@@ -31,8 +32,6 @@ async def create_resume_tables(room_name):
     ) as room:
         tables = await room.database.list_tables()
         log.info("Existing tables: %s", tables)
-
-        await room.database.drop_table(name="candidates", ignore_missing=True) # remove later
         try: 
             await room.database.create_table_with_schema(
                 name="candidates",
