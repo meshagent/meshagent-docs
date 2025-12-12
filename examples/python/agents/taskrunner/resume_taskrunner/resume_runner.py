@@ -97,12 +97,21 @@ class ResumeToolkit(RemoteToolkit):
         super().__init__(
             name="resume-toolkit",
             title="resume-toolkit",
-            description="a toolkit for processing resumes and job descriptions",
+            description="a toolkit for managing resumes",
             tools=[
-                # *StorageToolkit().tools,
-                # WebSearchTool(),
                 SaveCandidateDetails(), 
-                #SaveJobDescriptionDetails()
+            ],
+        )
+
+@service.path(identity="open-roles-toolkit", path="/open-roles-toolkit")
+class OpenRolesToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="open-roles-toolkit",
+            title="open-roles-toolkit",
+            description="a toolkit for managing open roles",
+            tools=[
+                SaveJobDescriptionDetails()
             ],
         )
 
@@ -192,79 +201,6 @@ class MailbotToolkit(RemoteToolkit):
             tools=[
                 ProcessResume()
             ],
-        )
-
-# resume_toolkit = Toolkit(name="resume-tools", tools=[WebSearchTool(), SaveCandidateDetails()])
-
-# Resume agent needs to take in a file, process the file, save the file and results to the room
-# Agent should compare the resume to other job descriptions and indicate if the person is a match for them
-# @service.path(identity="resume-runner", path="/resumerunner")
-# class ResumeRunner(LLMTaskRunner):
-#     def __init__(self):
-#         super().__init__(
-#             name="resume-runner",
-#             title="resume-runner",
-#             description="A TaskRunner that processes Resumes",
-#             llm_adapter=OpenAIResponsesAdapter(),
-#             supports_tools=True,
-#             toolkits=[resume_toolkit, StorageToolkit()],
-#             # input_schema={"prompt":""},
-#             rules=[
-#                 "You process resumes to determine if candidates are a good fit for open roles",
-#                 "When invoked, you MUST first call the get-resume tool with the provided resume_path to obtain the resume file.",
-#                 "Next extract the person's name, contact information, skills, and a concise experience summary",
-#                 "Once you have extracted skills from their resume, look them up on LinkedIn and Google to see if you can find additional information about the candidate",
-#                 "Once you have collected enough information about the candidate, save their information to the candidate database using the save-candidate-details tool"
-#             ]
-#         )
-#     async def start(self, *, room):
-#         await super().start(room=room)
-#         log.info("creating tables if they do not exist")
-#         await room.database.create_table_with_schema(
-#             name="candidates",
-#             schema={
-#                 "resume_path": TextDataType(),
-#                 "candidate_name": TextDataType(),
-#                 "contact_info": TextDataType(),
-#                 "resume_text": TextDataType(),
-#                 "resume_summary": TextDataType(), 
-#                 "web_search_notes": TextDataType()
-#             },
-#             mode="create_if_not_exists"
-#         )
-#         log.info("finished creating tables")
-
-#     # Override ask to avoid duplicating toolkits (context.toolkits already contains self._toolkits)
-#     async def ask(self, *, context: AgentCallContext, arguments: dict):
-#         prompt = arguments.get("prompt")
-#         if prompt is None:
-#             raise ValueError("`prompt` is required")
-
-#         context.chat.append_user_message(prompt)
-
-#         resp = await self._llm_adapter.next(
-#             context=context.chat,
-#             room=context.room,
-#             toolkits=context.toolkits,  # already includes this agent's toolkits need to fix potential bug in LLMRunner
-#             tool_adapter=self._tool_adapter,
-#             output_schema=self.output_schema,
-#         )
-
-#         if self.output_schema is None:
-#             return TextResponse(text=resp)
-#         return resp
-    
-# @service.path(identity="resume-mailbot", path="/resume-mailbot")  
-# class ResumeMailbot(MailWorker):
-#     def __init__(self):
-#         super().__init__(
-#             name="resume-mailbot",
-#             title="resume-mailbot",
-#             description="A mail agent that processes resumes",
-#             llm_adapter=OpenAIResponsesAdapter,
-#             toolkits=[Toolkit(name="web-search", tools=[WebSearchTool()]), StorageToolkit(), SaveCandidateDetails()],
-#             queue="resume_email", # update later
-#             email_address="jobs@mail.meshagent.life" # update later
-#         )
+        )    
 
 asyncio.run(service.run())
