@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import uuid
+import os
+from meshagent.api import RequiredToolkit
 from meshagent.api.room_server_client import TextDataType
 from meshagent.agents import ToolResponseAdapter
 from meshagent.tools import Tool, Toolkit, ToolContext, RemoteToolkit
@@ -89,7 +91,7 @@ class SaveJobDescriptionDetails(Tool):
             return JsonResponse(json={"status":"error", "error":str(e), "job_description_path":job_description_path})
         return JsonResponse(json={"status":"ok", "saved":record})
     
-@service.path(identity="resume-tools", path="/resume-tools")
+@service.path(identity="resume-toolkit", path="/resume-toolkit")
 class ResumeToolkit(RemoteToolkit):
     def __init__(self):
         super().__init__(
@@ -97,7 +99,98 @@ class ResumeToolkit(RemoteToolkit):
             title="resume-toolkit",
             description="a toolkit for processing resumes and job descriptions",
             tools=[
-                SaveCandidateDetails(), SaveJobDescriptionDetails()
+                # *StorageToolkit().tools,
+                # WebSearchTool(),
+                SaveCandidateDetails(), 
+                #SaveJobDescriptionDetails()
+            ],
+        )
+
+# Tool for Mailbot to trigger the resume processing
+class ProcessResume(Tool):
+    def __init__(self):
+        super().__init__(
+            name="process-resume",
+            title="process-resume",
+            description="Copy a resume attachment from an email into the resumes folder for processing",
+            input_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["attachment_path", "candidate_name", "candidate_email"],
+                "properties": {
+                    "attachment_path": {
+                        "type": "string",
+                        "description": "Path to the attachment saved by the mailworker (for example .emails/2025/01/01/12/00/00/abc123/attachments/resume.pdf)",
+                    },
+                    "candidate_name": {"type": "string"},
+                    "candidate_email": {"type": "string"},
+                },
+            },
+        )
+
+    async def execute(
+        self,
+        context: ToolContext,
+        attachment_path: str,
+        candidate_name: str | None = None,
+        candidate_email: str | None = None,
+    ):
+        # MailWorker saves attachments into .emails/.../attachments/<file>. Copy that into resumes/<file>
+        filename = os.path.basename(attachment_path.rstrip("/"))
+        target_path = f"resumes/{filename}"
+
+        try:
+            log.info(f"Saving resume to resumes/{target_path}")
+            download = await context.room.storage.download(path=attachment_path)
+            data = download.data
+            handle = await context.room.storage.open(path=target_path, overwrite=True)
+            try:
+                await context.room.storage.write(handle=handle, data=data)
+            finally:
+                await context.room.storage.close(handle=handle)
+        except Exception as e:
+            return JsonResponse(
+                json={
+                    "status": "error",
+                    "error": f"Failed to copy resume: {e}",
+                    "attachment_path": attachment_path,
+                }
+            )
+        
+        # Invoke the TaskRunner to process the resume
+        DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You can also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information using the SaveCandidateDetails tool."
+
+        resume_processing_prompt = os.getenv("") or DEFAULT_RESUME_PROMPT
+        log.info(f"Processing resume with prompt: {resume_processing_prompt}")
+
+        response = await context.room.agents.ask(
+            agent="meshagent.runner",
+            arguments={"prompt":resume_processing_prompt, "model":"gpt-5.2", "tools":[{"name":"storage"}, {"name":"web_search"}]},
+            requires=[
+                RequiredToolkit(name="resume-toolkit", tools=["save-candidate-details"])
+            ]
+        )
+
+        log.info(f"TaskRunner Processing Response: {response}")
+
+        return JsonResponse(
+            json={
+                "status": "ok",
+                "resume_path": target_path,
+                "candidate_name": candidate_name,
+                "candidate_email": candidate_email,
+            }
+        )
+
+@service.path(identity="mailbot-toolkit", path="/mailbot-toolkit")
+class MailbotToolkit(RemoteToolkit):
+    def __init__(self):
+        super().__init__(
+            name="mailbot-toolkit",
+            title="mailbot-toolkit",
+            description="A Toolkit for the MailWorker to kickoff resume processing",
+            tools=[
+                ProcessResume()
             ],
         )
 
