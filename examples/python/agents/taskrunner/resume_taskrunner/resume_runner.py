@@ -16,10 +16,7 @@ from meshagent.agents.mail import MailWorker
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
-log.setLevel(logging.DEBUG)
-logging.getLogger("meshagent").setLevel(logging.DEBUG)
-logging.getLogger("openai_agent").setLevel(logging.DEBUG)  # LLM adapter
-logging.getLogger("httpx").setLevel(logging.INFO)          # bump to DEBUG for wire traces
+log.setLevel(logging.DEBUG) # switch to info later 
 
 service = ServiceHost() 
 
@@ -32,25 +29,23 @@ class SaveCandidateDetails(Tool):
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["resume_path", "candidate_name", "contact_info", "resume_text", "resume_summary", "web_search_notes"],
+                "required": ["resume_path", "candidate_name", "contact_info", "resume_summary", "web_search_notes"],
                 "properties": {
                     "resume_path": {"type": "string"},
                     "candidate_name": {"type": "string"},
                     "contact_info": {"type": "string"},
-                    "resume_text": {"type": "string"},
                     "resume_summary": {"type": "string"},
                     "web_search_notes": {"type":"string"}
                 }
             }
         )
-    async def execute(self, context:ToolContext, resume_path:str, candidate_name:str, contact_info:str|None, resume_text:str, resume_summary:str, web_search_notes:str|None):
+    async def execute(self, context:ToolContext, resume_path:str, candidate_name:str, contact_info:str|None, resume_summary:str, web_search_notes:str|None):
         candidate_id = str(uuid.uuid4())
         record = {
                     "candidate_id": candidate_id,
                     "resume_path": resume_path,
                     "candidate_name": candidate_name,
                     "contact_info": contact_info,
-                    "resume_text": resume_text,
                     "resume_summary": resume_summary, 
                     "web_search_notes": web_search_notes
                 }
@@ -60,15 +55,49 @@ class SaveCandidateDetails(Tool):
             return JsonResponse(json={"status":"error", "error":str(e), "resume_path":resume_path})
         return JsonResponse(json={"status":"ok", "saved":record})
 
+class SaveJobDescriptionDetails(Tool):
+    def __init__(self):
+        super().__init__(
+            name="save-job-description-details",
+            title="save-job-description-details",
+            description="Store information about open roles and their job description in the room database",
+            input_schema={
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["hiring_manager", "job_title", "job_description_path", "required_skills"],
+                "properties": {
+                    "hiring_manager": {"type": "string"},
+                    "job_title": {"type": "string"},
+                    "job_description_path": {"type": "string"},
+                    "required_skills": {"type": "string"}
+                }
+            }
+        )
+          
+    async def execute(self, context:ToolContext, hiring_manager:str, job_title:str, job_description_path:str, required_skills:str|None):
+        role_id = str(uuid.uuid4())
+        record = {
+                    "role_id": role_id,
+                    "hiring_manager": hiring_manager,
+                    "job_title": job_title,
+                    "job_description_path": job_description_path,
+                    "required_skills": required_skills
+                }
+        try:
+            await context.room.database.insert(table="open_roles", records=[record])
+        except Exception as e:
+            return JsonResponse(json={"status":"error", "error":str(e), "job_description_path":job_description_path})
+        return JsonResponse(json={"status":"ok", "saved":record})
+    
 @service.path(identity="resume-tools", path="/resume-tools")
 class ResumeToolkit(RemoteToolkit):
     def __init__(self):
         super().__init__(
             name="resume-toolkit",
             title="resume-toolkit",
-            description="a toolkit for processing resumes",
+            description="a toolkit for processing resumes and job descriptions",
             tools=[
-                SaveCandidateDetails()
+                SaveCandidateDetails(), SaveJobDescriptionDetails()
             ],
         )
 
@@ -146,7 +175,3 @@ class ResumeToolkit(RemoteToolkit):
 #         )
 
 asyncio.run(service.run())
-# meshagent agents ask --room=resume --agent=resume-runner --input='{"prompt": "Process this resume: with resume_path ParsaResume.pdf"}'
-
-# export MESHAGENT_MAIL_DOMAIN=mail.meshagent.life
-# meshagent mailbot join --room resume --agent-name jobs --queue resume_email --email-address jobs@mail.meshagent.life --toolkit-name mailbot.mail --toolkit storage --toolkit resume-toolkit --room-rules

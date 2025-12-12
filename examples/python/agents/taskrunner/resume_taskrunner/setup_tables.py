@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+import argparse
 from meshagent.api.helpers import meshagent_base_url, websocket_room_url
 from meshagent.api import ParticipantToken, ApiScope, RoomClient, WebSocketClientProtocol, ParticipantGrant
 from meshagent.api.room_server_client import TextDataType, FloatDataType
@@ -32,6 +33,7 @@ async def create_resume_tables(room_name):
     ) as room:
         tables = await room.database.list_tables()
         log.info("Existing tables: %s", tables)
+        # await room.database.drop_table(name="candidates") #remove later
         try: 
             await room.database.create_table_with_schema(
                 name="candidates",
@@ -40,7 +42,7 @@ async def create_resume_tables(room_name):
                     "resume_path": TextDataType(),
                     "candidate_name": TextDataType(),
                     "contact_info": TextDataType(),
-                    "resume_text": TextDataType(),
+                    # "resume_text": TextDataType(),
                     "resume_summary": TextDataType(), 
                     "web_search_notes": TextDataType()
                 },
@@ -50,13 +52,14 @@ async def create_resume_tables(room_name):
         except Exception as e:
             log.exception(f"Failed to create candidates table: {e}")
 
+        # await room.database.drop_table(name="open_roles") #remove later
         try:
             await room.database.create_table_with_schema(
                 name="open_roles",
                 schema={
                     "role_id": TextDataType(),
                     "hiring_manager": TextDataType(),
-                    "title": TextDataType(),
+                    "job_title": TextDataType(),
                     "job_description_path": TextDataType(),
                     "required_skills": TextDataType(),
                 },
@@ -81,4 +84,9 @@ async def create_resume_tables(room_name):
         except Exception as e:
             log.exception(f"Failed to create candidate_role_scores table: {e}")
 
-asyncio.run(create_resume_tables(room_name="resume"))
+parser = argparse.ArgumentParser()
+parser.add_argument("--room", default=os.getenv("ROOM_NAME", "resume"))
+args = parser.parse_args()
+
+asyncio.run(create_resume_tables(room_name=args.room))
+# python3 setup_tables.py --room resume 
