@@ -13,7 +13,6 @@ otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
 log.setLevel(logging.DEBUG) # switch to info later 
 
-# main_identity = os.getenv("MESHAGENT_IDENTITY", "Shopping Bot")
 service = ServiceHost()
 
 service.paths.append(ServicePath(path="/resume-toolkit", identity="resume-toolkit", cls=ResumeToolkit))
