@@ -25,7 +25,6 @@ Now we can test the agent out locally before deploying:
 
 `meshagent mailbot join --room resume --agent-name jobs --queue resume_email --email-address jobs@mail.meshagent.life --toolkit-name mailbot.mail --toolkit mailbot-toolkit --room-rules=agents/resume_mailbot/rules.txt`
 
-    <!-- `meshagent mailbot join --room resume --agent-name jobs --queue resume_email --email-address jobs@mail.meshagent.life --toolkit-name mailbot.mail --toolkit storage --toolkit resume-toolkit --require-web-search --room-rules agents/resume_mailbot/rules.txt` -->
 
 3. Now let's email the agent a resume!
 
