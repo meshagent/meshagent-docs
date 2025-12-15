@@ -13,23 +13,25 @@ class SaveCandidateDetails(Tool):
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["resume_path", "candidate_name", "contact_info", "resume_summary", "web_search_notes"],
+                "required": ["resume_path","candidate_first_name", "candidate_last_name", "candidate_email", "candidate_phone_number", "resume_summary", "web_search_notes"],
                 "properties": {
                     "resume_path": {"type": "string"},
-                    "candidate_name": {"type": "string"},
-                    "contact_info": {"type": "string"},
+                    "candidate_first_name": {"type": "string"},
+                    "candidate_last_name" : {"type": "string"},
+                    "candidate_email": {"type": "string"},
+                    "candidate_phone_number": {"type":"string"},
                     "resume_summary": {"type": "string"},
                     "web_search_notes": {"type":"string"}
                 }
             }
         )
-    async def execute(self, context:ToolContext, resume_path:str, candidate_name:str, contact_info:str|None, resume_summary:str, web_search_notes:str|None):
-        candidate_id = str(uuid.uuid4())
+    async def execute(self, context:ToolContext, resume_path:str, candidate_first_name:str, candidate_last_name:str, candidate_email:str, candidate_phone_number:str|None, resume_summary:str, web_search_notes:str|None):
         record = {
-                    "candidate_id": candidate_id,
                     "resume_path": resume_path,
-                    "candidate_name": candidate_name,
-                    "contact_info": contact_info,
+                    "candidate_first_name": candidate_first_name,
+                    "candidate_last_name": candidate_last_name,
+                    "candidate_email": candidate_email,
+                    "candidate_phone_number": candidate_phone_number,
                     "resume_summary": resume_summary, 
                     "web_search_notes": web_search_notes
                 }
@@ -49,21 +51,27 @@ class GetCandidateDetails(Tool):
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["candidate_id"],
-                "properties": {"candidate_id": {"type": "string"}},
+                "required": ["candidate_first_name", "candidate_last_name", "candidate_email"],
+                "properties": {
+                    "candidate_first_name": {"type": "string"},
+                    "candidate_last_name": {"type": "string"},
+                    "candidate_email":{"type": "string"}
+                    },
             },
         )
 
-    async def execute(self, context: ToolContext, candidate_id: str):
+    async def execute(self, context: ToolContext, candidate_first_name: str, candidate_last_name:str, candidate_email:str):
         results = await context.room.database.search(
-            table="candidates", where={"candidate_id": candidate_id}, limit=1
+            table="candidates", where={"candidate_first_name": candidate_first_name,"candidate_last_name":candidate_last_name, "candidate_email":candidate_email}, limit=10
         )
 
         if not results:
             return JsonResponse(
                 json={
                     "status": "not_found",
-                    "candidate_id": candidate_id,
+                    "candidate_first_name": candidate_first_name,
+                    "candidate_last_name":candidate_last_name,
+                    "candidate_email":candidate_email
                 }
             )
 
@@ -79,9 +87,10 @@ class ListCandidates(Tool):
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
-                "required":["candidate_name", "resume_path"],
+                "required":["candidate_first_name", "candidate_last_name", "resume_path"],
                 "properties": {
-                    "candidate_name": {"type": "string"},
+                    "candidate_first_name": {"type": "string"},
+                    "candidate_last_name": {"type": "string"},
                     "resume_path": {"type": "string"},
                 },
             },
@@ -90,13 +99,14 @@ class ListCandidates(Tool):
     async def execute(
         self,
         context: ToolContext,
-        candidate_name: str | None = None,
+        candidate_first_name: str | None = None,
+        candidate_last_name: str | None = None,
         resume_path: str | None = None,
         limit: int | None = None,
     ):
         where = {}
-        if candidate_name:
-            where["candidate_name"] = candidate_name
+        if candidate_first_name:
+            where["candidate_first_name"] = candidate_first_name
         if resume_path:
             where["resume_path"] = resume_path
 
@@ -113,21 +123,33 @@ class DeleteCandidate(Tool):
         super().__init__(
             name="delete-candidate",
             title="delete-candidate",
-            description="Delete a candidate by id",
+            description="Delete a candidate by name and email",
             input_schema={
                 "type": "object",
-                "required": ["candidate_id"],
                 "additionalProperties": False,
-                "properties": {"candidate_id": {"type": "string"}},
+                "required": ["candidate_first_name", "candidate_last_name", "candidate_email"],
+                "properties": {
+                    "candidate_first_name": {"type": "string"},
+                    "candidate_last_name": {"type": "string"},
+                    "candidate_email":{"type": "string"}
+                    },
             },
         )
 
-    async def execute(self, context: ToolContext, candidate_id: str):
-        await context.room.database.delete(
-            table="candidates",
-            where=f"candidate_id = {json.dumps(candidate_id)}",
-        )
-        return JsonResponse(json={"status": "ok", "deleted": candidate_id})
+    async def execute(
+        self,
+        context: ToolContext,
+        candidate_first_name: str,
+        candidate_last_name: str,
+        candidate_email: str,
+    ):
+        where = {
+            "candidate_first_name": candidate_first_name,
+            "candidate_last_name": candidate_last_name,
+            "candidate_email": candidate_email,
+        }
+        await context.room.database.delete(table="candidates", where=where)
+        return JsonResponse(json={"status": "ok", "deleted": where})
     
 # @service.path(identity="resume-toolkit", path="/resume-toolkit")
 class ResumeToolkit(RemoteToolkit):

@@ -38,11 +38,11 @@ async def create_resume_tables(room_name):
             await room.database.create_table_with_schema(
                 name="candidates",
                 schema={
-                    "candidate_id": TextDataType(),
                     "resume_path": TextDataType(),
-                    "candidate_name": TextDataType(),
-                    "contact_info": TextDataType(),
-                    # "resume_text": TextDataType(),
+                    "candidate_first_name": TextDataType(),
+                    "candidate_last_name": TextDataType(),
+                    "candidate_email": TextDataType(),
+                    "candidate_phone_number": TextDataType(),
                     "resume_summary": TextDataType(), 
                     "web_search_notes": TextDataType()
                 },
@@ -57,7 +57,6 @@ async def create_resume_tables(room_name):
             await room.database.create_table_with_schema(
                 name="open_roles",
                 schema={
-                    "role_id": TextDataType(),
                     "hiring_manager": TextDataType(),
                     "job_title": TextDataType(),
                     "job_description_path": TextDataType(),
@@ -69,12 +68,16 @@ async def create_resume_tables(room_name):
         except Exception as e:
             log.exception(f"Failed to create open_roles table: {e}")
         
+        # await room.database.drop_table(name="candidate_role_scores") #remove later
         try:
             await room.database.create_table_with_schema(
                 name="candidate_role_scores",
                 schema={
-                    "candidate_id": TextDataType(),
-                    "role_id": TextDataType(),
+                    "candidate_first_name": TextDataType(),
+                    "candidate_last_name": TextDataType(),
+                    "candidate_email": TextDataType(),
+                    "hiring_manager": TextDataType(),
+                    "job_title": TextDataType(),
                     "score": FloatDataType(),
                     "reasoning": TextDataType()
                 },

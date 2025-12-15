@@ -65,14 +65,25 @@ class ProcessResume(Tool):
             )
         
         # Invoke the TaskRunner to process the resume
-        DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You can also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information using the SaveCandidateDetails tool."
+        DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You must also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information in the candidates table in the database."
 
         resume_processing_prompt = os.getenv("") or DEFAULT_RESUME_PROMPT
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
         response = await context.room.agents.ask(
             agent="meshagent.runner",
-            arguments={"prompt":resume_processing_prompt, "model":"gpt-5.2", "tools":[{"name":"storage"}, {"name":"web_search"}]},
+            arguments={"prompt":resume_processing_prompt, 
+                       "model":"gpt-5.2", 
+                       "tools":[
+                           {"name":"storage"}, # remove this later maybe just give bytes? 
+                           {"name":"web_search"},
+                        #    {
+                        #        "name": "database",
+                        #        "tables": ["candidates"],
+                        #        "read_only": False,
+                        #    },
+                        ]
+                    },
             requires=[
                 RequiredToolkit(name="resume-toolkit", tools=["save-candidate-details"])
             ]

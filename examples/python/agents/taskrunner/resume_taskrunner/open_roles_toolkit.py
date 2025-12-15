@@ -1,5 +1,4 @@
 
-import uuid
 from meshagent.tools import Tool, Toolkit, ToolContext, RemoteToolkit
 from meshagent.api.messaging import FileResponse, JsonResponse, TextResponse
 
@@ -23,9 +22,16 @@ class SaveJobDescriptionDetails(Tool):
         )
           
     async def execute(self, context:ToolContext, hiring_manager:str, job_title:str, job_description_path:str, required_skills:str|None):
-        role_id = str(uuid.uuid4())
+        # identify roles by hiring manager + job title (no role_id)
+        where = {"hiring_manager": hiring_manager, "job_title": job_title}
+        try:
+            # remove any existing record for this manager/title so the insert acts as an upsert
+            await context.room.database.delete(table="open_roles", where=where)
+        except Exception:
+            # ignore delete errors (e.g., no existing record)
+            pass
+
         record = {
-                    "role_id": role_id,
                     "hiring_manager": hiring_manager,
                     "job_title": job_title,
                     "job_description_path": job_description_path,
