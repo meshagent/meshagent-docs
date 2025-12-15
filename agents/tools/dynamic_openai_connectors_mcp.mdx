@@ -33,11 +33,8 @@ The `--mcp` flag adds `MCPToolkitBuilder()` for you behind the scenes.
 from meshagent.openai.tools.responses_adapter import MCPToolkitBuilder
 
 class MyChatBot(ChatBot):
-    async def get_thread_toolkit_builders(self, *, thread_context, participant):
-        builders = await super().get_thread_toolkit_builders(
-            thread_context=thread_context,
-            participant=participant
-        )
+    def get_toolkit_builders(self):
+        builders = super().get_toolkit_builders()
         builders.append(MCPToolkitBuilder())  # Add this!
         return builders
 ```
