@@ -57,10 +57,13 @@ async def create_resume_tables(room_name):
             await room.database.create_table_with_schema(
                 name="open_roles",
                 schema={
-                    "hiring_manager": TextDataType(),
+                    "hiring_manager_first_name": TextDataType(),
+                    "hiring_manager_last_name": TextDataType(),
                     "job_title": TextDataType(),
-                    "job_description_path": TextDataType(),
+                    "job_description": TextDataType(),
                     "required_skills": TextDataType(),
+                    "company_description":TextDataType(),
+                    "post_date": TextDataType()
                 },
                 mode="create_if_not_exists",
             )
