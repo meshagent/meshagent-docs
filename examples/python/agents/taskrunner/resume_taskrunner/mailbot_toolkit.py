@@ -75,18 +75,18 @@ class ProcessResume(Tool):
             arguments={"prompt":resume_processing_prompt, 
                        "model":"gpt-5.2", 
                        "tools":[
-                           {"name":"storage"}, # remove this later maybe just give bytes? 
+                           {"name":"storage"}, # remove this later ? 
                            {"name":"web_search"},
-                        #    {
-                        #        "name": "database",
-                        #        "tables": ["candidates"],
-                        #        "read_only": False,
-                        #    },
+                           {
+                               "name": "database",
+                               "tables": ["candidates"], # add specific tools? 
+                               "read_only": False,
+                           },
                         ]
                     },
-            requires=[
-                RequiredToolkit(name="resume-toolkit", tools=["save-candidate-details"])
-            ]
+            # requires=[
+            #     RequiredToolkit(name="resume-toolkit", tools=["save-candidate-details"])
+            # ]
         )
 
         log.info(f"TaskRunner Processing Response: {response}")

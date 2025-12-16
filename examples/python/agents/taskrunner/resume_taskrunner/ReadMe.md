@@ -28,6 +28,54 @@ Now we can test the agent out locally before deploying:
 
 3. Now let's email the agent a resume!
 
+4. Ask about the candidates who we've recieved resume's from. For example: 
+`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates"], "read_only": false}]}'`
 
+From UI: 
+{
+  "prompt": "Add all of the jobs in the jobdescriptions folder to the open_roles table and mark Jesse Ezell as the hiring manager for each role.",$
+  "tools": [
+    {
+      "name":"storage"
+    },
+    {
+      "name":"database",
+      "tables":["open_roles"],
+      "read_only": false
+    }
+  ],
+  "model":"gpt-5.2"
+}
+
+
+{
+  "prompt": "Create a new record in the candidate_role_scores for how well Michael (Mike) Ulichny fits each of the open roles",
+  "tools": [
+    {
+      "name":"storage"
+    },
+    {
+      "name":"database",
+      "tables":["open_roles", "candidates", "candidate_role_scores"],
+      "read_only": false
+    }
+  ],
+  "model":"gpt-5.2"
+}
+
+`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+
+`
 ## Notes / to do 
 - anytime an email comes in add it to the candidates table. When a new record comes in this needs to trigger another agent who compares the candidate to each of the open roles in the open_roles table and then stores how close the match is in the 
+
+
+## Done
+1. Created all the tables setup_tables.py
+2. Used assistant to research and create job descriptions
+3. Used mailbot CLI and gave it a custom process resume tool which :
+    a. Moves file to resumes folder
+    b. Invokes meshagent.runner with the storage, web search, and database toolkit
+    c. Has custom prompt in the room for modifying
+4. Used in room taskrunner with database toolkits to update other tables like open_roles table and candidates table 
+5. Used in room assistant to ask about the resumes / open roles and how well they match 

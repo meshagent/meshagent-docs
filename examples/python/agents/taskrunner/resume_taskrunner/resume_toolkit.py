@@ -4,6 +4,12 @@ from meshagent.tools import Tool, Toolkit, ToolContext, RemoteToolkit
 from meshagent.api.messaging import FileResponse, JsonResponse, TextResponse
 
 
+def _lower_or_none(val: str | None) -> str | None:
+    if val is None:
+        return None
+    return val.lower()
+
+
 class SaveCandidateDetails(Tool):
     def __init__(self):
         super().__init__(
@@ -28,10 +34,10 @@ class SaveCandidateDetails(Tool):
     async def execute(self, context:ToolContext, resume_path:str, candidate_first_name:str, candidate_last_name:str, candidate_email:str, candidate_phone_number:str|None, resume_summary:str, web_search_notes:str|None):
         record = {
                     "resume_path": resume_path,
-                    "candidate_first_name": candidate_first_name,
-                    "candidate_last_name": candidate_last_name,
-                    "candidate_email": candidate_email,
-                    "candidate_phone_number": candidate_phone_number,
+                    "candidate_first_name": _lower_or_none(candidate_first_name),
+                    "candidate_last_name": _lower_or_none(candidate_last_name),
+                    "candidate_email": _lower_or_none(candidate_email),
+                    "candidate_phone_number": _lower_or_none(candidate_phone_number),
                     "resume_summary": resume_summary, 
                     "web_search_notes": web_search_notes
                 }
@@ -61,6 +67,9 @@ class GetCandidateDetails(Tool):
         )
 
     async def execute(self, context: ToolContext, candidate_first_name: str, candidate_last_name:str, candidate_email:str):
+        candidate_first_name = _lower_or_none(candidate_first_name)
+        candidate_last_name = _lower_or_none(candidate_last_name)
+        candidate_email = _lower_or_none(candidate_email)
         results = await context.room.database.search(
             table="candidates", where={"candidate_first_name": candidate_first_name,"candidate_last_name":candidate_last_name, "candidate_email":candidate_email}, limit=10
         )
@@ -106,7 +115,9 @@ class ListCandidates(Tool):
     ):
         where = {}
         if candidate_first_name:
-            where["candidate_first_name"] = candidate_first_name
+            where["candidate_first_name"] = _lower_or_none(candidate_first_name)
+        if candidate_last_name:
+            where["candidate_last_name"] = _lower_or_none(candidate_last_name)
         if resume_path:
             where["resume_path"] = resume_path
 
@@ -144,9 +155,9 @@ class DeleteCandidate(Tool):
         candidate_email: str,
     ):
         where = {
-            "candidate_first_name": candidate_first_name,
-            "candidate_last_name": candidate_last_name,
-            "candidate_email": candidate_email,
+            "candidate_first_name": _lower_or_none(candidate_first_name),
+            "candidate_last_name": _lower_or_none(candidate_last_name),
+            "candidate_email": _lower_or_none(candidate_email),
         }
         await context.room.database.delete(table="candidates", where=where)
         return JsonResponse(json={"status": "ok", "deleted": where})
