@@ -16,7 +16,6 @@ log.setLevel(logging.DEBUG) # switch to info later
 service = ServiceHost()
 
 service.paths.append(ServicePath(path="/resume-toolkit", identity="resume-toolkit", cls=ResumeToolkit))
-# service.paths.append(ServicePath(path="/open-roles-toolkit", identity="open-roles-toolkit", cls=OpenRolesToolkit))
 service.paths.append(ServicePath(identity="/mailbot-toolkit", path="/mailbot-toolkit", cls=MailBotToolkit))
 
 asyncio.run(service.run())

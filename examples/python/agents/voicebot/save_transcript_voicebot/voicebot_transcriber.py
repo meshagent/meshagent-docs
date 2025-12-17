@@ -20,6 +20,7 @@ from meshagent.tools import ToolContext
 from meshagent.livekit.agents.voice import VoiceBot, VoiceConnection
 from meshagent.api import SchemaRegistration, SchemaRegistry
 from meshagent.agents.schemas.transcript import transcript_schema  
+from meshagent.api.helpers import deploy_schema
 
 service = ServiceHost()
 otel_config(service_name="voice-transcriber")
@@ -115,6 +116,18 @@ class TranscribeVoiceBot(VoiceBot):
             description="a voicebot that transcribes the conversatoin",
         )
 
+    async def _ensure_transcript_schema(self) -> None:
+        schema_path = ".schemas/transcript.json"
+        if await self.room.storage.exists(path=schema_path):
+            return
+
+        log.info("transcript schema missing; deploying to room storage")
+        await deploy_schema(
+            room=self.room,
+            schema=transcript_schema,
+            name="transcript",
+        )
+
     async def run_voice_agent(self, *, participant: Participant, breakout_room: str):
         """
         Same as VoiceBot.run_voice_agent, but:
@@ -139,6 +152,7 @@ class TranscribeVoiceBot(VoiceBot):
         )
 
         # Open (or create) the transcript doc for this call
+        await self._ensure_transcript_schema()
         doc: MeshDocument = await self.room.sync.open(
             path=transcript_path,
             create=True,
