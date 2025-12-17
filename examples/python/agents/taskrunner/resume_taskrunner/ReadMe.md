@@ -49,7 +49,7 @@ From UI:
 
 
 {
-  "prompt": "Create a new record in the candidate_role_scores for how well Michael (Mike) Ulichny fits each of the open roles",
+  "prompt": "Create a new record in the candidate_role_scores for how well Tula Masterman fits each of the open roles. Scores should be from 1-10 where 1 is a poor fit and 10 is a perfect fit.",
   "tools": [
     {
       "name":"storage"
@@ -64,6 +64,11 @@ From UI:
 }
 
 `meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+
+`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+
+meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Rate Tula Masterman's they are on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}'
+
 
 `
 ## Notes / to do 

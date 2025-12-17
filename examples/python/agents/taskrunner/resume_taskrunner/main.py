@@ -7,7 +7,6 @@ from meshagent.otel import otel_config
 
 from mailbot_toolkit import MailBotToolkit
 from resume_toolkit import ResumeToolkit
-from open_roles_toolkit import OpenRolesToolkit
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")

@@ -70,7 +70,7 @@ class ProcessResume(Tool):
         resume_processing_prompt = os.getenv("") or DEFAULT_RESUME_PROMPT
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
-        response = await context.room.agents.ask(
+        resume_response = await context.room.agents.ask(
             agent="meshagent.runner",
             arguments={"prompt":resume_processing_prompt, 
                        "model":"gpt-5.2", 
@@ -84,12 +84,33 @@ class ProcessResume(Tool):
                            },
                         ]
                     },
-            # requires=[
-            #     RequiredToolkit(name="resume-toolkit", tools=["save-candidate-details"])
-            # ]
         )
 
-        log.info(f"TaskRunner Processing Response: {response}")
+        log.info(f"TaskRunner Processed Resume: {resume_response}")
+
+        # Invoke the TaskRunner to score the resume
+        log.info(f"Scoring candidate with resume at {target_path}")
+        DEFAULT_SCORING_PROMPT = f"Collect all the roles in the open_roles table, then score the candidate with resume located at: {target_path} for each role. Add the score for each role to the candidate_role_scores table. Scores must be on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit."
+
+        resume_scoring_prompt = os.getenv("") or DEFAULT_SCORING_PROMPT
+        log.info(f"Scoring candidate with prompt: {resume_scoring_prompt}")
+
+        resume_score_response = await context.room.agents.ask(
+            agent="meshagent.runner",
+            arguments={"prompt":resume_scoring_prompt, 
+                       "model":"gpt-5.2", 
+                       "tools":[
+                           {"name":"storage"}, # remove this later ? 
+                           {
+                               "name": "database",
+                               "tables": ["candidates", "open_roles", "candidate_role_scores"], 
+                               "read_only": False,
+                           },
+                        ]
+                    }
+        )
+
+        log.info(f"TaskRunner Scored Candidate: {resume_score_response}")
 
         return JsonResponse(
             json={
