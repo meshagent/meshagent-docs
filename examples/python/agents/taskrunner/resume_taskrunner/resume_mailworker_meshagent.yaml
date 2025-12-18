@@ -1,0 +1,36 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: resume-mailbot
+  description: "Mailbot for the resume room that processes resumes"
+  annotations:
+    meshagent.service.id: "resume-mailbot"
+agents:
+  - name: resume-mailbot
+    annotations:
+      meshagent.agent.type: "MailWorker"
+variables: []
+ports:
+  - num: "*"
+    type: http
+    liveness: "/"
+    endpoints:
+      - path: /agent
+        meshagent:
+          identity: resume-mailbot
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz"
+  command: >
+    /usr/bin/meshagent/meshagent mailbot service
+    --agent-name=resume-mailbot
+    --model=gpt-5.2
+    --queue=resume_email
+    --email-address=jobs@mail.meshagent.life
+    --toolkit-name=mailbot.mail
+    --toolkit=mailbot-toolkit
+    --room-rules=agents/resume_mailbot/rules.txt
+    --whitelist=tula.masterman@timu.com --whitelist=jesse.ezell@timu.com --whitelist=parsa.rohani@timu.com --whitelist=john.cooper@carlsquare.com --whitelist=anthony@ikaun.com
+  storage:
+    room:
+      - path: /data
+        read_only: false

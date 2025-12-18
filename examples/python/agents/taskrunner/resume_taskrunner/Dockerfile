@@ -1,0 +1,8 @@
+FROM us-central1-docker.pkg.dev/meshagent-life/meshagent-public/python-sdk-slim:latest
+
+WORKDIR /app
+
+# Only copy what the service needs
+COPY mailbot_toolkit.py .
+
+ENTRYPOINT [ "python3", "mailbot_toolkit.py" ]
