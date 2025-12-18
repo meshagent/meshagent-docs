@@ -62,8 +62,7 @@ async def create_resume_tables(room_name):
                     "job_title": TextDataType(),
                     "job_description": TextDataType(),
                     "required_skills": TextDataType(),
-                    "company_description":TextDataType(),
-                    "post_date": TextDataType()
+                    # "post_date": TextDataType()
                 },
                 mode="create_if_not_exists",
             )

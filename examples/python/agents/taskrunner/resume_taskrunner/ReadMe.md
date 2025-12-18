@@ -33,7 +33,7 @@ Now we can test the agent out locally before deploying:
 
 From UI: 
 {
-  "prompt": "Add all of the jobs in the jobdescriptions folder to the open_roles table and mark Jesse Ezell as the hiring manager for each role.",$
+  "prompt": "Add all of the jobs in the jobdescriptions folder to the open_roles table and mark Jesse Ezell as the hiring manager for each role.",
   "tools": [
     {
       "name":"storage"
