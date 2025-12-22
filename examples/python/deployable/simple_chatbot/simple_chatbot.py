@@ -5,13 +5,13 @@ from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 
 # Enable OpenTelemetry logging and tracing for the agent
-otel_config(service_name="chatbot")
+otel_config(service_name="simple-chatbot")
 
 # Create a service host
 service = ServiceHost()  # optional to pass a port, MeshAgent automatically assigns an available one if none provideds
 
 # Register an agent at a specific path
-@service.path(path="/chat", identity="chatbot")
+@service.path(path="/agent", identity="simple-chatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
         super().__init__(

@@ -3,7 +3,8 @@ title: CLI Quickstart
 description: Instructions for using the MeshAgent CLI
 ---
 
-import SimpleChatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+import SimpleChatbot from "/snippets/examples/python/deployable/simple_chatbot/simple_chatbot.mdx"
+import CliChatBotYaml from "/snippets/examples/cli/chatbot/meshagent.mdx"
 
 ## Overview
 This guide covers common CLI workflows for day-to-day MeshAgent development. If you haven't set up MeshAgent yet, start with the [Getting Started Guide](../introduction/get_started) first.
@@ -112,11 +113,13 @@ Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and star
 
 #### Run your own MeshAgent service locally
 
-Expose your agent/tool via `ServiceHost` (local webhook server). A request from MeshAgent spins up your agent, connects it to the Room, and manages lifecycle for the session.
+The CLI based agents expose many tools and functionality already, we recommend using these for most use cases. When you need additional custom functionality you can extend the base agent classes, for example the `ChatBot`. To run this locally and deploy it, expose your agent or tool via `ServiceHost` (local webhook server). A request from MeshAgent spins up your agent or tool, connects it to the Room, and manages lifecycle for the session. For example: 
 
 <CodeGroup>
     <SimpleChatbot />
 </CodeGroup>
+
+To run the service locally use the `meshagent service run` command. 
 
 ```bash bash
 # Run your agent code locally in a room
@@ -128,7 +131,15 @@ Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and star
 The agent will only exist for the current session unless deployed.
 
 ### Package and Deploy Services 
-Once your agent works locally, you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. Once you've packaged the agent you can deploy it from the CLI to a project or room.
+Once your agent works locally, you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
+
+For example, let's deploy a CLI based chatbot with the web search tool, image generation tool, and storage tool. First copy this `meshagent.yaml` file. 
+
+<CodeGroup>
+    <CliChatBotYaml />
+</CodeGroup>
+
+Next, deploy it to your project or room. 
 
 ```bash bash 
 # Deploy as a project service (available in all rooms)

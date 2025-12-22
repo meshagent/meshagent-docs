@@ -1,0 +1,19 @@
+```yaml Yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: voicebot
+  description: "An agent that responds using voice"
+ports:
+- num: "*"                        # automatically assign an available MESHAGENT_PORT for the agent to run on 
+  type: http
+  liveness: "/"               # ensure the service is alive before connecting to the room
+  endpoints:
+  - path: /agent                  # service path to call and run the agent on
+    meshagent:
+      identity: voicebot             # name of the agent as it shows up in the Room
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:latest"
+  command: "/usr/bin/meshagent/meshagent voicebot service --agent-name=voice"
+```
+

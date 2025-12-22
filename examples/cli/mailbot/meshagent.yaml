@@ -1,0 +1,21 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: mailbot
+  description: "A mailbot that can respond to email"
+ports:
+- num: "*"                        # automatically assign an available MESHAGENT_PORT for the agent to run on 
+  type: http
+  liveness: "/"               # ensure the service is alive before connecting to the room
+  endpoints:
+  - path: /agent                  # service path to call and run the agent on
+    meshagent:
+      identity: mailbot             # name of the agent as it shows up in the Room
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:latest"
+  command: "/bin/sh -c 'exec /usr/bin/meshagent/meshagent mailbot service --agent-name=mailbot --queue=\"$EMAIL_QUEUE\" --email-address=\"$EMAIL_ADDRESS\"'"
+  environment:
+    - name: EMAIL_ADDRESS
+      value: "{email_address}"
+    - name: EMAIL_QUEUE
+      value: "{email_queue}"

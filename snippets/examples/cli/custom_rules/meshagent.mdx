@@ -1,0 +1,25 @@
+```yaml Yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: chatbot
+  description: "ChatBot with custom rules for Studio and Powerboards"
+  annotations:
+    meshagent.service.id: "meshagent.customrules.chatbot"
+agents:
+  - name: chatbot
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: "*"
+    type: http
+    liveness: "/"
+    endpoints:
+      - path: /agent
+        meshagent:
+          identity: chatbot
+container:
+  image: "meshagent/cli:latest" 
+  command: "/usr/bin/meshagent/meshagent chatbot service --agent-name=chatbot --web-search --require-storage --room_rules=agents/chatbot/rules.txt --rule=You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-native collaboration app built entirely on MeshAgent, the operating layer for agentic AI. You can learn more about Powerboards and MeshAgent by using the web search tool and researching meshagent.com and docs.meshagent.com. Use the same language the user is using; do not switch languages unless they do. If you need context about the room or project, ask concise follow-up questions first."
+```
+

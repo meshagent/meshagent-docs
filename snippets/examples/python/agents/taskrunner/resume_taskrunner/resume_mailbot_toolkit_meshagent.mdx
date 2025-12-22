@@ -1,0 +1,24 @@
+```yaml Yaml
+kind: Service
+version: v1
+metadata:
+  name: mailbot-toolkit
+  description: "Tool for the mailbot to use to store, process, and score candidate resumes."
+  annotations:
+    meshagent.service.id: "mailbot-toolkit"
+ports:
+  - num: "*"
+    type: http
+    liveness: "/"
+    endpoints:
+      - path: /mailbot-toolkit
+        meshagent:
+          identity: mailbot-toolkit
+container:
+  image: "tulamasterman/resume-mailbot-toolkit:0.0.2"
+  storage:
+    room:
+      - path: /data
+        read_only: false
+```
+

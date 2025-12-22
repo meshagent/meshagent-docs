@@ -1,0 +1,22 @@
+```yaml Yaml
+kind: Service
+version: v1
+metadata:
+  name: simple-chatbot
+  description: "A simple chatbot that can interact with users"
+agents:
+  - name: simple-chatbot
+    description: "A conversational agent without tools"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+- num: "*"
+  endpoints:
+  - path: /agent
+    meshagent:
+      identity: simple-chatbot
+container:
+  image: "meshagent/python-docs-examples:<tag>-esgz"
+  command: python /simple_chatbot/simple_chatbot.py
+```
+

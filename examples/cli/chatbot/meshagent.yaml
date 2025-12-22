@@ -1,0 +1,27 @@
+kind: Service # switch to service Template if installing from link for Powerboards
+version: v1
+metadata:
+  name: chatbot
+  description: "A simple chatbot that responds to users"
+  annotations:
+    meshagent.service.id: "meshagent.chatbot"
+agents:
+  - name: chatbot
+    description: "A conversational agent with tools"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+- num: "*"                    # automatically assign an available MESHAGENT_PORT for the agent to run on 
+  type: http
+  liveness: "/"               # ensure the service is alive before connecting to the room
+  endpoints:
+  - path: /agent              # service path to call and run the agent on
+    meshagent:
+      identity: chatbot       # name of the agent as it shows up in the Room
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: "/usr/bin/meshagent/meshagent chatbot service --agent-name=chatbot --image-generation=gpt-image-1 --require-storage --web-search --mcp"
+  storage:
+    room:
+      - path: /data             # mount room storage path for the agent to write files to
+        read_only: false        # allow write access 
