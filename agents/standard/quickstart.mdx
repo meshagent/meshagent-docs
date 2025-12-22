@@ -1,7 +1,8 @@
 ---
 title: "Agents Quickstart"
 ---
-import Chatbot from "/snippets/examples/python/agents/chatbot/simple_chatbot.mdx"
+import Chatbot from "/snippets/examples/python/deployable/simple_chatbot/simple_chatbot.mdx"
+import ChatbotYaml from "/snippets/examples/python/deployable/simple_chatbot/meshagent.mdx"
 
 MeshAgent Agents are processes that accept input and produce output. In many cases, your agent will be powered by a LLM, but it could also just be code that performs a task. 
 
@@ -45,15 +46,23 @@ In either case, the agent joins the room as participant ``chatbot``. Once the ag
 3. Select the agent ``chatbot`` and begin chatting!
 
 ## Step 4: Package and Deploy the Agent
-Now that our agent is working we can package and deploy it so it's always available for us to use! To do so we'll need to create a `meshagent.yaml` file which defines how our agent should run. If you are building your own custom agent you'll also need to create a Dockerfile and build and push your container. For the sake of this example, we can use an existing MeshAgent base image which already has the code to run our agent!
+Now that our agent is working we can package and deploy it so it's always available for us to use! To do so we'll need to create a `meshagent.yaml` file which defines how our agent should run. 
+
+If you are building your own custom agent you'll also need to create a Dockerfile and build and push your container. Use `docker buildx` and push with `--platform linux/amd64`. 
+
+For the sake of this example, we can use an existing MeshAgent base image which already has the code to run our agent!
 
 **Package the agent**
 Create a file called `meshagent.yaml`
 
+<CodeGroup>
+    <ChatbotYaml />
+</CodeGroup>
+
 **Deploy the agent**
 Next from the CLI in the folder where your `meshagent.yaml` file is run: 
 
-```
+```bash
 meshagent service create --file "meshagent.yaml" --room=quickstart
 ```
 

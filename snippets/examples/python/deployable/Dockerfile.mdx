@@ -1,12 +1,15 @@
 ```dockerfile Dockerfile
-FROM us-central1-docker.pkg.dev/meshagent-life/meshagent-public/python-sdk-slim:latest
+ARG MESHAGENT_SDK_IMAGE="meshagent/python-sdk-slim:latest"
 
-WORKDIR /app
+FROM ${MESHAGENT_SDK_IMAGE}
 
-# Copy the deployable examples (starting with the simple chatbot)
+# Copy only the simple chatbot example into the location the entrypoint expects
 COPY simple_chatbot /simple_chatbot
+
+WORKDIR /simple_chatbot
 
 # Default entrypoint for the simple chatbot example
 ENTRYPOINT ["python", "/simple_chatbot/simple_chatbot.py"]
+
 ```
 
