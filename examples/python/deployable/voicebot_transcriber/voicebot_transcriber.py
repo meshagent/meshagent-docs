@@ -106,13 +106,13 @@ def _attach_transcript_logger(
     return _on_conversation_item  # so we can detach later if we want
 
 
-@service.path(identity="voice_transcriber", path="/voice")
+@service.path(identity="voice-transcriber", path="/voice")
 class TranscribeVoiceBot(VoiceBot):
     def __init__(self, transcript_prefix: str = "transcripts"):
         self._transcript_prefix = transcript_prefix
         super().__init__(
-            name="voice_transcriber",
-            title="voice_transcriber",
+            name="voice-transcriber",
+            title="voice-transcriber",
             description="a voicebot that transcribes the conversatoin",
         )
 
