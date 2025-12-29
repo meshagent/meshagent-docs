@@ -1,0 +1,224 @@
+import asyncio
+import logging
+import re
+from datetime import datetime, timezone
+
+from livekit.agents import (
+    AgentSession,
+    RoomInputOptions,
+    RoomOutputOptions,
+    BackgroundAudioPlayer,
+    AudioConfig,
+    BuiltinAudioClip,
+)
+from livekit.agents.llm import ChatMessage
+from livekit.agents.voice import ConversationItemAddedEvent  
+from meshagent.api import Participant, MeshDocument
+from meshagent.api.services import ServiceHost
+from meshagent.otel import otel_config
+from meshagent.tools import ToolContext
+from meshagent.livekit.agents.voice import VoiceBot, VoiceConnection
+from meshagent.api import SchemaRegistration, SchemaRegistry
+from meshagent.agents.schemas.transcript import transcript_schema  
+from meshagent.api.helpers import deploy_schema
+
+service = ServiceHost()
+otel_config(service_name="voice-transcriber")
+log = logging.getLogger("voice-transcriber")
+
+# Make sure transcript is registered
+class TranscriptRegistry(SchemaRegistry):
+    def __init__(self):
+        name = "transcript"
+        super().__init__(
+            name=f"meshagent.schema.{name}",
+            validate_webhook_secret=False,
+            schemas=[SchemaRegistration(name=name, schema=transcript_schema)],
+        )
+
+TranscriptRegistry()
+
+def _iso_utc_from_unix(ts: float) -> str:
+    return (
+        datetime.fromtimestamp(ts, tz=timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+
+
+def _attach_transcript_logger(
+    *,
+    session: AgentSession,
+    doc: MeshDocument,
+    user_participant: Participant,
+    agent_name: str,
+    agent_participant_id: str = "agent",
+):
+    """
+    Attach a listener to AgentSession that adds all user+assistant ChatMessages
+    into the Mesh transcript document.
+    """
+
+    def _append_segment(*, role: str, text: str, created_at: float):
+        if not text:
+            return
+
+        if role == "user":
+            participant_id = user_participant.id
+            # Try to fetch a friendly name from attributes; fall back to id if missing.
+            participant_name = (
+                user_participant.get_attribute("name")
+                or user_participant.id
+            )
+        elif role == "assistant":
+            participant_id = agent_participant_id
+            participant_name = agent_name
+        else:
+            # skip system / developer / function_call, etc
+            return
+
+        segments = doc.root
+        segments.append_child(
+            "segment",
+            {
+                "text": text,
+                "participant_name": participant_name,
+                "participant_id": participant_id,
+                "time": _iso_utc_from_unix(created_at),
+            },
+        )
+
+    def _on_conversation_item(event: ConversationItemAddedEvent):
+        item = event.item
+        # Only care about ChatMessages (ignore tool calls, etc.)
+        if not isinstance(item, ChatMessage):
+            return
+
+        text = item.text_content
+        if text is None:
+            return
+
+        # item.role is Literal["developer", "system", "user", "assistant"]
+        _append_segment(role=item.role, text=text, created_at=item.created_at)
+
+    # Event name is the "type" defined on ConversationItemAddedEvent
+    session.on("conversation_item_added", _on_conversation_item)
+    return _on_conversation_item  # so we can detach later if we want
+
+
+@service.path(identity="voice-transcriber", path="/voice")
+class TranscribeVoiceBot(VoiceBot):
+    def __init__(self, transcript_prefix: str = "transcripts"):
+        self._transcript_prefix = transcript_prefix
+        super().__init__(
+            name="voice-transcriber",
+            title="voice-transcriber",
+            description="a voicebot that transcribes the conversatoin",
+        )
+
+    async def _ensure_transcript_schema(self) -> None:
+        schema_path = ".schemas/transcript.json"
+        if await self.room.storage.exists(path=schema_path):
+            return
+
+        log.info("transcript schema missing; deploying to room storage")
+        await deploy_schema(
+            room=self.room,
+            schema=transcript_schema,
+            name="transcript",
+        )
+
+    async def run_voice_agent(self, *, participant: Participant, breakout_room: str):
+        """
+        Same as VoiceBot.run_voice_agent, but:
+          * opens a MeshDocument
+          * listens to conversation_item_added
+          * writes user+assistant turns into the transcript
+        """
+        now = datetime.now(timezone.utc)
+        date_part = now.strftime("%Y-%m-%d")
+        time_part = now.strftime("%H-%M-%S")
+
+        # Prefer a friendly name if available; fall back to id, and sanitize for paths.
+        user_label = participant.get_attribute("name") or participant.id
+        user_label = re.sub(r"[^a-zA-Z0-9._-]+", "_", user_label)
+
+        transcript_path = (
+            f"{self._transcript_prefix}/"
+            f"{breakout_room}/"
+            f"{user_label}/"
+            f"{date_part}/"
+            f"{time_part}.transcript"
+        )
+
+        # Open (or create) the transcript doc for this call
+        await self._ensure_transcript_schema()
+        doc: MeshDocument = await self.room.sync.open(
+            path=transcript_path,
+            create=True,
+        )
+
+        async with VoiceConnection(
+            room=self.room, breakout_room=breakout_room
+        ) as connection:
+            log.info("starting voice agent with transcription")
+
+            context = ToolContext(
+                room=self.room,
+                caller=self.room.local_participant,
+                on_behalf_of=participant,
+            )
+
+            session = self.create_session(context=context)
+            agent = await self.create_agent(context=context, session=session)
+
+            # Attach transcript logger BEFORE starting the session so we don't miss anything
+            transcript_handler = _attach_transcript_logger(
+                session=session,
+                doc=doc,
+                user_participant=participant,
+                agent_name=self.title or self.name or "Agent",
+                agent_participant_id="agent",  # or self.room.local_participant.id
+            )
+
+            background_audio = BackgroundAudioPlayer(
+                thinking_sound=[
+                    AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.3),
+                    AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.4),
+                ],
+            )
+            await background_audio.start(
+                room=connection.livekit_room,
+                agent_session=session,
+            )
+
+            await session.start(
+                agent=agent,
+                room=connection.livekit_room,
+                room_input_options=RoomInputOptions(
+                    text_enabled=False,
+                    delete_room_on_close=False,
+                ),
+                room_output_options=RoomOutputOptions(
+                    transcription_enabled=True,
+                    audio_enabled=True,
+                ),
+            )
+
+            if self.auto_greet_prompt is not None:
+                session.generate_reply(user_input=self.auto_greet_prompt)
+
+            if self.auto_greet_message is not None:
+                session.say(self.auto_greet_message)
+
+            log.info("started voice agent")
+            try:
+                await self._wait_for_disconnect(room=connection.livekit_room)
+            finally:
+                # Detach the handler and close the document
+                session.off("conversation_item_added", transcript_handler)
+                await self.room.sync.close(path=transcript_path)
+                log.info("transcript saved at %s", transcript_path)
+
+
+asyncio.run(service.run())
