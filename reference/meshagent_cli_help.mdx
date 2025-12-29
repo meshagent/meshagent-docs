@@ -45,6 +45,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `helpers`: Join a mailbot to a room
 * `room`
 * `mailbox`: Manage mailboxes for your project
+* `database`: Manage database tables in a room
 * `meeting-transcriber`: Join a meeting transcriber to a room
 
 ## `meshagent exec`
@@ -1522,8 +1523,23 @@ $ meshagent chatbot join [OPTIONS]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-image-generation TEXT`: Name of an image gen model
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
+* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--key TEXT`: an api key to sign the token with
+* `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--always-reply / --no-always-reply`: Always reply
 * `--help`: Show this message and exit.
 
 ### `meshagent chatbot service`
@@ -1551,10 +1567,25 @@ $ meshagent chatbot service [OPTIONS]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-image-generation TEXT`: Name of an image gen model
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--working-directory TEXT`: The default working directory for shell commands
+* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
+* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--host TEXT`
 * `--port INTEGER`
 * `--path TEXT`: [default: /agent]
+* `--always-reply / --no-always-reply`: Always reply
 * `--help`: Show this message and exit.
 
 ## `meshagent task-runner`
@@ -1747,12 +1778,19 @@ $ meshagent mailbot join [OPTIONS]
 * `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the name of the mail queue  [required]
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations  [required]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--reply-all / --no-reply-all`: [default: no-reply-all]
 * `--help`: Show this message and exit.
 
 ### `meshagent mailbot service`
@@ -1772,6 +1810,7 @@ $ meshagent mailbot service [OPTIONS]
 * `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
 * `--host TEXT`
 * `--port INTEGER`
 * `--path TEXT`: [default: /agent]
@@ -1780,6 +1819,12 @@ $ meshagent mailbot service [OPTIONS]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations  [required]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--reply-all / --no-reply-all`: [default: no-reply-all]
 * `--help`: Show this message and exit.
 
 ## `meshagent container`
@@ -2298,6 +2343,389 @@ $ meshagent mailbox delete [OPTIONS] ADDRESS
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--help`: Show this message and exit.
+
+## `meshagent database`
+
+Manage database tables in a room
+
+**Usage**:
+
+```console
+$ meshagent database [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `tables`
+* `inspect`
+* `install`: Create a database from a json file...
+* `create`: Create a table with optional schema +...
+* `drop`
+* `add-columns`: Add columns.
+* `drop-columns`
+* `insert`
+* `merge`
+* `update`
+* `delete`
+* `search`
+* `optimize`
+* `versions`
+* `checkout`
+* `restore`
+* `indexes`
+* `index-create`
+* `index-drop`
+
+### `meshagent database tables`
+
+**Usage**:
+
+```console
+$ meshagent database tables [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database inspect`
+
+**Usage**:
+
+```console
+$ meshagent database inspect [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--json`: Output raw schema JSON
+* `--help`: Show this message and exit.
+
+### `meshagent database install`
+
+Create a database from a json file containing a list of RequiredTables.
+
+**Usage**:
+
+```console
+$ meshagent database install [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `--file TEXT`: Path to requirements JSON file
+* `--help`: Show this message and exit.
+
+### `meshagent database create`
+
+Create a table with optional schema + optional initial data.
+
+Schema JSON format matches your DataType.to_json() structure, e.g.:
+  &#123;&quot;id&quot;:&#123;&quot;type&quot;:&quot;int&quot;&#125;, &quot;body&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;, &quot;embedding&quot;:&#123;&quot;type&quot;:&quot;vector&quot;,&quot;size&quot;:1536,&quot;element_type&quot;:&#123;&quot;type&quot;:&quot;float&quot;&#125;&#125;&#125;
+
+**Usage**:
+
+```console
+$ meshagent database create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--schema-json TEXT`: Schema JSON as a string
+* `--schema-file TEXT`: Path to schema JSON file
+* `--data-json TEXT`: Initial rows (JSON list)
+* `--data-file TEXT`: Path to JSON file with initial rows
+* `--help`: Show this message and exit.
+
+### `meshagent database drop`
+
+**Usage**:
+
+```console
+$ meshagent database drop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--ignore-missing`: Ignore missing table
+* `--help`: Show this message and exit.
+
+### `meshagent database add-columns`
+
+Add columns. JSON supports either:
+  - DataType JSON: &#123;&quot;col&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;
+  - or server default SQL expr strings: &#123;&quot;col&quot;:&quot;&#x27;default&#x27;&quot;&#125;
+
+**Usage**:
+
+```console
+$ meshagent database add-columns [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--columns-json TEXT`: JSON object of new columns
+* `--help`: Show this message and exit.
+
+### `meshagent database drop-columns`
+
+**Usage**:
+
+```console
+$ meshagent database drop-columns [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --column TEXT`: Column to drop (repeatable)
+* `--help`: Show this message and exit.
+
+### `meshagent database insert`
+
+**Usage**:
+
+```console
+$ meshagent database insert [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--json TEXT`: JSON list of records
+* `-f, --file TEXT`: Path to JSON file (list of records)
+* `--help`: Show this message and exit.
+
+### `meshagent database merge`
+
+**Usage**:
+
+```console
+$ meshagent database merge [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `--on TEXT`: Column to match for upsert  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--json TEXT`: JSON records (list)
+* `-f, --file TEXT`: Path to JSON file (list)
+* `--help`: Show this message and exit.
+
+### `meshagent database update`
+
+**Usage**:
+
+```console
+$ meshagent database update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `--where TEXT`: SQL WHERE clause, e.g. &quot;id = 1&quot;  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--values-json TEXT`: JSON object of literal values
+* `--values-sql-json TEXT`: JSON object of SQL expressions
+* `--help`: Show this message and exit.
+
+### `meshagent database delete`
+
+**Usage**:
+
+```console
+$ meshagent database delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `--where TEXT`: SQL WHERE clause  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database search`
+
+**Usage**:
+
+```console
+$ meshagent database search [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--text TEXT`: Full-text query
+* `--vector-json TEXT`: Vector JSON array
+* `--where TEXT`: SQL WHERE clause
+* `--where-json TEXT`: JSON object converted to equality ANDs
+* `--select TEXT`: Columns to select (repeatable)
+* `--limit INTEGER`
+* `--offset INTEGER`
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+### `meshagent database optimize`
+
+**Usage**:
+
+```console
+$ meshagent database optimize [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database versions`
+
+**Usage**:
+
+```console
+$ meshagent database versions [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: [default: pretty]
+* `--help`: Show this message and exit.
+
+### `meshagent database checkout`
+
+**Usage**:
+
+```console
+$ meshagent database checkout [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-v, --version INTEGER`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database restore`
+
+**Usage**:
+
+```console
+$ meshagent database restore [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-v, --version INTEGER`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database indexes`
+
+**Usage**:
+
+```console
+$ meshagent database indexes [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: [default: pretty]
+* `--help`: Show this message and exit.
+
+### `meshagent database index-create`
+
+**Usage**:
+
+```console
+$ meshagent database index-create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `-c, --column TEXT`: [required]
+* `--kind TEXT`: vector | scalar | fts  [default: scalar]
+* `--replace / --no-replace`
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent database index-drop`
+
+**Usage**:
+
+```console
+$ meshagent database index-drop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: [required]
+* `--name TEXT`: Index name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
 ## `meshagent meeting-transcriber`
