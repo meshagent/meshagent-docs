@@ -47,11 +47,9 @@ A ``Worker`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, `
 4. Process the job. ``process_message(...)`` runs the task (default implementation calls your ``llm_adapter.next()`` with the prepared context and toolkits).
 5. Handle errors & keep running. Errors are logged. On receive failures, the loop backs off exponentially and retries; otherwise it immediately waits for the next message.
 
-You can customize steps (2)–(4) by overriding ``decode_message(...)``, ``append_message_context(...)``, or ``process_message(...)``.
 
 ## Key Behaviors and Hooks
 - **Queue consumption:** ``run()`` long-polls the queue ``(receive(..., wait=True))``, creating it if needed.
-- **Message decoding:** ``decode_message(message)`` lets you normalize incoming payloads.
 - **Context building:** ``append_message_context(...)`` inserts job data into the chat context (default: dump JSON as a user message).
 - **Job execution:** ``process_message(...)`` is the main hook: it prepares context, tools, and (by default) calls the LLM adapter’s ``.next()`` function to work through the task.
 - **Resilience:** Errors are logged; ``run()`` applies an exponential backoff between receive retries.
@@ -63,7 +61,6 @@ You can customize steps (2)–(4) by overriding ``decode_message(...)``, ``appen
 | `async def run(room)`                                              | Main loop: receives queue messages and processes them.             |
 | `async def process_message(chat_context, room, message, toolkits)` | Core job handler—override for custom behavior.                     |
 | `async def append_message_context(room, message, chat_context)`    | How a job is represented in the chat context (override to change). |
-| `def decode_message(message)`                                      | Normalize/validate incoming message payloads.                      |
 | `async def start(room)` / `async def stop()`                       | Start/stop the worker, manage background task.                     |
 
 
