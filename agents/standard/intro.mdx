@@ -4,6 +4,34 @@ title: "Introduction to Agents"
 
 Building an agent with an LLM is easy. **Deploying it, scaling it, and integrating it into real applications is hard.** MeshAgent bridges that gap with **built-in agents you can run or extend**, the ability to **wrap agents from any major framework**, and a **Room-based runtime** that handles **connectivity, tools, observability, and scale** out of the box.
 
+## How to build agents with MeshAgent
+MeshAgent supports two complementary ways to build and deploy agents, depending on how much customization you need.
+
+**1. Build and deploy agents with the MeshAgent CLI (recommended starting point)**
+The MeshAgent CLI is the fastest way to get production-ready agents running in real rooms, often without writing any agent code yourself.
+
+You can launch, configure, and deploy both conversational agents and background agents, including:
+- ChatBots and VoiceBots (interactive, multi-turn)
+- MailWorkers (email-based workflows)
+- TaskRunners and Workers (background + queue/task-driven)
+
+The CLI based agents support customization by allowing you to configure: 
+- Custom system prompts/rules
+- Tool access (use built-ins for web search, storage, image generation, etc.)
+- MCP connectors 
+
+For many teams, the CLI is the fastest path to production because it bundles the most common agent patterns and allows you to test and deploy quickly. 
+
+**2. Extend agents using the MeshAgent SDKs (when you need custom behavior)**
+When you need deeper control, you can build agents and tools directly with the MeshAgent SDKs. The SDKs give you the same underlying capabilities as the CLI but allows you to: 
+
+- Define your own agent classes and add custom agent logic
+- Create custom tools and schemas
+- Integrate external agent frameworks 
+- Define custom lifecycle hooks, routing logic, or other orchestration 
+
+Both CLI and SDK-based agents can be deployed either as project-wide services (available in all rooms) or room-scoped services, and shared with end users through Powerboards or your own application.
+
 ## Why Use MeshAgent When You Already Have Another Framework?
 MeshAgent expands on traditional agent frameworks by focusing on **inter-framework interoperability, rich human-in-the-loop workflows, and seamless multi-device reach.** Other frameworks focus on an agent interactions, reasoning loops, memory, and planning. MeshAgent focuses on everything around that core by providing the runtime infrastructure that makes agents usable in the real-world:
 
@@ -22,7 +50,6 @@ Suppose your agent is written in Python and hosted on a server, while your custo
 * The Python agent calls those tools exactly like any other function, even though they execute on the user’s phone.  
 * Observability events stream back automatically, so you can audit how often dialogs appeared, how long file picks took, and what it cost.
 * No additional RPC plumbing, versioning, or security tunnel is required; the room’s mesh protocol handles transport, authentication, and fallback across networks.
-
 
 ## Built-in MeshAgent Agents
 MeshAgent ships **built-in agent classes** that handle Room connectivity, context, and tool orchestration. You can run them as-is, extend them with your own rules and tools, or layer them with agents built with other agent libraries like LangChain, Semantic Kernel, CrewAI, and PydanticAI.
@@ -63,7 +90,7 @@ This design ensures **consistent context handling, toolkit discovery, and Room i
 ### Extending Built-in Agents
 - Add your own **rules** (system prompts) to steer behavior
 - Register **custom tools** or toolkits for new capabilities
-- Overrride methods like ``ask()`` to implement additional agent-specific logic. 
+- Override methods like ``ask()`` to implement additional agent-specific logic. 
 
 Built-in MeshAgent Agents support Studio testing, UI integration, observability, and cost tracking out of the box. When ready for deployment you can deploy the agent as a project or room specific service based on your permissions and use case needs.
 
