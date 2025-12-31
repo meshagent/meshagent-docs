@@ -7,7 +7,7 @@ import SimpleChatbot from "/snippets/examples/python/deployable/simple_chatbot/s
 import CliChatBotYaml from "/snippets/examples/cli/chatbot/meshagent.mdx"
 
 ## Overview
-This guide covers common CLI workflows for day-to-day MeshAgent development. If you haven't set up MeshAgent yet, start with the [Getting Started Guide](../introduction/get_started) first.
+This guide covers common CLI workflows for day-to-day MeshAgent development. If you haven't set up MeshAgent yet, start with the [Getting Started Guide](../introduction/get_started) first. This will walk you through creating a MeshAgent account, installing MeshAgent, and running your first agent from the CLI. 
 
 The MeshAgent CLI streamlines Room interactions and agent management right from your terminal. With the MeshAgent CLI you can easily:
 
@@ -16,75 +16,7 @@ The MeshAgent CLI streamlines Room interactions and agent management right from 
 - Deploy services to your project or room
 - Inspect and manage existing projects, secrets, agents, and services
 
-For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help) documentation.
-
-## Before you begin
-1. **Set up MeshAgent**: If you haven't installed MeshAgent yet, follow our [Getting Started](../introduction/get_started) guide. This will walk you through how to set up your MeshAgent account, create your first project, install MeshAgent, and connect to your first room with your first agent.
-
-2. **Install the MeshAgent CLI**: You can install the CLI globally on your system or in a virtual environment. 
-    **To install the CLI globally:**
-    <CodeGroup>
-    ```bash macOS
-    brew tap meshagent/homebrew-meshagent
-    # install the latest version
-    brew install meshagent
-    # Display the help
-    meshagent --help
-    ```
-    ```bash Windows
-    # Install
-    choco install meshagent
-    # Display the help
-    meshagent --help
-
-    # Alternatively:
-    Invoke-WebRequest -Uri "https://storage.googleapis.com/meshagent-cli-builds/0.17.1/meshagent.0.17.1.nupkg" -OutFile "C:\Downloads\meshagent.0.17.1.nupkg"
-    choco install meshagent --source "C:\Downloads\meshagent.0.17.1.nupkg"
-    ```
-    ```bash Other
-    # One can install the meshagent cli using pipx
-    pipx install "meshagent[cli]" --include-deps
-    # Optional: ensure meshagent is in the path. 
-    # You may need to open a new terminal.
-    pipx ensurepath
-    # Display the help
-    meshagent --help
-    ```
-    </CodeGroup>
-
-    **To install the CLI in a virtual environment:** Ensure you are in the appropriate project folder and have activated your virtual environment. (The virtual environment is active when the terminal prompt starts with ``venv``.) If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). Then you can install all the MeshAgent packages, or exclusively the MeshAgent CLI.
-
-    <CodeGroup>
-    ```bash pip
-    pip install "meshagent[cli]" # or "meshagent[all]"
-    ```
-    ```bash uv
-    uv add "meshagent[cli]" # or "meshagent[all]"
-    ```
-    </CodeGroup>
-
-3. **Authenticate**: Once the CLI is installed, authenticate and activate a project. 
-    <CodeGroup>
-    ```bash bash
-    # A browser window will open for OAUTH.
-    meshagent setup
-    # Then you will be prompted to activate a project
-    ```
-    </CodeGroup>
-
-    __Optional__: Alternatively, instead of running the `meshagent setup` command you can run:
-
-    <CodeGroup>
-    ```bash bash
-    # A browser window will open for OAUTH.
-    meshagent auth login
-    meshagent project activate -i
-    # create an api key if necessary. The key value will be displayed only once.
-    meshagent api-key create --activate my-key
-    ```
-    </CodeGroup>
-
-    You are now authenticated and ready to use the CLI! 
+For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
 
 ## Common Workflows
 ### Test Agents Locally
@@ -95,13 +27,16 @@ Before deploying, test your agent locally in a room:
 The MeshAgent CLI provides prebuilt [ChatBot](../agents/standard/chatbot) and [VoiceBot](../agents/standard/voicebot) agents you can test instantly:
 
 ```bash
+# Authenticate to MeshAgent if not already signed in
+meshagent setup
+
 # Test a chatbot
 meshagent chatbot join --room testroom --agent-name myagent
 
 # Test a voicebot  
 meshagent voicebot join --room testroom --agent-name myvoice
 
-# Test with tools enabled
+# Test a chatbot with tools enabled
 meshagent chatbot join --room testroom --web-search --storage
 ```
 
@@ -113,22 +48,22 @@ Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and star
 
 #### Run your own MeshAgent service locally
 
-The CLI based agents expose many tools and functionality already, we recommend using these for most use cases. When you need additional custom functionality you can extend the base agent classes, for example the `ChatBot`. To run this locally and deploy it, expose your agent or tool via `ServiceHost` (local webhook server). A request from MeshAgent spins up your agent or tool, connects it to the Room, and manages lifecycle for the session. For example: 
+The CLI based agents expose many tools and functionality already, we recommend using these for most use cases. When you need additional custom functionality you can extend the base agent classes, for example the `ChatBot`. To run a custom agent or tool locally and deploy it, expose it via `ServiceHost` (local webhook server). A request from MeshAgent spins up your agent or tool, connects it to the Room, and manages it's lifecycle for the session. 
+
+For example, create a file called `my_agent.py`: 
 
 <CodeGroup>
     <SimpleChatbot />
 </CodeGroup>
 
-To run the service locally use the `meshagent service run` command. 
+Then run the service locally with the MeshAgent CLI: 
 
 ```bash bash
 # Run your agent code locally in a room
 meshagent service run "my_agent.py" --room testroom
 ```
 
-Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and start chatting with your agent. You can iterate on the code and restart the service to test your changes.
-
-The agent will only exist for the current session unless deployed.
+Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and start chatting with your agent. You can iterate on the code and restart the service to test your changes (run `Ctrl+C` to stop the agent then rerun the `meshagent service run` command). The agent will only exist for the current session unless deployed.
 
 ### Package and Deploy Services 
 Once your agent works locally, you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
