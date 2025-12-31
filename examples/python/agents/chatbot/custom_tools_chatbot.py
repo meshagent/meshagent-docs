@@ -67,7 +67,6 @@ class GetTasks(Tool):
             json={"values": await context.room.database.search(table="tasks")}
         )
 
-
 @service.path(path="/chat", identity="mychatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
@@ -85,8 +84,8 @@ class SimpleChatbot(ChatBot):
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             llm_adapter=OpenAIResponsesAdapter(),
-            requires=[RequiredToolkit(name="ui"), RequiredSchema(name="document")],
-            toolkits=[
+            requires=[RequiredSchema(name="document")],
+            toolkits=[ # Add built in and custom tools here!
                 StorageToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
@@ -94,7 +93,7 @@ class SimpleChatbot(ChatBot):
                 ),
                 Toolkit(
                     name="tasktracker", tools=[WriteTask(), GetTasks()]
-                ),  # Add our Custom Tools Here!
+                ),  
             ],
         )
 
@@ -108,10 +107,12 @@ class SimpleChatbot(ChatBot):
         # One tiny table:
         await room.database.create_table_with_schema(
             name="tasks",
-            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
-            mode="overwrite",
+            schema={
+                "task_id": TextDataType(), 
+                "taskdescription": TextDataType()
+                },
+            mode="create_if_not_exists",
             data=None,
         )
-
 
 asyncio.run(service.run())
