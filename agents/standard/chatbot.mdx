@@ -10,8 +10,8 @@ import ChatbotYaml from "/snippets/examples/python/deployable/simple_chatbot/mes
 
 `ChatBot` supports both **static toolkits** (always available) and **dynamic toolkits** (built per message), so you can add or remove tools on demand as a conversation evolves. 
 
-### Two ways to build ChatBots
-1. **CLI:** Run production ready agents with a single command. Configure tools, rules, and behavior using command-line flags. Ideal for most use cases. 
+### Two ways to build a ChatBot
+1. **CLI:** Run production-ready agents with a single command. Configure tools, rules, and behavior using command-line flags. Ideal for most use cases. 
 2. **SDK:** Extend the base `ChatBot` class with custom code when you need deeper integrations or specialized behaviors. Best for full control or more complex logic. 
 
 Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, it's fastest and covers most scenarios, then moving to the SDK when you need further customization. 
@@ -49,14 +49,16 @@ meshagent setup
 meshagent chatbot join --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
 ```
 
+When you add the `--room-rules "agents/chatbot/rules.txt"` flag and supply a file path for the rules, the file will be created if it does not already exist, this file is relative to the room storage. 
+
 > **Tip:** Use the `--help` flag to see all available tools and options: `meshagent chatbot join --help`. The CLI ChatBot has built in tools you can turn on and off for things like image generation, web search, local shell, storage, and mcp.
 
 ### Step 2: Interact with the agent in MeshAgent Studio
-1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and log in
 2. Enter your room ``quickstart``
 3. Select the agent ``chatbot`` and begin chatting!
 
-If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agents `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
+If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
 
 ### Step 3: Package and Deploy the Agent
 Once your agent works locally, you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
@@ -73,10 +75,10 @@ Next, deploy it to your Room.
 meshagent service create --file meshagent.yaml --room quickstart
 ```
 
-The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others from an AI native application. 
+The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others from an AI native application. MeshAgent Studio, Powerboards, and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand ChatBot threads. This means any conversation started in the Studio or Powerboards can be displayed properly or continued inside your own application without extra integration work.
 
 ## Build a ChatBot with the SDK
-### Step 1: Create a `ChatBot` agent with ``ServiceHost`` 
+### Step 1: Create a `ChatBot` agent using ``ServiceHost`` 
 
 Let's create a simple ``ChatBot`` that takes a system prompt (rules). 
 
@@ -217,25 +219,6 @@ When a message arrives:
 Private vs group chats:
 - If the thread has one human in `<members>`, the chatbot treats it like a 1:1 and replies.
 - If the thread has more than one human in `<members>`, it automatically switches to multiplayer mode and uses `should_reply` to decide whether to speak.
-
-## Beginner-Friendly Examples
-
-<CodeGroup>
-    <SimpleChatbot />
-</CodeGroup>
-
-
-This subclass uses the OpenAI Responses API and applies a a system prompt. You can call the ChatBot into a room directly from your terminal by running: 
-
-```bash bash 
-meshagent service run "main.py" --room=gettingstarted
-``` 
-
-Next from the [MeshAgent Studio](https://studio.meshagent.com) you can go to the **Sessions** tab, open the **gettingstarted** room, and begin chatting with your agent. 
-
-To extend the Chatbot with Tools see the next article on [building a chat agent](./buildanddeploychatbot).
-
-MeshAgent Studio and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand ChatBot threads. This means any conversation started in the Studio can be displayed properly or continued inside your own application without extra integration work.
 
 ## Next Steps
 
