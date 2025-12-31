@@ -6,7 +6,20 @@ import GetCLIToken from "/snippets/examples/python/rest_api/get_token_from_cli_s
 
 The MeshAgent REST API is the **control plane** for MeshAgent. It exposes administrative and lifecycle operations for projects, rooms, users, permissions, services, storage, billing, sessions, and integrations.
 
-Use this API to manage your account/projects and provision resources, manage access, configure services, inspect activity, and integrate MeshAgent into external systems. For room-specific operations such as working with agents, databases, or storage use the [Room APIs](../room_api/overview).
+Use this API to manage your account/projects and provision resources, manage access, configure services, inspect activity, and integrate MeshAgent into external systems. For room-specific operations such as working with agents, databases, or queues use the [Room APIs](../room_api/overview).
+
+This page is organized by resource:
+
+- **Projects & Rooms** – create projects, manage rooms, and mint room connection tokens  
+- **Room grants** – persist per-user permissions to manage participant access and available actions
+- **Project storage** – upload/download project files by path  
+- **Services** – manage project-wide and room-scoped services
+- **Secrets** - manage key-based and image-pull secrets  
+- **Integrations** – webhooks, API keys, OAuth clients
+- **Shares** - create share links for Rooms
+- **Mailboxes** - manage mailboxes mapped to Rooms
+- **Operations** – sessions (events/spans/metrics) and scheduled tasks  
+- **Billing & usage** – balance, transactions, subscriptions, usage reporting
 
 ## Getting started
 
@@ -54,53 +67,187 @@ You can authenticate in one of two ways:
 ### Client configuration
 The `Meshagent()` client accepts a `base_url` and `token`.
 - `base_url`: defaults to `MESHAGENT_API_URL` (defaults to https://api.meshagent.com)
-- `token`: this should be a valid OAuth access token (from get_access_token() or CLI session). It defaults to `MESHAGENT_API_KEY`. API Keys are scoped to a specific project so cannot be used for global account based tasks like listing projects etc. API keys can be used for non user-specific operations like updating a service. 
+- `token`: a bearer token for the Authorization header. 
+    - This will default to `MESHAGENT_API_KEY`. API Keys are scoped to a specific project and cannot be used for global account based tasks like listing projects. API keys can be used for non user-specific operations like updating a service. 
+    - For most REST API operations, you will need an OAuth access token (from get_access_token() or CLI session shown above). 
+    this should be a valid OAuth access token (from get_access_token() or CLI session). OAuth access tokens are required for account wide operations such as listing projects.
 
 Every method raises `meshagent.api.RoomException` on non-2xx responses and validates responses with Pydantic models, so malformed payloads surface as rich errors.
 
-## Managing project room grants
-Project room grants store a user's allowed `ApiScope` for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and later copied into the runtime [`ParticipantToken`](./participant_tokens).
+## Projects & Rooms
+Create and manage projects and Rooms. Room connection returns a signed token and a room URL to join the room. 
 
-Key methods:
+| SDK method                                                               | HTTP route                                                       | What it does                                                      |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `create_project(name, settings?)`                                        | `POST /accounts/projects`                                        | Create a project.                                                 |
+| `list_projects()`                                                        | `GET /accounts/projects`                                         | List projects you can access.                                     |
+| `get_project(project_id)`                                                | `GET /accounts/projects/{project_id}`                            | Fetch one project.                                                |
+| `update_project_settings(project_id, settings)`                          | `PUT /accounts/projects/{project_id}/settings`                   | Update project settings.                                          |
+| `get_status(project_id)`                                                 | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
+| `get_project_role(project_id)`                                           | `GET /accounts/projects/{project_id}/role`                       | Get your role in the project.                                     |
+| `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user (optionally admin/developer/can_create_rooms).         |
+| `remove_user_from_project(project_id, user_id)`                          | `DELETE /accounts/projects/{project_id}/users/{user_id}`         | Remove a user from the project.                                   |
+| `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List users in the project.                                        |
+| `get_user_profile(user_id)`                                              | `GET /accounts/profiles/{user_id}`                               | Fetch a user profile.                                             |
+| `update_user_profile(user_id, first_name, last_name)`                    | `PUT /accounts/profiles/{user_id}`                               | Update basic profile fields.                                      |
+| `create_room(project_id, name, metadata?, permissions?, if_not_exists?)` | `POST /accounts/projects/{project_id}/rooms`                     | Create a room (supports metadata + optional initial permissions). |
+| `list_rooms(project_id, limit?, offset?, order_by?)`                     | `GET /accounts/projects/{project_id}/rooms`                      | List rooms with pagination.                                       |
+| `get_room(project_id, room_name)`                                        | `GET /accounts/projects/{project_id}/rooms/{room_name}`          | Fetch a room by name.                                             |
+| `update_room(project_id, room_id, name, metadata?)`                      | `PUT /accounts/projects/{project_id}/rooms/{room_id}`            | Rename/update a room.                                             |
+| `delete_room(project_id, room_id)`                                       | `DELETE /accounts/projects/{project_id}/rooms/{room_id}`         | Delete a room.                                                    |
+| `connect_room(project_id, room_name)`                                    | `POST /accounts/projects/{project_id}/rooms/{room_name}/connect` | Return `RoomConnectionInfo` (`jwt`, `room_url`, etc.).            |
 
-| Method | Description |
-| ------ | ----------- |
-| `create_room_grant(project_id, room_id, user_id, permissions)` | Creates a grant (POST `/accounts/projects/{project_id}/room-grants`). Accepts an `ApiScope` instance for `permissions`. |
-| `update_room_grant(project_id, room_id, user_id, permissions)` | Replaces the stored `ApiScope` for an existing grant (PUT `/room-grants`). |
-| `get_room_grant(project_id, room_id, user_id)` | Returns the persisted `ProjectRoomGrant` (GET `/room-grants/{room_id}/{user_id}`). |
-| `list_room_grants(project_id, limit?, offset?, order_by?)` | Lists every grant in a project with pagination support. |
-| `list_room_grants_by_user(project_id, user_id, ...)` | Lists the rooms a specific user can access. |
-| `list_room_grants_by_room(project_id, room_id, ...)` | Lists the users that have access to a room. |
-| `list_unique_rooms_with_grants(project_id, ...)` | Returns `ProjectRoomGrantCount` objects summarising how many grants exist per room. |
-| `list_unique_users_with_grants(project_id, ...)` | Returns `ProjectUserGrantCount` objects summarising grant counts per user. |
+## Room grants
+Room grants store per-user permissions (`ApiScope`s) for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and are used when minting room connection tokens (see [participant tokens](./participant_tokens)).
 
-Example: assign a user read-only storage access in a room.
+| SDK method                                                                | HTTP route                                                               | What it does                               |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------ |
+| `create_room_grant(project_id, room_id, user_id, permissions)`            | `POST /accounts/projects/{project_id}/room-grants`                       | Create a grant for a user.                 |
+| `create_room_grant_by_email(project_id, room_id, email, permissions)`     | `POST /accounts/projects/{project_id}/room-grants`                       | Create a grant targeting a user by email.  |
+| `update_room_grant(project_id, room_id, user_id, permissions, grant_id?)` | `PUT /accounts/projects/{project_id}/room-grants/{grant_id}`             | Replace permissions for an existing grant. |
+| `delete_room_grant(project_id, room_id, user_id)`                         | `DELETE /accounts/projects/{project_id}/room-grants/{room_id}/{user_id}` | Delete a grant.                            |
+| `get_room_grant(project_id, room_id, user_id)`                            | `GET /accounts/projects/{project_id}/room-grants/{room_id}/{user_id}`    | Fetch a grant (`ProjectRoomGrant`).        |
+| `list_room_grants(project_id, limit?, offset?, order_by?)`                | `GET /accounts/projects/{project_id}/room-grants`                        | List all grants in a project.              |
+| `list_room_grants_by_user(project_id, user_id, …)`                        | `GET /accounts/projects/{project_id}/room-grants/by-user/{user_id}`      | List rooms a user can access.              |
+| `list_room_grants_by_room(project_id, room_name, …)`                      | `GET /accounts/projects/{project_id}/room-grants/by-room/{room_name}`    | List users with access to a room.          |
+| `list_unique_rooms_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-room`                | Count grants per room.                     |
+| `list_unique_users_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-user`                | Count grants per user.                     |
 
-```python
-from meshagent.api.client import Meshagent
-from meshagent.api.participant_token import ApiScope, StorageGrant, StoragePathGrant
 
-scope = ApiScope(
-    storage=StorageGrant(paths=[StoragePathGrant(path="/data", read_only=True)])
-)
+## Project Storage
+MeshAgent allows you to use both project wide and room specific storage. For room-scoped storage see the [Storage API](../room_api/storage) documentation.
 
-await client.create_room_grant(
-    project_id="proj_123",
-    room_id="room_456",
-    user_id="user_789",
-    permissions=scope,
-)
-```
+| SDK method                       | HTTP route                                           | What it does                                                 |
+| -------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
+| `upload(project_id, path, data)` | `POST /projects/{project_id}/storage/upload?path=…`  | Upload raw bytes (`Content-Type: application/octet-stream`). |
+| `download(project_id, path)`     | `GET /projects/{project_id}/storage/download?path=…` | Download raw bytes.                                          |
 
-When that user connects, the router copies `scope` into the `api` grant of the token it mints (`cloud_router_server.connect_room`).
+## Services
 
-## Other administration helpers
-The client also exposes utilities for day-to-day project administration:
+Create and manage project and room services. Project services are available to all rooms in your project while room services are scoped to a specific room. 
 
-- **Room lifecycle**: create, rename, delete rooms; fetch room metadata.
-- **Project membership**: add/remove users, check roles, and list members.
-- **Storage helpers**: upload and download files under `/accounts/projects/{project_id}/storage/*`.
-- **OAuth clients**: create, update, list, and delete OAuth client records for project integrations.
+### Project Services
+
+| SDK method                                        | HTTP route                                                     | What it does                                    |
+| ------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| `create_service(project_id, service)`             | `POST /accounts/projects/{project_id}/services`                | Create a project-level service. |
+| `list_services(project_id)`                       | `GET /accounts/projects/{project_id}/services`                 | List project services.                          |
+| `get_service(project_id, service_id)`             | `GET /accounts/projects/{project_id}/services/{service_id}`    | Fetch a service spec.                           |
+| `update_service(project_id, service_id, service)` | `PUT /accounts/projects/{project_id}/services/{service_id}`    | Update a service.                               |
+| `delete_service(project_id, service_id)`          | `DELETE /accounts/projects/{project_id}/services/{service_id}` | Delete a service.                               |
+
+## Room Services
+
+| SDK method                                                        | HTTP route                                                                       | What it does                  |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------- |
+| `create_room_service(project_id, room_name, service)`             | `POST /accounts/projects/{project_id}/rooms/{room_name}/services`                | Create a room-scoped service. |
+| `list_room_services(project_id, room_name)`                       | `GET /accounts/projects/{project_id}/rooms/{room_name}/services`                 | List room services.           |
+| `get_room_service(project_id, room_name, service_id)`             | `GET /accounts/projects/{project_id}/rooms/{room_name}/services/{service_id}`    | Fetch a room service spec.    |
+| `update_room_service(project_id, room_name, service_id, service)` | `PUT /accounts/projects/{project_id}/rooms/{room_name}/services/{service_id}`    | Update a room service.        |
+| `delete_room_service(project_id, room_name, service_id)`          | `DELETE /accounts/projects/{project_id}/rooms/{room_name}/services/{service_id}` | Delete a room service.        |
+
+## Secrets
+Create and manage secrets. You can configure key based secrets as well as image pull secrets. 
+
+| SDK method                             | HTTP route                                                   | What it does                                    |
+| -------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| `create_secret(project_id, secret)`    | `POST /accounts/projects/{project_id}/secrets`               | Create a secret (`PullSecret` or `KeysSecret`). |
+| `list_secrets(project_id)`             | `GET /accounts/projects/{project_id}/secrets`                | List secrets.                                   |
+| `update_secret(project_id, secret)`    | `PUT /accounts/projects/{project_id}/secrets/{secret_id}`    | Update a secret.                                |
+| `delete_secret(project_id, secret_id)` | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a secret.                                |
+
+## Webhooks
+
+| SDK method                                  | HTTP route                                                     | What it does      |
+| ------------------------------------------- | -------------------------------------------------------------- | ----------------- |
+| `create_webhook(project_id, …)`             | `POST /accounts/projects/{project_id}/webhooks`                | Create a webhook. |
+| `list_webhooks(project_id)`                 | `GET /accounts/projects/{project_id}/webhooks`                 | List webhooks.    |
+| `update_webhook(project_id, webhook_id, …)` | `PUT /accounts/projects/{project_id}/webhooks/{webhook_id}`    | Update a webhook. |
+| `delete_webhook(project_id, webhook_id)`    | `DELETE /accounts/projects/{project_id}/webhooks/{webhook_id}` | Delete a webhook. |
+
+## API Keys
+
+| SDK method                                      | HTTP route                                             | What it does                              |
+| ----------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| `create_api_key(project_id, name, description)` | `POST /accounts/projects/{project_id}/api-keys`        | Issue a new API key (returns value once). |
+| `list_api_keys(project_id)`                     | `GET /accounts/projects/{project_id}/api-keys`         | List keys (does not list key value).              |
+| `delete_api_key(project_id, id)`                | `DELETE /accounts/projects/{project_id}/api-keys/{id}` | Revoke a key.                             |
+
+## OAuth clients
+Manage OAuth Clients for connections with other services. 
+
+| SDK method                                      | HTTP route                                                         | What it does                              |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------- |
+| `create_oauth_client(project_id, …)`            | `POST /accounts/projects/{project_id}/oauth/clients`               | Create an OAuth client (includes secret). |
+| `list_oauth_clients(project_id)`                | `GET /accounts/projects/{project_id}/oauth/clients`                | List OAuth clients.                       |
+| `get_oauth_client(project_id, client_id)`       | `GET /accounts/projects/{project_id}/oauth/clients/{client_id}`    | Fetch one client.                         |
+| `update_oauth_client(project_id, client_id, …)` | `PUT /accounts/projects/{project_id}/oauth/clients/{client_id}`    | Update a client.                          |
+| `delete_oauth_client(project_id, client_id)`    | `DELETE /accounts/projects/{project_id}/oauth/clients/{client_id}` | Delete a client.                          |
+
+
+## Shares
+Create share links/tokens that can connect into rooms.
+
+| SDK method                                      | HTTP route                                                 | What it does                                                     |
+| ----------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| `create_share(project_id, settings?)`           | `POST /accounts/projects/{project_id}/shares`              | Create a share token.                                            |
+| `list_shares(project_id)`                       | `GET /accounts/projects/{project_id}/shares`               | List shares.                                                     |
+| `update_share(project_id, share_id, settings?)` | `PUT /accounts/projects/{project_id}/shares/{share_id}`    | Update share settings.                                           |
+| `delete_share(project_id, share_id)`            | `DELETE /accounts/projects/{project_id}/shares/{share_id}` | Delete a share.                                                  |
+| `connect_share(share_id)`                       | `POST /shares/{share_id}/connect`                          | Return `RoomShareConnectionInfo` (`jwt`, `room_url`, settings…). |
+
+
+## Mailboxes
+Create and manage mailboxes that can be used by Agents or Rooms. 
+
+| SDK method                                         | HTTP route                                                   | What it does              |
+| -------------------------------------------------- | ------------------------------------------------------------ | ------------------------- |
+| `create_mailbox(project_id, address, room, queue)` | `POST /accounts/projects/{project_id}/mailboxes`             | Create a mailbox mapping. |
+| `list_mailboxes(project_id)`                       | `GET /accounts/projects/{project_id}/mailboxes`              | List mailboxes.           |
+| `get_mailbox(project_id, address)`                 | `GET /accounts/projects/{project_id}/mailboxes/{address}`    | Get a mailbox.            |
+| `update_mailbox(project_id, address, room, queue)` | `PUT /accounts/projects/{project_id}/mailboxes/{address}`    | Update mapping.           |
+| `delete_mailbox(project_id, address)`              | `DELETE /accounts/projects/{project_id}/mailboxes/{address}` | Delete mapping.           |
+
+
+## Sessions
+Inspect active/recent sessions and fetch diagnostics, or terminate sessions.
+
+| SDK method                                     | HTTP route                                                             | What it does            |
+| ---------------------------------------------- | ---------------------------------------------------------------------- | ----------------------- |
+| `list_active_sessions(project_id)`             | `GET /accounts/projects/{project_id}/sessions/active`                  | List active sessions.   |
+| `list_recent_sessions(project_id)`             | `GET /accounts/projects/{project_id}/sessions`                         | List recent sessions.   |
+| `get_session(project_id, session_id)`          | `GET /accounts/projects/{project_id}/sessions/{session_id}`            | Fetch session metadata. |
+| `list_session_events(project_id, session_id)`  | `GET /accounts/projects/{project_id}/sessions/{session_id}/events`     | Session event stream.   |
+| `list_session_spans(project_id, session_id)`   | `GET /accounts/projects/{project_id}/sessions/{session_id}/spans`      | Trace spans.            |
+| `list_session_metrics(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/metrics`    | Metrics data.           |
+| `terminate(project_id, session_id)`            | `POST /accounts/projects/{project_id}/sessions/{session_id}/terminate` | Terminate a session.    |
+
+
+## Scheduled Tasks
+Scheduled tasks let you automate room workflows by sending queued messages on a schedule (cron or one-time).
+
+| SDK method                                                                         | HTTP route                                                         | What it does             |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------ |
+| `create_scheduled_task(project_id, …)`                                             | `POST /accounts/projects/{project_id}/scheduled-tasks`             | Create a scheduled task. |
+| `update_scheduled_task(project_id, task_id, …)`                                    | `PUT /accounts/projects/{project_id}/scheduled-tasks/{task_id}`    | Update a task.           |
+| `delete_scheduled_task(project_id, task_id)`                                       | `DELETE /accounts/projects/{project_id}/scheduled-tasks/{task_id}` | Delete a task.           |
+| `list_scheduled_tasks(project_id, room_name?, task_id?, active?, limit?, offset?)` | `GET /accounts/projects/{project_id}/scheduled-tasks`              | List tasks with filters. |
+
+
+## Billing & usage
+Checkout balances, transactions, subscriptions, and usage reports.
+
+| SDK method                                                                | HTTP route                                          | What it does                                          |
+| ------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| `get_pricing()`                                                           | `GET /pricing`                                      | Fetch pricing metadata.                               |
+| `get_balance(project_id)`                                                 | `GET /accounts/projects/{project_id}/balance`       | Fetch current balance and auto-recharge config.       |
+| `get_recent_transactions(project_id)`                                     | `GET /accounts/projects/{project_id}/transactions`  | List recent transactions.                             |
+| `set_auto_recharge(project_id, enabled, amount, threshold)`               | `POST /accounts/projects/{project_id}/recharge`     | Configure auto-recharge.                              |
+| `get_checkout_url(project_id, success_url, cancel_url)`                   | `POST /accounts/projects/{project_id}/subscription` | Create subscription checkout; returns `checkout_url`. |
+| `get_credits_checkout_url(project_id, success_url, cancel_url, quantity)` | `POST /accounts/projects/{project_id}/credits`      | Purchase credits checkout; returns `checkout_url`.    |
+| `get_subscription(project_id)`                                            | `GET /accounts/projects/{project_id}/subscription`  | Fetch subscription info.                              |
+| `get_usage(project_id, start?, end?, interval?, report?)`                 | `GET /accounts/projects/{project_id}/usage`         | Usage reporting with optional filters.                |
+
 
 ## What’s next?
 - Explore the [Room API overview](../room_api/overview) to work with live collaborative rooms.
