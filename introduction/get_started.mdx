@@ -44,22 +44,52 @@ Before you start, make sure your machine matches the appropriate requirements. I
 3. Ensure your project has credits to start a room. Go to the **Billing** page to check your credits in the project. All new accounts start with $5. 
 
 
-### Step 2: Install MeshAgent (Python)
-From your terminal create or activate a virtual environment, for help with this see our [Machine Setup Guide](../reference/machine_setup).
+### Step 2: Install MeshAgent 
+Choose your preferred method: 
 
-Once your virtual environment is activated, install MeshAgent using the Python package manager of your choice. 
+#### System-wide installation (recommended for CLI-only use)
 
 <CodeGroup>
-```bash uv
-uv add 'meshagent[all]' 
+```bash macOS
+brew tap meshagent/homebrew-meshagent
+# install the latest version
+brew install meshagent
+# Display the help
+meshagent --help
 ```
-```bash pip
-pip install meshagent[all]
+```bash Windows
+# Install
+choco install meshagent
+# Display the help
+meshagent --help
+
+# Alternatively:
+Invoke-WebRequest -Uri "https://storage.googleapis.com/meshagent-cli-builds/0.17.1/meshagent.0.17.1.nupkg" -OutFile "C:\Downloads\meshagent.0.17.1.nupkg"
+choco install meshagent --source "C:\Downloads\meshagent.0.17.1.nupkg"
+```
+```bash Other
+# One can install the meshagent cli using pipx
+pipx install "meshagent[cli]" --include-deps
+# Optional: ensure meshagent is in the path. 
+# You may need to open a new terminal.
+pipx ensurepath
+# Display the help
+meshagent --help
 ```
 </CodeGroup>
 
-**Note**: Installing the entire MeshAgent SDK as shown above automatically installs the MeshAgent CLI package, but the CLI can also be installed independently using ``uv add "meshagent[cli]"`` or ``pip install "meshagent[cli]"``.
+#### Virtual environment installation (for development with Python SDK)
 
+To install the CLI in a virtual environment: Ensure you are in the appropriate project folder and have activated your virtual environment. (The virtual environment is active when the terminal prompt starts with ``venv``.) If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). Once activated, you can install all the MeshAgent packages, or exclusively the MeshAgent CLI.
+
+<CodeGroup>
+```bash pip
+pip install "meshagent[cli]" # or "meshagent[all]"
+```
+```bash uv
+uv add "meshagent[cli]" # or "meshagent[all]"
+```
+</CodeGroup>
 
 ### Step 3: Use the MeshAgent CLI to Connect to a Project
 
@@ -77,19 +107,19 @@ __Optional__: Alternatively, instead of running the `meshagent setup` command yo
 
 <CodeGroup>
 ```bash bash
-# A browser window will open for OAuth 
+# A browser window will open for OAUTH.
 meshagent auth login
-meshagent project activate -i # Select a project to activate
+meshagent project activate -i
 # create an api key if necessary. The key value will be displayed only once.
-meshagent api-key create --activate my-api-key
+meshagent api-key create --activate my-key
 ```
 </CodeGroup>
 
-You are now authenticated and ready to use the CLI to perform operations involving a Room. 
+You are now authenticated and ready to use the CLI! 
 
-### Step 4: Call an agent into a Room using the MeshAgent CLI
+### Step 4: Start and chat with an agent in a MeshAgent room
 
-Let's call a chatbot and voicebot into a new room and talk to them in MeshAgent Studio. 
+We can use the CLI to start pre-built agents. For example, let's call a chatbot and voicebot into a new room and talk to them in MeshAgent Studio. 
 
 ```sh
 # Start a chat agent in the room "gettingstarted"
@@ -101,7 +131,7 @@ meshagent voicebot join --room gettingstarted --agent-name voiceagent
 
 Now open [studio.meshagent.com](https://studio.meshagent.com/) and join the ``gettingstarted`` session. In the participants tab you will see the ``chatagent`` and ``voiceagent`` appear. To talk to the agent, just select it from the participants list and begin chatting! 
 
-These agents will be available in the Room while you're running them from the CLI. If you want the agents to persist in the room you will need to deploy them as a project or room service. 
+These agents will be available in the Room while you're running them from your terminal. If you want the agents to persist, you'll need to deploy them as a project or room service. 
 
 > **Tip**: Mute your mic after speaking to avoid background noise triggering the voice agent.
 
