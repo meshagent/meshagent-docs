@@ -4,12 +4,13 @@ import uuid
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
 from meshagent.api.services import ServiceHost
+from meshagent.tools.storage import StorageToolkit
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
     DocumentTypeAuthoringToolkit,
 )
-from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.api.messaging import TextResponse, JsonResponse
@@ -67,12 +68,12 @@ class GetTasks(Tool):
         )
 
 
-@service.path("/chat")
+@service.path(path="/chat", identity="mychatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
         super().__init__(
             name="mychatbot",
-            title="chatbot",
+            title="mychatbot",
             description="a simple chatbot",
             rules=[
                 "Always respond to the user and include a fun fact at the end of your response.",
@@ -86,7 +87,7 @@ class SimpleChatbot(ChatBot):
             llm_adapter=OpenAIResponsesAdapter(),
             requires=[RequiredToolkit(name="ui"), RequiredSchema(name="document")],
             toolkits=[
-                MarkItDownToolkit(),
+                StorageToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
@@ -96,6 +97,11 @@ class SimpleChatbot(ChatBot):
                 ),  # Add our Custom Tools Here!
             ],
         )
+
+    def get_toolkit_builders(self):
+        builders = super().get_toolkit_builders()
+        builders.append(WebSearchToolkitBuilder())  # add web search
+        return builders
 
     async def start(self, *, room):
         await super().start(room=room)

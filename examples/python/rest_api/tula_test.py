@@ -46,38 +46,38 @@ def env(name: str) -> str:
 
 # asyncio.run(main())
 
-# SESSION = Path("~/.meshagent/session.json").expanduser()
-# tokens = json.loads(SESSION.read_text())
-# access_token = tokens["access_token"]
-
-# async def main():
-#     client = Meshagent(base_url="https://api.meshagent.life", token=access_token) 
-#     # try:
-#     #     role = await client.get_project_role("1fd090a4-8dc5-4918-948b-2b1b2c981eb0")
-#     #     print("Valid key, role:", role)
-#     # except Exception as e:
-#     #     print("Key failed:", e)
-#     try:
-#         projects = await client.list_projects()
-#         print(projects)
-#     finally:
-#         await client.close()
-
-# asyncio.run(main())
-
-
-import asyncio
-from meshagent.api.client import Meshagent
-from meshagent.cli.auth_async import get_access_token
+SESSION = Path("~/.meshagent/session.json").expanduser()
+tokens = json.loads(SESSION.read_text())
+access_token = tokens["access_token"]
 
 async def main():
-    access_token = await get_access_token()
-    client = Meshagent(token=access_token)
+    client = Meshagent(base_url="https://api.meshagent.life", token=access_token) 
     try:
-        projects = await client.list_projects()
-        client.
+        role = await client.get_status("1fd090a4-8dc5-4918-948b-2b1b2c981eb0")
+        print("Result:", role)
+    except Exception as e:
+        print("Exception:", e)
+    try:
+        projects = await client
         print(projects)
     finally:
         await client.close()
 
 asyncio.run(main())
+
+
+# import asyncio
+# from meshagent.api.client import Meshagent
+# from meshagent.cli.auth_async import get_access_token
+
+# async def main():
+#     access_token = await get_access_token()
+#     client = Meshagent(token=access_token)
+#     try:
+#         projects = await client.list_shares()
+#         client.
+#         print(projects)
+#     finally:
+#         await client.close()
+
+# asyncio.run(main())
