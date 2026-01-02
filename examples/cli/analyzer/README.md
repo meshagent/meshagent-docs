@@ -20,7 +20,7 @@ meshagent chatbot join \
   --agent-name=analyzer \
   --model=codex-mini-latest \
   --local-shell \
-  --toolkit=ui \
+  --require-toolkit=ui \
   --rule='you may only write files inside the /data folder, everything else is read only. You should use the display_document tool to show files to users. If the user asks for a chart, install matplotlib and use it to make a chart image. strip the leading /data when showing files with display_document since the display_document tool expects a path relative to /data. If the user mentions a file that they uploaded, it should be inside the /data folder since the root of the room storage is mounted to /data.'
 ```
 

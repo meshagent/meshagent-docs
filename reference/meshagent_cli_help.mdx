@@ -48,6 +48,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `mailbox`: Manage mailboxes for your project
 * `database`: Manage database tables in a room
 * `meeting-transcriber`: Join a meeting transcriber to a room
+* `team`: Run a team of agents
 
 ## `meshagent exec`
 
@@ -1513,8 +1514,8 @@ $ meshagent chatbot join [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
@@ -1541,6 +1542,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--always-reply / --no-always-reply`: Always reply
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ### `meshagent chatbot service`
@@ -1557,8 +1559,8 @@ $ meshagent chatbot service [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
 * `--image-generation TEXT`: Name of an image gen model
 * `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
@@ -1585,8 +1587,9 @@ $ meshagent chatbot service [OPTIONS]
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--host TEXT`
 * `--port INTEGER`
-* `--path TEXT`: [default: /agent]
+* `--path TEXT`
 * `--always-reply / --no-always-reply`: Always reply
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ## `meshagent task-runner`
@@ -1709,8 +1712,8 @@ $ meshagent voicebot join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`
 * `--auto-greet-prompt TEXT`
 * `--key TEXT`: an api key to sign the token with
@@ -1730,13 +1733,13 @@ $ meshagent voicebot service [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`
 * `--auto-greet-prompt TEXT`
 * `--host TEXT`
 * `--port INTEGER`
-* `--path TEXT`: [default: /agent]
+* `--path TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--help`: Show this message and exit.
 
@@ -1775,15 +1778,19 @@ $ meshagent mailbot join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `-t, --toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the name of the mail queue  [required]
 * `--email-address TEXT`: the email address of the agent  [required]
-* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations  [required]
+* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
@@ -1792,6 +1799,9 @@ $ meshagent mailbot join [OPTIONS]
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
 * `--reply-all / --no-reply-all`: [default: no-reply-all]
+* `--enable-attachments / --no-enable-attachments`: [default: no-enable-attachments]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ### `meshagent mailbot service`
@@ -1807,17 +1817,19 @@ $ meshagent mailbot service [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`
 * `--port INTEGER`
-* `--path TEXT`: [default: /agent]
+* `--path TEXT`
 * `--queue TEXT`: the name of the mail queue  [required]
 * `--email-address TEXT`: the email address of the agent  [required]
-* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations  [required]
+* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
@@ -1826,6 +1838,9 @@ $ meshagent mailbot service [OPTIONS]
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
 * `--reply-all / --no-reply-all`: [default: no-reply-all]
+* `--enable-attachments / --no-enable-attachments`: [default: no-enable-attachments]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ## `meshagent worker`
@@ -1863,15 +1878,24 @@ $ meshagent worker join [OPTIONS]
 * `--agent-name TEXT`: Name of the worker agent  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.2]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: optional toolkit name to expose worker operations
 * `-rr, --room-rules TEXT`: path(s) in room storage to load rules from
+* `--image-generation TEXT`: Name of an image gen model
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--database-namespace TEXT`: Use a specific database namespace (JSON list or dotted)
@@ -1879,6 +1903,8 @@ $ meshagent worker join [OPTIONS]
 * `--require-table-write TEXT`: Enable table write tools for these tables
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ### `meshagent worker service`
@@ -1894,14 +1920,23 @@ $ meshagent worker service [OPTIONS]
 * `--agent-name TEXT`: Name of the worker agent  [required]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
-* `-t, --toolkit TEXT`: the name or url of a required toolkit
-* `-s, --schema TEXT`: the name or url of a required schema
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--require-local-shell / --no-require-local-shell`: [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`
 * `--port INTEGER`
-* `--path TEXT`: [default: /worker]
+* `--path TEXT`
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`
 * `-rr, --room-rules TEXT`
@@ -1912,6 +1947,8 @@ $ meshagent worker service [OPTIONS]
 * `--require-table-write TEXT`
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
 * `--help`: Show this message and exit.
 
 ## `meshagent container`
@@ -1933,6 +1970,7 @@ $ meshagent container [OPTIONS] COMMAND [ARGS]...
 * `ps`
 * `stop`
 * `logs`
+* `exec`
 * `run`
 * `images`: Image operations
 
@@ -1980,6 +2018,23 @@ $ meshagent container logs [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--id TEXT`: Container ID  [required]
 * `--follow / --no-follow`: [default: no-follow]
+* `--help`: Show this message and exit.
+
+### `meshagent container exec`
+
+**Usage**:
+
+```console
+$ meshagent container exec [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name  [required]
+* `--container-id TEXT`: container id  [required]
+* `--command TEXT`
+* `--tty / --no-tty`: [default: no-tty]
 * `--help`: Show this message and exit.
 
 ### `meshagent container run`
@@ -2864,5 +2919,38 @@ $ meshagent meeting-transcriber service [OPTIONS]
 * `--host TEXT`
 * `--port INTEGER`
 * `--path TEXT`: [default: /agent]
+* `--help`: Show this message and exit.
+
+## `meshagent team`
+
+Run a team of agents
+
+**Usage**:
+
+```console
+$ meshagent team [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `host`
+
+### `meshagent team host`
+
+**Usage**:
+
+```console
+$ meshagent team host [OPTIONS]
+```
+
+**Options**:
+
+* `--host TEXT`
+* `--port INTEGER`
+* `-c TEXT`: a list of commands to run, seperated by pipes
 * `--help`: Show this message and exit.
 
