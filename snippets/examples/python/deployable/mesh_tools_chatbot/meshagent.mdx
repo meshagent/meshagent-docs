@@ -1,0 +1,25 @@
+```yaml Yaml
+kind: Service
+version: v1
+metadata:
+  name: mesh-tools-chatbot
+  description: "A chatbot with tools that can interact with users"
+  annotations:
+    meshagent.service.id: "meshtools.chatbot"
+agents:
+  - name: mesh-tools-chatbot
+    description: "A conversational agent with web search, storage, and document authoring tools"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+- num: "*"
+  endpoints:
+  - path: /agent
+    meshagent:
+      identity: mesh-tools-chatbot
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
+  command: python mesh_tools_chatbot/mesh_tools_chatbot.py
+
+```
+

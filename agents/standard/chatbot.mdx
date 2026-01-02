@@ -3,8 +3,8 @@ title: "ChatBot"
 ---
 
 import CliChatBotYaml from "/snippets/examples/cli/chatbot/meshagent.mdx"
-import Chatbot from "/snippets/examples/python/deployable/simple_chatbot/simple_chatbot.mdx"
-import ChatbotYaml from "/snippets/examples/python/deployable/simple_chatbot/meshagent.mdx"
+import Chatbot from "/snippets/examples/python/deployable/mesh_tools_chatbot/mesh_tools_chatbot.mdx"
+import ChatbotYaml from "/snippets/examples/python/deployable/mesh_tools_chatbot/meshagent.mdx"
 
 ## Overview 
 `ChatBot` is the standard agent for building text-based conversational experiences in MeshAgent. The `ChatBot` class builds on [`SingleRoomAgent`](./singleroomagent). It joins a MeshAgent Room, communicates with participants via text, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. The `ChatBot` automatically handles conversation flow, thread storage, auto-greeting, and tool integration, making it the fastest path to building interactive agents like customer support bots, research assistants, and more. 
@@ -17,7 +17,7 @@ import ChatbotYaml from "/snippets/examples/python/deployable/simple_chatbot/mes
 
 Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, it's fastest and covers most scenarios, then moving to the SDK when you need further customization. 
 
-### In this guide
+### In this guide you will learn
 - When to use `ChatBot`
 - How to run and deploy a `ChatBot` with the MeshAgent CLI
 - How to build and deploy a `ChatBot` with the MeshAgent SDK
@@ -80,9 +80,9 @@ The `ChatBot` is now deployed to the `quickstart` room! Now the agent will alway
 
 ## Build and deploy a ChatBot with the SDK
 ### Step 1: Create a `ChatBot` agent using ``ServiceHost`` 
-This example shows a `ChatBot` with a custom rule to guide the agent's behavior and access to built-in MeshAgent Tools for web search and UI toolkits. For an agent this simple the CLI ChatBot would be sufficient. We're showing the SDK code here to demonstrate how to get similar functionality from code. 
+This example shows a `ChatBot` with a custom rule to guide the agent's behavior and access to built-in MeshAgent Tools for web search, document authoring, and storage. For an agent this simple the CLI ChatBot would be sufficient. The Python SDK code here demonstrates how to get similar functionality as the CLI.  
 
-To run the ``ChatBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure.
+To run the ``ChatBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure.  
 
 <CodeGroup>
     <Chatbot />
@@ -98,7 +98,7 @@ meshagent service run "main.py" --room=quickstart
 
 This command will start the chatbot on an available port at the path ``/agent``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities (this is the recommended way to test your agents and tools). 
 
-As an alternative to the ``service run`` command you can also run the service locally by running ``python main.py`` in one tab in your terminal, then from another tab you can call individual agents into the room using the ``meshagent call agent`` command. For example: 
+As an alternative to the ``service run`` command you can also run the service locally by setting a the `port` parameter on `ServiceHost` and running ``python main.py`` in one tab in your terminal, then from another tab you can call individual agents into the room using the ``meshagent call agent`` command. For example: 
 
 ```bash bash
 meshagent setup # authenticate to meshagent
@@ -113,6 +113,8 @@ In either case, the agent joins the room as participant ``chatbot``. Once the ag
 3. Select the agent ``chatbot`` and begin chatting!
 
 If you want to modify and restart the agent run `Ctrl+C` from the terminal to stop the agent then re-run the `meshagent service run` command. 
+
+> **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
 
 ### Step 4: Package and Deploy the Agent
 To deploy your SDK ChatBot permanently, you'll need:

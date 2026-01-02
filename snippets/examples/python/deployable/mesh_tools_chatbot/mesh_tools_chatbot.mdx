@@ -1,9 +1,11 @@
+```python Python
 import asyncio
-
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
 from meshagent.api.services import ServiceHost
+from meshagent.tools.storage import StorageToolkit
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
     DocumentTypeAuthoringToolkit,
@@ -19,12 +21,12 @@ otel_config(
 )  # automatically enables telemetry data collection for your agents and tools
 
 
-@service.path(path="/chat", identity="basic-chatbot")
+@service.path(path="/agent", identity="mesh-tools-chatbot")
 class SimpleChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="chatbot",
-            title="chatbot",
+            name="mesh-tools-chatbot",
+            title="mesh-tools-chatbot",
             description="a simple chatbot",
             rules=[
                 "Always respond to the user and include a fun fact at the end of your response.",
@@ -36,13 +38,22 @@ class SimpleChatbot(ChatBot):
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             llm_adapter=OpenAIResponsesAdapter(),
-            requires=[RequiredToolkit(name="ui"), RequiredSchema(name="document")],
+            requires=[RequiredSchema(name="document")],
             toolkits=[
+                StorageToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
             ],
         )
+    
+    def get_toolkit_builders(self):
+        builders = super().get_toolkit_builders()
+        builders.append(WebSearchToolkitBuilder())  # add web search
+        return builders
 
 asyncio.run(service.run())
+
+```
+
