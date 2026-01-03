@@ -48,7 +48,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `mailbox`: Manage mailboxes for your project
 * `database`: Manage database tables in a room
 * `meeting-transcriber`: Join a meeting transcriber to a room
-* `mesh`: connect agents and tools to a room for...
+* `multi`: connect agents and tools to a room for...
 
 ## `meshagent exec`
 
@@ -928,7 +928,7 @@ $ meshagent service create [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `-f, --file TEXT`: File path to a service definition  [required]
-* `-r, --room TEXT`: The name of a room to create the service for
+* `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
 ### `meshagent service update`
@@ -947,7 +947,7 @@ $ meshagent service update [OPTIONS]
 * `--id TEXT`
 * `-f, --file TEXT`: File path to a service definition  [required]
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
-* `-r, --room TEXT`: The name of a room to update the service for
+* `--room TEXT`: The name of a room to update the service for
 * `--help`: Show this message and exit.
 
 ### `meshagent service run`
@@ -1003,7 +1003,7 @@ $ meshagent service list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `-o, --output TEXT`: output format   [default: table]
-* `-r, --room TEXT`: The name of a room to list the services for
+* `--room TEXT`: The name of a room to list the services for
 * `--help`: Show this message and exit.
 
 ### `meshagent service delete`
@@ -1023,7 +1023,7 @@ $ meshagent service delete [OPTIONS] SERVICE_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `-r, --room TEXT`: The name of a room to delete the service for
+* `--room TEXT`: The name of a room to delete the service for
 * `--help`: Show this message and exit.
 
 ## `meshagent secret`
@@ -1496,6 +1496,8 @@ $ meshagent chatbot [OPTIONS] COMMAND [ARGS]...
 
 * `join`
 * `service`
+* `spec`
+* `deploy`
 
 ### `meshagent chatbot join`
 
@@ -1592,6 +1594,110 @@ $ meshagent chatbot service [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--help`: Show this message and exit.
+
+### `meshagent chatbot spec`
+
+**Usage**:
+
+```console
+$ meshagent chatbot spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-image-generation TEXT`: Name of an image gen model
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
+* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--always-reply / --no-always-reply`: Always reply
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--help`: Show this message and exit.
+
+### `meshagent chatbot deploy`
+
+**Usage**:
+
+```console
+$ meshagent chatbot deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-image-generation TEXT`: Name of an image gen model
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
+* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--always-reply / --no-always-reply`: Always reply
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
 ## `meshagent task-runner`
@@ -1698,6 +1804,8 @@ $ meshagent voicebot [OPTIONS] COMMAND [ARGS]...
 
 * `join`
 * `service`
+* `spec`
+* `deploy`
 
 ### `meshagent voicebot join`
 
@@ -1745,6 +1853,60 @@ $ meshagent voicebot service [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--help`: Show this message and exit.
 
+### `meshagent voicebot spec`
+
+**Usage**:
+
+```console
+$ meshagent voicebot spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--auto-greet-message TEXT`
+* `--auto-greet-prompt TEXT`
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `--help`: Show this message and exit.
+
+### `meshagent voicebot deploy`
+
+**Usage**:
+
+```console
+$ meshagent voicebot deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--auto-greet-message TEXT`
+* `--auto-greet-prompt TEXT`
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: The name of a room to create the service for
+* `--help`: Show this message and exit.
+
 ## `meshagent mailbot`
 
 Join a mailbot to a room
@@ -1763,6 +1925,8 @@ $ meshagent mailbot [OPTIONS] COMMAND [ARGS]...
 
 * `join`
 * `service`
+* `spec`
+* `deploy`
 
 ### `meshagent mailbot join`
 
@@ -1847,6 +2011,94 @@ $ meshagent mailbot service [OPTIONS]
 * `--shell-image TEXT`: an image tag to use to run shell commands in
 * `--help`: Show this message and exit.
 
+### `meshagent mailbot spec`
+
+**Usage**:
+
+```console
+$ meshagent mailbot spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--queue TEXT`: the name of the mail queue  [required]
+* `--email-address TEXT`: the email address of the agent  [required]
+* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `--whitelist TEXT`: an email to whitelist
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--reply-all / --no-reply-all`: [default: no-reply-all]
+* `--enable-attachments / --no-enable-attachments`: [default: no-enable-attachments]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--help`: Show this message and exit.
+
+### `meshagent mailbot deploy`
+
+**Usage**:
+
+```console
+$ meshagent mailbot deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--queue TEXT`: the name of the mail queue  [required]
+* `--email-address TEXT`: the email address of the agent  [required]
+* `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `--whitelist TEXT`: an email to whitelist
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--reply-all / --no-reply-all`: [default: no-reply-all]
+* `--enable-attachments / --no-enable-attachments`: [default: no-enable-attachments]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: The name of a room to create the service for
+* `--help`: Show this message and exit.
+
 ## `meshagent worker`
 
 Join a worker agent to a room
@@ -1865,6 +2117,8 @@ $ meshagent worker [OPTIONS] COMMAND [ARGS]...
 
 * `join`
 * `service`
+* `spec`
+* `deploy`
 
 ### `meshagent worker join`
 
@@ -1955,6 +2209,104 @@ $ meshagent worker service [OPTIONS]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--help`: Show this message and exit.
+
+### `meshagent worker spec`
+
+**Usage**:
+
+```console
+$ meshagent worker spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the worker agent  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-local-shell / --no-require-local-shell`: [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--queue TEXT`: the queue to consume  [required]
+* `--toolkit-name TEXT`
+* `-rr, --room-rules TEXT`
+* `--require-storage / --no-require-storage`: [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: [default: no-require-read-only-storage]
+* `--database-namespace TEXT`
+* `--require-table-read TEXT`
+* `--require-table-write TEXT`
+* `--title TEXT`: a display name for the agent
+* `--description TEXT`: a description for the agent
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--help`: Show this message and exit.
+
+### `meshagent worker deploy`
+
+**Usage**:
+
+```console
+$ meshagent worker deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the worker agent  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-local-shell / --no-require-local-shell`: [default: no-require-local-shell]
+* `--require-web-search / --no-require-web-search`: [default: no-require-web-search]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--host TEXT`
+* `--port INTEGER`
+* `--path TEXT`
+* `--queue TEXT`: the queue to consume  [required]
+* `--toolkit-name TEXT`
+* `-rr, --room-rules TEXT`
+* `--require-storage / --no-require-storage`: [default: no-require-storage]
+* `--require-read-only-storage / --no-require-read-only-storage`: [default: no-require-read-only-storage]
+* `--database-namespace TEXT`
+* `--require-table-read TEXT`
+* `--require-table-write TEXT`
+* `--title TEXT`: a display name for the agent
+* `--description TEXT`: a description for the agent
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
 ## `meshagent container`
@@ -2927,14 +3279,14 @@ $ meshagent meeting-transcriber service [OPTIONS]
 * `--path TEXT`: [default: /agent]
 * `--help`: Show this message and exit.
 
-## `meshagent mesh`
+## `meshagent multi`
 
 connect agents and tools to a room for testing or host them as a mesh service
 
 **Usage**:
 
 ```console
-$ meshagent mesh [OPTIONS] COMMAND [ARGS]...
+$ meshagent multi [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -2943,15 +3295,71 @@ $ meshagent mesh [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `spec`
+* `deploy`
 * `service`
 * `join`
 
-### `meshagent mesh service`
+### `meshagent multi spec`
 
 **Usage**:
 
 ```console
-$ meshagent mesh service [OPTIONS]
+$ meshagent multi spec [OPTIONS]
+```
+
+**Options**:
+
+* `-c TEXT`: a list of sub commands to run, seperated by semicolons
+
+available sub commands:
+
+chatbot ...;
+mailbot ...;
+worker ...;
+voicebot ...;
+python path-to-python-file.py --name=NameOfModule;
+
+chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.  [required]
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--help`: Show this message and exit.
+
+### `meshagent multi deploy`
+
+**Usage**:
+
+```console
+$ meshagent multi deploy [OPTIONS]
+```
+
+**Options**:
+
+* `-c TEXT`: a list of sub commands to run, seperated by semicolons
+
+available sub commands:
+
+chatbot ...;
+mailbot ...;
+worker ...;
+voicebot ...;
+python path-to-python-file.py --name=NameOfModule;
+
+chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.  [required]
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: The name of a room to create the service for
+* `--help`: Show this message and exit.
+
+### `meshagent multi service`
+
+**Usage**:
+
+```console
+$ meshagent multi service [OPTIONS]
 ```
 
 **Options**:
@@ -2965,17 +3373,18 @@ available sub commands:
 chatbot ...;
 mailbot ...;
 worker ...;
+voicebot ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, and meshagent worker service commands.
+chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.
 * `--help`: Show this message and exit.
 
-### `meshagent mesh join`
+### `meshagent multi join`
 
 **Usage**:
 
 ```console
-$ meshagent mesh join [OPTIONS]
+$ meshagent multi join [OPTIONS]
 ```
 
 **Options**:
@@ -2988,9 +3397,10 @@ available sub commands:
 chatbot ...;
 mailbot ...;
 worker ...;
+voicebot ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, and meshagent worker service commands.
+chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
 * `--room TEXT`: A room name to test the service in (must not be currently running)
 * `--key TEXT`: an api key to sign the token with
