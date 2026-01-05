@@ -64,5 +64,6 @@ class MathToolkit(RemoteToolkit):
         )
 
 
-print(f"running on port {service.port}")
-asyncio.run(service.run())
+if __name__ == "main":
+    print(f"running on port {service.port}")
+    asyncio.run(service.run())
