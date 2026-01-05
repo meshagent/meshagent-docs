@@ -1,6 +1,6 @@
 from meshagent.api import RequiredToolkit
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.computers import ComputerAgent, BrowserbaseBrowser, Operator
+from meshagent.computers import ComputerChatBot, BrowserbaseBrowser, Operator
 from meshagent.api.services import ServiceHost
 
 import asyncio
@@ -9,7 +9,7 @@ service = ServiceHost()
 
 
 @service.path("/agent")
-class BrowserbaseAgent(ComputerAgent):
+class BrowserbaseAgent(ComputerChatBot):
     def __init__(self):
         super().__init__(
             name="meshagent.browser",
@@ -33,9 +33,10 @@ class BrowserbaseAgent(ComputerAgent):
                 },
             ),
             labels=["tasks", "computers"],
-            computer_cls=BrowserbaseBrowser,
-            operator_cls=Operator,
         )
+
+    async def make_computer(self):
+        return BrowserbaseBrowser()
 
 
 asyncio.run(service.run())
