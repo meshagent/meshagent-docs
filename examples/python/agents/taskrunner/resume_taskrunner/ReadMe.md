@@ -19,7 +19,7 @@ Now we can test the agent out locally before deploying:
 
 1. Run the remote toolkit in the resume_runner file. We will give this toolkit to the mail agent so it can update the `candidates` table in the database with information about each candidate.
 
-    `meshagent service run main.py --room resume`
+    `meshagent service run mailbot_toolkit.py --room resume`
 
 2. Next, call the mailbot into the room. As long as our toolkit is running locally, we can pass it to the mailbot for use. We'll also give the agent access to the storage toolkit so it can read/write files in the room and the web search toolkit so it can research the candidates. We will also pass the room-rules flag so a recruiter or hiring manager can tailor the criteria for how the mailworker should process and score resumes. 
 
