@@ -21,28 +21,28 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `exec`: Open an interactive websocket‑based TTY.
 * `version`: Print the version
 * `setup`: Perform initial login and project/api key...
-* `call`
+* `call`: Trigger agent/tool calls via URL
 * `auth`: Authenticate to meshagent
 * `project`: Manage or activate your meshagent projects
 * `api-key`: Manage or activate api-keys for your project
-* `session`
-* `participant-token`
-* `webhook`
+* `session`: Inspect recent sessions and events
+* `participant-token`: Generate participant tokens (JWTs)
+* `webhook`: Manage project webhooks
 * `service`: Manage services for your project
-* `mcp`
+* `mcp`: Bridge MCP servers into MeshAgent rooms
 * `oauth2`: OAuth2 test commands
-* `helpers`: Join a mailbot to a room
-* `rooms`
+* `helpers`: Developer helper services
+* `rooms`: Create, list, and manage rooms in a project
 * `mailbox`: Manage mailboxes for your project
 * `meeting-transcriber`: Join a meeting transcriber to a room
-* `port`: Manage mailboxes for your project
-* `multi`: connect agents and tools to a room for...
+* `port`: Port forwarding into room containers
+* `multi`: Connect agents and tools to a room
 * `voicebot`: Join a voicebot to a room
 * `chatbot`: Join a chatbot to a room
 * `mailbot`: Join a mailbot to a room
 * `task-runner`: Join a taskrunner to a room
 * `worker`: Join a worker agent to a room
-* `room`
+* `room`: Operate within a room
 
 ## `meshagent exec`
 
@@ -98,6 +98,8 @@ $ meshagent setup [OPTIONS]
 
 ## `meshagent call`
 
+Trigger agent/tool calls via URL
+
 **Usage**:
 
 ```console
@@ -110,12 +112,14 @@ $ meshagent call [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `tool`
-* `agent`
-* `toolkit`
-* `schema`
+* `tool`: Send a call request to a tool webhook URL
+* `agent`: Send a call request to an agent webhook URL
+* `toolkit`: Send a call request to a toolkit webhook URL
+* `schema`: Send a call request to a schema webhook URL
 
 ### `meshagent call tool`
+
+Send a call request to a tool webhook URL
 
 **Usage**:
 
@@ -138,6 +142,8 @@ $ meshagent call tool [OPTIONS]
 
 ### `meshagent call agent`
 
+Send a call request to an agent webhook URL
+
 **Usage**:
 
 ```console
@@ -159,6 +165,8 @@ $ meshagent call agent [OPTIONS]
 
 ### `meshagent call toolkit`
 
+Send a call request to a toolkit webhook URL
+
 **Usage**:
 
 ```console
@@ -179,6 +187,8 @@ $ meshagent call toolkit [OPTIONS]
 * `--help`: Show this message and exit.
 
 ### `meshagent call schema`
+
+Send a call request to a schema webhook URL
 
 **Usage**:
 
@@ -412,6 +422,8 @@ $ meshagent api-key delete [OPTIONS] ID
 
 ## `meshagent session`
 
+Inspect recent sessions and events
+
 **Usage**:
 
 ```console
@@ -424,10 +436,12 @@ $ meshagent session [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `list`
-* `show`
+* `list`: List recent sessions
+* `show`: Show events for a session
 
 ### `meshagent session list`
+
+List recent sessions
 
 **Usage**:
 
@@ -441,6 +455,8 @@ $ meshagent session list [OPTIONS]
 * `--help`: Show this message and exit.
 
 ### `meshagent session show`
+
+Show events for a session
 
 **Usage**:
 
@@ -459,6 +475,8 @@ $ meshagent session show [OPTIONS] SESSION_ID
 
 ## `meshagent participant-token`
 
+Generate participant tokens (JWTs)
+
 **Usage**:
 
 ```console
@@ -471,9 +489,11 @@ $ meshagent participant-token [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `generate`
+* `generate`: Generate a participant token (JWT) from a...
 
 ### `meshagent participant-token generate`
+
+Generate a participant token (JWT) from a spec
 
 **Usage**:
 
@@ -491,6 +511,8 @@ $ meshagent participant-token generate [OPTIONS]
 
 ## `meshagent webhook`
 
+Manage project webhooks
+
 **Usage**:
 
 ```console
@@ -503,13 +525,13 @@ $ meshagent webhook [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `create`: Create a new project webhook.
-* `list`: List all webhooks for the project.
-* `delete`: Delete a project webhook.
+* `create`: Create a webhook
+* `list`: List webhooks
+* `delete`: Delete a webhook
 
 ### `meshagent webhook create`
 
-Create a new project webhook.
+Create a webhook
 
 **Usage**:
 
@@ -530,7 +552,7 @@ $ meshagent webhook create [OPTIONS]
 
 ### `meshagent webhook list`
 
-List all webhooks for the project.
+List webhooks
 
 **Usage**:
 
@@ -545,7 +567,7 @@ $ meshagent webhook list [OPTIONS]
 
 ### `meshagent webhook delete`
 
-Delete a project webhook.
+Delete a webhook
 
 **Usage**:
 
@@ -699,6 +721,8 @@ $ meshagent service delete [OPTIONS] SERVICE_ID
 
 ## `meshagent mcp`
 
+Bridge MCP servers into MeshAgent rooms
+
 **Usage**:
 
 ```console
@@ -711,13 +735,15 @@ $ meshagent mcp [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `sse`
-* `stdio`
-* `http-proxy`
-* `sse-proxy`
-* `stdio-service`
+* `sse`: Connect an MCP server over SSE and...
+* `stdio`: Run an MCP server over stdio and register...
+* `http-proxy`: Expose a stdio MCP server over streamable...
+* `sse-proxy`: Expose a stdio MCP server over SSE
+* `stdio-service`: Run a stdio MCP server as an HTTP service
 
 ### `meshagent mcp sse`
+
+Connect an MCP server over SSE and register it as a toolkit
 
 **Usage**:
 
@@ -737,6 +763,8 @@ $ meshagent mcp sse [OPTIONS]
 * `--help`: Show this message and exit.
 
 ### `meshagent mcp stdio`
+
+Run an MCP server over stdio and register it as a toolkit
 
 **Usage**:
 
@@ -758,6 +786,8 @@ $ meshagent mcp stdio [OPTIONS]
 
 ### `meshagent mcp http-proxy`
 
+Expose a stdio MCP server over streamable HTTP
+
 **Usage**:
 
 ```console
@@ -776,6 +806,8 @@ $ meshagent mcp http-proxy [OPTIONS]
 
 ### `meshagent mcp sse-proxy`
 
+Expose a stdio MCP server over SSE
+
 **Usage**:
 
 ```console
@@ -793,6 +825,8 @@ $ meshagent mcp sse-proxy [OPTIONS]
 * `--help`: Show this message and exit.
 
 ### `meshagent mcp stdio-service`
+
+Run a stdio MCP server as an HTTP service
 
 **Usage**:
 
@@ -921,7 +955,7 @@ $ meshagent oauth2 delete [OPTIONS] ID
 
 ## `meshagent helpers`
 
-Join a mailbot to a room
+Developer helper services
 
 **Usage**:
 
@@ -935,9 +969,11 @@ $ meshagent helpers [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `service`
+* `service`: Run local helper HTTP services
 
 ### `meshagent helpers service`
+
+Run local helper HTTP services
 
 **Usage**:
 
@@ -950,6 +986,8 @@ $ meshagent helpers service [OPTIONS]
 * `--help`: Show this message and exit.
 
 ## `meshagent rooms`
+
+Create, list, and manage rooms in a project
 
 **Usage**:
 
@@ -1226,7 +1264,7 @@ $ meshagent meeting-transcriber service [OPTIONS]
 
 ## `meshagent port`
 
-Manage mailboxes for your project
+Port forwarding into room containers
 
 **Usage**:
 
@@ -1240,9 +1278,11 @@ $ meshagent port [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `forward`
+* `forward`: Forward a container port to localhost
 
 ### `meshagent port forward`
+
+Forward a container port to localhost
 
 **Usage**:
 
@@ -1253,14 +1293,14 @@ $ meshagent port forward [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `-r, --room TEXT`: Room name to route inbound mail into  [required]
-* `-c, --container-id TEXT`: The container which should have it&#x27;s port forwarded  [required]
-* `-p, --port TEXT`: The port to foward and the port to expose local:remote  [required]
+* `-r, --room TEXT`: Room name containing the target container  [required]
+* `-c, --container-id TEXT`: Container ID to port-forward into  [required]
+* `-p, --port TEXT`: Port mapping in the form LOCAL:REMOTE  [required]
 * `--help`: Show this message and exit.
 
 ## `meshagent multi`
 
-connect agents and tools to a room for testing or host them as a mesh service
+Connect agents and tools to a room
 
 **Usage**:
 
@@ -2234,6 +2274,8 @@ $ meshagent worker deploy [OPTIONS]
 
 ## `meshagent room`
 
+Operate within a room
+
 **Usage**:
 
 ```console
@@ -2246,16 +2288,18 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `agents`
-* `secret`: Manage secrets for your project.
+* `agents`: Interact with agents and toolkits
+* `secret`: Manage secrets for your project
 * `queue`: Use queues in a room
-* `messaging`
+* `messaging`: Send and receive messages
 * `storage`: Manage storage for a room
-* `developer`
+* `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
-* `container`: Manage containers and images inside a room
+* `container`: Manage containers and images in a room
 
 ### `meshagent room agents`
+
+Interact with agents and toolkits
 
 **Usage**:
 
@@ -2269,12 +2313,14 @@ $ meshagent room agents [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `ask`
-* `invoke-tool`: Invoke a specific tool from a given...
-* `list-agents`: List all agents available in the room.
-* `list-toolkits`: List all toolkits (and tools within them)...
+* `ask`: Send a request to an agent
+* `invoke-tool`: Invoke a specific tool from a toolkit
+* `list-agents`: List agents currently in the room
+* `list-toolkits`: List toolkits (and tools) available in the...
 
 #### `meshagent room agents ask`
+
+Send a request to an agent
 
 **Usage**:
 
@@ -2293,7 +2339,7 @@ $ meshagent room agents ask [OPTIONS]
 
 #### `meshagent room agents invoke-tool`
 
-Invoke a specific tool from a given toolkit with arguments.
+Invoke a specific tool from a toolkit
 
 **Usage**:
 
@@ -2316,7 +2362,7 @@ $ meshagent room agents invoke-tool [OPTIONS]
 
 #### `meshagent room agents list-agents`
 
-List all agents available in the room.
+List agents currently in the room
 
 **Usage**:
 
@@ -2332,7 +2378,7 @@ $ meshagent room agents list-agents [OPTIONS]
 
 #### `meshagent room agents list-toolkits`
 
-List all toolkits (and tools within them) available in the room.
+List toolkits (and tools) available in the room
 
 **Usage**:
 
@@ -2350,7 +2396,7 @@ $ meshagent room agents list-toolkits [OPTIONS]
 
 ### `meshagent room secret`
 
-Manage secrets for your project.
+Manage secrets for your project
 
 **Usage**:
 
@@ -2688,6 +2734,8 @@ $ meshagent room queue receive [OPTIONS]
 
 ### `meshagent room messaging`
 
+Send and receive messages
+
 **Usage**:
 
 ```console
@@ -2700,13 +2748,13 @@ $ meshagent room messaging [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `list-participants`: List all messaging-enabled participants in...
-* `send`: Send a direct message to a single...
-* `broadcast`: Broadcast a message to all...
+* `list-participants`: List messaging-enabled participants
+* `send`: Send a direct message to a participant
+* `broadcast`: Broadcast a message to all participants
 
 #### `meshagent room messaging list-participants`
 
-List all messaging-enabled participants in the room.
+List messaging-enabled participants
 
 **Usage**:
 
@@ -2722,7 +2770,7 @@ $ meshagent room messaging list-participants [OPTIONS]
 
 #### `meshagent room messaging send`
 
-Send a direct message to a single participant in the room.
+Send a direct message to a participant
 
 **Usage**:
 
@@ -2741,7 +2789,7 @@ $ meshagent room messaging send [OPTIONS]
 
 #### `meshagent room messaging broadcast`
 
-Broadcast a message to all messaging-enabled participants in the room.
+Broadcast a message to all participants
 
 **Usage**:
 
@@ -2886,6 +2934,8 @@ $ meshagent room storage ls [OPTIONS] PATH
 
 ### `meshagent room developer`
 
+Developer utilities for a room
+
 **Usage**:
 
 ```console
@@ -2898,11 +2948,11 @@ $ meshagent room developer [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `watch`: Watch logs from the developer feed in the...
+* `watch`: Stream developer logs from a room
 
 #### `meshagent room developer watch`
 
-Watch logs from the developer feed in the specified room.
+Stream developer logs from a room
 
 **Usage**:
 
@@ -3301,7 +3351,7 @@ $ meshagent room database index-drop [OPTIONS]
 
 ### `meshagent room container`
 
-Manage containers and images inside a room
+Manage containers and images in a room
 
 **Usage**:
 
