@@ -1,28 +1,137 @@
 ---
-title: "VoiceBot Overview"
+title: "VoiceBot"
 ---
 
+import CliVoiceBotYaml from "/snippets/examples/cli/voicebot/meshagent.mdx"
 import BasicVoicebot from "/snippets/examples/python/agents/voicebot/voicebot.mdx"
 
+## Overview
+`VoiceBot` is the standard agent for building real-time, speech-based conversational experiences in MeshAgent. It builds on [`SingleRoomAgent`](./singleroomagent) and adds streaming audio input/output, LiveKit session management, speech recognition, and natural voice responses.
 
-``VoiceBot`` builds on [`SingleRoomAgent`](./singleroomagent) to deliver a voice-enabled conversational agent. It joins a MeshAgent room, listens for ``voice_call`` messages, and connects to a LiveKit breakout room where it can speak and listen in real time.
+A `VoiceBot` joins a MeshAgent room, listens for `voice_call` messages, connects to a LiveKit breakout room where it can speak and listen to participants in real-time. It combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), LLM reasoning, and tool calling automatically. 
 
-A ``VoiceBot`` combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), and LLM-based reasoning into a VoiceBot that can seamlessly interact with users through speech/voice. It can greet users, run tools, and respond through natural speech — all without extra setup.
+### Two ways to build a VoiceBot
+1. **CLI**: Run production-ready voice agents with a single command. Configure speech, tools, and rules using CLI flags. Ideal for most use cases.
+2. **SDK**: Extend the base `VoiceBot` with custom code when you need deeper integrations or specialized behaviors. Best for full control or more complex logic. 
 
-Toolkit integration, audio streaming, and session management are handled automatically, making the MeshAgent ``VoiceBot`` the quickest path to creating a live, conversational voice assistant.
+Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, it's fastest and covers most scenarios, then moving to the SDK when you need further customization. 
 
-## When to Use It
-Use ``VoiceBot`` when:
+### In this guide you will learn
+1. When to use `VoiceBot`
+2. How to run and deploy a `VoiceBot` with the MeshAgent CLI
+3. How to build and deploy a `VoiceBot` with the MeshAgent SDK
+4. How `VoiceBot` works, including lifecycle, voice sessions, conversation flow, hooks, and methods
 
-- You want your agent to **talk and listen** in real time instead of using text chat.
-- You’re building a **speech-driven assistant powered by an LLM** (for example, a helpdesk or meeting companion).
-- You want automatic connection to LiveKit rooms and reliable voice session management.
-- You need to **execute tools or reasoning steps** during spoken interaction.
-- You prefer to focus on conversation flow and logic, not on the details of STT, TTS, or audio routing.
+## When to use VoiceBot
+Use the ``VoiceBot`` when you need an agent that:
+- **Talks and listens in real time** using speech
+- **Manages live voice sessions** automatically via LiveKit
+- **Runs LLM reasoning and tools** during spoken interaction
+- **Supports natural interruptions and turn-taking**
+- **Feels like a phone call or meeting assistant**, instead of using a text based chat.
 
-If your agent only handles text-based chat, use [ChatBot](./chatbot) instead. For non-interactive background agents, see [Worker](./worker) or [TaskRunner](./taskrunner).
+If your agent only handles text-based chat, use [ChatBot](./chatbot) instead. For non-interactive background agents, see [Worker](./worker) or [TaskRunner](./taskrunner). For email based agents use [MailWorker](./mailworker).
 
-## Constructor Parameters
+## Run and deploy a VoiceBot with the CLI
+### Step 1: Run a `VoiceBot` from the CLI
+Let's run a `VoiceBot` from the CLI with a custom rule and shared rules that can be edited by anyone in the room. The room rules can be modified per conversation turn while the base rule will be applied to the entire conversation. 
+
+```bash bash 
+# Authenticate to MeshAgent if not already signed in
+meshagent setup
+
+# Call a voicebot into your room
+meshagent voicebot join --room quickstart --agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
+```
+
+When you add the `--room-rules "agents/voiceagent/rules.txt"` flag and supply a file path for the rules, the file will be created if it does not already exist, this file is relative to the room storage.
+
+### Step 2: Interact with the agent in MeshAgent Studio
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and log in
+2. Enter your room ``quickstart``
+3. Select the agent ``voiceagent`` and begin speaking!
+
+If you've added the `--room-rules` flag to your agent you can modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the `rules.txt` will be applied per message. 
+
+> **Tip**: Mute your microphone after you finish speaking to prevent background noise from interfering with the agent. 
+
+### Step 3: Package and deploy the agent
+Once your agent works locally to make it always available you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
+
+To deploy the agent we just ran we'll create a `meshagent.yaml` file. 
+<CodeGroup>
+    <CliVoiceBotYaml />
+</CodeGroup>
+
+Next, deploy it to your Room. 
+
+```bash bash 
+# Deploy as a room service (specific room only)
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others or use built in agents. 
+
+## Build and deploy a VoiceBot with the SDK
+
+### Step 1: Create a VoiceBot agent 
+This example shows a `VoiceBot` with a custom rule to guide the agent's behavior. For an agent this simple the CLI VoiceBot would be sufficient. The Python SDK code here demonstrates how to get similar functionality as the CLI.  
+
+To run the ``VoiceBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure. 
+
+<CodeGroup>
+    <BasicVoicebot />
+</CodeGroup>
+
+### Step 2: Call the agent into a room 
+Run the `VoiceBot` locally and connect it to a Room: 
+```bash 
+meshagent setup # authenticate to MeshAgent
+meshagent service run "main.py" --room=quickstart
+```
+
+This command will start the VoiceBot on an available port at the path ``/agent``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities (this is the recommended way to test your agents and tools). 
+
+Once the agent joins the room, you can converse with it in [MeshAgent Studio](https://www.studio.meshagent.com).
+
+### Step 3: Interact with the agent in MeshAgent Studio 
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
+2. Enter your room ``quickstart``
+3. Select the agent ``voiceagent`` and begin chatting!
+
+If you want to modify and restart the agent run `Ctrl+C` from the terminal to stop the agent then re-run the `meshagent service run` command. 
+
+> **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
+
+### Step 4: Package and deploy the agent
+To deploy your SDK VoiceBot permanently, you'll need:
+1. A `meshagent.yaml` file defining the agent configuration
+2. A Docker container with your code
+
+For this example, we'll use a MeshAgent base image that already contains the code above.
+
+For your own custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+
+**Package the agent**
+Create a file called `meshagent.yaml`
+
+<CodeGroup>
+    <VoiceBotYaml />
+</CodeGroup>
+
+**Deploy the agent**
+Next from the CLI in the folder where your `meshagent.yaml` file is run: 
+
+```bash
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). 
+
+> **Note:** If you previously deployed the CLI voicebot with name "voiceagent" you will need to give your SDK based voicebot a unique name. 
+
+## How VoiceBot Works
+### Constructor Parameters
 ``VoiceBot`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
 
 | Parameter             | Type                          | Description                                                                                                           |
@@ -38,14 +147,14 @@ If your agent only handles text-based chat, use [ChatBot](./chatbot) instead. Fo
 | `toolkits`           | `list[Toolkit] \| None`       | Additional toolkits to install beyond `requires`.                                                                     |
 | `requires`           | `list[Requirement] \| None`   | Toolkits or schemas needed before running (e.g., for tool access or shared data).                                     |
 
-## Lifecycle Overview
+### Lifecycle Overview
 ``VoiceBot`` inherits all lifecycle hooks from SingleRoomAgent and adds voice session handling on top.
 
 - ``await start(room: RoomClient)``: Registers the bot as a voice-capable participant by setting ``"supports_voice": True`` and listening for ``voice_call`` messages. When a voice call is received, the bot joins a LiveKit breakout room and starts a real-time session.
 - ``await stop()``: Cancels any active voice sessions and disconnects cleanly from the room.
 - **room** property: Returns the active ``RoomClient`` (inherited from SingleRoomAgent).
 
-## Conversational Flow
+### Conversational Flow
 When a user starts a voice call:
 
 1. The participant sends a message of type ``"voice_call"`` with a breakout room ID.
@@ -61,7 +170,7 @@ When a user starts a voice call:
 
 When the participant hangs up or disconnects, the session ends automatically.
 
-## Key Behaviors and Hooks
+### Key Behaviors and Hooks
 - **Voice connection management:** Each session is isolated in its own LiveKit breakout room. The internal ``VoiceConnection`` helper handles joining, connecting, and disconnecting from the session safely.
 - **Session creation:** ``create_session()`` constructs an AgentSession with STT, TTS, VAD, and LLM components wired to the room’s proxy API.
 - **Agent creation:** ``create_agent()`` builds the conversational logic layer that uses the LLM, applies your rules, and exposes tool functions like ``say()``.
@@ -69,7 +178,7 @@ When the participant hangs up or disconnects, the session ends automatically.
 - **Tool integration:** Tools are automatically converted into callable functions for the LLM via ``make_function_tools()``. Responses are adapted to speech when a ``tool_adapter`` is provided.
 - **Interruptions and natural flow:** Sessions allow interruption mid-speech and handle turn-taking automatically through VAD.
 
-## Key Methods
+### Key Methods
 | Method                                                  | Description                                                                  |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `async def start(room)`                                 | Registers the bot for voice calls and listens for `voice_call` messages.     |
@@ -79,7 +188,7 @@ When the participant hangs up or disconnects, the session ends automatically.
 | `async def make_function_tools(context)`                | Converts all registered toolkits into LLM-callable functions.                |
 | `async def _wait_for_disconnect(room)`                  | Awaits the end of the voice call and cleans up resources.                    |
 
-## Built-in Components and Behavior
+### Built-in Components and Behavior
 
 VoiceBot comes pre-integrated with:
 
@@ -91,27 +200,14 @@ VoiceBot comes pre-integrated with:
 
 These components can be swapped or extended through adapters if you need different models or behaviors. 
 
-## Minimal Example
-
-<CodeGroup>
-    <BasicVoicebot />
-</CodeGroup>
-
-To run the VoiceBot in a room:
-```bash bash 
-meshagent setup # authenticate with MeshAgent if not already logged in
-meshagent service run "main.py" --room=voice-demo
-```
-
-Then, from [MeshAgent Studio](https://studio.meshagent.com), open the **Sessions** tab, select **voice-demo**, and start a voice call to begin interacting with your agent.
-
 ## Next Steps 
 ``VoiceBot`` builds directly on ``SingleRoomAgent``, inheriting connection management and toolkit installation, and extends it with real-time audio and speech features. Where ``ChatBot`` focuses on text threads, ``VoiceBot`` handles spoken conversations end-to-end.
 
-Continue learning or building:
-
-- [Build a Voice Agent](./buildanddeployvoicebot): Iterativley build up a MeshAgent VoiceBot by starting with the base Voicebot then adding built-in and custom tools.
+Discover other agents in MeshAgent:
 - [ChatBot](./chatbot): Text-based LLM conversations.
 - [Worker](./worker) and [TaskRunner](./taskrunner): Background or automation agents.
+- [MailWorker](./mailworker): Email based agents.
 
-Use ``VoiceBot`` whenever your agent’s main interface is voice, and you want full real-time conversation and tool interaction.
+To learn more about deploying agents with MeshAgent
+- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
+- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment

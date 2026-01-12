@@ -61,7 +61,7 @@ When you add the `--room-rules "agents/chatbot/rules.txt"` flag and supply a fil
 
 If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
 
-### Step 3: Package and Deploy the Agent
+### Step 3: Package and deploy the agent
 Once your agent works locally to make it always available you'll need to [package](../services_room_containers/packaging_and_deploying/packaging) and [deploy](../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
 
 To deploy the agent we just ran we'll create a `meshagent.yaml` file. 
@@ -79,7 +79,7 @@ meshagent service create --file meshagent.yaml --room quickstart
 The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others from an AI native application. MeshAgent Studio, Powerboards, and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand ChatBot threads. This means any conversation started in the Studio or Powerboards can be displayed properly or continued inside your own application without extra integration work.
 
 ## Build and deploy a ChatBot with the SDK
-### Step 1: Create a `ChatBot` agent using ``ServiceHost`` 
+### Step 1: Create a `ChatBot` agent
 This example shows a `ChatBot` with a custom rule to guide the agent's behavior and access to built-in MeshAgent Tools for web search, document authoring, and storage. For an agent this simple the CLI ChatBot would be sufficient. The Python SDK code here demonstrates how to get similar functionality as the CLI.  
 
 To run the ``ChatBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure.  
@@ -107,7 +107,7 @@ meshagent call agent --url=http://localhost:8081/agent --room=quickstart --parti
 
 In either case, the agent joins the room as participant ``chatbot``. Once the agent joins the room, you can converse with it in [MeshAgent Studio](https://www.studio.meshagent.com).
 
-### Step 3: Interact with the Agent in MeshAgent Studio
+### Step 3: Interact with the agent in MeshAgent Studio
 1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
 2. Enter your room ``quickstart``
 3. Select the agent ``chatbot`` and begin chatting!
@@ -116,14 +116,15 @@ If you want to modify and restart the agent run `Ctrl+C` from the terminal to st
 
 > **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
 
-### Step 4: Package and Deploy the Agent
+### Step 4: Package and deploy the agent
 To deploy your SDK ChatBot permanently, you'll need:
 1. A `meshagent.yaml` file defining the agent configuration
 2. A Docker container with your code
 
 For this example, we'll use a MeshAgent base image that already contains the code above.
 
-For your own custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`.
+For your own custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+
 
 **Package the agent**
 Create a file called `meshagent.yaml`
