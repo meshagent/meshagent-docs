@@ -146,20 +146,21 @@ The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will alwa
 | `auto_greet_message` | `str \| None`                 | Optional message spoken to the participant when the session starts.                                                   |
 | `auto_greet_prompt`  | `str \| None`                 | Optional text prompt that seeds the first LLM response at session start.                                              |
 | `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter that converts tool responses into plain speech.                                                      |
-| `toolkits`           | `list[Toolkit] \| None`       | Additional toolkits to install beyond `requires`.                                                                     |
+| `toolkits`           | `list[Toolkit] \| None`       | Additional Toolkits to expose beyond `requires`; pass instantiated toolkits you want available to the LLM.            |
 | `requires`           | `list[Requirement] \| None`   | Toolkits or schemas needed before running (e.g., for tool access or shared data).                                     |
+| `client_rules`       | `dict[str, list[str]] \| None` | Optional map keyed by the participant's `client` attribute that appends extra rules when matched.                      |
 
 ### Lifecycle Overview
 ``VoiceBot`` inherits all lifecycle hooks from SingleRoomAgent and adds voice session handling on top.
 
 - ``await start(room: RoomClient)``: Registers the bot as a voice-capable participant by setting ``"supports_voice": True`` and listening for ``voice_call`` messages. When a voice call is received, the bot joins a LiveKit breakout room and starts a real-time session.
-- ``await stop()``: Cancels any active voice sessions and disconnects cleanly from the room.
+- ``await stop()``: Clears the room reference. Active voice sessions end when the LiveKit room disconnects (for example, when the caller hangs up).
 - **room** property: Returns the active ``RoomClient`` (inherited from SingleRoomAgent).
 
 ### Conversational Flow
 When a user starts a voice call:
 
-1. The participant sends a message of type ``"voice_call"`` with a breakout room ID.
+1. The participant sends a message of type ``"voice_call"`` with a breakout room ID (and optionally a ``transcript_path``).
 2. The ``VoiceBot`` receives it through ``on_message()`` and joins the corresponding LiveKit room.
 3. It creates a ``ToolContext`` scoped to that participant.
 4. A new ``AgentSession`` is created, containing:
@@ -172,12 +173,16 @@ When a user starts a voice call:
 
 When the participant hangs up or disconnects, the session ends automatically.
 
+If ``transcript_path`` is provided in the ``voice_call`` message, the session uses a ``Transcriber`` to log ``conversation_item_added`` events to that path while running.
+
 ### Key Behaviors and Hooks
 - **Voice connection management:** Each session is isolated in its own LiveKit breakout room. The internal ``VoiceConnection`` helper handles joining, connecting, and disconnecting from the session safely.
 - **Session creation:** ``create_session()`` constructs an AgentSession with STT, TTS, VAD, and LLM components wired to the room’s proxy API.
 - **Agent creation:** ``create_agent()`` builds the conversational logic layer that uses the LLM, applies your rules, and exposes tool functions like ``say()``.
 - **Greeting behavior:** When configured, ``auto_greet_prompt`` triggers the LLM to generate an initial spoken message, and ``auto_greet_message`` plays a prewritten greeting.
 - **Tool integration:** Tools are automatically converted into callable functions for the LLM via ``make_function_tools()``. Responses are adapted to speech when a ``tool_adapter`` is provided.
+- **Transcript logging:** When a ``transcript_path`` is supplied, ``create_agent()`` returns a ``Transcriber`` that logs conversation items to that location.
+- **Lifecycle hooks:** Override ``on_session_created()``, ``on_session_started()``, or ``on_session_ended()`` to add custom logic around the session lifecycle.
 - **Interruptions and natural flow:** Sessions allow interruption mid-speech and handle turn-taking automatically through VAD.
 
 ### Key Methods
@@ -189,15 +194,19 @@ When the participant hangs up or disconnects, the session ends automatically.
 | `async def create_agent(context, session)`              | Builds a conversational agent with your rules and available tools.           |
 | `async def make_function_tools(context)`                | Converts all registered toolkits into LLM-callable functions.                |
 | `async def _wait_for_disconnect(room)`                  | Awaits the end of the voice call and cleans up resources.                    |
+| `async def on_session_created(context, session)`        | Hook called after an AgentSession is constructed but before it starts.       |
+| `async def on_session_started(context, session)`        | Hook called immediately after the session starts.                            |
+| `async def on_session_ended(context, session)`          | Hook called after the session ends.                                          |
 
 ### Built-in Components and Behavior
 
 VoiceBot comes pre-integrated with:
 
-- **Speech-to-Text (STT):** Converts live audio input into text using OpenAI or another configured provider.
-- **Text-to-Speech (TTS):** Streams generated responses as natural audio output.
-- **Voice Activity Detection (VAD):** Detects pauses or user interruptions automatically.
-- **Background Audio Player:** Plays gentle “thinking” sounds during LLM processing to indicate the bot is working.
+- **Speech-to-Text (STT):** Converts live audio input into text using OpenAI STT via the room's proxied client (override `create_session` to swap providers).
+- **Text-to-Speech (TTS):** Streams generated responses as natural audio output using OpenAI TTS.
+- **Voice Activity Detection (VAD):** Detects pauses or user interruptions automatically (Silero VAD).
+- **Room I/O defaults:** Text input is disabled; audio output and transcription are enabled for the LiveKit room session.
+- **Background Audio Player:** Plays gentle “thinking” keyboard sounds during LLM processing to indicate the bot is working.
 - **Tool Invocation:** Voice commands can trigger registered tools and return spoken responses.
 
 These components can be swapped or extended through adapters if you need different models or behaviors. 
