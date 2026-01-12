@@ -1,0 +1,21 @@
+kind: Service
+version: v1
+metadata:
+  name: simple-voicebot
+  description: "A simple voicebot that can interact with users"
+  annotations:
+    meshagent.service.id: "simple.voicebot"
+agents:
+  - name: simple-voicebot
+    description: "A conversational agent without tools"
+    annotations:
+      meshagent.agent.type: "VoiceBot"
+ports:
+- num: "*"
+  endpoints:
+  - path: /agent
+    meshagent:
+      identity: simple-voicebot
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
+  command: python /simple_voicebot/simple_voicebot.py
