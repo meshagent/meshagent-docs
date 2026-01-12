@@ -16,7 +16,75 @@ The MeshAgent CLI streamlines Room interactions and agent management right from 
 - Deploy services to your project or room
 - Inspect and manage existing projects, secrets, agents, and services
 
-For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
+For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help) documentation.
+
+## Before you begin
+1. **Set up MeshAgent**: If you haven't installed MeshAgent yet, follow our [Getting Started](../introduction/get_started) guide. This will walk you through how to set up your MeshAgent account, create your first project, install MeshAgent, and connect to your first room with your first agent.
+
+2. **Install the MeshAgent CLI**: You can install the CLI globally on your system or in a virtual environment. 
+    **To install the CLI globally:**
+    <CodeGroup>
+    ```bash macOS
+    brew tap meshagent/homebrew-meshagent
+    # install the latest version
+    brew install meshagent
+    # Display the help
+    meshagent --help
+    ```
+    ```bash Windows
+    # Install
+    choco install meshagent
+    # Display the help
+    meshagent --help
+
+    # Alternatively:
+    Invoke-WebRequest -Uri "https://storage.googleapis.com/meshagent-cli-builds/0.20.4/meshagent.0.20.4.nupkg" -OutFile "C:\Downloads\meshagent.0.20.4.nupkg"
+    choco install meshagent --source "C:\Downloads\meshagent.0.20.4.nupkg"
+    ```
+    ```bash Other
+    # One can install the meshagent cli using pipx
+    pipx install "meshagent[cli]" --include-deps
+    # Optional: ensure meshagent is in the path. 
+    # You may need to open a new terminal.
+    pipx ensurepath
+    # Display the help
+    meshagent --help
+    ```
+    </CodeGroup>
+
+    **To install the CLI in a virtual environment:** Ensure you are in the appropriate project folder and have activated your virtual environment. (The virtual environment is active when the terminal prompt starts with ``venv``.) If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). Then you can install all the MeshAgent packages, or exclusively the MeshAgent CLI.
+
+    <CodeGroup>
+    ```bash pip
+    pip install "meshagent[cli]" # or "meshagent[all]"
+    ```
+    ```bash uv
+    uv add "meshagent[cli]" # or "meshagent[all]"
+    ```
+    </CodeGroup>
+
+3. **Authenticate**: Once the CLI is installed, authenticate and activate a project. 
+    <CodeGroup>
+    ```bash bash
+    # A browser window will open for OAUTH.
+    meshagent setup
+    # Then you will be prompted to activate a project
+    ```
+    </CodeGroup>
+
+    __Optional__: Alternatively, instead of running the `meshagent setup` command you can run:
+
+    <CodeGroup>
+    ```bash bash
+    # A browser window will open for OAUTH.
+    meshagent auth login
+    meshagent project activate -i
+    # create an api key if necessary. The key value will be displayed only once.
+    meshagent api-key create --activate my-key
+    ```
+    </CodeGroup>
+
+    You are now authenticated and ready to use the CLI! 
 
 ## Common Workflows
 ### Test Agents Locally
