@@ -29,7 +29,7 @@ Now we can test the agent out locally before deploying:
 3. Now let's email the agent a resume!
 
 4. Ask about the candidates who we've recieved resume's from. For example: 
-`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates"], "read_only": false}]}'`
+`meshagent room agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates"], "read_only": false}]}'`
 
 From UI: 
 ```json
@@ -66,11 +66,11 @@ From UI:
 }
 ```
 
-`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+`meshagent room agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
 
-`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+`meshagent room agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
 
-`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Rate Tula Masterman on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}`
+`meshagent room agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Rate Tula Masterman on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}`
 
 
 ## Notes / to do 
