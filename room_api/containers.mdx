@@ -23,7 +23,7 @@ for image in images:
     print(image.tags, image.size)
 ```
 ```bash CLI
-meshagent container images list \
+meshagent room container images list \
   --room myroom
 ```
 </CodeGroup>
@@ -42,7 +42,7 @@ meshagent container images list \
 await room.containers.delete_image(image="chatbot:old")
 ```
 ```bash CLI
-meshagent container images delete \
+meshagent room container images delete \
   --room myroom \
   --image chatbot:old
 ```
@@ -63,7 +63,7 @@ meshagent container images delete \
 await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 ```
 ```bash CLI
-meshagent container images pull \
+meshagent room container images pull \
   --room myroom \
   --tag registry.example.com/agents/chatbot:0.2
 ```
@@ -96,7 +96,7 @@ container_id = await room.containers.run(
 print(f"Container launched: {container_id}")
 ```
 ```bash CLI
-meshagent container run \
+meshagent room container run \
   --room myroom \
   --image registry.example.com/agents/chatbot:0.2 \
   --var SYSTEM_PROMPT="Always respond with a fun fact." \
@@ -157,7 +157,7 @@ async for line in stream.logs():
 await stream  # optional: wait for the request to finish
 ```
 ```bash CLI
-meshagent container logs \
+meshagent room container logs \
   --room myroom \
   --id "$CONTAINER_ID" \
   --follow
@@ -180,7 +180,7 @@ for container in containers:
     print(container.id, container.state, container.started_by.name)
 ```
 ```bash CLI
-meshagent container ps \
+meshagent room container ps \
   --room myroom \
   --output table # optional (will return JSON otherwise)
 ```
@@ -201,7 +201,7 @@ meshagent container ps \
 await room.containers.stop(container_id=container_id, force=False)
 ```
 ```bash CLI
-meshagent container stop \
+meshagent room container stop \
   --room myroom \
   --id "$CONTAINER_ID"
 ```
