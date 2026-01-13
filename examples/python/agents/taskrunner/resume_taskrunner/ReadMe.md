@@ -32,45 +32,47 @@ Now we can test the agent out locally before deploying:
 `meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates"], "read_only": false}]}'`
 
 From UI: 
+```json
 {
   "prompt": "Add all of the jobs in the jobdescriptions folder to the open_roles table and mark Jesse Ezell as the hiring manager for each role.",
   "tools": [
     {
-      "name":"storage"
+      "name": "storage"
     },
     {
-      "name":"database",
-      "tables":["open_roles"],
+      "name": "database",
+      "tables": ["open_roles"],
       "read_only": false
     }
   ],
-  "model":"gpt-5.2"
+  "model": "gpt-5.2"
 }
+```
 
-
+```json
 {
   "prompt": "Create a new record in the candidate_role_scores for how well Tula Masterman fits each of the open roles. Scores should be from 1-10 where 1 is a poor fit and 10 is a perfect fit.",
   "tools": [
     {
-      "name":"storage"
+      "name": "storage"
     },
     {
-      "name":"database",
-      "tables":["open_roles", "candidates", "candidate_role_scores"],
+      "name": "database",
+      "tables": ["open_roles", "candidates", "candidate_role_scores"],
       "read_only": false
     }
   ],
-  "model":"gpt-5.2"
+  "model": "gpt-5.2"
 }
+```
 
 `meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
 
 `meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
 
-meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Rate Tula Masterman's they are on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}'
+`meshagent agents ask --room=resume --agent=meshagent.runner --input '{"prompt":"Rate Tula Masterman on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}`
 
 
-`
 ## Notes / to do 
 - anytime an email comes in add it to the candidates table. When a new record comes in this needs to trigger another agent who compares the candidate to each of the open roles in the open_roles table and then stores how close the match is in the 
 
