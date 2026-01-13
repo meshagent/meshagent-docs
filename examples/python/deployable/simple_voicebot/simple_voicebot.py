@@ -7,7 +7,7 @@ service = ServiceHost()
 
 otel_config(service_name="simple-voicebot")  # enable telemetry for this service
 
-@service.path(path="/voice", identity="simple-voicebot")
+@service.path(path="/agent", identity="simple-voicebot")
 class SimpleVoiceBot(VoiceBot):
     def __init__(self):
         super().__init__(
