@@ -69,7 +69,7 @@ product_schema = {
 
 asyncio.run(
     run_schema_planner(
-        room_name="test",
+        room_name="quickstart",
         prompt="Create a product listing for a bluetooth speaker",
         output_schema=product_schema,
     )

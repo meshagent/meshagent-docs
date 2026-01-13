@@ -1,0 +1,29 @@
+```yaml Yaml
+kind: Service # switch to service Template if installing from link for Powerboards
+version: v1
+metadata:
+  name: taskrunner
+  description: "A task runner that handles one-off tasks"
+  annotations:
+    meshagent.service.id: "meshagent.taskrunner"
+agents:
+  - name: taskrunner
+    description: "An LLM TaskRunner with optional tools"
+    annotations:
+      meshagent.agent.type: "TaskRunner"
+ports:
+- num: "*"                    # automatically assign an available MESHAGENT_PORT for the agent to run on
+  type: http
+  liveness: "/"               # ensure the service is alive before connecting to the room
+  endpoints:
+  - path: /agent              # service path to call and run the agent on
+    meshagent:
+      identity: taskrunner    # name of the agent as it shows up in the Room
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: "/usr/bin/meshagent/meshagent task-runner service --agent-name=taskrunner --web-search --storage --room-rules='agents/taskrunner/rules.txt' --rule='You are a helpful assistant'"
+  storage:
+    room:
+      - path: /data             # mount room storage path for the agent to write files to
+        read_only: false        # allow write access
+```

@@ -43,7 +43,7 @@ async def run_planner(room_name: str, prompt: str):
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
             response = await room.agents.ask(
-                agent="meshagent.planner", arguments={"prompt": prompt}
+                agent="meshagent.runner", arguments={"prompt": prompt}
             )
             log.info(f"Response from agent:{response}")
             return response
@@ -54,6 +54,6 @@ async def run_planner(room_name: str, prompt: str):
 
 asyncio.run(
     run_planner(
-        room_name="test", prompt="Write a product description for a bluetooth speaker"
+        room_name="quickstart", prompt="Write a product description for a bluetooth speaker"
     )
 )

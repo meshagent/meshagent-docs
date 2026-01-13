@@ -1,0 +1,186 @@
+## Overview
+
+The `DeveloperClient` streams structured logs into the room Developer Console and lets you subscribe to developer log events from other participants. Use it to debug agents, tools, and services during a live session.
+
+Key concepts:
+
+- **Typed logs**: Each log has a `type` string and a `data` payload.
+- **Subscriptions**: Call `enable()` to start receiving developer log events.
+- **Fire-and-forget helpers**: Some SDKs include convenience methods for quick logging.
+
+> **Permissions**: Developer log forwarding is controlled by the `developer` scope. See [API Scopes](../rest_api/api_scopes).
+
+---
+
+## Events
+
+- **`log`**  
+  Triggered when a developer log event is received. Handlers receive the log `type` and `data`.
+
+<CodeGroup>
+```python Python
+def on_log(type: str, data: dict):
+    print(f"[{type}] {data}")
+
+room.developer.on("log", on_log)
+await room.developer.enable()
+```
+```javascript NodeJs
+room.developer.on("log", (event) => {
+  console.log(`[${event.type}]`, event.data);
+});
+
+await room.developer.enable();
+```
+```typescript TypeScript
+room.developer.on("log", (event) => {
+  console.log(`[${event.type}]`, event.data);
+});
+
+await room.developer.enable();
+```
+```dart Dart
+room.listen((RoomEvent event) {
+  if (event is RoomLogEvent) {
+    print("[${event.type}] ${event.data}");
+  }
+});
+
+await room.developer.enable();
+```
+```dotnet C#
+room.Developer.On("log", data =>
+{
+  Console.WriteLine($"[{data["type"]}] {data["data"]}");
+});
+
+await room.Developer.Enable();
+```
+</CodeGroup>
+
+---
+
+## API Methods
+
+### log
+- **Description**: Emit a developer log event.
+- **Parameters**:
+  - `type`: A log category string (for example, `"info"` or `"error"`).
+  - `data`: A JSON-serializable payload with any extra fields.
+- **Returns**: `None`
+
+<CodeGroup>
+```python Python
+await room.developer.log(type="info", data={"message": "Hello from DeveloperClient!"})
+```
+```javascript NodeJs
+await room.developer.log("info", { message: "Hello from DeveloperClient!" });
+```
+```typescript TypeScript
+await room.developer.log("info", { message: "Hello from DeveloperClient!" });
+```
+```dart Dart
+await room.developer.log("info", {"message": "Hello from DeveloperClient!"});
+```
+```dotnet C#
+await room.Developer.Log("info", new Dictionary<string, object?>
+{
+  ["message"] = "Hello from DeveloperClient!"
+});
+```
+</CodeGroup>
+
+---
+
+### log_nowait
+- **Description**: Fire-and-forget log emission without awaiting a response.
+- **Availability**: Python and .NET SDKs.
+- **Parameters**:
+  - `type`: A log category string.
+  - `data`: A JSON-serializable payload.
+- **Returns**: `None`
+
+<CodeGroup>
+```python Python
+room.developer.log_nowait(type="info", data={"message": "Log without await"})
+```
+```dotnet C#
+room.Developer.LogNowait("info", new Dictionary<string, object?>
+{
+  ["message"] = "Log without await"
+});
+```
+</CodeGroup>
+
+---
+
+### info / warning / error
+- **Description**: Convenience helpers for emitting structured logs with common severity labels.
+- **Availability**: Python and Dart SDKs.
+- **Parameters**:
+  - `message`: Human-readable text.
+  - `extra` *(optional)*: Additional fields to include with the log.
+- **Returns**: `None`
+
+<CodeGroup>
+```python Python
+room.developer.info("Background sync started", extra={"phase": "init"})
+room.developer.warning("Retrying sync", extra={"attempt": 2})
+room.developer.error("Sync failed", extra={"reason": "timeout"})
+```
+```dart Dart
+await room.developer.info("Background sync started", extra: {"phase": "init"});
+await room.developer.warning("Retrying sync", extra: {"attempt": 2});
+await room.developer.error("Sync failed", extra: {"reason": "timeout"});
+```
+</CodeGroup>
+
+---
+
+### enable
+- **Description**: Start receiving developer log events for the room.
+- **Parameters**: None.
+- **Returns**: `None`
+
+<CodeGroup>
+```python Python
+await room.developer.enable()
+```
+```javascript NodeJs
+await room.developer.enable();
+```
+```typescript TypeScript
+await room.developer.enable();
+```
+```dart Dart
+await room.developer.enable();
+```
+```dotnet C#
+await room.Developer.Enable();
+```
+</CodeGroup>
+
+---
+
+### disable
+- **Description**: Stop receiving developer log events for the room.
+- **Parameters**: None.
+- **Returns**: `None`
+
+<CodeGroup>
+```python Python
+await room.developer.disable()
+```
+```javascript NodeJs
+await room.developer.disable();
+```
+```typescript TypeScript
+await room.developer.disable();
+```
+```dart Dart
+await room.developer.disable();
+```
+```dotnet C#
+await room.Developer.Disable();
+```
+</CodeGroup>
