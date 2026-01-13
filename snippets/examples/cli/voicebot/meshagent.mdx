@@ -1,19 +1,26 @@
 ```yaml Yaml
-kind: ServiceTemplate
+kind: Service # switch to service Template if installing from link for Powerboards
 version: v1
 metadata:
-  name: voicebot
+  name: voiceagent
   description: "An agent that responds using voice"
+  annotations:
+    meshagent.service.id: "meshagent.voiceagent"
+agents:
+  - name: voiceagent
+    description: "A voice agent"
+    annotations:
+      meshagent.agent.type: "VoiceBot"
 ports:
 - num: "*"                        # automatically assign an available MESHAGENT_PORT for the agent to run on 
   type: http
-  liveness: "/"               # ensure the service is alive before connecting to the room
+  liveness: "/"                   # ensure the service is alive before connecting to the room
   endpoints:
   - path: /agent                  # service path to call and run the agent on
     meshagent:
-      identity: voicebot             # name of the agent as it shows up in the Room
+      identity: voiceagent        # name of the agent as it shows up in the Room
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:latest"
-  command: "/usr/bin/meshagent/meshagent voicebot service --agent-name=voice"
+  command: "/usr/bin/meshagent/meshagent voicebot service --agent-name=voiceagent --room-rules='agents/voiceagent/rules.txt'"
 ```
 
