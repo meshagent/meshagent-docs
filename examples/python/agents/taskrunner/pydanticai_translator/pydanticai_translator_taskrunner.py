@@ -90,6 +90,3 @@ class TranslationTaskRunner(TaskRunner):
         )
 
         return translations.output.model_dump()
-
-
-asyncio.run(service.run())
