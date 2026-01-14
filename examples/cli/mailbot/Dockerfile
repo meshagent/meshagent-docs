@@ -1,6 +1,0 @@
-ARG MESHAGENT_CLI_IMAGE="meshagent/cli:latest"
-
-FROM ${MESHAGENT_CLI_IMAGE}
-
-
-ENTRYPOINT ["/bin/sh", "-c", "meshagent mailbot service --agent-name=mailbot --queue=\"${EMAIL_QUEUE}\" --email-address=\"${EMAIL_ADDRESS}\""]

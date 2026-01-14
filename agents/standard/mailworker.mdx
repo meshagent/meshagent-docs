@@ -66,7 +66,7 @@ meshagent mailbox list
 Start the built-in mailbot locally and connect it to your room:
 
 ```bash bash
-meshagent mailbot join --room quickstart --agent-name mailbot \
+meshagent mailbot join --room quickstart --agent-name mailbot --enable-attachments\
   --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
 ```
 
@@ -74,23 +74,27 @@ Use flags like `--reply-all`, `--enable-attachments`, `--whitelist`, or `--room-
 
 ### Step 3: Send an email and verify
 Send an email to the agent at the address you provisioned and it will respond! The agent will not show up in the participant list (mailbots are email-only) in MeshAgent Studio, but you can verify emails are received by checking:
-- Logs in the Developer Console
+- Logs in the terminal when running locally or Developer Console once deployed
 - A `.emails/` folder in Files
 - Metadata rows in the `emails` table
 
 ### Step 4: Package and deploy the agent
 Once the mailbot works locally, deploy it as a service.
 
+**Both options below deploy the same MailWorker - choose based on your workflow:**
+- **Option 1 (`meshagent mailbot deploy`):** One command that deploys immediately (fastest/easiest approach)
+- **Option 2 (`meshagent mailbot spec` + `meshagent service create`):** Generates a yaml file you can review, or further customize before deploying
+
 **Option 1: Deploy directly**
 ```bash bash
 meshagent mailbot deploy --room quickstart --service-name mailbot --agent-name mailbot \
-  --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
+  --enable-attachments --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
 ```
 
 **Option 2: Generate a YAML spec**
 ```bash
 meshagent mailbot spec --service-name mailbot --agent-name mailbot \
-  --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
+  --enable-attachments --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
 ```
 
 Copy the output into `meshagent.yaml`:
@@ -105,10 +109,10 @@ Then deploy it:
 meshagent service create --file meshagent.yaml --room quickstart
 ```
 
-The `--room` flag is optional. Without it, the mailbot is deployed at the project level and appears in all rooms.
+Be sure to pass the `--room` flag so the agent is deployed properly to your room. The email and queue are only associated to a specific room. 
 
 ## Build and deploy a MailWorker with the SDK
-The SDK approach produces the same deployed behavior as the CLI mailbot but lets you customize parsing, routing, toolkits, and reply logic.
+You can also use the MeshAgent SDK to manage mailboxes and create an email agent by extending the `MailWorker` class. For most use cases the CLI is sufficient and a faster way to get started, while the SDK allows you further customization. 
 
 ### Step 1: Create a `MailWorker` agent
 <CodeGroup>
@@ -116,13 +120,14 @@ The SDK approach produces the same deployed behavior as the CLI mailbot but lets
 </CodeGroup>
 
 ### Step 2: Provision a mailbox (if needed)
-If you do not already have a mailbox, create one in Studio or via the CLI. To provision via SDK code:
+If you do not already have a mailbox, create one in Studio or via the CLI. You can also provision a mailbox via SDK code:
 
 ```bash bash
 meshagent api-key create --activate my-mailbot-key
 ```
 
 ```bash bash
+# Fill these in 
 export MESHAGENT_API_KEY="<your-api-key>"
 export MESHAGENT_PROJECT_ID="<your-project-id>" # from meshagent project list
 export ROOM_NAME="quickstart"
@@ -142,8 +147,9 @@ python provision_mailbox.py
 Make sure the queue and email address are set, then run the service:
 
 ```bash
-export EMAIL_ADDRESS="support@mail.meshagent.com"
-export EMAIL_QUEUE="support"
+# Fill these in!
+export EMAIL_ADDRESS="<your_unique_email>@mail.meshagent.com"
+export EMAIL_QUEUE="<your_unique_queue_name>"
 meshagent service run "main.py" --room=quickstart
 ```
 
