@@ -34,10 +34,10 @@ class StorageWorker(Worker):
             ],
         )
 
-    async def process_message(self, *, chat_context, room, message, toolkits):
+    async def process_message(self, *, chat_context, message, toolkits):
         log.info(f"processing {message}")
         response = await super().process_message(
-            chat_context=chat_context, room=room, message=message, toolkits=toolkits
+            chat_context=chat_context, message=message, toolkits=toolkits
         )
         log.info(f"response {response}")
 

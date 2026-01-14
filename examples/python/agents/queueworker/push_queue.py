@@ -21,7 +21,7 @@ if not api_key:
 
 async def push():
     room_name = (
-        "queue-test"  # make sure this matches the room your service is running in
+        "quickstart"  # make sure this matches the room your service is running in
     )
     token = ParticipantToken(
         name="sample-participant",
