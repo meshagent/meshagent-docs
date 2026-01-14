@@ -1,111 +1,243 @@
 ---
-title: "TaskRunner Overview"
+title: "TaskRunner"
 ---
-import TaskRunnerBase from "/snippets/examples/python/agents/taskrunner/minimal_taskrunner.mdx"
 
-A TaskRunner is the bridge that makes any **existing AI Agent built in your framework of choice work seamlessly with MeshAgent**. It is a base agent class designed with one core principle: **bring your own logic**. It builds on ``SingleRoomAgent`` to let you wrap any existing agent or functionality and run it inside a MeshAgent room. 
+import CliTaskRunnerYaml from "/snippets/examples/cli/taskrunner/meshagent.mdx"
+import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm_taskrunners_service.mdx"
+import PrebuiltTaskRunner from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner.mdx"
+import PrebuiltTaskRunnerSchema from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner_schema.mdx"
 
-Think of ``TaskRunner`` as a thin execution adapter: it handles room connection, registration, validation, toolkit resolution, and request routing so you can focus on your logic. Whether that logic comes from Pydantic AI, LangChain, CrewAI, or plain Python, ``TaskRunner`` enables you to use existing code in MeshAgent easily.
+## Overview
+`TaskRunner` is the standard agent for single-turn tasks in MeshAgent. It joins a room, accepts structured input, runs a task, and returns structured output. Unlike ChatBot and VoiceBot, it does not manage a multi-turn conversation or thread state.
 
-A TaskRunner defines three core things: 
-- **Input Schema**: JSON schema describing what arguments your agent accepts
-- **Output Schema** (optional): JSON schema describing what your agent returns
-- **``ask()`` Method**: Your custom logic that processes inputs and returns results
+A `TaskRunner` defines:
+- **Input schema**: JSON Schema describing the arguments your agent accepts
+- **Output schema** (optional): JSON Schema describing what your agent returns
+- **`ask()` method**: the code that performs the task and returns results
 
-Once you call the agent into a room, your TaskRunner becomes an invokable participant. You can discover and run it directly from the [MeshAgent Studio](https://studio.meshagent.com) via the **"Run Task..."** room menu option, from the CLI ``meshagent room agents ask``, or programatically via ``room.agents.ask(...)`` in your code. 
+Once registered in a room, you can invoke a TaskRunner from:
+- **MeshAgent Studio** (Room menu → **Run Task…**)
+- **CLI** (`meshagent room agents ask`)
+- **SDK** (`room.agents.ask(...)`)
 
-## Why TaskRunner Exists
+Most users should start with **`LLMTaskRunner`**, the built-in TaskRunner implementation that calls an LLM (and optional tools) to complete a single-turn task. The `meshagent task-runner` CLI command spins up an `LLMTaskRunner` by default, and MeshAgent ships prebuilt LLMTaskRunners like `meshagent.runner` and `meshagent.schema_planner` that are available in every room.
 
-Many developers already have working agents written in their framework of choice. ``TaskRunner`` eliminates the need to rewrite them for MeshAgent — just wrap your logic in a TaskRunner subclass, define schemas for inputs and outputs, and your agent becomes callable, shareable, and manageable within a MeshAgent room.
+### How to think about TaskRunners
+**Base `TaskRunner` class** is intentionally minimal which allows you to **bring-your-own-logic**. You can use it to wrap ANY custom code: agents from other frameworks (Pydantic AI, LangChain, CrewAI), simple business operations (calculations, validations), API calls, database queries, or custom workflows. You implement `ask(...)`, define schemas, and MeshAgent handles room connection, registration, validation, and invocation.
 
-This design lets you integrate any AI framework, or even simple business logic, into a unified, multi-agent environment that supports shared toolkits, structured communication, and rich UI integrations.
+**This guide focuses on `LLMTaskRunner`** which extends base TaskRunner by adding LLM reasoning with optional tools for single-turn tasks.
 
-## When to Use It
-- You already have agent logic and want to run it in a room without rewriting it.
-- You need a typed boundary for requests/results (JSON Schema).
-- You want to expose agents as tools that other agents (like [ChatBots](./chatbot)) can use. 
-- You’re building higher-level specializations (e.g., ``LLMTaskRunner``, ``DynamicLLMTaskRunner``).
+**Three ways to use LLMTaskRunner:**
+1. **Built-in instances** - `meshagent.runner` (LLMTaskRunner) and `meshagent.schema_planner` (DynamicLLMTaskRunner) are pre-deployed in every room
+2. **CLI** - Launch your own instance via `meshagent task-runner join` with custom tools/rules  
+3. **SDK** - Extend `LLMTaskRunner` or `DynamicLLMTaskRunner` for custom logic
 
-If you need a conversational, message-based assistant, use [ChatBot](./chatbot). For real-time speech, see [VoiceBot](./voicebot). 
+The `LLMTaskRunner` uses a fixed output schema defined at initialization (default: text response) while the `DynamicLLMTaskRunner` uses an output schema provided per-request, allowing different response structures for each task.
 
-## Constructor Parameters
-``TaskRunner`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) plus task-specific parameters.
+If you need a multi-turn conversation, use [ChatBot](./chatbot). For real-time speech, use [VoiceBot](./voicebot). For background queue work, use [Worker](./worker) and for email use [MailWorker](./mailworker).
+
+### In this guide you will learn
+- When to use `TaskRunner` (specifically `LLMTaskRunner`)
+- How to invoke built-in MeshAgent TaskRunners using the CLI, SDK, or Studio
+- How to run and deploy a TaskRunner with the MeshAgent CLI
+- How to build and deploy an `LLMTaskRunner` with the MeshAgent SDK
+- How `TaskRunner` works, including lifecycle, task flow, and core hooks
+
+## When to use TaskRunner
+Use a TaskRunner when you need an agent that:
+- **Runs one-off tasks** and returns a structured response
+- **Accepts JSON schema input**, and optionally enforces an output schema
+- **Can be invoked by other agents** (for example a `ChatBot` calling a TaskRunner as a tool)
+
+TaskRunners excel when:
+- Inputs and outputs are well-defined
+- The task doesn’t require multi-turn clarification with a user
+- You want a clean context window on every execution
+- You’re running background jobs, batch tasks, or callable tools for other agents
+
+The `TaskRunner` class is intentionally minimal so you can bring your own logic or integrate agents from existing frameworks without rewriting them for MeshAgent. It provides the wiring for:
+- **Schema-defined inputs and outputs** (validation and discoverability in Studio and SDKs)
+- **Room lifecycle and routing** (registration, invocation, and error handling)
+- **Tool resolution** (optional toolkits from the room or caller)
+
+You implement `ask(...)` and supply schemas, and MeshAgent handles the rest.
+
+## Using built-in TaskRunners 
+MeshAgent ships LLM-based TaskRunners that are already available in every room:
+- `meshagent.runner` (an `LLMTaskRunner` instance) - Accepts a prompt and optional tools, returns text response in `{"result": "..."}` format. Great for single-turn tasks and testing custom tools.
+- `meshagent.schema_planner` (a `DynamicLLMTaskRunner` instance) - Accepts a prompt and an `output_schema`, returns structured JSON matching that schema.
+
+You can invoke these agents from the CLI, from code (use the `room.agents.ask()` method), or from [MeshAgent Studio](https://studio.meshagent.com). 
+
+> **Note**: If you invoke either agent using the MeshAgent SDK you will need to create and export a `MESHAGENT_API_KEY`. You can do this by running `meshagent api-key create <KEY_NAME> --activate` then `export MESHAGENT_API_KEY="your_unique_key"`. If you want to go back to using the regular CLI commands after this you will need to run `unset MESHAGENT_API_KEY` then reauthenticate by running `meshagent setup`. 
+
+### Invoking `meshagent.runner` programmatically
+
+<CodeGroup>
+   ```bash CLI
+    meshagent room agents ask \
+    --room quickstart \
+    --agent meshagent.runner \
+    --input '{"prompt": "Write a product description for a bluetooth speaker"}'
+    ```
+    <PrebuiltTaskRunner />
+</CodeGroup>
+
+> **Note**: When you run this from the MeshAgent CLI, it automatically connects to the room and waits for the agent to join before sending the task. If you’re calling the agent from a language SDK (like Python or JavaScript), you might occasionally see an error such as “agent not in room” if the TaskRunner hasn’t joined yet. In that case, just wait a few seconds and retry once the agent is connected.
+
+### Invoking `meshagent.schema_planner` programatically 
+
+<CodeGroup>
+    ```bash CLI
+    meshagent room agents ask \
+    --room quickstart \
+    --agent meshagent.schema_planner \
+    --input '{"prompt":"Create a product listing","output_schema":{"type":"object", "additionalProperties": false, "required": ["title", "price", "features", "description"], "properties": {"title": {"type": "string"}, "price": {"type": "number"}, "features": {"type": "array", "items": {"type": "string"}}, "description": {"type": "string"}}}}'
+    ```
+    <PrebuiltTaskRunnerSchema />
+</CodeGroup>
+
+### Invoke from MeshAgent Studio
+1. Go to [MeshAgent Studio](https://studio.meshagent.com)
+2. Enter your room
+3. Menu → **Run Task...** → select the **Generic TaskRunner** this is the `meshagent.runner`
+4. Enter prompt and add tools or files to the agent if desired. These can be built-in MeshAgent tools like the UI tools, or other tools you have called into your room to test.
+5. Click **Continue** you'll be prompted to fill in the prompt for the TaskRunner.
+
+## Run and deploy a TaskRunner with the CLI
+### Step 1: Run a `TaskRunner` from the CLI
+This starts a local `LLMTaskRunner` with optional tools and rules.
+
+```bash bash
+# Authenticate to MeshAgent if not already signed in
+meshagent setup
+
+# Call a task runner into your room
+meshagent task-runner join --room quickstart --agent-name mytaskrunner --web-search --storage --room-rules "agents/mytaskrunner/rules.txt" --rule "You are a helpful assistant"
+```
+
+When you add the `--room-rules "agents/mytaskrunner/rules.txt"` flag and supply a file path for the rules, the file will be created if it does not already exist. This file is relative to room storage.
+
+> **Tip:** Use `meshagent task-runner join --help` to see all available tools and options.
+
+### Step 2: Invoke the TaskRunner
+You can invoke the TaskRunner from MeshAgent Studio or from the CLI just like the built-in TaskRunners.
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and log in
+2. Enter your room `quickstart`
+3. Open the **Run Task...** menu, select `mytaskrunner`, and submit a prompt
+
+You can also invoke the task runner from the CLI:
+```bash bash
+meshagent room agents ask --room quickstart --agent mytaskrunner --input '{"prompt":"Draft a short product description for a bluetooth speaker"}'
+```
+
+### Step 3: Package and deploy the agent
+Once your agent works locally, deploy it as a room or project service. Create a `meshagent.yaml` file:
+
+<CodeGroup>
+    <CliTaskRunnerYaml />
+</CodeGroup>
+
+Then deploy it:
+```bash bash
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+## Build and deploy a TaskRunner with the SDK
+### Step 1: Create a TaskRunner
+This example shows how to create your own `LLMTaskRunner` and `DynamicLLMTaskRunner` instances using `ServiceHost`. These work like the built-in `meshagent.runner` and `meshagent.schema_planner`.
+
+<CodeGroup>
+    <LLMTaskRunnerService />
+</CodeGroup>
+
+### Step 2: Call the agent into a room
+Run the agent locally and connect it to a room:
+```bash
+meshagent setup # authenticate to MeshAgent
+meshagent service run "main.py" --room=quickstart
+```
+
+### Step 3: Invoke the TaskRunner
+From a different tab in your terminal invoke either the `LLMTaskRunner` or `DynamicLLMTaskRunner` from the CLI: 
+
+
+<CodeGroup>
+    ```bash LLMTaskRunner
+    meshagent room agents ask \
+    --room myroom \
+    --agent llmtaskrunner \
+    --input '{"prompt":"Write a poem about ai agents"}'
+    ```
+
+    ```bash DynamicLLMTaskRunner
+    meshagent room agents ask \
+    --room myroom \
+    --agent dynamicllmtaskrunner \
+    --input '{"prompt":"Create a product listing for a bluetooth speaker","output_schema":{"type":"object","additionalProperties":false,"required":["title","price","features","description"],"properties":{"title":{"type":"string"},"price":{"type":"number"},"features":{"type":"array","items":{"type":"string"}},"description":{"type":"string"}}}}'
+    ```
+</CodeGroup>
+
+
+### Step 4: Package and deploy the agent
+To deploy your SDK TaskRunner permanently, you will need:
+1. A `meshagent.yaml` file defining the agent configuration
+2. A Docker container with your code
+
+For custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. Then deploy with:
+```bash
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+## How TaskRunner Works
+### TaskRunner vs LLMTaskRunner
+- `TaskRunner` is the base class. You implement `ask(...)` and define input/output schemas.
+- `LLMTaskRunner` or `DynamicLLMTaskRunner` is a concrete implementation that calls an LLM adapter, resolves toolkits, and returns the model output.
+- The CLI `task-runner` command builds an `LLMTaskRunner` for you.
+
+### Constructor Parameters
+`TaskRunner` accepts everything from `SingleRoomAgent` (`name`, `title`, `description`, `requires`, `labels`) plus task-specific configuration.
 
 | Parameter         | Type                    | Description                                                                                      |
 | ---------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
 | `supports_tools` | `bool \| None`          | Whether callers can pass ad-hoc toolkits at runtime (default `False`).                           |
-| `input_schema`   | `dict`                  | **Required.** JSON Schema for request arguments. If `None`, defaults to a “no-arguments” schema. |
+| `input_schema`   | `dict`                  | **Required.** JSON Schema for request arguments. If `None`, defaults to a no-args schema.       |
 | `output_schema`  | `dict \| None`          | Optional JSON Schema for responses; if set, responses are validated.                             |
 | `toolkits`       | `list[Toolkit] \| None` | Local toolkits always available to this TaskRunner (in addition to any `requires`).              |
 
-## Lifecycle Overview
+`LLMTaskRunner` adds LLM-specific parameters like `llm_adapter`, `tool_adapter`, `rules`, `client_rules`, and `input_prompt`.
 
-``TaskRunner`` inherits lifecycle hooks from ``SingleRoomAgent`` and adds task registration and routing.
+### Lifecycle Overview
+`TaskRunner` inherits lifecycle hooks from `SingleRoomAgent` and adds task registration and routing.
 
-- ``await start(room: RoomClient)``: Registers the agent for agent.ask requests, installs requirements, and enables message routing.
-- ``await stop()``: Unregisters the agent if the protocol is open, then disconnects cleanly.
-- ``room property``: Access the active RoomClient as usual.
+- `await start(room: RoomClient)`: Registers the agent for `agent.ask` requests, installs requirements, and enables routing.
+- `await stop()`: Unregisters the agent if the protocol is open, then disconnects cleanly.
+- `room` property: Access the active RoomClient as usual.
 
-## TaskRunner Flow
+### Task Flow
 When a task is invoked (from Studio or code):
+1. The room delivers an `agent.ask` message to your TaskRunner.
+2. Arguments are validated against `input_schema`.
+3. Your `ask(context, arguments)` method runs your logic and returns a dict.
+4. If `output_schema` is set, the response is validated before returning to the caller.
 
-1. The room delivers an ``agent.ask`` message to your TaskRunner.
-2. _ask(...) creates an AgentCallContext:
-    - Builds/initializes a chat context via ``init_chat_context()``.
-    - Resolves required/local toolkits (and any toolkits supplied by the caller when supports_tools=True).
-    - Identifies the caller and (optionally) the ``on_behalf_of`` participant.
-3. Arguments are validated against ``input_schema``.
-4. Your ``ask(context, arguments)`` method runs your logic and returns a dict.
-5. If ``output_schema`` is set, the response is validated before being returned to the caller.
-6. The result (or error) is sent back to the room; Studio and SDKs render/store it appropriately.
+### Key Behaviors and Hooks
+- **Schema validation:** `validate_arguments()` and `validate_response()` enforce `input_schema` and `output_schema`.
+- **Tool support:** When `supports_tools=True`, callers can include tool configs per request. `LLMTaskRunner` uses these to build toolkits for the LLM.
+- **Discovery:** Registration exposes your TaskRunner's schema and capabilities to Studio, CLI, and other agents so they are discoverable and invokable.
+- **Agents as tools**: With `RunTaskTool` and the "agents" toolkit factory, other agents (e.g., ``ChatBot``) can call your ``TaskRunner`` as a tool.
 
-All the registration, routing, and validation plumbing is handled for you.
-
-## Key Behaviors and Hooks
-
-- **Schema validation:** ``validate_arguments()`` and ``validate_response()`` enforce ``input_schema`` and ``output_schema`` respectively.
-- **Request handler:** start() wires ``_ask(...)`` to the room’s protocol. You implement the public ``ask(...)`` with your business logic.
-- **Context & toolkits:** _ask(...) assembles an AgentCallContext with chat, caller, on_behalf_of, and a merged set of toolkits: local (toolkits), required (requires), and optional caller-supplied sets when supports_tools=True.
-- **Discovery & invocation:** _register() exposes your agent’s name, title, schemas, and capabilities to the room, so Studio and room.agents.ask can find and invoke it.
-- **Agents as tools**: With ``RunTaskTool`` and the "agents" toolkit factory, other agents (e.g., ``ChatBot``) can call your ``TaskRunner`` as a tool.
-
-## Key Methods
-| Method                                       | Description                                                            |
-| -------------------------------------------- | ---------------------------------------------------------------------- |
-| `async def ask(context, arguments) -> dict`  | **Implement your task logic** Return a JSON-serializable dict.    |
-| `async def validate_arguments(arguments)`    | Validates inputs against `input_schema`.                               |
-| `async def validate_response(response)`      | Validates outputs against `output_schema` when provided.               |
-| `async def start(room)` / `async def stop()` | Registers/unregisters the runner and protocol handlers.                |
-| `def to_json()`                              | Serializes metadata (schemas, flags, labels) used during registration. |
-
-## Minimal Example
-This minimal example shows the structure of a ``TaskRunner``. There’s no LLM, tool integration, or external logic yet — it simply demonstrates how the base class comes together. See the TaskRunner examples for more insights into plugging existing agents from other frameworks into a TaskRunner, using an LLM based TaskRunner, and more. 
-
-<CodeGroup>
-    <TaskRunnerBase />
-</CodeGroup>
-
-Next from the CLI run the following commands to call the TaskRunner into the room and invoke it with the ``ask`` method.
-
-```
-meshagent setup # authenticate to meshagent
-meshagent service run "main.py" --room=task # run the task runner locally and call it into the room 
-meshagent room agents ask --room=task --agent="hello-taskrunner" --input={} # call the ask method on the agent
-```
-
-> This example is intentionally minimal. In real projects, you’ll typically subclass TaskRunner to integrate an LLM, framework-based agent, or other custom business logic. See TaskRunner examples for more. 
+### Key Methods
+| Method                                      | Description                                                            |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| `async def ask(context, arguments) -> dict` | Implement your task logic and return a JSON-serializable dict.        |
+| `async def validate_arguments(arguments)`   | Validates inputs against `input_schema`.                               |
+| `async def validate_response(response)`     | Validates outputs against `output_schema` when provided.               |
+| `async def start(room)` / `async def stop()`| Registers/unregisters the runner and protocol handlers.                |
+| `def to_json()`                             | Serializes metadata (schemas, flags, labels) used during registration. |
 
 ## Next Steps
-Examples of TaskRunners in action
-- [Prebuilt MeshAgent TaskRunners](./taskrunner_prebuilt): Learn how to use prebuilt TaskRunners that come out of the box with every MeshAgent room
-- [Create a Custom LLM TaskRunner](./taskrunner_custom_llm): Build your own LLM-driven TaskRunner
-- [Use an existing agent with a MeshAgent TaskRunner](./taskrunner_agents_and_tools): Learn how to take an existing PydanticAI Agent, use it as a TaskRunner, then use the TaskRunner as a tool for a MeshAgent ``ChatBot``
-
-Understand other MeshAgent agents
-- [Chatbot](./chatbot) for conversation based agents
-- [Voicebot](./voicebot) for voice based agents
-- [Worker](./worker) for background queue based agents
-
-Learn more about deploying agents with MeshAgent
-- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
-- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment
+- [Use an existing agent with a TaskRunner](./taskrunner_agents_and_tools)
+- [ChatBot](./chatbot) for conversation-based agents
+- [VoiceBot](./voicebot) for voice-based agents
+- [Worker](./worker) for background queue processing
