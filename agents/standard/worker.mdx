@@ -3,9 +3,9 @@ title: "Worker"
 ---
 
 import CliWorkerYaml from "/snippets/examples/cli/worker/meshagent.mdx"
-import QueueWorker from "/snippets/examples/python/agents/queueworker/queueworker.mdx"
-import PushQueue from "/snippets/examples/python/agents/queueworker/push_queue.mdx"
-
+import QueueWorker from "/snippets/examples/python/deployable/queueworker/queueworker.mdx"
+import PushQueue from "/snippets/examples/python/deployable/queueworker/push_queue.mdx"
+import QueueWorkerYaml from "/snippets/examples/python/deployable/queueworker/meshagent.mdx"
 
 ## Overview
 A ``Worker`` is a specialized **queue-based agent** that processes messages sent to a MeshAgent room queue. **Other agents or
@@ -55,14 +55,33 @@ meshagent room queue send --room=quickstart --queue=tasks \
 ```
 
 ### Step 3: Package and deploy the worker
-Once your worker runs locally, package it as a service so it is always available in the room.
+Once your worker runs locally, package it as a service so it is always available in the room. 
 
-Create a `meshagent.yaml` file:
+**Both options below deploy the exact same worker - choose based on your workflow:**
+- **Option 1 (`meshagent worker deploy`):** One command that deploys immediately - fastest approach
+- **Option 2 (`meshagent worker spec` + `meshagent service create`):** Generates a yaml file you can version control, review, or customize before deploying
+
+**Option 1: Deploy directly**
+Use the CLI to automatically deploy the worker to your room. 
+```bash bash 
+meshagent worker deploy --room quickstart --service-name worker --agent-name worker --queue tasks --require-storage \
+  --room-rules "agents/worker/rules.txt" --rule "Process queued tasks and save results to storage."
+```
+
+**Option 2: Generate a YAML spec**  Create a `meshagent.yaml` file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running: 
+
+```bash 
+meshagent worker spec --service-name worker --agent-name worker --queue tasks --require-storage \
+  --room-rules "agents/worker/rules.txt" --rule "Process queued tasks and save results to storage."
+```
+
+Next, copy the output to a `meshagent.yaml` file
+
 <CodeGroup>
     <CliWorkerYaml />
 </CodeGroup>
 
-Deploy it to your Room:
+Then deploy it to your Room:
 ```bash bash
 meshagent service create --file meshagent.yaml --room quickstart
 ```
@@ -70,7 +89,9 @@ meshagent service create --file meshagent.yaml --room quickstart
 The `--room` flag is optional. Without it, the worker is deployed at the project level and appears in all rooms in your project.
 
 ## Build and deploy a Worker with the SDK
-### Example: Creating a Storage Queue Worker
+The SDK approach produces the same deployed worker as the CLI examples above. Using the SDK allows you further control to write custom Python code for specialized processing logic, integrations, or behaviors. For most use cases the CLI is sufficient. 
+
+### Step 1: Create a Worker Agent
 
 The sample below shows a Worker that listens on a queue and writes files using the `StorageToolkit`. After starting the
 service you can push a message to the queue to trigger the worker.
@@ -81,16 +102,15 @@ First create a python file, ``main.py``, and define our ``StorageWorker``:
     <QueueWorker />
 </CodeGroup>
 
-#### Running the Worker
+### Step 2: Running the Worker
 
 From your terminal inside an activated virtual environment start the service:
 ```bash bash
-export WORKER_QUEUE=test
 meshagent setup # authenticate to meshagent if not already
 meshagent service run "main.py" --room=quickstart
 ```
 
-#### Sending Work to the Queue
+### Step 3: Sending Work to the Queue
 
 Now that our agent is running, let's send it some work!
 
@@ -98,11 +118,11 @@ Now that our agent is running, let's send it some work!
 Use the MeshAgent CLI to directly connect to the room, mint a token, and send a message to the queue.
 
 ```bash bash
-meshagent room queue send --room=quickstart --queue=test \
-  --json '{"instructions": "save a poem about ai to poem.txt"}'
+meshagent room queue send --room=quickstart --queue=storage-worker-queue \
+  --json '{"prompt": "save a poem about ai to poem.txt"}'
 ```
 
-**Option 2: Invoking the Queue from Code**
+**Option 2: Invoking the queue from code**
 Create a python file ``push_queue.py`` and define our function to push a message to the queue.
 
 <CodeGroup>
@@ -112,14 +132,37 @@ Create a python file ``push_queue.py`` and define our function to push a message
 Make sure your service is still running (``meshagent service run "main.py" --room=quickstart``). From a different tab in your terminal you can run the python file we created to send a task to the queue.
 
 ```bash bash
+export MESHAGENT_API_KEY="<your_api_key>"
 python push_queue.py
 ```
 
 You'll see logs for the queue activity in the terminal window where your service is running. To verify the results we'll head to MeshAgent Studio where we can see the .txt files.
 
-#### Checking Results in the Studio
+#### Checking results in the Studio
 From [studio.meshagent.com](https://studio.meshagent.com) open the room ``quickstart`` and you'll see our poem about AI in the poems.txt file!
 
+### Step 4: Package and deploy the agent
+To deploy your SDK Worker permanently, you’ll need:
+1. `A meshagent.yaml` file defining the agent configuration
+2. A Docker container with your code
+
+For this example, we’ll use a MeshAgent base image that already contains the code above.
+
+> **Note**: For your own custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+
+**Package the agent**: Create a `meshagent.yaml` file just like we did with the CLI based workers. 
+
+<CodeGroup>
+    <QueueWorkerYaml />
+</CodeGroup>
+
+**Deploy the agent**: Next from the CLI in the folder where your `meshagent.yaml` file is run:
+
+```bash bash 
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+The `Worker` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to send queue-based tasks. We can use the same CLI commands or SDK code from above to send messages to the queue. 
 
 ## How Worker Works
 ### Constructor Arguments

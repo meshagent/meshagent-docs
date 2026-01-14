@@ -1,4 +1,3 @@
-```python Python
 import os
 import asyncio
 import logging
@@ -22,7 +21,7 @@ if not api_key:
 
 async def push():
     room_name = (
-        "queue-test"  # make sure this matches the room your service is running in
+        "quickstart"  # make sure this matches the room your service is running in
     )
     token = ParticipantToken(
         name="sample-participant",
@@ -40,7 +39,7 @@ async def push():
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
             await room.queues.send(
-                name=os.getenv("WORKER_QUEUE"),
+                name="storage-worker-queue",
                 message={"instructions": "save a poem about ai to poem.txt"},
             )
     except Exception as e:
@@ -49,6 +48,3 @@ async def push():
 
 
 asyncio.run(push())
-
-```
-

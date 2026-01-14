@@ -12,7 +12,6 @@ from meshagent.tools.storage import StorageToolkit
 
 otel_config(service_name="worker")
 log = logging.getLogger("worker")
-log.info(f"Listening on {os.getenv('WORKER_QUEUE')}")
 
 host = ServiceHost()  # port defaults to an available port if not assigned
 
@@ -21,7 +20,7 @@ host = ServiceHost()  # port defaults to an available port if not assigned
 class StorageWorker(Worker):
     def __init__(self):
         super().__init__(
-            queue=os.getenv("WORKER_QUEUE"),
+            queue="storage-worker-queue",
             name="storage-worker",
             title="storage worker sample",
             description="this sample reads messages from a queue",

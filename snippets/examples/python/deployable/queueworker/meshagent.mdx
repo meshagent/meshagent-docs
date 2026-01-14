@@ -1,0 +1,24 @@
+```yaml Yaml
+kind: Service
+version: v1
+metadata:
+  name: storage-worker
+  description: "A worker agent that processes messages from a queue"
+  annotations:
+    meshagent.service.id: "storageworker"
+agents:
+  - name: storage-worker
+    description: "A worker agent that processes messages from a queue"
+    annotations:
+      meshagent.agent.type: "Worker"
+ports:
+- num: "*"
+  endpoints:
+  - path: /worker
+    meshagent:
+      identity: storage-worker
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
+  command: python queueworker/queueworker.py
+```
+
