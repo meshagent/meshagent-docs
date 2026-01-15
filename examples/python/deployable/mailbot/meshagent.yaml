@@ -1,0 +1,27 @@
+kind: Service
+version: v1
+metadata:
+  name: mailbot
+  description: "An email based agent"
+  annotations:
+    meshagent.service.id: "mailbot"
+agents:
+  - name: mailbot
+    description: "An email based agent"
+    annotations:
+      meshagent.agent.type: "MailBot"
+ports:
+- num: "*"
+  endpoints:
+  - path: /mail
+    meshagent:
+      identity: mailbot
+container:
+  # image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
+  image: tulamasterman/python-docs-examples:0.0.13
+  command: python mailbot/mailbot.py
+  environment:
+    - name: EMAIL_QUEUE
+      value: "newtulaemail" # "YOUR_QUEUE_NAME" # fill in 
+    - name: EMAIL_ADDRESS
+      value: "newtulaemail@mail.meshagent.life"  # "YOUR_EMAIL@mail.meshagent.com" # fill in

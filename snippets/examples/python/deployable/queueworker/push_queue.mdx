@@ -40,7 +40,7 @@ async def push():
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
             await room.queues.send(
-                name=os.getenv("WORKER_QUEUE"),
+                name="storage-worker-queue",
                 message={"instructions": "save a poem about ai to poem.txt"},
             )
     except Exception as e:

@@ -3,8 +3,9 @@ title: "MailWorker"
 ---
 
 import CliMailbotYaml from "/snippets/examples/cli/mailbot/meshagent.mdx"
-import SimpleMailbot from "/snippets/examples/python/agents/mailbot/mailbot.mdx"
-import ProvisionMailbox from "/snippets/examples/python/agents/mailbot/provision_mailbox.mdx"
+import SimpleMailbot from "/snippets/examples/python/deployable/mailbot/mailbot.mdx"
+import ProvisionMailbox from "/snippets/examples/python/deployable/mailbot/provision_mailbox.mdx"
+import SDKMailbotYaml from "/snippets/examples/python/deployable/mailbot/meshagent.mdx"
 
 ## Overview
 `MailWorker` is the standard agent for building email-based workflows in MeshAgent. It extends [`Worker`](./worker) to process inbound email delivered to a room queue, store every message and attachment in room storage, rebuild thread context for the LLM, and send replies via SMTP. This turns a mailbox into a room-connected, tool-using email agent.
@@ -36,7 +37,7 @@ Don't use `MailWorker` if:
 
 ## Mailbox provisioning (required)
 A mailbox maps an email address to a Room and queue. The `MailWorker` consumes that queue and sends replies from that address. Mailboxes can be managed from:
-- **MeshAgent Studio** (recommended): create and assign mailboxes in the **Mail** tab
+- **[MeshAgent Studio](https://studio.meshagent.com)** (recommended): create and assign mailboxes in the **Mail** tab
 - **MeshAgent CLI:** Manage mailboxes with the `meshagent mailbox...` commands
 - **SDK/REST:** Use the MeshAgent REST API to create, list, update, or delete mailboxes. 
 
@@ -73,7 +74,7 @@ meshagent mailbot join --room quickstart --agent-name mailbot --enable-attachmen
 Use flags like `--reply-all`, `--enable-attachments`, `--whitelist`, or `--room-rules` to customize behavior. Run `meshagent mailbot join --help` for the full list.
 
 ### Step 3: Send an email and verify
-Send an email to the agent at the address you provisioned and it will respond! The agent will not show up in the participant list (mailbots are email-only) in MeshAgent Studio, but you can verify emails are received by checking:
+Send an email to the agent at the address you provisioned and it will respond! The agent will not show up in the participant list (mailbots are email-only) in [MeshAgent Studio](https://studio.meshagent.com), but you can verify emails are received by checking:
 - Logs in the terminal when running locally or Developer Console once deployed
 - A `.emails/` folder in Files
 - Metadata rows in the `emails` table
@@ -114,36 +115,43 @@ Be sure to pass the `--room` flag so the agent is deployed properly to your room
 ## Build and deploy a MailWorker with the SDK
 You can also use the MeshAgent SDK to manage mailboxes and create an email agent by extending the `MailWorker` class. For most use cases the CLI is sufficient and a faster way to get started, while the SDK allows you further customization. 
 
-### Step 1: Create a `MailWorker` agent
-<CodeGroup>
-    <SimpleMailbot />
-</CodeGroup>
+### Prerequisite: Provision a mailbox
+If you do not already have a mailbox, create one in [MeshAgent Studio](https://studio.meshagent.com) or via the CLI (recommended). 
 
-### Step 2: Provision a mailbox (if needed)
-If you do not already have a mailbox, create one in Studio or via the CLI. You can also provision a mailbox via SDK code:
+**Alternatively, you can provision a mailbox via SDK code:**
 
-```bash bash
+You will need a MeshAgent API key to provision the mailbox, you can create one by running: 
+``` bash bash 
 meshagent api-key create --activate my-mailbot-key
 ```
 
+Next set the required environment variables: 
 ```bash bash
 # Fill these in 
 export MESHAGENT_API_KEY="<your-api-key>"
-export MESHAGENT_PROJECT_ID="<your-project-id>" # from meshagent project list
+export MESHAGENT_PROJECT_ID="<your-project-id>" # run meshagent project list to see project ids
 export ROOM_NAME="quickstart"
 export EMAIL_ADDRESS="<your_email>@mail.meshagent.com"
 export EMAIL_QUEUE="<your_queue_name>"
 ```
 
+Then copy the code to create the mailbox:
 <CodeGroup>
     <ProvisionMailbox />
 </CodeGroup>
+
+Run the file to provision the mailbox: 
 
 ```bash bash
 python provision_mailbox.py
 ```
 
-### Step 3: Run the agent locally
+### Step 1: Create a `MailWorker` agent
+<CodeGroup>
+    <SimpleMailbot />
+</CodeGroup>
+
+### Step 2: Run the agent locally
 Make sure the queue and email address are set, then run the service:
 
 ```bash
@@ -154,14 +162,32 @@ meshagent service run "main.py" --room=quickstart
 ```
 
 ### Step 4: Email the agent
-Send an email to the mailbox and verify the `.emails/` folder and logs in MeshAgent Studio.
+Send an email to the mailbox and wait for it's response, you can verify the `.emails/` folder and logs in [MeshAgent Studio](https://studio.meshagent.com).
 
 ### Step 5: Package and deploy the agent
-To deploy your SDK MailWorker permanently, you need:
+To deploy your Mail agent permanently, you need:
 1. A `meshagent.yaml` defining the service
 2. A Docker image with your code
 
-Create a Dockerfile, build and push your image, then deploy with `meshagent service create --file meshagent.yaml --room quickstart` or from MeshAgent Studio. See [Services and Room Containers](../../services_room_containers/overview) for packaging and deployment workflows.
+For this example, we’ll use a MeshAgent base image that already contains the code above.
+
+For your own custom agents, create a Dockerfile, build with docker buildx, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+
+**Package the agent**: Create a `meshagent.yaml` that defines how to run the agent. Be sure to update the variables with the email address and queue you created for the agent. 
+
+<CodeGroup>
+    <SDKMailbotYaml />
+</CodeGroup>
+
+**Deploy the agent**: Next from the CLI in the folder where your meshagent.yaml file is run:
+
+```bash bash 
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+>**Note**: If you have already deployed a service named `mailbot` using the CLI above, you will need to create a unique name for this service in order to deploy it. 
+
+The Mail agent is now deployed to the `quickstart` room! Now we can email the agent anytime and get a response!
 
 ## How MailWorker Works
 ### Constructor Parameters
