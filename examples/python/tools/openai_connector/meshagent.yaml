@@ -1,0 +1,22 @@
+kind: Service
+version: v1
+metadata:
+  name: microsoft-teams-connector
+  description: "Expose Microsoft Teams via OpenAI Connector"
+ports:
+- num: "*"
+  type: http
+  endpoints:
+  - path: /
+    mcp:
+      label: "microsoft-teams-connector"
+      description: "OpenAI Connector for Microsoft Teams"
+      openai_connector_id: "connector_microsoftteams"
+      oauth:
+        client_id: "YOUR_CLIENT_ID"
+        client_secret: "..."
+        authorization_endpoint: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+        token_endpoint: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        no_pkce: false                    # Optional: depends on if pkce is used
+        scopes: ["User.Read", "Chat.Read", "ChannelMessage.Read.All"]
+external: {}
