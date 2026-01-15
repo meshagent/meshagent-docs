@@ -62,14 +62,31 @@ When you add the `--room-rules "agents/chatbot/rules.txt"` flag and supply a fil
 If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
 
 ### Step 3: Package and deploy the agent
-Once your agent works locally to make it always available you'll need to [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
+Once your agent works locally to make it always available you'll need to [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
 
-To deploy the agent we just ran we'll create a `meshagent.yaml` file. 
+**Both options below deploy the same ChatBot** - choose based on your workflow:
+- **Option 1 (`meshagent chatbot deploy`)**: One command that deploys immediately (fastest/easiest approach)
+- **Option 2 (`meshagent chatbot spec` + `meshagent service create`)**: Generates a yaml file you can review, or further customize before deploying
+
+**Option 1: Deploy directly** Use the CLI to automatically deploy the `ChatBot` to your room.
+
+```bash bash 
+meshagent chatbot deploy --service-name chatbot --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+```
+
+**Option 2: Generate a YAML spec** Create a meshagent.yaml file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
+
+```bash bash 
+meshagent chatbot spec --service-name chatbot --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+```
+
+Next, copy the output to a `meshagent.yaml` file
+
 <CodeGroup>
     <CliChatBotYaml />
 </CodeGroup>
 
-Next, deploy it to your Room. 
+Then, deploy it to your Room. 
 
 ```bash bash 
 # Deploy as a room service (specific room only)

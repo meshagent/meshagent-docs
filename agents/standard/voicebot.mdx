@@ -58,14 +58,30 @@ If you've added the `--room-rules` flag to your agent you can modify the agent's
 > **Tip**: Mute your microphone after you finish speaking to prevent background noise from interfering with the agent. 
 
 ### Step 3: Package and deploy the agent
-Once your agent works locally to make it always available you'll need to [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
+Once your agent works locally to make it always available you'll need to [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
 
-To deploy the agent we just ran we'll create a `meshagent.yaml` file. This defines how our service should run. 
+**Both options below deploy the same VoiceBot** - choose based on your workflow:
+- **Option 1 (`meshagent voicebot deploy`)**: One command that deploys immediately (fastest/easiest approach)
+- **Option 2 (`meshagent voicebot spec` + `meshagent service create`)**: Generates a yaml file you can review, or further customize before deploying
+
+**Option 1: Deploy directly** Use the CLI to automatically deploy the `VoiceBot` to your room.
+```bash bash 
+meshagent voicebot deploy --service-name voiceagent --room quickstart --agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
+```
+
+**Option 2: Generate a YAML spec** Create a `meshagent.yaml` file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
+
+```bash bash 
+meshagent voicebot spec --service-name voiceagent ---agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
+```
+
+Next, copy the output to a `meshagent.yaml` file
+
 <CodeGroup>
     <CliVoiceBotYaml />
 </CodeGroup>
 
-Next, deploy it to your Room. 
+Then, deploy it to your Room. 
 
 ```bash bash 
 # Deploy as a room service (specific room only)
