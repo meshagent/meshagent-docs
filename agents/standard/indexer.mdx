@@ -2,7 +2,8 @@
 title: "Indexer"
 ---
 
-import StorageRagService from "/snippets/examples/python/services/storage_rag/main.mdx"
+import StorageRagService from "/snippets/examples/python/deployable/storage_rag/indexer.mdx"
+import IndexerYaml from "/snippets/examples/python/deployable/storage_rag/meshagent.mdx"
 
 Indexers keep a room’s vector database fresh so other agents can run retrieval-augmented generation (RAG) queries. They watch for new content, chunk and embed it, then store both the raw text and embeddings in a table that `RagToolkit` powered agents can search.
 
@@ -60,16 +61,18 @@ Add `RagToolkit(table="your_table")` to a ChatBot, VoiceBot, or TaskRunner to su
 ## Example
 You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`. The example below shows a MarkitDown-powered indexer paired with a RAG-enabled ChatBot.
 
-**Prerequisites and Dependencies**
-- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`, this will be provisioned automatically with the MeshAgent CLI).
+### Prerequisites and Dependencies
+- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`, this will be provisioned automatically when deployed).
 - `chonkie` for semantic chunking (installed with the agents package).
 - Optional toolkits such as `meshagent.markitdown` or `meshagent.firecrawl` depending on which indexer you deploy.
 
-**Creating a Rag based ChatBot and Rag tool**
+### Step 1: Create a RAG based ChatBot and RAG tool
 
 <CodeGroup>
     <StorageRagService />
 </CodeGroup>
+
+### Step 2: Run the service and test locally 
 
 Now that we've defined our services, let's start the room and connect the chatbot and indexer. 
 
@@ -85,6 +88,29 @@ Now we can interact with our agent in [MeshAgent Studio](https://studio.meshagen
 2. Go to the room ``rag``
 3. Upload a document to the room for processing. The indexer will chunk and embed the document. 
 4. Ask the agent about the document once it's been processed! 
+
+### Step 3: Package and deploy the service 
+To deploy your RAG Indexer and RAG agent permanently, you need:
+1. A `meshagent.yaml` defining the service
+2. A Docker image with your code
+
+For this example, we’ll use a MeshAgent base image that already contains the code above.
+
+For your own custom agents, create a Dockerfile, build with docker buildx, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+
+**Package the service**: Create a `meshagent.yaml` that defines how to run the service. This will be used to deploy the indexer and RAG ChatBot.
+
+<CodeGroup>
+    <IndexerYaml />
+</CodeGroup>
+
+**Deploy the agent**: Next from the CLI in the folder where your meshagent.yaml file is run:
+
+```bash bash 
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+Now the agent and indexer will always be available for us to use! 
 
 ## Next Steps
 Understand other MeshAgent agents
