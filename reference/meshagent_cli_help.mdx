@@ -30,7 +30,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `webhook`: Manage project webhooks
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
-* `oauth2`: OAuth2 test commands
+* `secrets`: Manage secrets for your project.
 * `helpers`: Developer helper services
 * `rooms`: Create, list, and manage rooms in a project
 * `mailbox`: Manage mailboxes for your project
@@ -844,14 +844,14 @@ $ meshagent mcp stdio-service [OPTIONS]
 * `-e, --env TEXT`: KEY=VALUE
 * `--help`: Show this message and exit.
 
-## `meshagent oauth2`
+## `meshagent secrets`
 
-OAuth2 test commands
+Manage secrets for your project.
 
 **Usage**:
 
 ```console
-$ meshagent oauth2 [OPTIONS] COMMAND [ARGS]...
+$ meshagent secrets [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -860,96 +860,275 @@ $ meshagent oauth2 [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `request`: Run an OAuth2 request test between two...
-* `get`: Run an OAuth2 request test between two...
-* `list`: list secrets
-* `delete`: delete a secret
+* `list`: List all secrets in the project (typed as...
+* `delete`: Delete a secret.
+* `keys`: Create or update environment-based...
+* `docker`: Create or update a Docker registry pull...
+* `acr`: Create or update an Azure Container...
+* `gar`: Create or update a Google Artifact...
 
-### `meshagent oauth2 request`
+### `meshagent secrets list`
 
-Run an OAuth2 request test between two participants in the same room.
-One will act as the consumer, the other as the provider.
+List all secrets in the project (typed as Docker/ACR/GAR or Keys secrets).
 
 **Usage**:
 
 ```console
-$ meshagent oauth2 request [OPTIONS]
+$ meshagent secrets list [OPTIONS]
 ```
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--from-participant-id TEXT`: Participant ID to request the token from  [required]
-* `--client-id TEXT`: OAuth client ID  [required]
-* `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
-* `--token-endpoint TEXT`: OAuth token endpoint URL  [required]
-* `--scopes TEXT`: Comma-separated OAuth scopes
-* `--client-secret TEXT`: OAuth client secret (if required)  [required]
-* `--redirect-uri TEXT`: Redirect URI for the OAuth flow  [required]
-* `--pkce / --no-pkce`: Use PKCE (recommended)  [default: pkce]
 * `--help`: Show this message and exit.
 
-### `meshagent oauth2 get`
+### `meshagent secrets delete`
 
-Run an OAuth2 request test between two participants in the same room.
-One will act as the consumer, the other as the provider.
+Delete a secret.
 
 **Usage**:
 
 ```console
-$ meshagent oauth2 get [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--delegated-to TEXT`: Participant ID to delegate the token to  [required]
-* `--client-id TEXT`: OAuth client ID  [required]
-* `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
-* `--token-endpoint TEXT`: OAuth token endpoint URL  [required]
-* `--scopes TEXT`: Comma-separated OAuth scopes
-* `--client-secret TEXT`: OAuth client secret (if required)  [required]
-* `--redirect-uri TEXT`: Redirect URI for the OAuth flow  [required]
-* `--pkce / --no-pkce`: Use PKCE (recommended)  [default: pkce]
-* `--help`: Show this message and exit.
-
-### `meshagent oauth2 list`
-
-list secrets
-
-**Usage**:
-
-```console
-$ meshagent oauth2 list [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--help`: Show this message and exit.
-
-### `meshagent oauth2 delete`
-
-delete a secret
-
-**Usage**:
-
-```console
-$ meshagent oauth2 delete [OPTIONS] ID
+$ meshagent secrets delete [OPTIONS] SECRET_ID
 ```
 
 **Arguments**:
 
-* `ID`: [required]
+* `SECRET_ID`: ID of the secret to delete  [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--delegated-to TEXT`: The value of the delegated_to field of the secret  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secrets keys`
+
+Create or update environment-based key-value secrets.
+
+**Usage**:
+
+```console
+$ meshagent secrets keys [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a new &#x27;keys&#x27; secret (opaque env-vars).
+* `update`: Update an existing &#x27;keys&#x27; secret (opaque...
+
+#### `meshagent secrets keys create`
+
+Create a new &#x27;keys&#x27; secret (opaque env-vars).
+
+**Usage**:
+
+```console
+$ meshagent secrets keys create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Secret name  [required]
+* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent secrets keys update`
+
+Update an existing &#x27;keys&#x27; secret (opaque env-vars).
+
+**Usage**:
+
+```console
+$ meshagent secrets keys update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--secret-id TEXT`: Existing secret ID  [required]
+* `--name TEXT`: Secret name  [required]
+* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secrets docker`
+
+Create or update a Docker registry pull secret.
+
+**Usage**:
+
+```console
+$ meshagent secrets docker [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a new Docker pull secret (generic).
+* `update`: Update an existing Docker pull secret...
+
+#### `meshagent secrets docker create`
+
+Create a new Docker pull secret (generic).
+
+**Usage**:
+
+```console
+$ meshagent secrets docker create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: Docker registry server, e.g. index.docker.io  [required]
+* `--username TEXT`: Registry user name  [required]
+* `--password TEXT`: Registry password  [required]
+* `--email TEXT`: User email for Docker config
+* `--help`: Show this message and exit.
+
+#### `meshagent secrets docker update`
+
+Update an existing Docker pull secret (generic).
+
+**Usage**:
+
+```console
+$ meshagent secrets docker update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--secret-id TEXT`: Existing secret ID  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: Docker registry server  [required]
+* `--username TEXT`: Registry user name  [required]
+* `--password TEXT`: Registry password  [required]
+* `--email TEXT`: User email for Docker config
+* `--help`: Show this message and exit.
+
+### `meshagent secrets acr`
+
+Create or update an Azure Container Registry pull secret.
+
+**Usage**:
+
+```console
+$ meshagent secrets acr [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a new ACR pull secret (defaults...
+* `update`: Update an existing ACR pull secret...
+
+#### `meshagent secrets acr create`
+
+Create a new ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
+
+**Usage**:
+
+```console
+$ meshagent secrets acr create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
+* `--username TEXT`: Service principal ID  [required]
+* `--password TEXT`: Service principal secret/password  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent secrets acr update`
+
+Update an existing ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
+
+**Usage**:
+
+```console
+$ meshagent secrets acr update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--secret-id TEXT`: Existing secret ID  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
+* `--username TEXT`: Service principal ID  [required]
+* `--password TEXT`: Service principal secret/password  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secrets gar`
+
+Create or update a Google Artifact Registry pull secret.
+
+**Usage**:
+
+```console
+$ meshagent secrets gar [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a new Google Artifact Registry pull...
+* `update`: Update an existing Google Artifact...
+
+#### `meshagent secrets gar create`
+
+Create a new Google Artifact Registry pull secret.
+
+By default, sets email=&#x27;none@google.com&#x27;, username=&#x27;_json_key&#x27;
+
+**Usage**:
+
+```console
+$ meshagent secrets gar create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
+* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent secrets gar update`
+
+Update an existing Google Artifact Registry pull secret.
+
+**Usage**:
+
+```console
+$ meshagent secrets gar update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--secret-id TEXT`: Existing secret ID  [required]
+* `--name TEXT`: Secret name  [required]
+* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
+* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
 * `--help`: Show this message and exit.
 
 ## `meshagent helpers`
@@ -2312,7 +2491,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `agents`: Interact with agents and toolkits
-* `secret`: Manage secrets for your project
+* `secrets`: Manage secrets for your project
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages
 * `storage`: Manage storage for a room
@@ -2417,14 +2596,14 @@ $ meshagent room agents list-toolkits [OPTIONS]
 * `--participant-id TEXT`: Optional participant ID
 * `--help`: Show this message and exit.
 
-### `meshagent room secret`
+### `meshagent room secrets`
 
 Manage secrets for your project
 
 **Usage**:
 
 ```console
-$ meshagent room secret [OPTIONS] COMMAND [ARGS]...
+$ meshagent room secrets [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -2433,275 +2612,135 @@ $ meshagent room secret [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `list`: List all secrets in the project (typed as...
-* `delete`: Delete a secret.
-* `keys`: Create or update environment-based...
-* `docker`: Create or update a Docker registry pull...
-* `acr`: Create or update an Azure Container...
-* `gar`: Create or update a Google Artifact...
+* `oauth`: Run an OAuth2 request test between two...
+* `request`: Request a secret from another participant.
+* `get`: Get a stored secret by secret id.
+* `set`: Set/store a secret (bytes from stdin or...
+* `list`: list secrets
+* `delete`: delete a secret
 
-#### `meshagent room secret list`
+#### `meshagent room secrets oauth`
 
-List all secrets in the project (typed as Docker/ACR/GAR or Keys secrets).
+Run an OAuth2 request test between two participants in the same room.
+One will act as the consumer, the other as the provider.
 
 **Usage**:
 
 ```console
-$ meshagent room secret list [OPTIONS]
+$ meshagent room secrets oauth [OPTIONS]
 ```
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--from-participant-id TEXT`: Participant ID to request the token from  [required]
+* `--client-id TEXT`: OAuth client ID  [required]
+* `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
+* `--token-endpoint TEXT`: OAuth token endpoint URL  [required]
+* `--scopes TEXT`: Comma-separated OAuth scopes
+* `--client-secret TEXT`: OAuth client secret (if required)  [required]
+* `--redirect-uri TEXT`: Redirect URI for the OAuth flow  [required]
+* `--pkce / --no-pkce`: Use PKCE (recommended)  [default: pkce]
 * `--help`: Show this message and exit.
 
-#### `meshagent room secret delete`
+#### `meshagent room secrets request`
 
-Delete a secret.
+Request a secret from another participant.
 
 **Usage**:
 
 ```console
-$ meshagent room secret delete [OPTIONS] SECRET_ID
+$ meshagent room secrets request [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
+* `--url TEXT`: Secret URL identifier  [required]
+* `--type TEXT`: Secret MIME type  [default: application/octet-stream]
+* `--delegate-to TEXT`: Delegate secret to this participant name
+* `--timeout INTEGER`: Timeout in seconds  [default: 300]
+* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secrets get`
+
+Get a stored secret by secret id.
+
+**Usage**:
+
+```console
+$ meshagent room secrets get [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--secret-id TEXT`: Secret ID  [required]
+* `--delegated-to TEXT`: Fetch a secret delegated to this participant name
+* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secrets set`
+
+Set/store a secret (bytes from stdin or file).
+
+**Usage**:
+
+```console
+$ meshagent room secrets set [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--secret-id TEXT`: Secret ID  [required]
+* `--type TEXT`: Secret MIME type
+* `--name TEXT`: Optional secret name
+* `--delegated-to TEXT`: Store a secret delegated to this participant name
+* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secrets list`
+
+list secrets
+
+**Usage**:
+
+```console
+$ meshagent room secrets list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secrets delete`
+
+delete a secret
+
+**Usage**:
+
+```console
+$ meshagent room secrets delete [OPTIONS] ID
 ```
 
 **Arguments**:
 
-* `SECRET_ID`: ID of the secret to delete  [required]
+* `ID`: [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret keys`
-
-Create or update environment-based key-value secrets.
-
-**Usage**:
-
-```console
-$ meshagent room secret keys [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new &#x27;keys&#x27; secret (opaque env-vars).
-* `update`: Update an existing &#x27;keys&#x27; secret (opaque...
-
-##### `meshagent room secret keys create`
-
-Create a new &#x27;keys&#x27; secret (opaque env-vars).
-
-**Usage**:
-
-```console
-$ meshagent room secret keys create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--name TEXT`: Secret name  [required]
-* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
-* `--help`: Show this message and exit.
-
-##### `meshagent room secret keys update`
-
-Update an existing &#x27;keys&#x27; secret (opaque env-vars).
-
-**Usage**:
-
-```console
-$ meshagent room secret keys update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret docker`
-
-Create or update a Docker registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent room secret docker [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new Docker pull secret (generic).
-* `update`: Update an existing Docker pull secret...
-
-##### `meshagent room secret docker create`
-
-Create a new Docker pull secret (generic).
-
-**Usage**:
-
-```console
-$ meshagent room secret docker create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: Docker registry server, e.g. index.docker.io  [required]
-* `--username TEXT`: Registry user name  [required]
-* `--password TEXT`: Registry password  [required]
-* `--email TEXT`: User email for Docker config
-* `--help`: Show this message and exit.
-
-##### `meshagent room secret docker update`
-
-Update an existing Docker pull secret (generic).
-
-**Usage**:
-
-```console
-$ meshagent room secret docker update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: Docker registry server  [required]
-* `--username TEXT`: Registry user name  [required]
-* `--password TEXT`: Registry password  [required]
-* `--email TEXT`: User email for Docker config
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret acr`
-
-Create or update an Azure Container Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent room secret acr [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new ACR pull secret (defaults...
-* `update`: Update an existing ACR pull secret...
-
-##### `meshagent room secret acr create`
-
-Create a new ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
-
-**Usage**:
-
-```console
-$ meshagent room secret acr create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
-* `--username TEXT`: Service principal ID  [required]
-* `--password TEXT`: Service principal secret/password  [required]
-* `--help`: Show this message and exit.
-
-##### `meshagent room secret acr update`
-
-Update an existing ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
-
-**Usage**:
-
-```console
-$ meshagent room secret acr update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
-* `--username TEXT`: Service principal ID  [required]
-* `--password TEXT`: Service principal secret/password  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret gar`
-
-Create or update a Google Artifact Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent room secret gar [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new Google Artifact Registry pull...
-* `update`: Update an existing Google Artifact...
-
-##### `meshagent room secret gar create`
-
-Create a new Google Artifact Registry pull secret.
-
-By default, sets email=&#x27;none@google.com&#x27;, username=&#x27;_json_key&#x27;
-
-**Usage**:
-
-```console
-$ meshagent room secret gar create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
-* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
-* `--help`: Show this message and exit.
-
-##### `meshagent room secret gar update`
-
-Update an existing Google Artifact Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent room secret gar update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
-* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
+* `--room TEXT`: Room name  [required]
+* `--delegated-to TEXT`: The value of the delegated_to field of the secret  [required]
 * `--help`: Show this message and exit.
 
 ### `meshagent room queue`
@@ -2771,18 +2810,18 @@ $ meshagent room messaging [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `list-participants`: List messaging-enabled participants
+* `list`: List messaging-enabled participants
 * `send`: Send a direct message to a participant
 * `broadcast`: Broadcast a message to all participants
 
-#### `meshagent room messaging list-participants`
+#### `meshagent room messaging list`
 
 List messaging-enabled participants
 
 **Usage**:
 
 ```console
-$ meshagent room messaging list-participants [OPTIONS]
+$ meshagent room messaging list [OPTIONS]
 ```
 
 **Options**:
