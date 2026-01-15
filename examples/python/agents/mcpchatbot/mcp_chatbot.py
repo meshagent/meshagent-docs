@@ -11,7 +11,6 @@ otel_config(service_name="mcp-deepwiki-chatbot")
 log = logging.getLogger(__name__)
 service = ServiceHost()
 
-
 @service.path(path="/mcp-deepwiki-chatbot", identity="mcp-deepwiki-chatbot")
 class MCPChatbot(ChatBot):
     def __init__(self):
