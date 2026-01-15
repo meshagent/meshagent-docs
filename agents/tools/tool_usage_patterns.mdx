@@ -23,7 +23,7 @@ chatbot = ChatBot(
 ## Dynamic Toolkits (Builder Driven)
 - Register one or more `ToolkitBuilder` instances so the agent can materialise toolkits from configs at runtime.
 - The UI (or calling service) requests the builder list via `get_thread_toolkit_builders`, lets the user pick tools, then sends a `tools` array where each entry matches a builder `name` and config schema.
-- During the turn, `make_tools(model, providers, tools)` validates each config against the builder’s `ToolkitConfig` and instantiates only the requested toolkits.
+- During the turn, `make_toolkits(room, model, providers, tools)` validates each config against the builder’s `ToolkitConfig` and instantiates only the requested toolkits.
 - Perfect for capabilities that should be opt-in or short lived: MCP connectors, local shell access, or storage uploads that only appear when the user adds an attachment.
 
 ```python Python
@@ -49,11 +49,14 @@ message = {
     ],
 }
 ```
+This `message` dict is the payload your client sends to the agent; the key piece is the `tools` array, which must match the selected builder names and config schema.
+
+> **CLI note**: CLI agents that expose toolkit builders follow the same dynamic pattern and accept a `tools` array for per-message selection; flags like `--require-*` attach always-on toolkits in addition to any dynamic ones.
 
 ## Message Flow for Dynamic Tools
 1. **Discover providers**: the client sends `get_thread_toolkit_builders`; the chatbot replies with the builders it supports.  
 2. **User picks tools**: the client shows those builders as toggles and builds a JSON payload that matches the selected configs.  
-3. **Agent turn**: `ChatBot` collects static thread toolkits, calls `make_tools` with the selected configs, and flattens the combined toolkit list.  
+3. **Agent turn**: `ChatBot` collects static thread toolkits, calls `make_toolkits` with the selected configs, and flattens the combined toolkit list.  
 4. **LLM execution**: `OpenAIResponsesAdapter.next` converts those toolkits into OpenAI tool definitions for that single request.  
 5. **Tool call routing**: when the LLM calls a tool, `ResponsesToolBundle` looks up the owning toolkit (static or dynamic) and executes it. On the next message, the list resets and the process repeats.
 
