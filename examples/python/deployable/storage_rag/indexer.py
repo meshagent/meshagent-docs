@@ -16,7 +16,6 @@ import asyncio
 
 service = ServiceHost()
 
-
 @service.path(path="/agent", identity="meshagent.chatbot.storage_rag")
 class RagChatBot(ChatBot):
     def __init__(self):
