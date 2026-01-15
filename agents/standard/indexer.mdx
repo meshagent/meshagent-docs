@@ -62,8 +62,8 @@ Add `RagToolkit(table="your_table")` to a ChatBot, VoiceBot, or TaskRunner to su
 You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`. The example below shows a MarkitDown-powered indexer paired with a RAG-enabled ChatBot.
 
 ### Prerequisites and Dependencies
-- An embedding provider (default requires the OpenAI Python SDK and `OPENAI_API_KEY`, this will be provisioned automatically when deployed).
-- `chonkie` for semantic chunking (installed with the agents package).
+- An embedding provider (default uses an OpenAI embedder, but you can set your own).
+- `chonkie` for semantic chunking (installed with the meshagent agents package).
 - Optional toolkits such as `meshagent.markitdown` or `meshagent.firecrawl` depending on which indexer you deploy.
 
 ### Step 1: Create a RAG based ChatBot and RAG tool
@@ -76,8 +76,6 @@ You typically host a `StorageIndexer` alongside a chatbot that uses `RagToolkit`
 
 Now that we've defined our services, let's start the room and connect the chatbot and indexer. 
 
-> **Note**: If running this locally you will need to export an ``OPENAI_API_KEY``. When deployed and running in the room that will be set automatically. 
-
 ```bash bash
 meshagent setup # authenticate if not already
 meshagent service run "main.py" --room=rag
@@ -86,7 +84,7 @@ meshagent service run "main.py" --room=rag
 Now we can interact with our agent in [MeshAgent Studio](https://studio.meshagent.com)
 1. Open the studio 
 2. Go to the room ``rag``
-3. Upload a document to the room for processing. The indexer will chunk and embed the document. 
+3. Upload a document to the room for processing. The indexer will chunk and embed the document. You will see logs in your terminal related to the document processing. 
 4. Ask the agent about the document once it's been processed! 
 
 ### Step 3: Package and deploy the service 

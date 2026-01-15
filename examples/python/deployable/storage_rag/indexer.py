@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
@@ -6,19 +8,22 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.agents.indexer import RagToolkit, StorageIndexer
+from meshagent.openai.proxy import get_client
+from meshagent.agents.indexer import RagToolkit, StorageIndexer, OpenAIEmbedder
 from meshagent.api.services import ServiceHost
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.tools import ToolContext
+from meshagent.otel import otel_config
 
-
-import asyncio
+otel_config(service_name="storage-rag") 
+log = logging.getLogger("storage-rag")
 
 service = ServiceHost()
 
 @service.path(path="/agent", identity="meshagent.chatbot.storage_rag")
 class RagChatBot(ChatBot):
     def __init__(self):
+        self._rag_toolkit = None
         super().__init__(
             name="meshagent.chatbot.storage_rag",
             title="Storage RAG chatbot",
@@ -41,10 +46,22 @@ class RagChatBot(ChatBot):
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
-                RagToolkit(table="rag-index"),
             ],
             labels=["chatbot", "rag"],
         )
+    async def start(self, *, room):
+        rag_toolkit = RagToolkit(
+            table="rag-index",
+            embedder=OpenAIEmbedder(
+                size=3072,
+                max_length=8191,
+                model="text-embedding-3-large",
+                openai=get_client(room=room),
+            ),
+        )
+        self._rag_toolkit = rag_toolkit
+        self._toolkits.append(rag_toolkit)
+        await super().start(room=room)
 
 
 @service.path(path="/indexer", identity="storage_indexer")
