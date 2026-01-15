@@ -11,7 +11,7 @@ Spin up a text-based chatbot using the MeshAgent CLI. You can run it locally or 
 
 ## Tools available to this chatbot
 - **Web Search** (`--web-search`): lets the bot look things up on the web.
-- **Image Generation** (`--image-generation=gpt-image-1`): generate images from prompts.
+- **Image Generation** (`--image-generation=gpt-image-1.5`): generate images from prompts.
 - **Room Storage** (`--require-storage`): read/write files in the room’s storage (mounted at `/data` when running as a service).
 - **MCP** (`--mcp`): enable Model Context Protocol tools (connect external tool providers).
 
@@ -24,7 +24,7 @@ meshagent setup
 meshagent chatbot join \
   --room=myroom \
   --agent-name=chatbot \
-  --image-generation=gpt-image-1 \ 
+  --image-generation=gpt-image-1.5 \ 
   --mcp \
   --require-storage \
   --web-search 
