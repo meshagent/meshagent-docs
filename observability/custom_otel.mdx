@@ -2,7 +2,8 @@
 title: "Custom Logs, Traces, and Metrics"
 ---
 
-import OtelExample from "/snippets/examples/python/observability/main.mdx"
+import OtelExample from "/snippets/examples/python/deployable/observability/observability.mdx"
+import OtelYAML from "/snippets/examples/python/deployable/observability/meshagent.mdx"
 
 MeshAgent emits OpenTelemetry signals out of the box. When you need deeper insight, you can add your own spans, logs, and metrics using standard OTEL SDKs. This guide walks through a Weather Toolkit with custom intstrumentation so you can see the pieces in action. 
 
@@ -83,7 +84,12 @@ These show up in the room’s **Metrics** tab.
 You can run this toolkit as a service and invoke the weather tool, `get_weather()`, from Studio or the CLI.
 
 ### Step 1: Creating the room service 
-First build and push the container, then add the service to your room. You'll need a ``Dockerfile`` and ``meshagent.yaml`` file to do so. 
+To deploy the otel service you'll need to:
+1. Create a Dockerfile, build/push the container (or use the available meshagent image) 
+2. Create a yaml file that defines the service
+3. Deploy it using the MeshAgent CLI. 
+
+**(Optional) Create your container** If you want to create your own image you'll need to create a Dockerfile and build and push a container. 
 
 ```Dockerfile Dockerfile
 FROM "meshagent/python-sdk-slim:latest"
@@ -95,35 +101,26 @@ COPY . /src
 ENTRYPOINT [ "python3", "main.py" ] 
 ```
 
-```yaml yaml
-kind: Service
-version: v1
-metadata:
-  name: otel-example
-  description: "An example weather tool with otel instrumentation"
-ports:
-- num: "*"
-  liveness: "/"
-  endpoints:
-  - path: /weather
-    meshagent:
-      identity: weather-toolkit
-container: 
-  image: "YOUR_IMAGE_DETAILS" #example: myregistry/otel-example:0.0.1
-  command: python3 main.py
+```bash 
+docker buildx build . \
+  -t "$IMAGE:$TAG" \ # fill this in 
+  --platform linux/amd64 \
+  --push
 ```
 
-Once you've built and pushed the container, add the service to a room using the MeshAgent CLI or MeshAgent Studio UI: 
-**Using the MeshAgent CLI**
+**Create a `meshagent.yaml` file that defines the service**
+
+If you built and pushed your own container you can update the container path in the YAML file below. Otherwise you can use the meshagent container. 
+
+<CodeGroup>
+    <OtelYAML />
+</CodeGroup>
+
+**Deploy the service**
+
 ```bash bash
 meshagent service create --file=meshagent.yaml --room=otel
 ```
-
-**From MeshAgent Studio**
-1. Click the menu icon for the room --> **Services** --> **New Service**
-2. Fill in name, image details, and port details. For **Ports** you can put `*` to let MeshAgent assign an available port.
-    - Add the port endpoint information e.g. Port Type: `meshagent.callable`, Endpoint: `/weather`, Participant Name" `weather-toolkit`. 
-4. Create the service
 
 ### Step 2: Invoking the tool 
 Once you've created the service you can invoke the tool directly from MeshAgent Studio by going into the room, clicking the menu icon, selecting **Toolkits**, then select the **Weather Tool** and click **Invoke**. The UI will display a dialog for you to input the city and units you want to get the weather from. 
@@ -133,7 +130,7 @@ You can also invoke the tool using the MeshAgent CLI:
 ```bash bash 
 meshagent room agents invoke-tool \
   --room=otel \
-  --require-toolkit=weather-toolkit \
+  --toolkit=weather-toolkit \
   --tool=get_weather \
   --arguments='{"city":"Costa Mesa","units":"imperial"}'
 ```

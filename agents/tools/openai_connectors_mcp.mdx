@@ -3,7 +3,8 @@ title: "OpenAI Connectors & MCP Servers"
 ---
 import MCPDeepWikiTool from "/snippets/examples/python/tools/mcp_deepwiki/meshagent.mdx"
 import OpenAIConnectorTool from "/snippets/examples/python/tools/openai_connector/meshagent.mdx"
-import MCPChatBot from "/snippets/examples/python/agents/mcpchatbot/mcp_chatbot.mdx"
+import MCPChatBot from "/snippets/examples/python/deployable/mcp_chatbot/mcp_chatbot.mdx"
+import MCPChatBotYAML from "/snippets/examples/python/deployable/mcp_chatbot/meshagent.mdx"
 
 In addition to MeshAgent Tools, agents can also use external tools through [OpenAI Connectors and Model Context Protocol (MCP) servers](https://platform.openai.com/docs/guides/tools-connectors-mcp). 
 
@@ -159,9 +160,14 @@ meshagent service run "main.py" --room=quickstart
 From [MeshAgent Studio](https://studio.meshagent.com), enter `quickstart`, and start talking to the agent. Ask it about public GitHub repositories and it will use the DeepWiki MCP tools to respond. For example you can ask "What's in the README on the Pydantic AI repository?". 
 
 ### Step 3: Package and deploy the agent
-Once satisfied with the agent, we can [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project service so it's automatically available to all the rooms in a project, or as a room service so it's always available in a specific room. To do so we'll create a Dockerfile, build/push the image, create a yaml file that defines the service, then deploy it using the MeshAgent CLI. 
+Once satisfied with the agent, we can [package](../../services_room_containers/packaging_and_deploying/packaging) and [deploy](../../services_room_containers/packaging_and_deploying/deployment) it as a project service so it's automatically available to all the rooms in a project, or as a room service so it's always available in a specific room. 
 
-**Create the Dockerfile**
+To do so you'll need to:
+1. Create a Dockerfile, build/push the container (or use the available meshagent image) 
+2. Create a yaml file that defines the service
+3. Deploy it using the MeshAgent CLI. 
+
+**(Optional) Create your container** If you want to create your own image you'll need to create a Dockerfile and build and push a container. 
 
 ```Dockerfile Dockerfile
 FROM meshagent/python-sdk-slim:latest
@@ -170,8 +176,6 @@ WORKDIR /src
 ENTRYPOINT [ "python3", "main.py" ]
 ```
 
-**Step 2: Build and Push the Image**
-
 ```bash 
 docker buildx build . \
   -t "$IMAGE:$TAG" \
@@ -179,27 +183,15 @@ docker buildx build . \
   --push
 ```
 
-**Step 3: Define the Service**
+**Create a `meshagent.yaml` file that defines the service**
 
-```yaml yaml
-kind: Service
-version: v1
-metadata:
-  name: mcp-deepwiki-chatbot
-  description: "Expose a ChatBot with access to DeepWiki MCP server"
-ports:
-- num: "*" 
-  type: http
-  liveness: "/"
-  endpoints:
-  - path: /mcp-deepwiki-chatbot
-    meshagent:
-      identity: "mcp-deepwiki-chatbot"
-container:
-  image: "IMAGE:TAG"
-```
+If you built and pushed your own container you can update the container path in the YAML file below. Otherwise you can use the meshagent container. 
 
-**Step 4: Deploy**
+<CodeGroup>
+  <MCPChatBotYAML/>
+</CodeGroup>
+
+**Deploy the service**
 
 ```bash bash
 meshagent service create --file "meshagent.yaml" --room=quickstart 

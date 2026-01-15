@@ -1,3 +1,4 @@
+```yaml Yaml
 kind: Service
 version: v1
 metadata:
@@ -6,6 +7,8 @@ metadata:
 agents:
   - name: assistant
     description: "Conversational agent for the room"
+    annotations:
+      meshagent.agent.type: "ChatBot"
 ports:
 - num: "*" 
   type: http
@@ -16,4 +19,7 @@ ports:
       identity: "MCP DeepWiki ChatBot"
       # api: if you need to use secrets/OAuth with the agent you can add those permissions here
 container:
-  image: "IMAGE:TAG" # update to your image and image tag 
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
+  command: python mcp_chatbot/mcp_chatbot.py
+```
+
