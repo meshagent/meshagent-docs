@@ -6,10 +6,11 @@ The OpenAI Responses adapter is our reference `LLMAdapter` implementation. It en
 
 ## Key features
 - **Model defaults:** Reads the model name from the constructor (`model=`) or the `OPENAI_MODEL` environment variable. Override per message by passing `model` in the chat payload; `ChatBot` forwards it to `next()`.
-- **System role selection:** Adjusts the initial chat role (`system`, `developer`, etc.) based on the model name (o1, o3, computer-use, etc.).
+- **Chat context defaults:** Creates `AgentChatContext(system_role=None)` so system/developer prompts are driven by the caller or wrapper agent.
 - **Tool bundling:** Converts the supplied toolkits into OpenAI tool definitions (both standard JSON function tools and OpenAI-native tools like `computer_use_preview`, `web_search_preview`, `image_generation`).
 - **Streaming support:** Consumes the streaming response API, emitting events such as reasoning summaries, partial content, and tool call updates.
 - **Parallel tool calls:** Optionally enables OpenAI’s `parallel_tool_calls` setting (disabled automatically for models that do not support it).
+- **Structured output:** If `output_schema` is provided to `next()`, requests JSON schema output and validates the result.
 
 ## Constructor parameters
 ```python Python
@@ -20,6 +21,7 @@ OpenAIResponsesAdapter(
     response_options: Optional[dict] = None,
     reasoning_effort: Optional[str] = None,
     provider: str = "openai",
+    log_requests: bool = False,
 )
 ```
 - `model` – default model name; can be overridden per message.
@@ -28,6 +30,7 @@ OpenAIResponsesAdapter(
 - `response_options` – extra parameters passed to `responses.create`.
 - `reasoning_effort` – populates the Responses API `reasoning` options.
 - `provider` – label emitted in telemetry and logs.
+- `log_requests` – when true, logs HTTP requests for debugging.
 
 ## Tool provider integration
 The adapter includes several builders and tools for OpenAI native tools. Agents can use them directly, or override them with agent-specific wrappers that add persistence (for example, the ChatBot’s thread-aware image generation builder that saves partial/final images to room storage and updates the thread document).

@@ -5,7 +5,7 @@ title: "OpenAI Tool Response Adapter"
 `OpenAIResponsesToolResponseAdapter` is the default `ToolResponseAdapter` used whenever you pair an agent with the OpenAI Responses adapter. It converts tool outputs into the payloads the OpenAI Responses API expects and exposes a plain-text summary that hosts can display or log.
 
 ## Behavior summary
-- **Plain-text rendering:** `to_plain_text` generates concise strings for each response type (`LinkResponse`, `JsonResponse`, `TextResponse`, `FileResponse`, `EmptyResponse`). Hosts decide whether to show or log that text.
+- **Plain-text rendering:** `to_plain_text` generates concise strings for common response types (`LinkResponse`, `JsonResponse`, `TextResponse`, `FileResponse`, `EmptyResponse`). Hosts decide whether to show or log that text.
 - **Chat context updates:** `create_messages` returns OpenAI Responses `function_call_output` objects so the model receives the tool result on the next turn.
 - **Developer logging:** Emits events via `room.developer.log_nowait` to aid debugging when tools are called.
 
@@ -14,9 +14,10 @@ title: "OpenAI Tool Response Adapter"
 | ------------- | ------------------ | ----- |
 | `TextResponse` | The returned text | Injected as-is into the chat transcript. |
 | `JsonResponse` | JSON string dump   | Useful when the LLM expects structured output. |
-| `FileResponse` | `filename.ext`     | The chat message embeds the file bytes as a base64 `input_file` blob. |
+| `FileResponse` | `filename.ext`     | Images become `input_image` payloads; PDFs use `input_file`; text/JSON are inlined; other formats return a "not supported" message. |
 | `LinkResponse` | `{ "name": ..., "url": ... }` | Links become JSON strings so the user can follow the URL. |
 | `EmptyResponse` | `"ok"`             | Signals successful execution without additional data. |
+| `RawOutputs` | n/a | Passed through directly as OpenAI Responses outputs, bypassing plain-text conversion. |
 
 ## Extending or replacing
 You can subclass `OpenAIResponsesToolResponseAdapter` to tweak the plain-text summary or adjust logging, provided the emitted messages continue to match the OpenAI Responses schema. Alternatively, supply your own adapter instance when constructing the agent (for example, `ChatBot(..., tool_adapter=...)`).

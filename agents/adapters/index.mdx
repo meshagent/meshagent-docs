@@ -9,8 +9,92 @@ Adapters connect MeshAgent to external LLMs and standardize how tool results flo
 
 Most people start with the built-in OpenAI adapters, but you can implement your own to integrate additional LLM vendors, customise defaults, or change how tool responses are handled.
 
+## `LLMAdapter`
+The `LLMAdapter` is the base class that standardizes how MeshAgent communicates with any language model provider (OpenAI, Anthropic, self-hosted, etc.). You pick or implement an adapter for your provider and can use it with any agent that accepts an `llm_adapter` parameter.
+
+### Why LLM adapters exist
+Different LLM providers have different: 
+- Request and response formats
+- Tool-calling protocols  
+- Streaming APIs
+- System role conventions by models (e.g., some use "system", others use "developer")
+- Termination signals
+
+The adapter abstracts these differences so your agent logic remains provider-agnostic.
+
+### Adapter responsibilities
+The ``LLMAdapter`` supplies the methods your implementation uses to run a full conversation turn. For a concrete reference, see the [OpenAI Responses Adapter](./openai_responses_adapter).
+- Input: Receive the current chat context and the toolkits selected for this turn.
+- Call the model: Use the provider's API/SDK to send the messages; stream tokens/events back.
+- Handle tools: When the model requests a tool, execute it via the toolkit and capture the result (using a `ToolResponseAdapter` if provided).
+- Update Context: Add tool results back into the chat context so the model can use it in the same turn or a later one (depending on the agent).
+- Output: Return the model’s final response for the turn (text or structured output).
+
+> Adapters append results to the in-memory chat context for the turn. Whether that context is persisted across turns is agent-specific (e.g., `ChatBot` saves to the thread document and is used for multi-turn conversations; a `TaskRunner` does not and is used for single-turn tasks).
+
+### What an `LLMAdapter` base class defines
+- `default_model()`: Return the model name (or identifier) the adapter should use when the caller does not override it.
+- `create_chat_context()`: Creates a fresh `AgentChatContext`. Implementations can use this to set provider and model specific roles (e.g., some models prefer a "developer" prompt vs a "system" prompt).
+- `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves (see the `ChatBot` implementation for an example).
+- `make_toolkit(room, model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
+- `check_for_termination(context, room)`: Allows you to use the chat context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
+- `next(...)`: The core method: given the chat context, room, toolkits for this turn, and an optional `ToolResponseAdapter`, call the underlying LLM, stream events (via `event_handler`), execute tool calls, inject tool results into the context, and return the final output. You can pass `output_schema` for structured responses, override `model`, and act `on_behalf_of` a participant. See [OpenAI Responses Adapter](./openai_responses_adapter) for a detailed implementation.
+- `validate(response, output_schema)`: Validate structured output using JSON Schema.
+
+### How agents use adapters (conversation turn flow)
+1. The agent resolves toolkits for this turn
+2. The agent calls `llm_adapter.next(...)` with the messages and toolkits
+3. The adapter streams events, executes tool calls, and returns the final result
+
+### Implementing your own LLM Adapter
+1. **Subclass `LLMAdapter`.** Provide defaults for the model name and optionally a custom `create_chat_context()`. 
+2. **Implement `next()`.** Use your provider’s SDK or API to send the chat context, include tool definitions derived from the supplied toolkits, stream result, execute any tool calls, and append tool outputs back to the chat context. 
+3. **Expose native tool builders (optional).** You can include built-in toolkits with your adapter by overriding `tool_providers()` to return `ToolkitBuilder`s so UIs can offer them as toggles.
+4. **Be mindful of cancellation and telemetry.** Make appropriate operations async, apply appropriate timeouts/retries, and emit tracing data if you integrate with OpenTelemetry (the base adapters do).
+
+## `ToolResponseAdapter`
+While `LLMAdapter` talks to the model, a `ToolResponseAdapter` decides how to surface tool outputs to the ongoing conversation and exposes a plain-text view when the host needs one. Every tool invocation returns a `Response` (`TextResponse`, `JsonResponse`, `FileResponse`, `LinkResponse`, `EmptyResponse`, `ErrorResponse`, `RawOutputs`, etc.). The adapter translates that object into the concrete payloads that should be appended to the chat context and, optionally, into a readable string.
+
+### Core responsibilities
+- **Chat context updates:** Return message objects from `create_messages` that the LLM adapter will append to the conversation. The structure is provider-specific (for OpenAI Responses the payloads are `{"type": "function_call_output", ...}` objects rather than assistant-role messages).
+- **Plain-text representation:** Provide a best-effort human-readable string via `to_plain_text`. Callers decide if and where to display it.
+- **Attachment handling:** Convert `FileResponse`, `LinkResponse`, or other rich responses into whatever metadata the LLM provider expects (e.g., base64-encoded blobs or image inputs for OpenAI Responses).
+- **Passthrough outputs:** Some adapters support provider-native payloads (like `RawOutputs`) for cases where you already have the final message objects.
+
+### Base interface
+```python Python
+class ToolResponseAdapter(ABC):
+    @abstractmethod
+    async def to_plain_text(self, *, room: RoomClient, response: Response) -> str:
+        ...
+
+    @abstractmethod
+    async def create_messages(
+        self,
+        *,
+        context: AgentChatContext,
+        tool_call: Any,
+        room: RoomClient,
+        response: Response,
+    ) -> list:
+        ...
+```
+- `to_plain_text` – convert the response into a single string (used by loggers or providers that expect plain text).
+- `create_messages` – return the list of messages to append to the chat context.
+
+### When to customize
+- **Provider expectations:** Different APIs have their own schema for tool results. Implement a custom adapter when you need to emit non-default roles, event types, or headers.
+- **UI formatting:** If you want to display richer summaries (markdown tables, shortened JSON, etc.), override `to_plain_text` or wrap the adapter so the host displays exactly what users need.
+
+### Usage in the chat loop
+During each tool call the LLM adapter:
+1. Executes the requested tool via the toolkit.
+2. Passes the tool’s `Response` object to the configured `ToolResponseAdapter`.
+3. Appends the returned messages to the chat context so the LLM can see the outcome.
+4. Optionally uses `to_plain_text` if the hosting application wants to log or display a summary. Nothing is automatically pushed to the UI unless the caller does so.
+
+If you use the OpenAI Responses adapter and omit `tool_adapter`, it defaults to the OpenAI-focused implementation described next.
+
 ## Related Topics
-- [LLM Adapters](./llm_adapters)
-- [OpenAI Responses Adapter](./openai_responses_adapter)
-- [Tool Response Adapters](./tool_response_adapters)
+- [OpenAI Adapters](./openai_responses_adapter)
 - [OpenAI Tool Response Adapter](./openai_tool_response_adapter)
