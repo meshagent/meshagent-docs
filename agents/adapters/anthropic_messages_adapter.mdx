@@ -1,0 +1,27 @@
+---
+title: "Anthropic Messages Adapter"
+---
+
+The Anthropic Messages adapter is an `LLMAdapter` implementation for Anthropic's Messages API. It enables MeshAgent agents to use Claude models while still using MeshAgent toolkits and tool response adapters.
+
+## Key features
+- **Model defaults:** Reads the model name from the constructor (`model=`) or the `ANTHROPIC_MODEL` environment variable.
+- **Tool calling:** Converts the supplied toolkits into Anthropic `tools` definitions and executes `tool_use` requests.
+- **Tool result formatting:** Uses `AnthropicMessagesToolResponseAdapter` to return `tool_result` blocks back to the model.
+- **Structured output (best-effort):** When `output_schema` is provided, the adapter prompts for JSON output and validates it.
+
+## Constructor parameters
+```python Python
+AnthropicMessagesAdapter(
+    model: str = "claude-3-5-sonnet-latest",
+    max_tokens: int = 1024,
+    client: Optional[Any] = None,
+    message_options: Optional[dict] = None,
+    provider: str = "anthropic",
+)
+```
+
+## Related Topics
+- [LLM Adapters](./llm_adapters)
+- [Tool Response Adapters](./tool_response_adapters)
+- [OpenAI Responses Adapter](./openai_responses_adapter)

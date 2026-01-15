@@ -258,6 +258,22 @@ adapter = OpenAIResponsesAdapter(client=AsyncOpenAI(api_key="sk-..."))
 ### Tool Response Adapter
 The ``OpenAICompletionsToolResponseAdapter`` and ``OpenAIResponsesToolResponseAdapter``convert a tool's structured response into plain text or JSOn that can beinserted into an OpenAI chat context. 
 
+## MeshAgent Anthropic
+The ``meshagent.anthropic`` package provides adapters to integrate Anthropic models with MeshAgent tools and agents.
+
+### Messages Adapter
+- ``AnthropicMessagesAdapter``: wraps Anthropic's Messages API. It converts `Toolkit` objects into Anthropic tool definitions, executes tool calls, and returns the final assistant response.
+
+<CodeGroup>
+```Python Python
+from meshagent.anthropic import AnthropicMessagesAdapter
+
+adapter = AnthropicMessagesAdapter(model="claude-3-5-sonnet-latest")
+```
+</CodeGroup>
+
+### Tool Response Adapter
+The ``AnthropicMessagesToolResponseAdapter`` converts a tool's structured response into Anthropic `tool_result` blocks so the model can consume tool outputs in the same turn.
 
 ## MeshAgent CLI
 The ``meshagent.cli`` package installs everything you need to streamline room and agent management from your terminal. The CLI assembles submodules for authentication, projects, API keys, participant tokens, messaging, storage, agents, webhooks, and more. 
