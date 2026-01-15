@@ -47,6 +47,7 @@ Use this when your agent should **always** have access to specific tools.
 - Cases when users should not choose tools manually
 
 In both cases, MeshAgent talks to OpenAI via the [`OpenAIResponsesAdapter`](../adapters/openai_responses_adapter). This adapter gathers the toolkits available to the agent on that turn, manages tool execution, streaming responses, and returning the final result. 
+Tool lists are rebuilt on every user message by merging always-on toolkits with any user-selected toolkits for that turn. For the full flow see [Tool Usage Patterns](./tool_usage_patterns).
 
 ## User-Toggleable Tools (Per-Message)
 This section shows you how to let users dynamically enable/disable OpenAI Connectors and MCP servers per conversation or message — similar to how ChatGPT and Claude let you toggle tools on and off.
@@ -208,22 +209,6 @@ meshagent service create --file "meshagent.yaml" --room=quickstart
 
 Next open [MeshAgent Studio](https://studio.meshagent.com), go to a room where the service is deployed, and begin talking to the ChatBot.
 
-## How tools are collected each turn 
-Every user message is handled as a new “turn.” On each turn, MeshAgent builds a **tool list for that message** and sends it to OpenAI.
-
-Tools can come from two places:
-1. **Always-on toolkits**: Toolkits attached to the agent in code (via `toolkits=...`). These are available on every message.
-2. **User-selected toolkits (per-message)**: Toolkits selected in the UI (like Studio toggles). These are only available for the current message.
-
-MeshAgent merges both sources into a single tool list for the turn, and sends that list to OpenAI through the `OpenAIResponsesAdapter`.
-
-For each turn: 
-1. The UI displays available services as tools and passes the user's selected tools to the ChatBot
-2. The ChatBot's `MCPToolkitBuilder` creates tool definitions with the server endpoints
-3. These definitions are sent to OpenAI's Responses API via the `OpenAIResponsesAdapter`
-4. OpenAI connects to each MCP server and discovers what tools they offer
-5. The agent can now call those tools, and the adapter handles execution and returning the results
-
 ## Security and best practices
 When adding external tools like MCP Servers or OpenAI Connectors consider: 
 - What data you're sharing with external services
@@ -232,6 +217,7 @@ When adding external tools like MCP Servers or OpenAI Connectors consider:
 
 ## Related Topics
 - [Dynamic Connectors and MCP Servers](./dynamic_openai_connectors_mcp): Configure your agent and UI so users can dynamically select tools for the agent per message. 
+- [Tool Usage Patterns](./tool_usage_patterns): How toolkits are collected per turn and routed to the adapter.
 - [Introduction to Services and Containers](../../services_room_containers/overview): Learn more about project and room services and how to run ad-hoc commands using the Containers API. 
 - [Packaging Services](../../services_room_containers/packaging_and_deploying/packaging): Learn how to create a meshagent.yaml file to package a project or room service
 - [Deploying Services](../../services_room_containers/packaging_and_deploying/deployment): Learn how to deploy a project or room service from MeshAgent Studio or using the MeshAgent CLI

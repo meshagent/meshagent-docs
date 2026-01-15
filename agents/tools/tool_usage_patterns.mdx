@@ -3,6 +3,7 @@ title: "Tool Usage Patterns"
 ---
 
 MeshAgent supports two complementary ways to bring tools into an agent turn. Static toolkits stay attached to the agent for its entire lifetime, while dynamic toolkits are created on demand from `ToolkitBuilder`/`ToolkitConfig` pairs. This guide walks through both patterns, explains why you might pick one over the other, and maps out the runtime flow for message-specific tool selection.
+Every user message is a new turn, and the tool list is rebuilt for that turn by merging always-on toolkits with any dynamic toolkits requested for the message. On the next message, the process repeats with a fresh tool list.
 
 ## Static Toolkits (Always On)
 - Construct the toolkit up front (for example `StorageToolkit()` or a custom bundle) and pass it in the agent’s `toolkits` list.
@@ -59,6 +60,8 @@ This `message` dict is the payload your client sends to the agent; the key piece
 3. **Agent turn**: `ChatBot` collects static thread toolkits, calls `make_toolkits` with the selected configs, and flattens the combined toolkit list.  
 4. **LLM execution**: `OpenAIResponsesAdapter.next` converts those toolkits into OpenAI tool definitions for that single request.  
 5. **Tool call routing**: when the LLM calls a tool, `ResponsesToolBundle` looks up the owning toolkit (static or dynamic) and executes it. On the next message, the list resets and the process repeats.
+
+For MCP and OpenAI Connector toolkits, the adapter also reaches out to each MCP server during the request to discover that server's tool definitions.
 
 ## Motivations and Use Cases
 - **User-selected connectors**: Let people opt into specific tools for MCP servers, web search, proprietary APIs, and more on a per-message basis.  
