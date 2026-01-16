@@ -80,6 +80,7 @@ Define how MeshAgent connects to your service. Each port can expose multiple end
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `num` | `"*"` or int | Yes | Port number or `"*"` for auto-assignment |
+| `host_port` | int | No | Host port mapping for the container port (defaults to `num`) |
 | `type` | string | No | Protocol type: `http` or `tcp` |
 | `liveness` | string | No | Path for health checks |
 | `endpoints` | list | No | List of endpoints this port serves |
@@ -194,18 +195,59 @@ Use ``container`` when MeshAgent should run your service in a container. Contain
 | `pull_secret` | string | No | Secret ID for accessing private registries (`ServiceSpec` only)|
 | `storage` | object | No | Mount room or project storage |
 | `api_key` | object | No | Auto-provision API key for the service (`ServiceSpec` only)|
+| `on_demand` | boolean | No | Run only when explicitly invoked (per-request services) |
+| `writable_root_fs` | boolean | No | Allow writes to the container root filesystem (default: read-only) |
 
+
+#### Environment Variables
+Environment variables can be literal values or request a participant token to be injected.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Environment variable name |
+| `value` | string | No | Literal value |
+| `token` | object | No | Inject a participant token instead of a literal value |
+
+`token` fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `identity` | string | Yes | Participant identity to issue the token for |
+| `api` | object | No | API scope for the token (see [API Scopes](../../rest_api/api_scopes)) |
+
+Example token-backed environment variable:
+```yaml yaml
+environment:
+  - name: MESHAGENT_TOKEN
+    token:
+      identity: my-agent
+      api:
+        queues:
+          send: ["notifications"]
+```
 
 #### Storage
-Use the ``storage`` field to mount room or project storage into your container. 
+Use the ``storage`` field to mount room, project, or image storage into your container.
 - Room storage: Per-room files, read/write by default
 - Project storage: Shared across all rooms, read-only by default
+- Image storage: Read-only mounts from another container image
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `path` | string | Yes | Mount path inside the container |
 | `subpath` | string | No | Subdirectory within the storage volume |
 | `read_only` | boolean | No | Whether the mount is read-only |
+| `image` | string | No | Source image for `storage.images` mounts |
+
+Example image mount:
+```yaml yaml
+storage:
+  images:
+    - image: "registry.example.com/data:latest"
+      path: /opt/data
+      subpath: "models"
+      read_only: true
+```
 
 #### API Key Provisioning
 The ``api_key`` field allows your container service to request an admin API key be automatically provisioned and injected. This is useful when your service needs to call MeshAgent APIs directly (e.g., to manage participants, create resources, etc.).
@@ -241,7 +283,7 @@ container:
 ```
 
 ### Variables (only for ServiceTemplate)
-Variables define what values users can provide when a container-based service launches. You can restrict inputs or hide sensitive ones. Variables from the ServiceTemplate will be mapped to environment variables in the container. 
+Variables define what values users can provide when a container-based service launches. You can restrict inputs or hide sensitive ones. Variables are substituted into container fields (most often `container.environment` values) using `{variable_name}` placeholders. 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
