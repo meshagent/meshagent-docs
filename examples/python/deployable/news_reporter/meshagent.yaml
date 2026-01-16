@@ -1,0 +1,54 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: news-reporter
+  description: "Daily news reporter with email updates"
+  annotations:
+    meshagent.service.id: "news-reporter"
+    meshagent.service.readme: "Daily News reporter via email along with a ChatBot. Customize the rules to tailor your daily news digest"
+agents:
+  - name: news-reporter
+    description: "Chatbot that can trigger the news mailer"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+  - name: news-reporter
+    description: "Mailbot for inbound requests and outbound email tools"
+    annotations:
+      meshagent.agent.type: "MailBot"
+      # Runs daily at 09:00 (cron timezone depends on scheduler settings).
+      meshagent.agent.schedule: '{"schedule":"0 9 * * *","queue":"news_updates","name":"DailyAINews","payload":{"prompt":"Generate and send the daily AI news briefing. Follow your rules."}}'
+  - name: news-reporter
+    description: "Scheduled worker that composes and sends the daily digest"
+    annotations:
+      meshagent.agent.type: "Worker"
+variables:
+  - name: email
+    type: email
+    description: "Choose an email address for the mailbot (e.g. news@mail.meshagent.com)."
+  - name: send_to_email
+    description: "Choose an email to send updates to. (Recipient email for daily updates.)"
+ports:
+- num: "*"
+  type: http
+  liveness: "/"
+  endpoints:
+  - path: /agent
+    meshagent:
+      identity: news-reporter
+  - path: /agent1
+    meshagent:
+      identity: news-reporter
+  - path: /agent2
+    meshagent:
+      identity: news-reporter
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: >
+    /usr/bin/meshagent/meshagent multi service
+    -c "chatbot --agent-name=news-reporter --require-web-search --require-toolkit=email --require-storage --rule='You are a newsroom assistant. When asked, you can send a news digest email using the email toolkit. Make sure that the news briefing is detailed and includes links to relevant sources' --room-rules='agents/news-reporter/chatbotrules.txt';
+        mailbot --agent-name=news-reporter --queue=news_email --email-address={email} --toolkit-name=email --require-web-search --enable-attachments --rule='You are a news reporter. When replying to inbound emails, use web search when applicable. Ensure that the news briefings you share are detailed and include links to relevant sources.' --room-rules='agents/news-reporter/mailbotrules.txt';
+        worker --agent-name=news-reporter --queue=news_updates --require-toolkit=email --require-storage --require-web-search --rule='Create a daily AI news digest covering market moves, funding, major product announcements, and policy updates. Use web search and include the links to your sources. Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md. Send the digest email to {send_to_email} using the email toolkit.' --room-rules='agents/news-reporter/workerrules.txt'"
+  storage:
+    room:
+      - path: /data
+        read_only: false
