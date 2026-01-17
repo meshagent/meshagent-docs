@@ -4,7 +4,7 @@ import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.agents.mail import MailWorker
+from meshagent.agents.mail import MailBot
 
 # Enable OpenTelemetry logging and tracing for the agent
 otel_config(service_name="mailbot")
@@ -18,7 +18,7 @@ service = ServiceHost()  # MeshAgent assigns a free port if you omit one
 
 
 @service.path(path="/mail", identity="mailbot")
-class ExampleMailbot(MailWorker):
+class ExampleMailbot(MailBot):
     def __init__(self):
         super().__init__(
             name="mailbot",

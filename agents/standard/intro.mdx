@@ -47,7 +47,7 @@ Background (ambient) agents triggered by tasks, queues, or other events to execu
 **Available Background Agents:** 
 * **[TaskRunner](./taskrunner):** Schema-driven background agent. Define input/output schemas and an ask() method. Perfect for wrapping existing agents.
 * **[Worker](./worker):** Queue driven background agent. Listens for messages and processes them sequentially. Ideal for background jobs or long-running tasks.  
-* **[MailWorker](./mailworker):** Specialized worker for email. Communicates via email, can process attachments, and invoke other custom tools before replying to a user. 
+* **[MailBot](./MailBot):** Specialized worker for email. Communicates via email, can process attachments, and invoke other custom tools before replying to a user. 
 * **[Indexer](./indexer):** Watches incoming content, embeds it into the room’s vector store, and integrates with RagToolkit for Retrieval Augmented Generation (RAG) workflows.  
 
 ### Under the Hood: Agent Class Model
@@ -56,7 +56,7 @@ MeshAgent agents are built on a layered class hierarchy. This design makes it ea
 All MeshAgent agents share a **layered class hierarchy**:
 - **`Agent`** – Base identity, metadata, and `AgentChatContext`.  
 - **`SingleRoomAgent`** – Binds an agent to a Room connection and installs required toolkits.  
-- **Specialized Base Agents** – These extend the SingleRoomAgent and are either participant-oriented (ChatBot, VoiceBot) or run in the background (TaskRunner, Worker, Indexer, MailWorker). 
+- **Specialized Base Agents** – These extend the SingleRoomAgent and are either participant-oriented (ChatBot, VoiceBot) or run in the background (TaskRunner, Worker, Indexer, MailBot). 
 
 This design ensures **consistent context handling, toolkit discovery, and Room integration** across all agent types.
 

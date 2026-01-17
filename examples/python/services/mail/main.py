@@ -1,5 +1,5 @@
 from meshagent.api.services import ServiceHost
-from meshagent.agents.mail import MailWorker
+from meshagent.agents.mail import MailBot
 
 from meshagent.openai import OpenAIResponsesAdapter
 import asyncio
@@ -12,7 +12,7 @@ service = ServiceHost()
 
 
 @service.path("/agent")
-class SampleMailWorker(MailWorker):
+class SampleMailBot(MailBot):
     def __init__(self):
         super().__init__(
             name="meshagent.mail.agent",

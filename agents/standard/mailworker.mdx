@@ -1,18 +1,18 @@
 ---
-title: "MailWorker Overview"
+title: "MailBot Overview"
 ---
 
 import SimpleMailbot from "/snippets/examples/python/agents/mailbot/mailbot.mdx"
 import ProvisionMailbox from "/snippets/examples/python/agents/mailbot/provision_mailbox.mdx"
 
-The ``MailWorker`` lets your build an agent that communicates via email. It receives incoming messages, stores them in your room, generates replies using an LLM, and sends responses back out through SMTP — automatically turning your inbox into an intelligent, room-connected agent.
+The ``MailBot`` lets your build an agent that communicates via email. It receives incoming messages, stores them in your room, generates replies using an LLM, and sends responses back out through SMTP — automatically turning your inbox into an intelligent, room-connected agent.
 
-``MailWorker`` extends the [``Worker``](./worker) agent to process inbound email from a queue and send replies via SMTP. It automatically persists every message and attachment to room storage, builds conversation context from past emails, and can call tools or reason over messages like any other agent.
+``MailBot`` extends the [``Worker``](./worker) agent to process inbound email from a queue and send replies via SMTP. It automatically persists every message and attachment to room storage, builds conversation context from past emails, and can call tools or reason over messages like any other agent.
 
-> **Prerequisite**: To use ``MailWorkers`` you must either be an admin of the MeshAgent project you are using or have an admin create and allocate an email address for the agent to use. Only project admins can create and allocate email addresses. 
+> **Prerequisite**: To use ``MailBots`` you must either be an admin of the MeshAgent project you are using or have an admin create and allocate an email address for the agent to use. Only project admins can create and allocate email addresses. 
 
 ## When to Use It
-Use ``MailWorker`` when you want an agent that:
+Use ``MailBot`` when you want an agent that:
 - Responds to incoming email automatically (e.g., helpdesk, order confirmations, triage bots)
 - Maintains threaded context so replies include past conversation history (based on the current email thread)
 - Runs LLMs or tools over incoming email messages before responding
@@ -21,7 +21,7 @@ Use ``MailWorker`` when you want an agent that:
 If you just need a background job, see [Worker](./worker). If you want real-time conversations outside of email, see [ChatBot](./chatbot) or [VoiceBot](./voicebot). 
 
 ## Constructor Parameter
-``MailWorker`` inherits all ``Worker`` parameters (like ``queue``, ``llm_adapter``, ``tool_adapter``, ``toolkits``, ``rules``, and ``requires``) and adds a few email-specific ones:
+``MailBot`` inherits all ``Worker`` parameters (like ``queue``, ``llm_adapter``, ``tool_adapter``, ``toolkits``, ``rules``, and ``requires``) and adds a few email-specific ones:
 
 | Parameter        | Type                        | Description                                                                                            |
 | --------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -32,14 +32,14 @@ If you just need a background job, see [Worker](./worker). If you want real-time
 
 
 ## Lifecycle Overview
-``MailWorker`` inherits its lifecycle from ``Worker``:
+``MailBot`` inherits its lifecycle from ``Worker``:
 - ``await start(room)``: connects to the room and begins long-polling the email queue for new messages.
 - ``await stop()``: gracefully stops the polling loop and disconnects.
 
 > Note: “Long-polling” means the worker efficiently waits on the queue until a new message arrives—no busy-looping or manual sleep required.
 
 ## Processing Flow
-``MailWorker`` runs a continuous loop inherited from ``Worker`` that listens for incoming email messages on a queue and processes them end-to-end.
+``MailBot`` runs a continuous loop inherited from ``Worker`` that listens for incoming email messages on a queue and processes them end-to-end.
 
 1. Receive an email — The worker long-polls the email queue and receives base64-encoded .eml messages.
 2. Parse and persist — It decodes the message, extracts headers, body, and attachments, and saves them under ``.emails/...`` in room storage. A summary record is inserted into the ``emails`` table for lookup and threading.
@@ -58,7 +58,7 @@ If you just need a background job, see [Worker](./worker). If you want real-time
 
 
 ## Example
-First create and allocate an available email address, then define a ``MailWorker`` that uses it. 
+First create and allocate an available email address, then define a ``MailBot`` that uses it. 
 
 ### Create a Mailbox
 You can create a new mailbox in [MeshAgent Studio](https://studio.meshagent.com) from the **Mail** tab. You will need to choose an email address and email queue for the agent. 
@@ -100,7 +100,7 @@ export EMAIL_QUEUE="my_email"
 meshagent service run "main.py" --room=maildemo
 ```
 
-At this point, the MailWorker is connected to the ``maildemo`` room and listening on the queue you configured. As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
+At this point, the MailBot is connected to the ``maildemo`` room and listening on the queue you configured. As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
 
 > **Note:** Once you stop the room, the mail agent will not automatically restart unless you save the agent configuration and deploy the agent as a project wide service or run it via a room container. To persist your mail agent and reuse it you will need to save the configuration for your agent and create a project wide service that manages saved agent configurations via room containers. This project wide service will be responsible for starting/stopping agent configuration in a specific room. You can learn more about this in the services & containers documentation. 
 
