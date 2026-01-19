@@ -11,6 +11,7 @@ The OpenAI Responses adapter is our reference `LLMAdapter` implementation. It en
 - **Streaming support:** Consumes the streaming response API, emitting events such as reasoning summaries, partial content, and tool call updates.
 - **Parallel tool calls:** Optionally enables OpenAI’s `parallel_tool_calls` setting (disabled automatically for models that do not support it).
 - **Structured output:** If `output_schema` is provided to `next()`, requests JSON schema output and validates the result.
+- **Automatic compaction:** Uses the OpenAI Responses compaction API to shrink the context when the next request would exceed the model window.
 
 ## Constructor parameters
 ```python Python
@@ -22,6 +23,7 @@ OpenAIResponsesAdapter(
     reasoning_effort: Optional[str] = None,
     provider: str = "openai",
     log_requests: bool = False,
+    max_output_tokens: Optional[int] = 32000,
 )
 ```
 - `model` – default model name; can be overridden per message.
@@ -31,6 +33,7 @@ OpenAIResponsesAdapter(
 - `reasoning_effort` – populates the Responses API `reasoning` options.
 - `provider` – label emitted in telemetry and logs.
 - `log_requests` – when true, logs HTTP requests for debugging.
+- `max_output_tokens` – cap output tokens per response; also used when deciding whether to compact the context.
 
 ## Tool provider integration
 The adapter includes several builders and tools for OpenAI native tools. Agents can use them directly, or override them with agent-specific wrappers that add persistence (for example, the ChatBot’s thread-aware image generation builder that saves partial/final images to room storage and updates the thread document).
@@ -51,6 +54,9 @@ When `next()` is called it:
 4. **Executes tools** - When the model requests tools, executes them and formats results
 5. **Loops** - Continues calling the model with tool results until it produces a final answer
 6. **Returns Result** - Gives you the final output (text or structured data)
+
+## Context compaction
+`OpenAIResponsesAdapter` stores token usage from the last response in the chat context metadata. Before issuing the next request it checks whether the prior input + output usage would overflow the model's context window (while reserving `max_output_tokens` for the reply). If so, it calls `responses.compact`, replaces the context messages with the compacted output, and then proceeds with the new request. This is automatic; you do not need to call compaction manually.
 
 ## Related Topics
 - [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters

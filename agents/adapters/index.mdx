@@ -28,6 +28,7 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - Call the model: Use the provider's API/SDK to send the messages; stream tokens/events back.
 - Handle tools: When the model requests a tool, execute it via the toolkit and capture the result (using a `ToolResponseAdapter` if provided).
 - Update Context: Add tool results back into the chat context so the model can use it in the same turn or a later one (depending on the agent).
+- Optional compaction: When the context is too large for the model, compact it before sending the next request.
 - Output: Return the model’s final response for the turn (text or structured output).
 
 > Adapters append results to the in-memory chat context for the turn. Whether that context is persisted across turns is agent-specific (e.g., `ChatBot` saves to the thread document and is used for multi-turn conversations; a `TaskRunner` does not and is used for single-turn tasks).
@@ -35,11 +36,18 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 ### What an `LLMAdapter` base class defines
 - `default_model()`: Return the model name (or identifier) the adapter should use when the caller does not override it.
 - `create_chat_context()`: Creates a fresh `AgentChatContext`. Implementations can use this to set provider and model specific roles (e.g., some models prefer a "developer" prompt vs a "system" prompt).
+- `context_window_size(model: str)`: Declare the model's context window size if known.
+- `needs_compaction(context)`: Decide if the current context should be compacted before the next request.
+- `compact(context, room, model?)`: Mutate the context to a smaller representation (provider-specific).
+- `get_input_tokens(...)`: Optional helper to estimate the token count for the current request.
 - `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves (see the `ChatBot` implementation for an example).
 - `make_toolkit(room, model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
 - `check_for_termination(context, room)`: Allows you to use the chat context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
 - `next(...)`: The core method: given the chat context, room, toolkits for this turn, and an optional `ToolResponseAdapter`, call the underlying LLM, stream events (via `event_handler`), execute tool calls, inject tool results into the context, and return the final output. You can pass `output_schema` for structured responses, override `model`, and act `on_behalf_of` a participant. See [OpenAI Responses Adapter](./openai_responses_adapter) for a detailed implementation.
 - `validate(response, output_schema)`: Validate structured output using JSON Schema.
+
+### Context compaction
+LLM adapters can optionally compact a chat context before a new request when the context is too large for the model. The base class provides `needs_compaction()` and `compact()` as hooks; the default implementations do nothing. If your adapter supports compaction, check `needs_compaction()` early in `next()` and mutate the `AgentChatContext` in-place (for example, by summarizing older messages or using a provider's compaction API). The built-in [OpenAI Responses Adapter](./openai_responses_adapter) performs this automatically.
 
 ### How agents use adapters (conversation turn flow)
 1. The agent resolves toolkits for this turn
