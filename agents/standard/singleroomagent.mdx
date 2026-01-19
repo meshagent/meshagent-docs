@@ -14,13 +14,13 @@ The ``SingleRoomAgent`` is the foundation for other classes like ``ChatBot`` or 
 
 ## Constructor Parameters
 Because `SingleRoomAgent` extends `Agent`, it accepts the same initialization parameters:
-- `name (str)`: Unique identifier for the agent within the room. Required.
-- `title (str | None)`: Human-friendly display name. Defaults to the value of `name`.
+- `name (str | None)`: Deprecated. Agent identity comes from the participant token; if provided, it is only used to default `title`.
+- `title (str | None)`: Human-friendly display name. If omitted and you set `name`, it defaults to that value.
 - `description (str | None)`: Short description that UX surfaces can show to users. Defaults to an empty string.
 - `requires (list[Requirement] | None)`: Dependencies that must exist in the room (usually `RequiredToolkit` or `RequiredSchema`). Defaults to an empty list.
 - `labels (list[str] | None)`: Optional tags that help discovery and filtering. Defaults to an empty list.
 
-These arguments are stored on the instance and serialized through `Agent.to_json()` when a derived agent registers itself with the room service.
+These arguments are stored on the instance and serialized through `Agent.to_json()` when a derived agent registers itself with the room service. The `name` field in that JSON is taken from the participant token, not the constructor.
 
 ## Lifecycle Methods
 - `await start(room: RoomClient)`: Called when the agent is connected to a room. Stores the `RoomClient` reference and invokes `install_requirements()` so declared toolkits and schemas become available. Override this to add startup logic (logging, bootstrapping state, sending welcome messages), but always call `await super().start(room=room)` first.
@@ -49,7 +49,6 @@ service = ServiceHost()
 class StartAgent(SingleRoomAgent):
     def __init__(self):
         super().__init__(
-            name="start-agent",
             title="Start Agent",
             description="An example of extending the SingleRoomAgent Class",
             requires=[RequiredToolkit(name="ui")],

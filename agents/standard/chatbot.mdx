@@ -159,16 +159,15 @@ meshagent service create --file "meshagent.yaml" --room=quickstart
 
 The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). 
 
-> **Note:** If you previously deployed the CLI ChatBot with name "chatbot" you will need to give your SDK based chatbot a unique name. 
 
 ## How ChatBot Works
 ### Constructor Parameters
-`ChatBot` accepts everything that `SingleRoomAgent` does (`name`, `title`, `description`, `requires`, `labels`) and adds chat-specific parameters.
+`ChatBot` accepts everything that `SingleRoomAgent` does (`title`, `description`, `requires`, `labels`). The `name` constructor argument is deprecated; agent identity comes from its participant token.
 
 | Parameter             | Type                          | Description                                                                                                     |
 | -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `name`               | `str`                         | Unique identifier for the agent within the room.                                                                |
-| `title`              | `str \| None`                 | Human-friendly name shown in UX. Defaults to `name`.                                                            |
+| `name`               | `str \| None`                 | Deprecated. Agent identity comes from the participant token; if provided, it is only used to default `title`.   |
+| `title`              | `str \| None`                 | Human-friendly name shown in UX. If omitted and you set `name`, it defaults to that value.                      |
 | `description`        | `str \| None`                 | Optional short description.                                                                                     |
 | `requires`           | `list[Requirement] \| None`   | Dependencies such as `RequiredSchema` or `RequiredToolkit`. Automatically ensures the `"thread"` schema exists. |
 | `llm_adapter`        | `LLMAdapter`                  |  Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies chat contexts and translates responses into MeshAgent events.                                      |
