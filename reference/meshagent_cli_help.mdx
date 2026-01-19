@@ -2592,6 +2592,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
 * `container`: Manage containers and images in a room
+* `sync`: Inspect and update mesh documents in a room
 
 ### `meshagent room agents`
 
@@ -3679,5 +3680,141 @@ $ meshagent room container images pull [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--tag TEXT`: Image tag/ref to pull  [required]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+### `meshagent room sync`
+
+Inspect and update mesh documents in a room
+
+**Usage**:
+
+```console
+$ meshagent room sync [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `show`: Print the full document JSON
+* `grep`: Search the document for matching content
+* `inspect`: Print the document schema JSON
+* `create`: Create a new document at a path
+* `update`: Apply a JSON patch to a document
+
+#### `meshagent room sync show`
+
+Print the full document JSON
+
+**Usage**:
+
+```console
+$ meshagent room sync show [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--include-ids`: Include $id attributes in output
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync grep`
+
+Search the document for matching content
+
+**Usage**:
+
+```console
+$ meshagent room sync grep [OPTIONS] PATH PATTERN
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+* `PATTERN`: Regex pattern to match  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--ignore-case`: Ignore case
+* `--before INTEGER RANGE`: Include siblings before  [default: 0; x&gt;=0]
+* `--after INTEGER RANGE`: Include siblings after  [default: 0; x&gt;=0]
+* `--include-ids`: Include $id attributes in output
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync inspect`
+
+Print the document schema JSON
+
+**Usage**:
+
+```console
+$ meshagent room sync inspect [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync create`
+
+Create a new document at a path
+
+**Usage**:
+
+```console
+$ meshagent room sync create [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--schema PATH`: Schema JSON file  [required]
+* `--json TEXT`: Initial JSON payload
+* `--json-file PATH`: Path to initial JSON payload
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync update`
+
+Apply a JSON patch to a document
+
+**Usage**:
+
+```console
+$ meshagent room sync update [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--patch TEXT`: JSON patch array
+* `--patch-file PATH`: Path to JSON patch array
 * `--help`: Show this message and exit.
 
