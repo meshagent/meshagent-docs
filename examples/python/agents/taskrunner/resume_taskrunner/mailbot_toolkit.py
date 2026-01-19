@@ -26,7 +26,7 @@ class ProcessResume(Tool):
                 "properties": {
                     "attachment_path": {
                         "type": "string",
-                        "description": "Path to the attachment saved by the mailworker (for example .emails/2025/01/01/12/00/00/abc123/attachments/resume.pdf)",
+                        "description": "Path to the attachment saved by the mailbot (for example .emails/2025/01/01/12/00/00/abc123/attachments/resume.pdf)",
                     },
                     "candidate_name": {"type": "string"},
                     "candidate_email": {"type": "string"},
@@ -41,7 +41,7 @@ class ProcessResume(Tool):
         candidate_name: str | None = None,
         candidate_email: str | None = None,
     ):
-        # MailWorker saves attachments into .emails/.../attachments/<file>. Copy that into resumes/<file>
+        # MailBot saves attachments into .emails/.../attachments/<file>. Copy that into resumes/<file>
         filename = os.path.basename(attachment_path.rstrip("/"))
         target_path = f"resumes/{filename}"
 
@@ -202,7 +202,7 @@ class MailBotToolkit(RemoteToolkit):
         super().__init__(
             name="mailbot-toolkit",
             title="mailbot-toolkit",
-            description="A Toolkit for the MailWorker to kickoff resume processing",
+            description="A Toolkit for the MailBot to kickoff resume processing",
             tools=[
                 ProcessResume()
             ],

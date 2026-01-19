@@ -1,6 +1,6 @@
 # Resume Processing Example
 
-This sample wires up a resume-processing workflow inside a MeshAgent room. It creates tables in the room database to track candidates, open roles, and candidate role scores. It also uses a MailWorker agent for resume processing. Candidates email the MailWorker who stores their resume and candidate details in the room. 
+This sample wires up a resume-processing workflow inside a MeshAgent room. It creates tables in the room database to track candidates, open roles, and candidate role scores. It also uses a MailBot agent for resume processing. Candidates email the MailBot who stores their resume and candidate details in the room. 
 
 Once the candidate information is stored, another agent compares the candidates background to open roles and suggests matches. 
 
@@ -21,7 +21,7 @@ Now we can test the agent out locally before deploying:
 
     `meshagent service run mailbot_toolkit.py --room resume`
 
-2. Next, call the mailbot into the room. As long as our toolkit is running locally, we can pass it to the mailbot for use. We'll also give the agent access to the storage toolkit so it can read/write files in the room and the web search toolkit so it can research the candidates. We will also pass the room-rules flag so a recruiter or hiring manager can tailor the criteria for how the mailworker should process and score resumes. 
+2. Next, call the mailbot into the room. As long as our toolkit is running locally, we can pass it to the mailbot for use. We'll also give the agent access to the storage toolkit so it can read/write files in the room and the web search toolkit so it can research the candidates. We will also pass the room-rules flag so a recruiter or hiring manager can tailor the criteria for how the mailbot should process and score resumes. 
 
 `meshagent mailbot join --room resume --agent-name jobs --queue resume_email --email-address jobs@mail.meshagent.life --toolkit-name mailbot.mail --toolkit mailbot-toolkit --room-rules=agents/resume_mailbot/rules.txt`
 

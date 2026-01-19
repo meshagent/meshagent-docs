@@ -50,9 +50,10 @@ Create a mailbox tied to a Room in [MeshAgent Studio](https://studio.meshagent.c
 ```bash bash
 meshagent setup
 
-# Fill in to careate a unique email address !
-export EMAIL_ADDRESS="<your_unqiue_address>@mail.meshagent.com"
-export EMAIL_QUEUE="<your_unqiue_address>"
+# Fill in to create a unique email address.
+export EMAIL_ADDRESS="<your_unique_address>@mail.meshagent.com"
+# Optional: if omitted, MailBot defaults the queue to the email address.
+export EMAIL_QUEUE="$EMAIL_ADDRESS"
 
 meshagent mailbox create --address "$EMAIL_ADDRESS" --room quickstart --queue "$EMAIL_QUEUE"
 ```
@@ -70,6 +71,8 @@ Start the built-in mailbot locally and connect it to your room:
 meshagent mailbot join --room quickstart --agent-name mailbot --enable-attachments\
   --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
 ```
+
+If you omit `--queue`, MailBot defaults the queue to the `--email-address` value. Make sure the mailbox is configured to deliver to the same queue.
 
 Use flags like `--reply-all`, `--enable-attachments`, `--whitelist`, or `--room-rules` to customize behavior. Run `meshagent mailbot join --help` for the full list.
 
@@ -132,7 +135,7 @@ export MESHAGENT_API_KEY="<your-api-key>"
 export MESHAGENT_PROJECT_ID="<your-project-id>" # run meshagent project list to see project ids
 export ROOM_NAME="quickstart"
 export EMAIL_ADDRESS="<your_email>@mail.meshagent.com"
-export EMAIL_QUEUE="<your_queue_name>"
+export EMAIL_QUEUE="$EMAIL_ADDRESS" # optional; defaults to the email address
 ```
 
 Then copy the code to create the mailbox:
@@ -157,12 +160,12 @@ Make sure the queue and email address are set, then run the service:
 ```bash
 # Fill these in!
 export EMAIL_ADDRESS="<your_unique_email>@mail.meshagent.com"
-export EMAIL_QUEUE="<your_unique_queue_name>"
+export EMAIL_QUEUE="$EMAIL_ADDRESS" # optional; defaults to the email address
 meshagent service run "main.py" --room=quickstart
 ```
 
 ### Step 4: Email the agent
-Send an email to the mailbox and wait for it's response, you can verify the `.emails/` folder and logs in [MeshAgent Studio](https://studio.meshagent.com). At this point, the MailBot is connected to the ``quickstart`` room and listening on the queue you configured. As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
+Send an email to the mailbox and wait for it's response, you can verify the `.emails/` folder and logs in [MeshAgent Studio](https://studio.meshagent.com). At this point, the MailBot is connected to the ``quickstart`` room and listening on the configured queue (defaults to the email address). As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
 
 ### Step 5: Package and deploy the agent
 To deploy your Mail agent permanently, you need:
@@ -198,7 +201,7 @@ The Mail agent is now deployed to the `quickstart` room! Now we can email the ag
 | `name`               | `str \| None`                 | Deprecated. Agent identity comes from the participant token; if provided, it is only used to default `title`.       |
 | `title`              | `str \| None`                 | Display name shown in UX. If omitted and you set `name`, it defaults to that value.                                 |
 | `description`        | `str \| None`                 | Optional short description.                                                                                         |
-| `queue`              | `str`                         | Queue to listen on. Defaults to `"email"`.                                                                          |
+| `queue`              | `str`                         | Queue to listen on. Defaults to the `email_address` when not provided.                                               |
 | `llm_adapter`        | `LLMAdapter`                  | Required LLM adapter (for example `OpenAIResponsesAdapter`).                                                        |
 | `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter for translating tool outputs into LLM context messages.                                            |
 | `toolkits`           | `list[Toolkit] \| None`       | Toolkits always available to this worker beyond what `requires` installs. Defaults to `[]`.                        |
