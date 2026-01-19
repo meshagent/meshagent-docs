@@ -26,7 +26,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `project`: Manage or activate your meshagent projects
 * `api-key`: Manage or activate api-keys for your project
 * `session`: Inspect recent sessions and events
-* `participant-token`: Generate participant tokens (JWTs)
+* `token`: Generate participant tokens (JWTs)
 * `webhook`: Manage project webhooks
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
@@ -473,14 +473,14 @@ $ meshagent session show [OPTIONS] SESSION_ID
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--help`: Show this message and exit.
 
-## `meshagent participant-token`
+## `meshagent token`
 
 Generate participant tokens (JWTs)
 
 **Usage**:
 
 ```console
-$ meshagent participant-token [OPTIONS] COMMAND [ARGS]...
+$ meshagent token [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -491,14 +491,14 @@ $ meshagent participant-token [OPTIONS] COMMAND [ARGS]...
 
 * `generate`: Generate a participant token (JWT) from a...
 
-### `meshagent participant-token generate`
+### `meshagent token generate`
 
 Generate a participant token (JWT) from a spec
 
 **Usage**:
 
 ```console
-$ meshagent participant-token generate [OPTIONS]
+$ meshagent token generate [OPTIONS]
 ```
 
 **Options**:
@@ -602,6 +602,10 @@ $ meshagent service [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a service attached to the project.
 * `update`: Create a service attached to the project.
+* `validate`: Validate a service spec from a YAML file.
+* `create-template`: Create a service from a ServiceTemplate spec.
+* `update-template`: Update a service using a ServiceTemplate...
+* `validate-template`: Validate a service template from a YAML file.
 * `run`
 * `show`: Show a services for the project.
 * `list`: List all services for the project.
@@ -641,6 +645,76 @@ $ meshagent service update [OPTIONS]
 * `-f, --file TEXT`: File path to a service definition  [required]
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
 * `--room TEXT`: The name of a room to update the service for
+* `--help`: Show this message and exit.
+
+### `meshagent service validate`
+
+Validate a service spec from a YAML file.
+
+**Usage**:
+
+```console
+$ meshagent service validate [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: File path to a service definition  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent service create-template`
+
+Create a service from a ServiceTemplate spec.
+
+**Usage**:
+
+```console
+$ meshagent service create-template [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-f, --file TEXT`: File path to a service template  [required]
+* `--values-file TEXT`: File path to template values
+* `-v, --value TEXT`: Template value override (key=value)
+* `--room TEXT`: The name of a room to create the service for
+* `--help`: Show this message and exit.
+
+### `meshagent service update-template`
+
+Update a service using a ServiceTemplate spec.
+
+**Usage**:
+
+```console
+$ meshagent service update-template [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--id TEXT`
+* `-f, --file TEXT`: File path to a service template  [required]
+* `--values-file TEXT`: File path to template values
+* `-v, --value TEXT`: Template value override (key=value)
+* `--create / --no-create`: create the service if it does not exist  [default: no-create]
+* `--room TEXT`: The name of a room to update the service for
+* `--help`: Show this message and exit.
+
+### `meshagent service validate-template`
+
+Validate a service template from a YAML file.
+
+**Usage**:
+
+```console
+$ meshagent service validate-template [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: File path to a service template  [required]
 * `--help`: Show this message and exit.
 
 ### `meshagent service run`
@@ -1420,7 +1494,7 @@ $ meshagent meeting-transcriber join [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
-* `--agent-name TEXT`: Name of the agent  [required]
+* `--agent-name TEXT`: Name of the agent
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
@@ -1636,7 +1710,7 @@ $ meshagent voicebot join [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
-* `--agent-name TEXT`: Name of the agent to call  [required]
+* `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
@@ -1744,6 +1818,8 @@ $ meshagent chatbot [OPTIONS] COMMAND [ARGS]...
 * `service`
 * `spec`
 * `deploy`
+* `run`
+* `use`
 
 ### `meshagent chatbot join`
 
@@ -1758,7 +1834,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--role TEXT`: [default: agent]
-* `--agent-name TEXT`: Name of the agent to call  [required]
+* `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
@@ -1794,6 +1870,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: log all requests to the llm  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -1845,6 +1922,7 @@ $ meshagent chatbot service [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: log all requests to the llm  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -1899,6 +1977,7 @@ $ meshagent chatbot spec [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: log all requests to the llm  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -1953,9 +2032,88 @@ $ meshagent chatbot deploy [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: log all requests to the llm  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
+* `--help`: Show this message and exit.
+
+### `meshagent chatbot run`
+
+**Usage**:
+
+```console
+$ meshagent chatbot run [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: [default: agent]
+* `--agent-name TEXT`: Name of the agent to call
+* `-r, --rule TEXT`: a system rule
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--require-image-generation TEXT`: Name of an image gen model
+* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
+* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
+* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
+* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--database-namespace TEXT`: Use a specific database namespace
+* `--require-table-read TEXT`: Enable table read tools for a specific table
+* `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
+* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
+* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
+* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--key TEXT`: an api key to sign the token with
+* `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--always-reply / --no-always-reply`: Always reply
+* `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: log all requests to the llm  [default: no-delegate-shell-token]
+* `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
+* `--thread-path TEXT`: log all requests to the llm
+* `--message TEXT`: the input message to use
+* `--use-web-search / --no-use-web-search`: request the web search tool
+* `--use-image-gen / --no-use-image-gen`: request the image gen tool
+* `--use-storage / --no-use-storage`: request the storage tool
+* `--help`: Show this message and exit.
+
+### `meshagent chatbot use`
+
+**Usage**:
+
+```console
+$ meshagent chatbot use [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--agent-name TEXT`: Name of the agent to call
+* `--thread-path TEXT`: log all requests to the llm
+* `--message TEXT`: the input message to use
+* `--use-web-search / --no-use-web-search`: request the web search tool
+* `--use-image-gen / --no-use-image-gen`: request the image gen tool
+* `--use-storage / --no-use-storage`: request the storage tool
 * `--help`: Show this message and exit.
 
 ## `meshagent mailbot`
@@ -1992,7 +2150,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--role TEXT`: [default: agent]
-* `--agent-name TEXT`: Name of the agent to call  [required]
+* `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
@@ -2005,7 +2163,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
-* `--queue TEXT`: the name of the mail queue  [required]
+* `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2023,6 +2181,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2049,7 +2208,7 @@ $ meshagent mailbot service [OPTIONS]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
-* `--queue TEXT`: the name of the mail queue  [required]
+* `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2067,6 +2226,7 @@ $ meshagent mailbot service [OPTIONS]
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2096,7 +2256,7 @@ $ meshagent mailbot spec [OPTIONS]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
-* `--queue TEXT`: the name of the mail queue  [required]
+* `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2114,6 +2274,7 @@ $ meshagent mailbot spec [OPTIONS]
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2143,7 +2304,7 @@ $ meshagent mailbot deploy [OPTIONS]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
-* `--queue TEXT`: the name of the mail queue  [required]
+* `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2161,6 +2322,7 @@ $ meshagent mailbot deploy [OPTIONS]
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
@@ -2198,7 +2360,7 @@ $ meshagent task-runner join [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--role TEXT`: [default: agent]
-* `--agent-name TEXT`: Name of the agent to call  [required]
+* `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
@@ -2213,6 +2375,7 @@ $ meshagent task-runner join [OPTIONS]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--working-directory TEXT`: The default working directory for shell commands
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--key TEXT`: an api key to sign the token with
 * `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;  [default: &#123;&quot;meshagent.task-runner.attachment-format&quot;:&quot;tar&quot;&#125;]
 * `--title TEXT`: a friendly name for the task runner
@@ -2244,6 +2407,7 @@ $ meshagent task-runner service [OPTIONS]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--working-directory TEXT`: The default working directory for shell commands
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at  [default: /agent]
@@ -2286,7 +2450,7 @@ $ meshagent worker join [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--role TEXT`: [default: agent]
-* `--agent-name TEXT`: Name of the worker agent  [required]
+* `--agent-name TEXT`: Name of the worker agent
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
@@ -2319,6 +2483,7 @@ $ meshagent worker join [OPTIONS]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2367,6 +2532,7 @@ $ meshagent worker service [OPTIONS]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2418,6 +2584,7 @@ $ meshagent worker spec [OPTIONS]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -2469,6 +2636,7 @@ $ meshagent worker deploy [OPTIONS]
 * `--working-directory TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
@@ -2498,6 +2666,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
 * `container`: Manage containers and images in a room
+* `sync`: Inspect and update mesh documents in a room
 
 ### `meshagent room agents`
 
@@ -3585,5 +3754,141 @@ $ meshagent room container images pull [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--tag TEXT`: Image tag/ref to pull  [required]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+### `meshagent room sync`
+
+Inspect and update mesh documents in a room
+
+**Usage**:
+
+```console
+$ meshagent room sync [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `show`: Print the full document JSON
+* `grep`: Search the document for matching content
+* `inspect`: Print the document schema JSON
+* `create`: Create a new document at a path
+* `update`: Apply a JSON patch to a document
+
+#### `meshagent room sync show`
+
+Print the full document JSON
+
+**Usage**:
+
+```console
+$ meshagent room sync show [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--include-ids`: Include $id attributes in output
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync grep`
+
+Search the document for matching content
+
+**Usage**:
+
+```console
+$ meshagent room sync grep [OPTIONS] PATH PATTERN
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+* `PATTERN`: Regex pattern to match  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--ignore-case`: Ignore case
+* `--before INTEGER RANGE`: Include siblings before  [default: 0; x&gt;=0]
+* `--after INTEGER RANGE`: Include siblings after  [default: 0; x&gt;=0]
+* `--include-ids`: Include $id attributes in output
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync inspect`
+
+Print the document schema JSON
+
+**Usage**:
+
+```console
+$ meshagent room sync inspect [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--pretty / --compact`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync create`
+
+Create a new document at a path
+
+**Usage**:
+
+```console
+$ meshagent room sync create [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--schema PATH`: Schema JSON file  [required]
+* `--json TEXT`: Initial JSON payload
+* `--json-file PATH`: Path to initial JSON payload
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync update`
+
+Apply a JSON patch to a document
+
+**Usage**:
+
+```console
+$ meshagent room sync update [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--patch TEXT`: JSON patch array
+* `--patch-file PATH`: Path to JSON patch array
 * `--help`: Show this message and exit.
 
