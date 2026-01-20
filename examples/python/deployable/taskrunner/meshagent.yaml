@@ -1,0 +1,34 @@
+kind: Service
+version: v1
+metadata:
+  name: llm-taskrunners
+  description: "LLM and Dynamic LLM TaskRunners"
+  annotations:
+    meshagent.service.id: "llm-taskrunners"
+agents:
+  - name: llmtaskrunner
+    description: "LLM TaskRunner"
+    annotations:
+      meshagent.agent.type: "TaskRunner"
+  - name: dynamicllmtaskrunner
+    description: "Dynamic LLM TaskRunner"
+    annotations:
+      meshagent.agent.type: "TaskRunner"
+ports:
+- num: "*"
+  endpoints:
+  - path: /llmtaskrunner
+    meshagent:
+      identity: llmtaskrunner
+  - path: /dynamicllmtaskrunner
+    meshagent:
+      identity: dynamicllmtaskrunner
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
+  command: python /src/taskrunner/llm_taskrunners_service.py
+  storage:
+    images:
+      # Replace this image tag with your own code-only image if you build one.
+      - image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}"
+        path: /src
+        read_only: true

@@ -18,7 +18,14 @@ ports:
     meshagent:
       identity: simple-chatbot
 container:
-  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
-  command: python simple_chatbot/simple_chatbot.py
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
+  command: python /src/simple_chatbot/simple_chatbot.py
+  storage:
+    images:
+      # Replace this image tag with your own code-only image if you build one.
+      - image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}"
+        path: /src
+        read_only: true
+
 ```
 

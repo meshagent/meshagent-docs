@@ -4,6 +4,8 @@ title: "TaskRunner"
 
 import CliTaskRunnerYaml from "/snippets/examples/cli/taskrunner/meshagent.mdx"
 import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm_taskrunners_service.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
+import TaskRunnerYaml from "/snippets/examples/python/deployable/taskrunner/meshagent.mdx"
 import PrebuiltTaskRunner from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner.mdx"
 import PrebuiltTaskRunnerSchema from "/snippets/examples/python/agents/taskrunner/prebuilt_taskrunner_schema.mdx"
 
@@ -180,14 +182,71 @@ From a different tab in your terminal invoke either the `LLMTaskRunner` or `Dyna
 
 
 ### Step 4: Package and deploy the agent
-To deploy your SDK TaskRunner permanently, you will need:
-1. A `meshagent.yaml` file defining the agent configuration
-2. A Docker container with your code
+To deploy your SDK TaskRunner permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
+For full details on the service spec and deployment flow, see [Packaging Services](../../services_room_containers/packaging) and [Deploying Services](../../services_room_containers/deployment).
 
-For custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. Then deploy with:
+MeshAgent supports two deployment patterns for containers:
+1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+
+This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image. If you want to build and push your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
+
+**Prepare your project structure**
+This example organizes the agent code and configuration in the same folder, making each agent self-contained:
+
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── taskrunner/
+│   ├── llm_taskrunners_service.py
+│   └── meshagent.yaml           # Config specific to this sample
+└── another_sample/              # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
+```
+
+> **Note:** If you're building a single agent, you only need the `taskrunner/` folder. The structure shown supports multiple samples sharing one Dockerfile.
+
+**Step 4a: Build a Docker container**
+If you want a code-only image, create a scratch Dockerfile and copy the files you want to run. This creates a minimal image that pairs with the runtime image + code mount pattern.
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image with `docker buildx`:
+
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
+
+> **Note:** Building from the project root copies your entire project structure into the image. For a single agent, this is fine - your image will just contain one folder. For multi-agent projects, all agents will be in one image, but each can deploy independently using its own `meshagent.yaml`.
+
+**Step 4b: Package the agent**
+Define the service configuration in a `meshagent.yaml` file.
+
+<CodeGroup>
+    <TaskRunnerYaml />
+</CodeGroup>
+
+How the paths work:
+- Your code image contains `taskrunner/llm_taskrunners_service.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/taskrunner/llm_taskrunners_service.py`
+
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
+
+**Step 4c: Deploy the agent**
+Next from the CLI in the directory where your `meshagent.yaml` file is run:
+
 ```bash
 meshagent service create --file "meshagent.yaml" --room=quickstart
 ```
+
+The TaskRunner is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to run tasks.
 
 ## How TaskRunner Works
 ### TaskRunner vs LLMTaskRunner

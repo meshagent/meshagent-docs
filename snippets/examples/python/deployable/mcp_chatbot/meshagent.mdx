@@ -19,7 +19,14 @@ ports:
       identity: "MCP DeepWiki ChatBot"
       # api: if you need to use secrets/OAuth with the agent you can add those permissions here
 container:
-  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
-  command: python mcp_chatbot/mcp_chatbot.py
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
+  command: python /src/mcp_chatbot/mcp_chatbot.py
+  storage:
+    images:
+      # Replace this image tag with your own code-only image if you build one.
+      - image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}"
+        path: /src
+        read_only: true
+
 ```
 
