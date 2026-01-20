@@ -1673,7 +1673,7 @@ python path-to-python-file.py --name=NameOfModule;
 
 chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
-* `--room TEXT`: A room name to test the service in (must not be currently running)
+* `--room TEXT`: Room name  [required]
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
@@ -2346,6 +2346,8 @@ $ meshagent task-runner [OPTIONS] COMMAND [ARGS]...
 
 * `join`
 * `service`
+* `spec`
+* `deploy`
 
 ### `meshagent task-runner join`
 
@@ -2410,10 +2412,86 @@ $ meshagent task-runner service [OPTIONS]
 * `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
-* `--path TEXT`: HTTP path to mount the service at  [default: /agent]
+* `--path TEXT`: HTTP path to mount the service at
 * `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;  [default: &#123;&quot;meshagent.task-runner.attachment-format&quot;:&quot;tar&quot;&#125;]
 * `--title TEXT`: a friendly name for the task runner
 * `--description TEXT`: a description for the task runner
+* `--help`: Show this message and exit.
+
+### `meshagent task-runner spec`
+
+**Usage**:
+
+```console
+$ meshagent task-runner spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-t, --toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;  [default: &#123;&quot;meshagent.task-runner.attachment-format&quot;:&quot;tar&quot;&#125;]
+* `--title TEXT`: a friendly name for the task runner
+* `--description TEXT`: a description for the task runner
+* `--help`: Show this message and exit.
+
+### `meshagent task-runner deploy`
+
+**Usage**:
+
+```console
+$ meshagent task-runner deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name  [required]
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-r, --rule TEXT`: a system rule
+* `--rules-file TEXT`
+* `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-t, --toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
+* `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.2]
+* `--image-generation TEXT`: Name of an image gen model
+* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
+* `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
+* `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
+* `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
+* `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--working-directory TEXT`: The default working directory for shell commands
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;  [default: &#123;&quot;meshagent.task-runner.attachment-format&quot;:&quot;tar&quot;&#125;]
+* `--title TEXT`: a friendly name for the task runner
+* `--description TEXT`: a description for the task runner
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
 ## `meshagent worker`
