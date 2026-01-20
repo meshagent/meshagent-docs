@@ -1,0 +1,22 @@
+kind: Service
+version: v1
+metadata:
+  name: pydanticai-translator
+  description: "A TaskRunner that translates text with PydanticAI"
+  annotations:
+    meshagent.service.id: "pydanticai-translator"
+agents:
+  - name: translator
+    description: "Translate text to French and Spanish"
+    annotations:
+      meshagent.agent.type: "TaskRunner"
+ports:
+- num: "*"
+  endpoints:
+  - path: /translator
+    meshagent:
+      identity: translator
+container:
+  # Build this image from the Dockerfile in this folder.
+  image: "<REGISTRY>/<NAMESPACE>/pydanticai-translator:<TAG>"
+  command: python /src/translator.py

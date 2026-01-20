@@ -4,31 +4,34 @@ title: "Use an Existing Agent"
 
 import PydanticAgents from "/snippets/examples/python/agents/taskrunner/pydanticai_translator/pydanticai_translator_taskrunner.mdx"
 import InvokingTaskRunner from "/snippets/examples/python/agents/taskrunner/pydanticai_translator/invoking_taskrunner.mdx"
+import PydanticTranslatorDockerfile from "/snippets/examples/python/deployable/pydanticai_translator/Dockerfile.mdx"
+import PydanticTranslatorYaml from "/snippets/examples/python/deployable/pydanticai_translator/meshagent.mdx"
 
-This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent [``TaskRunner``](./taskrunner). We subclass the base ``TaskRunner`` to create a ``TranslationTaskRunner`` with a defined input schema, output schema, and ``ask()`` method. This allows us to keep the existing logic from the Pydantic AI agent and run it inside a MeshAgent room.
+This example shows how to wrap an existing Pydantic AI translation agent with a MeshAgent [``TaskRunner``](./taskrunner). We subclass the base ``TaskRunner`` to create a ``TranslationTaskRunner`` with a defined input schema, output schema, and ``ask()`` method. This allows us to keep the existing logic from the Pydantic AI agent and run it inside a MeshAgent room. The sample uses the MeshAgent room router for Anthropic access, so credentials are supplied by your project configuration.
 
 ### Prerequisites
 - Python venv with ``meshagent`` and ``pydantic_ai`` installed
-- An LLM provider key (example uses ``ANTHROPIC_API_KEY``)
 - Authenticate to MeshAgent ``meshagent setup``
 
-## Example: Integrating a Pydantic AI Agent
-Copy this code into a file called ``translator.py``. You will need to create and export an ``ANTHROPIC_API_KEY`` first for this to run. Or update the example to use a model from a different provider of your choice. 
+## Step 1: Create the TaskRunner
+Copy this code into a file called ``translator.py``. This example uses the MeshAgent room router to supply Anthropic credentials, so you do not need a local ``ANTHROPIC_API_KEY``. If you are not using the room router, update the provider to use your own Anthropic key or swap in a different model/provider.
 
 <CodeGroup>
     <PydanticAgents />
 </CodeGroup>
 
-### Running the TaskRunner
-
-From the terminal start your service locally. Be sure you are in an activated virtual environment where meshagent and pydantic_ai are installed: 
+## Step 2: Run locally
+From the terminal start your service locally. Be sure you are in an activated virtual environment where meshagent and pydantic_ai are installed:
 
 ```bash bash
 meshagent setup # this will authenticate you 
 meshagent service run "translator.py" --room=translate
 ```
 
-#### Invoking from the Studio
+## Step 3: Invoke and Test the TaskRunner
+You can test the TaskRunner by invoking it from MeshAgent Studio, the CLI, or SDK code. If you want to make changes to the agent you can run `Ctrl+C` to stop the service from running, update it, then restart the service. If you want the service to persist you will need to deploy it (see Step 4).
+
+### Invoking from the Studio
 1. Go to [MeshAgent Studio](https://studio.meshagent.com) 
 2. Enter the room ``translate``
 3. Click the upper left menu --> "Run Task"
@@ -36,8 +39,8 @@ meshagent service run "translator.py" --room=translate
 5. Enter the text to translate
 6. Results appear and are saved to room storage under the "translations" folder 
 
-#### Invoking from the CLI or Code
-**From the CLI** 
+### Invoking from the CLI or Code
+**From the CLI**
 While the service is running, create a new tab in your terminal and run: 
 ```bash CLI
 meshagent room agents ask \
@@ -53,7 +56,7 @@ Asking agent...
 {"french_translation": "J'adore MeshAgent !", "spanish_translation": "\u00a1Me encanta MeshAgent!"}
 ```
 
-**From Code** 
+**From Code**
 
 Create and run a file called ``invoke_translator.py``. This will establish the connection to the room and allow you to run the TranslationTaskRunner. 
 
@@ -70,6 +73,46 @@ python invoke_translator.py
 ```
 
 You will see the result logged to your terminal and saved in the room. 
+
+## Step 4: Deploy as a service
+To persist the agent you will need to deploy it to your room. 
+
+This sample uses a single image so the container includes the `pydantic_ai` dependency.
+
+**Dockerfile (single image)**
+Build from the sample folder so the Dockerfile copies the translator files into the image.
+
+<CodeGroup>
+    <PydanticTranslatorDockerfile />
+</CodeGroup>
+
+To build and push the container run:
+
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/pydanticai-translator:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
+
+> **Note**: If you build your own image, we recommend optimizing it with [eStargz](../../services_room_containers/containers/optimizing_containers) for faster pulls.
+
+**meshagent.yaml**
+Define the service configuration in a `meshagent.yaml` file. This service references your single image and runs the TaskRunner entrypoint.
+
+<CodeGroup>
+    <PydanticTranslatorYaml />
+</CodeGroup>
+
+**Deploy it to your room**
+Next from the CLI in the directory where your `meshagent.yaml` file is run:
+
+```bash bash
+# Room service
+meshagent service create --file meshagent.yaml --room translate
+```
+
+The agent is now deployed to the translate room! Now the agent will always be available inside the room for us to use. You can invoke it by following the same steps in step 3 above. 
 
 ## Next Steps
 - [TaskRunner Overview](./taskrunner): Understand TaskRunners and how to use them
