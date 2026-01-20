@@ -11,7 +11,6 @@ otel_config(service_name="simple-voicebot")  # enable telemetry for this service
 class SimpleVoiceBot(VoiceBot):
     def __init__(self):
         super().__init__(
-            name="simple-voicebot",
             title="Simple VoiceBot",
             description="A voice assistant",
             rules=[

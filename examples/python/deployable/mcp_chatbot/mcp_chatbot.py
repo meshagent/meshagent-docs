@@ -15,7 +15,6 @@ service = ServiceHost()
 class MCPChatbot(ChatBot):
     def __init__(self):
         super().__init__(
-            name="mcp-deepwiki-chatbot",
             title="ChatBot that can use DeepWiki MCP Server",
             description="An agent that can use the DeepWiki MCP server",
             rules=["you are an assistant for trying out MCP servers"],

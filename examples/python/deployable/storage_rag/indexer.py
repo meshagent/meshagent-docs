@@ -25,7 +25,6 @@ class RagChatBot(ChatBot):
     def __init__(self):
         self._rag_toolkit = None
         super().__init__(
-            name="meshagent.chatbot.storage_rag",
             title="Storage RAG chatbot",
             description="an simple chatbot that does rag, pair with an indexer",
             llm_adapter=OpenAIResponsesAdapter(),
@@ -69,7 +68,6 @@ class MarkitDownFileIndexer(StorageIndexer):
     def __init__(
         self,
         *,
-        name="storage_indexer",
         title="storage indexer",
         description="watch storage and index any uploaded pdfs or office documents",
         labels=["watchers", "rag"],
@@ -80,7 +78,6 @@ class MarkitDownFileIndexer(StorageIndexer):
         self._markitdown = MarkItDownToolkit()
 
         super().__init__(
-            name=name,
             title=title,
             description=description,
             labels=labels,

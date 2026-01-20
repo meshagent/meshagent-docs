@@ -21,7 +21,6 @@ class StorageWorker(Worker):
     def __init__(self):
         super().__init__(
             queue="storage-worker-queue",
-            name="storage-worker",
             title="storage worker sample",
             description="this sample reads messages from a queue",
             llm_adapter=OpenAIResponsesAdapter(),
