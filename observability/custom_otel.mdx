@@ -4,6 +4,7 @@ title: "Custom Logs, Traces, and Metrics"
 
 import OtelExample from "/snippets/examples/python/deployable/observability/observability.mdx"
 import OtelYAML from "/snippets/examples/python/deployable/observability/meshagent.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
 
 MeshAgent emits OpenTelemetry signals out of the box. When you need deeper insight, you can add your own spans, logs, and metrics using standard OTEL SDKs. This guide walks through a Weather Toolkit with custom intstrumentation so you can see the pieces in action. 
 
@@ -81,45 +82,75 @@ calls.add(1, attributes={"city": city.lower(), "units": units})
 These show up in the room’s **Metrics** tab.
 
 ## Running the sample
-You can run this toolkit as a service and invoke the weather tool, `get_weather()`, from Studio or the CLI.
+You can deploy and run this toolkit as a service and invoke the weather tool, `get_weather()`, from Studio or the CLI.
 
-### Step 1: Creating the room service 
-To deploy the otel service you'll need to:
-1. Create a Dockerfile, build/push the container (or use the available meshagent image) 
-2. Create a yaml file that defines the service
-3. Deploy it using the MeshAgent CLI. 
+### Step 1: Package and deploy the room service
+To deploy the otel service permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
+For full details on the service spec and deployment flow, see [Packaging Services](../services_room_containers/packaging) and [Deploying Services](../services_room_containers/deployment).
 
-**(Optional) Create your container** If you want to create your own image you'll need to create a Dockerfile and build and push a container. 
+MeshAgent supports two deployment patterns for containers:
+1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need extra libraries that aren't already in the runtime image, but can result in larger images and slower pulls.
 
-```Dockerfile Dockerfile
-FROM "meshagent/python-sdk-slim:latest"
+This example demonstrates approach #1 with a code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
 
-WORKDIR /src
-RUN python3 -m pip install --no-cache-dir httpx
-COPY . /src
+**Prepare your project structure**
+This example organizes the tool code and configuration in the same folder, making each sample self-contained:
 
-ENTRYPOINT [ "python3", "main.py" ] 
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── observability/
+│   ├── observability.py
+│   └── meshagent.yaml            # Config specific to this sample
+└── another_sample/               # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
 ```
 
-```bash 
+> **Note:** If you're building a single tool, you only need the `observability/` folder. The structure shown supports multiple samples sharing one Dockerfile.
+
+**Step 1a: Build a Docker container**
+Create a scratch Dockerfile and copy the files you want to run. This creates a minimal image containing only your code files.
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image with `docker buildx`:
+
+```bash bash
 docker buildx build . \
-  -t "$IMAGE:$TAG" \ # fill this in 
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
   --platform linux/amd64 \
   --push
 ```
 
-**Create a `meshagent.yaml` file that defines the service**
+> **Note:** Building from the project root copies your entire project structure into the image. For a single tool, this is fine - your image will just contain one folder. For multi-tool projects, all samples will be in one image, but each can deploy independently using its own `meshagent.yaml`.
 
-If you built and pushed your own container you can update the container path in the YAML file below. Otherwise you can use the meshagent container. 
+**Step 1b: Package the service**
+Define the service configuration in a `meshagent.yaml` file. This service will have a `container` section that references:
+
+- Runtime image: The MeshAgent Python SDK image with all dependencies
+- Code mount: Your code-only image mounted at /src
+- Command path: Points to your sample's specific location
 
 <CodeGroup>
     <OtelYAML />
 </CodeGroup>
 
-**Deploy the service**
+How the paths work:
+- Your code image contains `/observability/observability.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/observability/observability.py`
 
-```bash bash
-meshagent service create --file=meshagent.yaml --room=otel
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
+
+**Step 1c: Deploy the service**
+Next from the CLI in the directory where your `meshagent.yaml` file is run:
+
+```bash
+meshagent service create --file "meshagent.yaml" --room=otel
 ```
 
 ### Step 2: Invoking the tool 

@@ -11,7 +11,7 @@ Both service types start and stop with the room’s lifecycle. The main differen
 Project services are best for static, shared functionality. Room services are best when customization is needed or only certain teams need access to them. To learn more about when to use each, see [Introduction to Services and Containers](./overview).
 
 ## Deployment Options
-- **MeshAgent CLI**: Automate deployments and integrate with CI/CD workflows. The CLI expects a `kind: Service` YAML file. If you start from a `ServiceTemplate`, replace variables with concrete values before deploying. 
+- **MeshAgent CLI**: Automate deployments and integrate with CI/CD workflows. The CLI accepts both `kind: Service` and `kind: ServiceTemplate` manifests. Use `meshagent service validate-template` to validate templates and `meshagent service create-template` / `update-template` to deploy them with values. 
 - **MeshAgent Studio**: Deploy and manage services through the web UI at [studio.meshagent.com](https://studio.meshagent.com)
 - **Powerboards Install Links**: Install services directly into Powerboards (room services only).
 
@@ -21,6 +21,9 @@ For common agents (like chatbots and voicebots) you can use the CLI to deploy th
 For custom services, you can deploy from the MeshAgent Studio UI, or you'll need to create a service configuration file (`meshagent.yaml`) that specifies either: 
 - **Containerized services**: Container image, commands, and applicable environment variables or secrets. 
 - **External services**: URL where your service is already running. 
+
+If you're using a `ServiceTemplate`, provide values at deploy time using `--values-file` or `--value`. You can also validate the template first with `meshagent service validate-template`.
+For `kind: Service` manifests, validate locally with `meshagent service validate` before deploying.
 
 ## Example: Deploy a Custom ChatBot
 
@@ -85,6 +88,19 @@ meshagent service create --file="meshagent.yaml"
 meshagent service create --file="meshagent.yaml" --room quickstart
 ```
 
+If you are starting from a `ServiceTemplate`, validate it and provide values when deploying:
+
+```bash bash
+# Validate a template file
+meshagent service validate-template --file="meshagent.template.yaml"
+
+# Deploy from a template (project service)
+meshagent service create-template --file="meshagent.template.yaml" --values-file="meshagent.values.yaml"
+
+# Deploy from a template (room service)
+meshagent service create-template --file="meshagent.template.yaml" --values-file="meshagent.values.yaml" --room quickstart
+```
+
 #### Deploy from MeshAgent Studio
 You can also deploy and manage services from [MeshAgent Studio](https://studio.meshagent.com). 
 
@@ -120,6 +136,7 @@ If you make modifications to your service, you can easily update it using the Me
 
 ```bash bash
 meshagent service update --file meshagent.yaml  # add --room=myroom for room services
+meshagent service update-template --file meshagent.template.yaml --values-file meshagent.values.yaml  # add --room=myroom for room services
 ```
 
 ## Verify Deployment and Troubleshooting
