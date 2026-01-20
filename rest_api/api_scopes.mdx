@@ -6,13 +6,13 @@ title: API Scopes
 ## Built-in presets
 MeshAgent ships two convenience constructors:
 
-- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Database, Sync, Storage, Containers, Developer, Agents, and Secrets access.
-- `ApiScope.full()` – everything in `agent_default()` plus the Admin grant.
+- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Database, Sync, Storage, Containers, Developer, and Agents access. Use `ApiScope.agent_default(tunnels=True)` to include the tunnels grant.
+- `ApiScope.full()` – everything in `agent_default()` plus the Admin, Secrets, and Tunnels grants.
 
 Use these helpers when you want broad access, then override individual fields when you need to lock things down.
 
 ## Scope fields
-Each field is optional. When a field is `None` the runtime treats it as "no restriction" for that capability. When populated, the nested grant limits behaviour as described below.
+Each field is optional. Most fields treat `None` as "no restriction" for that capability. Tunnels are opt-in: when `tunnels` is `None`, tunnel access is denied.
 
 ### `livekit`
 `LivekitGrant` contains an optional `breakout_rooms` list. When provided, only the named breakout rooms can be joined; leaving it empty allows every breakout room (`LivekitGrant.can_join_breakout_room`).
@@ -50,6 +50,11 @@ Each field is optional. When a field is `None` the runtime treats it as "no rest
 ### `developer`
 `DeveloperGrant` currently exposes a single `logs` boolean, enabling developer log forwarding when `True`.
 
+### `tunnels`
+`TunnelsGrant` controls port-forwarding into room containers.
+
+- `ports`: optional list of allowed container ports. If omitted or empty, all ports are allowed. If `tunnels` is `None`, port forwarding is denied.
+
 ### `agents`
 `AgentsGrant` exposes boolean switches for registering agents or toolkits (`register_agent`, `register_public_toolkit`, `register_private_toolkit`) and for invoking the Agents API (`call`, `use_agents`, `use_tools`). They default to `True` to match the typical agent workflow.
 
@@ -70,6 +75,13 @@ api:
     paths:
       - path: "/data/uploads"
         read_only: true
+```
+
+```yaml
+# Allow port forwarding only to container port 9000
+api:
+  tunnels:
+    ports: ["9000"]
 ```
 
 ```python

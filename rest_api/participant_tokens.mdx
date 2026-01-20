@@ -14,14 +14,23 @@ MeshAgent exposes tokens through `meshagent.api.participant_token.ParticipantTok
 - `grants` (optional): a list of individual `ParticipantGrant` entries that describe permissions
 
 ### Permission Types 
-Participant tokens use grants and scopes to define permissions. Each grant has a grant name which indicates the type of permission (``room``, ``role``, ``tunnel_ports``, ``api``), and each grant has a scope which provides the specific details of what is allowed. 
+Participant tokens use grants and scopes to define permissions. Each grant has a grant name which indicates the type of permission (``room``, ``role``, ``api``), and each grant has a scope which provides the specific details of what is allowed. 
 
 | Grant | Scope format | What it controls |
 | ----- | ------------ | ---------------- |
 | `room` | room name string | Which room the participant may join (`add_room_grant`) |
 | `role` | `"agent" \| "tool" \| "user"` | Participant role advertised to other services (`add_role_grant`) |
-| `tunnel_ports` | comma-separated port numbers | Which tunnel ports can be opened from the room server (`add_tunnel_grant`) |
 | `api` | [`ApiScope`](./api_scopes) object | Fine-grained access to each Room API surface (`add_api_grant`). A single `ApiScope` can enable multiple sections (storage, containers, secrets, etc.) |
+
+**Tunnels and port forwarding**
+Port forwarding is authorized via the `api.tunnels` grant (see [API Scopes](./api_scopes)). If `tunnels` is omitted, tunnel access is denied. If `tunnels.ports` is omitted or empty, all ports are allowed; otherwise only the listed ports are allowed. Some older tokens include a top-level `tunnel_ports` grant, but current tunnel enforcement uses `api.tunnels`.
+
+```yaml
+# Allow port forwarding to container port 9000
+api:
+  tunnels:
+    ports: ["9000"]
+```
 
 ## How tokens are issued
 MeshAgent signs participant tokens automatically for anything it launches on your behalf. You describe the identity and permissions through a Service or ServiceTemplate manifest and MeshAgent creates that token whenever it needs to connect the service to the room. When building a custom application on MeshAgent you will need to generate ParticipantTokens so participants can connect to your rooms with the appropriate permissions. 

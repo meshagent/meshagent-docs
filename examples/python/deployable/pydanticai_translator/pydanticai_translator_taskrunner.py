@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field, ConfigDict
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.providers.anthropic import AnthropicProvider
 
+from meshagent.anthropic.proxy import get_client as get_anthropic_client
+
 otel_config(service_name="translator")
 log = logging.getLogger("translator")
 
@@ -36,14 +38,16 @@ system_prompt = f"""
     # Task
     Provide two translations, one in French and one in Spanish.    
     """
-translation_agent = Agent(
-    model=AnthropicModel(
-        "claude-4-sonnet-20250514", provider=AnthropicProvider()
-    ),  # pass API key from env variables
-    deps_type=None,
-    instructions=system_prompt,
-    output_type=TranslationResult,
-)
+def build_translation_agent(*, room):
+    # Use the MeshAgent room proxy so API keys are provided by the room router.
+    client = get_anthropic_client(room=room)
+    provider = AnthropicProvider(anthropic_client=client)
+    return Agent(
+        model=AnthropicModel("claude-sonnet-4-5-20250929", provider=provider),
+        deps_type=None,
+        instructions=system_prompt,
+        output_type=TranslationResult,
+    )
 
 
 # Utility function
@@ -70,6 +74,7 @@ class TranslationTaskRunner(TaskRunner):
         inputs = TranslationInput(**arguments)
         log.info(f"Translating Text: {inputs.text}")
 
+        translation_agent = build_translation_agent(room=room)
         translations = await translation_agent.run(inputs.text)
         log.info(f"Translation Result: {translations.output}")
 
