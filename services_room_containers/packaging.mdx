@@ -74,6 +74,21 @@ agents:
       meshagent.agent.type: "ChatBot"
 ```
 
+#### Scheduled Tasks
+You can schedule queued messages by adding a `meshagent.agent.schedule` annotation to an agent. The value is a JSON string that defines a cron or one-time schedule and the message to enqueue.
+
+```yaml yaml
+agents:
+  - name: reporter
+    description: "Daily scheduled worker"
+    annotations:
+      meshagent.agent.type: "Worker"
+      # Runs daily at 09:00 (cron timezone depends on scheduler settings).
+      meshagent.agent.schedule: '{"name":"DailyReport","schedule":"0 9 * * *","queue":"reports","payload":{"topic":"ai"}}'
+```
+
+For programmatic management and schedule details, see [Scheduled Tasks](../rest_api/overview#scheduled-tasks).
+
 ### Ports
 Define how MeshAgent connects to your service. Each port can expose multiple endpoints.
 

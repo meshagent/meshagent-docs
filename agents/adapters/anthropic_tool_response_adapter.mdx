@@ -1,0 +1,35 @@
+---
+title: "Anthropic Tool Response Adapter"
+---
+
+`AnthropicMessagesToolResponseAdapter` is the default `ToolResponseAdapter` used whenever you pair an agent with the Anthropic Messages adapter. It converts tool outputs into Anthropic `tool_result` blocks and provides a plain-text fallback that hosts can display or log.
+
+## Behavior summary
+- **Plain-text rendering:** `to_plain_text` generates concise strings for common response types (`LinkResponse`, `JsonResponse`, `TextResponse`, `FileResponse`, `EmptyResponse`).
+- **Chat context updates:** `create_messages` returns a user message containing a `tool_result` block so the model can consume tool output on the next turn.
+- **Attachment handling:** Images and PDFs are converted into Anthropic `image` or `document` blocks; unsupported image types fall back to text.
+- **Developer logging:** Emits events via `room.developer.log_nowait` to aid debugging when tools are called.
+
+## Response handling
+| Response type | Plain text example | Notes |
+| ------------- | ------------------ | ----- |
+| `TextResponse` | The returned text | Included as a text block in the `tool_result`. |
+| `JsonResponse` | JSON string dump   | Included as a text block in the `tool_result`. |
+| `FileResponse` | `filename.ext`     | Images (`image/jpeg`, `image/png`, `image/gif`, `image/webp`) are embedded as Anthropic image blocks; PDFs become `document` blocks; other files fall back to text. |
+| `LinkResponse` | `{ "name": ..., "url": ... }` | Serialized to JSON and included as a text block. |
+| `EmptyResponse` | `"ok"`            | Signals successful execution without additional data. |
+| `RawOutputs` | n/a | Passed through directly as Anthropic message blocks, bypassing plain-text conversion. |
+
+## Tool use requirements
+Anthropic requires tool results to include a `tool_use_id`. The adapter raises an error if the `tool_use` block is missing an `id`.
+
+## Extending or replacing
+You can subclass `AnthropicMessagesToolResponseAdapter` to customize plain-text formatting or message content, provided the emitted messages still follow Anthropic's `tool_result` schema. Alternatively, supply your own adapter instance when constructing the agent (for example, `ChatBot(..., tool_adapter=...)`).
+
+## Where it is used
+- Automatically when you construct `AnthropicMessagesAdapter` without specifying a custom `tool_adapter`.
+- Any agent that wants to reuse the same Anthropic formatting logic can import and instantiate it directly.
+
+## Related references
+- [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters
+- [Anthropic Messages Adapter](./anthropic_messages_adapter): Understand the LLM integration that uses this adapter.

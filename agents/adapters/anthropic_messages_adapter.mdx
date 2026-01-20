@@ -2,13 +2,17 @@
 title: "Anthropic Messages Adapter"
 ---
 
-The Anthropic Messages adapter is an `LLMAdapter` implementation for Anthropic's Messages API. It enables MeshAgent agents to use Claude models while still using MeshAgent toolkits and tool response adapters.
+The Anthropic Messages adapter is an `LLMAdapter` implementation for Anthropic's Messages API. It enables MeshAgent agents to use Claude models, handle tool calls, and stream responses while preserving MeshAgent toolkit behavior.
 
 ## Key features
-- **Model defaults:** Reads the model name from the constructor (`model=`) or the `ANTHROPIC_MODEL` environment variable.
+- **Model defaults:** Reads the model name from the constructor (`model=`) or the `ANTHROPIC_MODEL` environment variable. Override per call by passing `model` to `next()` (for example via `ChatBot`).
+- **Max token defaults:** Reads `max_tokens` from the constructor or `ANTHROPIC_MAX_TOKENS`.
+- **Chat context defaults:** Creates `AgentChatContext(system_role=None)` so system/developer prompts come from the caller.
 - **Tool calling:** Converts the supplied toolkits into Anthropic `tools` definitions and executes `tool_use` requests.
 - **Tool result formatting:** Uses `AnthropicMessagesToolResponseAdapter` to return `tool_result` blocks back to the model.
-- **Structured output (best-effort):** When `output_schema` is provided, the adapter prompts for JSON output and validates it.
+- **Streaming support:** Uses Anthropic's streaming API and emits events to `event_handler`.
+- **Structured output (best-effort):** When `output_schema` is provided, the adapter prompts for JSON and validates it (with retries).
+- **MCP connector support:** MCP toolkits inject `mcp_servers`, MCP toolset entries in `tools`, and required `betas` flags into the request.
 
 ## Constructor parameters
 ```python Python
@@ -18,9 +22,30 @@ AnthropicMessagesAdapter(
     client: Optional[Any] = None,
     message_options: Optional[dict] = None,
     provider: str = "anthropic",
+    log_requests: bool = False,
 )
 ```
+- `model` - default model name; can be overridden per call.
+- `max_tokens` - cap on output tokens per response.
+- `client` - reuse an existing Anthropic client; otherwise the adapter builds one via `meshagent.anthropic.client.get_client`.
+- `message_options` - extra parameters passed to `messages.create` (for example `temperature`, `top_p`, `tools`, `betas`).
+- `provider` - label emitted in telemetry and logs.
+- `log_requests` - when true, uses a logging HTTP client for debugging.
+
+## MCP connector support
+Anthropic's official MCP connector can be enabled by adding an MCP toolkit to your toolkits list. The adapter applies MCP middleware to the request, which injects `mcp_servers` and an MCP toolset into the top-level `tools` array (and ensures the required `betas` flag is present).
+
+## Handling a turn
+When `next()` is called it:
+1. **Bundles tools** - Converts toolkits into Anthropic tool definitions.
+2. **Builds the request** - Converts the chat context into Anthropic blocks and constructs the request payload.
+3. **Calls the model** - Sends the request (streaming if `event_handler` is provided).
+4. **Handles tool calls** - Executes requested tools and formats `tool_result` blocks.
+5. **Loops** - Continues until the model returns a final response.
+6. **Returns result** - Returns text or validated JSON if `output_schema` was supplied.
 
 ## Related Topics
-- [LLM Adapters & Tool Response Adapters](./index)
-- [OpenAI Responses Adapter](./openai_responses_adapter)
+- [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters
+- [OpenAI Responses Adapter](./openai_responses_adapter): A detailed reference implementation
+- [Anthropic Tool Response Adapter](./anthropic_tool_response_adapter): How tool outputs are rendered back into the chat transcript
+- [ChatBot Overview](../standard/chatbot): Shows where adapters are used
