@@ -158,6 +158,8 @@ your-project/
     └── meshagent.yaml
 ```
 
+> **Note:** If you're building a single agent, you only need the `mesh_tools_chatbot/` folder. The structure shown supports multiple samples sharing one Dockerfile.
+
 **Step 4a: Build a Docker container**
 Create a scratch Dockerfile and copy the files you want to run. This creates a minimal image containing only your code files.
 
@@ -174,7 +176,7 @@ docker buildx build . \
   --push
 ```
 
-> Note: Building from the project root copies all sample folders into the image. This is efficient for repos where you want all examples in one image, but each sample can deploy independently.
+> **Note:** Building from the project root copies your entire project structure into the image. For a single agent, this is fine - your image will just contain one folder. For multi-agent projects, all agents will be in one image, but each can deploy independently using its own `meshagent.yaml`.
 
 **Step 4b: Package the agent**
 Define the service configuration in a `meshagent.yaml` file. This service will have a `container` section that references: 
@@ -192,10 +194,10 @@ How the paths work:
 - It's mounted at `/src` in the runtime container
 - The command runs `python /src/mesh_tools_chatbot/mesh_tools_chatbot.py`
 
-> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test without building your own image first. Replace this with your actual image tag when deploying your own code.
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
 
 **Step 4c: Deploy the agent**
-Next from the CLI in the directorys where your `meshagent.yaml` file is run: 
+Next from the CLI in the directory where your `meshagent.yaml` file is run: 
 
 ```bash
 meshagent service create --file "meshagent.yaml" --room=quickstart
