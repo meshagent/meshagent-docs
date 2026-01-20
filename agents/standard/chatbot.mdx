@@ -4,6 +4,7 @@ title: "ChatBot"
 
 import CliChatBotYaml from "/snippets/examples/cli/chatbot/meshagent.mdx"
 import Chatbot from "/snippets/examples/python/deployable/mesh_tools_chatbot/mesh_tools_chatbot.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
 import ChatbotYaml from "/snippets/examples/python/deployable/mesh_tools_chatbot/meshagent.mdx"
 
 ## Overview 
@@ -134,22 +135,38 @@ If you want to modify and restart the agent run `Ctrl+C` from the terminal to st
 > **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
 
 ### Step 4: Package and deploy the agent
-To deploy your SDK ChatBot permanently, you'll need:
-1. A `meshagent.yaml` file defining the agent configuration
-2. A container that can run your code:
-   - **Single image:** you build an image that includes your runtime deps and your code (recommended to [optimize with eStargz](../../services_room_containers/containers/optimizing_containers) for faster pulls).
-   - **Two-image setup:** use a MeshAgent runtime image (like `python-sdk-slim`) and mount a tiny code-only image into it for faster startup and smaller pulls.
 
-For this example, we use a standard MeshAgent runtime image and mount a tiny code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
+To deploy your SDK ChatBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run. 
 
-**Build a code-only image (optional)**
-1. Put your deployable examples under a `src/` folder (for example: `src/mesh_tools_chatbot/mesh_tools_chatbot.py`).
-2. Create a scratch Dockerfile:
-```dockerfile Dockerfile
-FROM scratch
-COPY ./src /src
+MeshAgent supports two deployment patterns for containers: 
+1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly. 
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+
+This example demonstrates approach #1 with a code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
+
+**Prepare your project structure**
+This example organizes the agent code and configuration in the same folder, making each agent self-contained:
+
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── mesh_tools_chatbot/
+│   ├── mesh_tools_chatbot.py
+│   └── meshagent.yaml           # Config specific to this sample
+└── another_sample/              # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
 ```
-3. Build and push with `docker buildx`:
+
+**Step 4a: Build a Docker container**
+Create a scratch Dockerfile and copy the files you want to run. This creates a minimal image containing only your code files.
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image with `docker buildx`:
+
 ```bash bash
 docker buildx build . \
   -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
@@ -157,16 +174,28 @@ docker buildx build . \
   --push
 ```
 
+> Note: Building from the project root copies all sample folders into the image. This is efficient for repos where you want all examples in one image, but each sample can deploy independently.
 
-**Package the agent**
-Create a file called `meshagent.yaml`.
+**Step 4b: Package the agent**
+Define the service configuration in a `meshagent.yaml` file. This service will have a `container` section that references: 
+
+- Runtime image: The MeshAgent Python SDK image with all dependencies
+- Code mount: Your code-only image mounted at /src
+- Command path: Points to your sample's specific location
 
 <CodeGroup>
     <ChatbotYaml />
 </CodeGroup>
 
-**Deploy the agent**
-Next from the CLI in the folder where your `meshagent.yaml` file is run: 
+How the paths work:
+- Your code image contains `/mesh_tools_chatbot/mesh_tools_chatbot.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/mesh_tools_chatbot/mesh_tools_chatbot.py`
+
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test without building your own image first. Replace this with your actual image tag when deploying your own code.
+
+**Step 4c: Deploy the agent**
+Next from the CLI in the directorys where your `meshagent.yaml` file is run: 
 
 ```bash
 meshagent service create --file "meshagent.yaml" --room=quickstart

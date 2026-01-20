@@ -249,6 +249,12 @@ storage:
       read_only: true
 ```
 
+**How image mounts work**
+- The container still starts from `container.image` (your runtime image). Any command/entrypoint must exist in that runtime image.
+- `storage.images` mounts files from another image into the running container as a read-only filesystem.
+- `path` is the mount target; `subpath` (optional) points to a folder inside the mounted image.
+- The mounted image must be pullable by the room runtime (public or with `pull_secret`).
+
 #### API Key Provisioning
 The ``api_key`` field allows your container service to request an admin API key be automatically provisioned and injected. This is useful when your service needs to call MeshAgent APIs directly (e.g., to manage participants, create resources, etc.).
 
