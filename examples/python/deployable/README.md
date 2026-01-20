@@ -1,1 +1,1 @@
-These examples are available under the meshagent/python-docs-examples container. They are meant to be used as complete samples. 
+These examples are bundled into the `python-docs-examples` code image for `storage.images` mounts. You can use that public image as a fallback, or build your own code-only image with the scratch Dockerfile in this folder.

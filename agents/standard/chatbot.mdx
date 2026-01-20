@@ -136,15 +136,30 @@ If you want to modify and restart the agent run `Ctrl+C` from the terminal to st
 ### Step 4: Package and deploy the agent
 To deploy your SDK ChatBot permanently, you'll need:
 1. A `meshagent.yaml` file defining the agent configuration
-2. A Docker container with your code
+2. A container that can run your code:
+   - **Single image:** you build an image that includes your runtime deps and your code (recommended to [optimize with eStargz](../../services_room_containers/containers/optimizing_containers) for faster pulls).
+   - **Two-image setup:** use a MeshAgent runtime image (like `python-sdk-slim`) and mount a tiny code-only image into it for faster startup and smaller pulls.
 
-For this example, we'll use a MeshAgent base image that already contains the code above.
+For this example, we use a standard MeshAgent runtime image and mount a tiny code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
 
-For your own custom agents, create a Dockerfile, build with `docker buildx`, and push to your registry with `--platform linux/amd64`. For example, `docker buildx build -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<VERSION_TAG>" --platform linux/amd64 --push`.
+**Build a code-only image (optional)**
+1. Put your deployable examples under a `src/` folder (for example: `src/mesh_tools_chatbot/mesh_tools_chatbot.py`).
+2. Create a scratch Dockerfile:
+```dockerfile Dockerfile
+FROM scratch
+COPY ./src /src
+```
+3. Build and push with `docker buildx`:
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
 
 
 **Package the agent**
-Create a file called `meshagent.yaml`
+Create a file called `meshagent.yaml`.
 
 <CodeGroup>
     <ChatbotYaml />

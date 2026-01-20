@@ -17,5 +17,12 @@ ports:
     meshagent:
       identity: mesh-tools-chatbot
 container:
-  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}-esgz"
-  command: python mesh_tools_chatbot/mesh_tools_chatbot.py
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
+  command: python /src/mesh_tools_chatbot/mesh_tools_chatbot.py
+  storage:
+    images:
+      # Replace this image tag with your own code-only image if you build one.
+     # - image: "us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples:{SERVER_VERSION}"
+      - image: "docker.io/tulamasterman/python-docs-examples:0.0.15"
+        path: /src
+        read_only: true
