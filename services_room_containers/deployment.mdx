@@ -27,11 +27,9 @@ For `kind: Service` manifests, validate locally with `meshagent service validate
 
 ## Example: Deploy a Custom ChatBot
 
-### Step 1: Create the agent files
-Let's create a simple chatbot that can be deployed as a project or room service. To deploy the agent we'll create three files: 
+### Step 1: Create the agent file
+Let's create a simple chatbot that can be deployed as a project or room service. We'll add the container image and `meshagent.yaml` next.
 - **main.py:** A MeshAgent-native chatbot service using ServiceHost
-- **Dockerfile:** Packages the service as a container
-- **meshagent.yaml**: A service config that defines how to run the service
 
 **main.py**
 
@@ -40,7 +38,23 @@ Let's create a simple chatbot that can be deployed as a project or room service.
 </CodeGroup>
 
 
-**Dockerfile**
+### Step 2: Choose a container layout
+You can package the service in two ways. The example YAML below uses the runtime image + code image mount layout.
+
+**Option A: Runtime image + code image mount (matches the sample YAML)**
+Build a code-only image that just ships your source to `/src`:
+
+```dockerfile Dockerfile
+FROM scratch
+COPY . /src
+```
+
+In this layout, `container.image` points to a runtime image (for example `meshagent/python-sdk-slim`), and `container.storage.images` mounts the code-only image into the container. The `command` runs from the mounted path.
+
+This approach is the recommended path because it allows you to use existing optimized MeshAgent base images with small code-only images that can be pulled and run quickly. 
+
+**Option B: Single image (self-contained)**
+Build a single image that includes the runtime and your code:
 
 ```dockerfile Dockerfile
 FROM meshagent/python-sdk-slim:latest
@@ -52,21 +66,23 @@ WORKDIR /src
 ENTRYPOINT [ "python3", "main.py" ]
 ```
 
-### Step 2: Build and push the container
-Build and push the Docker image to your registry. Make sure `$IMAGE` and `$TAG` are set for your repo. You can skip this step and still run the example since the container in the `meshagent.yaml` file below defaults to an existing meshagent container. 
+If you build your own image, we recommend optimizing it with [eStargz](./containers/optimizing_containers). This approach is the best fit when your runtime needs custom system packages.
+
+### Step 3: Build and push the container image(s)
+Build and push the Docker image(s) to your registry. Make sure `$IMAGE` / `$CODE_IMAGE` and `$TAG` are set for your repo. Use the command that matches the layout you chose. You can skip this step and still run the example by using the public docs example image in the `meshagent.yaml` file below.
 
 ```bash
 docker buildx build . \
-  -t "$IMAGE:$TAG" \ 
+  -t "$IMAGE:$TAG" \
   --platform linux/amd64 \
   --push
 ```
 
 > **Note:** We recommend docker buildx because it supports cross-platform builds, pushes directly to your registry in one step, and enables optional layer caching for much faster CI builds.
 
-### Step 3: Configure the `meshagent.yaml` file
+### Step 4: Configure the `meshagent.yaml` file
 
-Update the container section of the YAML file to use your image (if applicable).
+Update the container section of the YAML file to use your image(s) (if applicable). The example below uses the runtime + code image mount pattern from the standard agent samples. If you follow the single-image path, update `container.image`, remove `storage.images`, and adjust `command` to match your entrypoint or file path.
 
 <CodeGroup>
     <SimpleChatbotYAML />
@@ -74,7 +90,7 @@ Update the container section of the YAML file to use your image (if applicable).
 
 For more details on the configuration files see the [packaging services](./packaging) documentation. Don't forget to add a `pull_secret` parameter to the `container` section of the manifest if you are pulling from a private repository. 
 
-### Step 4: Deploy the Service
+### Step 5: Deploy the Service
 #### Deploy via CLI
 We can deploy the service to the entire project or to a specific room. To deploy to the entire project, omit `--room`. To deploy to a specific room, include `--room <room>`.
 
@@ -122,7 +138,7 @@ Once saved, the service will be available to all the rooms in your project. The 
 
 Once saved, the service will be available in this room and start the next time the room starts. If the service is updated during the session, MeshAgent will automatically update the service so it stays in sync with what is saved.
 
-### Step 5: Use the Service
+### Step 6: Use the Service
 Now that your service is deployed, try it out in [MeshAgent Studio](https://studio.meshagent.com). 
 
 **Project Services**
