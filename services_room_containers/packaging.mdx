@@ -286,7 +286,7 @@ container:
   command: "python main.py"             # Optional: Override entrypoint
   environment:                          # Optional: Environment variables
     - name: VAR_NAME
-      value: "{var_name}"
+      value: "!template {{ var_name }}"
   secrets: ["secret-id"]                # Optional: Secret IDs to inject
   pull_secret: "image-pull-secret-id"   # Optional: Secret ID for private registries
   storage:                              # Optional: Mount storage
@@ -304,11 +304,13 @@ container:
 ```
 
 ### Variables (only for ServiceTemplate)
-Variables define what values users can provide when a container-based service launches. You can restrict inputs or hide sensitive ones. Variables are substituted into container fields (most often `container.environment` values) using `{variable_name}` placeholders. 
+Variables define what values users can provide when a container-based service launches. You can restrict inputs or hide sensitive ones. Template substitutions use Jinja and only run on strings that start with `!template`. Use `{{ variable_name }}` placeholders inside those strings.
+
+Templating is supported in metadata fields, agents, `container.image`, `container.command`, `container.environment` values, and `external.url`.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | Yes | Variable identifier used in `{variable_name}` substitution |
+| `name` | string | Yes | Variable identifier used in `{{ variable_name }}` templates |
 | `description` | string | No | Help text shown in the UI |
 | `enum` | list | No | Restrict to specific values (dropdown displayed in UI)|
 | `optional` | boolean | No | Whether the variable is required |
@@ -332,16 +334,16 @@ variables:
 
 **Mapping Variables to Environment Variables**
 
-Use {variable_name} syntax in the `environment` section of your `container` definition to map user-provided values to environment variables. For example: 
+Use `!template {{ variable_name }}` syntax in the `environment` section of your `container` definition to map user-provided values to environment variables. For example: 
 
 ```yaml
 environment:
 - name: SYSTEM_PROMPT
-  value: "{system_prompt}"
+  value: "!template {{ system_prompt }}"
 - name: TONE
-  value: "{tone}"
+  value: "!template {{ tone }}"
 - name: OPENAI_API_KEY
-  value: "{api_key}"
+  value: "!template {{ api_key }}"
 ```
 
 ## Creating a ``Dockerfile`` for your Service
