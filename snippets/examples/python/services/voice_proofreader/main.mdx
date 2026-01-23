@@ -151,8 +151,9 @@ class SampleVoiceAgentWithTools(VoiceBot):
                         if text is not None:
                             print(f"checking change {text}")
 
-                            response = await self.room.agents.ask(
-                                agent="meshagent.schema_planner",
+                            response = await self.room.agents.invoke_tool(
+                                toolkit="meshagent.schema_planner",
+                                tool="run_meshagent.schema_planner_task",
                                 arguments={
                                     "prompt": f"if this statement is wrong, respond with a corrected statement (correction) and respond like a good friend might about your disagreement (response). Limit your response to a maximum one sentence, the shorter the better: {text}",
                                     "output_schema": {

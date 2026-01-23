@@ -125,10 +125,13 @@ class Survey(Tool):
 
         # summarize results
         log.info("Summarizing survey results")
-        summary_resp = await context.room.agents.ask(
-            agent="meshagent.schema_planner",
+        summary_resp = await context.room.agents.invoke_tool(
+            toolkit="meshagent.schema_planner",
+            tool="run_meshagent.schema_planner_task",
             arguments={
                 "prompt": f"Summarize these survey results:\n{json.dumps(summary)}",
+                "tools":[],
+                "model":"null",
                 "output_schema": {
                     "type": "object",
                     "properties": {"summary": {"type": "string"}},

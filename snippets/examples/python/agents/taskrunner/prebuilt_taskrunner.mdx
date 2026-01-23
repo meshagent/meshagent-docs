@@ -22,7 +22,7 @@ if not api_key:
 
 async def run_planner(room_name: str, prompt: str):
     """
-    Connect to a MeshAgent room and ask the built-in Planner to handle a one-turn task.
+    Connect to a MeshAgent room and invoke the built-in TaskRunner tool.
 
     Args:
         room_name: Target room (will be created on first connect if it doesn't exist)
@@ -43,8 +43,10 @@ async def run_planner(room_name: str, prompt: str):
     try:
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
-            response = await room.agents.ask(
-                agent="meshagent.runner", arguments={"prompt": prompt}
+            response = await room.agents.invoke_tool(
+                toolkit="meshagent.runner",
+                tool="run_meshagent.runner_task",
+                arguments={"prompt": prompt, "tools":[], "model":"null"},
             )
             log.info(f"Response from agent:{response}")
             return response

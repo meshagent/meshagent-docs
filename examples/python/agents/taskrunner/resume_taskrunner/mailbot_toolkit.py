@@ -69,10 +69,11 @@ class ProcessResume(Tool):
         resume_processing_prompt = os.getenv("RESUME_PROCESSING_PROMPT") or DEFAULT_RESUME_PROMPT
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
-        resume_response = await context.room.agents.ask(
-            agent="meshagent.runner",
-            arguments={"prompt":resume_processing_prompt, 
-                       "model":"gpt-5.2", 
+        resume_response = await context.room.agents.invoke_tool(
+            toolkit="meshagent.runner",
+            tool="run_meshagent.runner_task",
+            arguments={"prompt":resume_processing_prompt,
+                       "model":"gpt-5.2",
                        "tools":[
                            {"name":"storage"}, # remove this later ? 
                            {"name":"web_search"},
@@ -150,8 +151,9 @@ class ProcessResume(Tool):
 
                 log.info("Scoring candidate for role '%s'", role.get("job_title"))
                 try:
-                    resume_score_response = await context.room.agents.ask(
-                        agent="meshagent.runner",
+                    resume_score_response = await context.room.agents.invoke_tool(
+                        toolkit="meshagent.runner",
+                        tool="run_meshagent.runner_task",
                         arguments={
                             "prompt": prompt,
                             "model": "gpt-5.2",
