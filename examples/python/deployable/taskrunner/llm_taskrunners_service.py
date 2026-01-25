@@ -1,5 +1,5 @@
 import asyncio
-from meshagent.agents.llmrunner import LLMTaskRunner, DynamicLLMTaskRunner
+from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
@@ -25,16 +25,5 @@ class LLMRunner(LLMTaskRunner):
                 "properties": {"result": {"type": "string"}},
             },
         )
-
-
-@service.path(path="/dynamicllmtaskrunner", identity="dynamicllmtaskrunner")
-class DynamicLLMRunner(DynamicLLMTaskRunner):
-    def __init__(self):
-        super().__init__(
-            title="Dynamic LLM TaskRunner",
-            description="Prompt + caller‑supplied JSON Schema → structured output.",
-            llm_adapter=OpenAIResponsesAdapter(),
-        )
-
 
 asyncio.run(service.run())
