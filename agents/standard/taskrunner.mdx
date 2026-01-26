@@ -3,9 +3,11 @@ title: "TaskRunner"
 ---
 
 import CliTaskRunnerYaml from "/snippets/examples/cli/taskrunner/meshagent.mdx"
-import LLMTaskRunnerService from "/snippets/examples/python/agents/taskrunner/llm_taskrunners_service.mdx"
+import LLMTaskRunnerService from "/snippets/examples/python/deployable/taskrunner/llm_taskrunners_service.mdx"
 import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
 import TaskRunnerYaml from "/snippets/examples/python/deployable/taskrunner/meshagent.mdx"
+import RunTaskRunner from "/snippets/examples/python/agents/taskrunner/run_taskrunner.mdx"
+import InvokeLLMTaskRunner from "/snippets/examples/python/deployable/taskrunner/invoke_llm_taskrunner.mdx"
 
 ## Overview
 A `TaskRunner` is a type of agent that accepts structured input, performs work, and can return structured output. TaskRunners can be invoked directly (e.g., via CLI) or joined to a room where they register as a tool that other agents and humans can invoke.
@@ -40,9 +42,9 @@ Use a TaskRunner when you need an agent that:
 
 TaskRunners excel when:
 - Inputs and outputs are well-defined
-- You want to expose an agent as a callable tool for other agents
+- You want to expose an agent as a callable tool for agents or humans
 - You want to run an agent in the background, not have a conversation with it
-- You want a clean context window for each invocation. (To persist conversation state across runs, enable thread selection and provide a path so the runner can load and update the thread document)
+- You want a clean context window for each invocation (you can persist conversation state across runs by enabling thread selection and providing a `path` for the runner to load and update the thread document)
 
 If you need a conversational agent, use [ChatBot](./chatbot). For real-time speech, use [VoiceBot](./voicebot). For background queue work, use [Worker](./worker) and for email use [MailBot](./mailbot).
 
@@ -63,26 +65,30 @@ When a TaskRunner joins a room, it registers a toolkit with a single tool named 
 - **`task-runner run`** executes a single task and exits. It **does not** register a toolkit in the room. This is ideal for scripts, tests, or startup automation.
 - **`task-runner join`** connects to a room and **registers a toolkit** (`run_<agent_name>_task`) so you can invoke it from MeshAgent Studio or from another agent. It stays connected to the room until you stop the process.
 
-### Step 1: Run a TaskRunner once (CLI)
+### Step 1: Run a TaskRunner once
 This runs a local `LLMTaskRunner` with optional tools/rules and prints the result.
 
-```bash bash
-# Authenticate to MeshAgent if not already signed in
-meshagent setup
+<CodeGroup>
+    ```bash CLI
+    # Authenticate to MeshAgent if not already signed in
+    meshagent setup
 
-# Execute a one-off task (no toolkit registration)
-meshagent task-runner run \
-  --room quickstart \
-  --agent-name mytaskrunner \
-  --web-search \
-  --storage \
-  --input '{"prompt":"Write a product description for a bluetooth speaker","tools":[],"model":null}'
-```
+    # Execute a one-off task (no toolkit registration)
+    meshagent task-runner run \
+      --room quickstart \
+      --agent-name mytaskrunner \
+      --web-search \
+      --storage \
+      --input '{"prompt":"Write a product description for a bluetooth speaker","tools":[],"model":null}'
+    ```
+
+    <RunTaskRunner />
+</CodeGroup>
 
 > **Tip:** `--input -` reads JSON from stdin, which is handy for piping data from other commands or scripts.
 > **Thread persistence:** Add `--allow-thread-selection` and include a `path` in your input JSON to read/write a thread document between runs.
 
-### Step 2: Join a TaskRunner to a room (CLI)
+### Step 2: Join a TaskRunner to a room
 This starts a local `LLMTaskRunner` that registers as a toolkit in the room.
 
 ```bash bash
@@ -155,16 +161,18 @@ meshagent service run "main.py" --room=quickstart
 ```
 
 ### Step 3: Invoke the TaskRunner
-From a different tab in your terminal invoke the `LLMTaskRunner` from the CLI:
+From a different tab in your terminal invoke the `LLMTaskRunner` from the CLI or Python:
 
 <CodeGroup>
-    ```bash bash
+    ```bash CLI
     meshagent room agents invoke-tool \
-    --room myroom \
-    --toolkit llmtaskrunner \
-    --tool run_llmtaskrunner_task \
-    --arguments '{"prompt":"Write a poem about ai agents", "tools":[{"name": "web_search"}],"model":null}'
+      --room myroom \
+      --toolkit llmtaskrunner \
+      --tool run_llmtaskrunner_task \
+      --arguments '{"prompt":"Write a poem about ai agents", "tools":[],"model":null}'
     ```
+
+    <InvokeLLMTaskRunner />
 </CodeGroup>
 
 
