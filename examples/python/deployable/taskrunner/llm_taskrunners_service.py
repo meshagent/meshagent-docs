@@ -3,6 +3,8 @@ from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder, LocalShellToolkitBuilder
+from meshagent.tools.storage import StorageToolkitBuilder
 
 otel_config(service_name="llm-taskrunners")
 service = ServiceHost()
@@ -25,5 +27,11 @@ class LLMRunner(LLMTaskRunner):
                 "properties": {"result": {"type": "string"}},
             },
         )
+    def get_toolkit_builders(self):
+        return [
+            WebSearchToolkitBuilder(),
+            StorageToolkitBuilder(),
+            LocalShellToolkitBuilder(),
+        ]
 
 asyncio.run(service.run())

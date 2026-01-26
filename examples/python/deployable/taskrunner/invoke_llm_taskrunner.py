@@ -19,15 +19,13 @@ if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
-async def run_schema_planner(room_name: str, prompt: str, output_schema: dict):
+async def invoke_taskrunner(room_name: str, prompt: str):
     """
-    Connect to a MeshAgent room and ask the built-in Schema Planner to produce
-    a structured response that conforms to `output_schema`.
+    Connect to a MeshAgent room and invoke a joined LLMTaskRunner tool.
 
     Args:
-        room_name: Name of the room to connect to
-        prompt: The task description / instruction
-        output_schema: The structured JSON output schema the agent must respond with
+        room_name: Target room
+        prompt: The text to send to the task runner
     """
     token = ParticipantToken(
         name="sample-participant",
@@ -44,33 +42,21 @@ async def run_schema_planner(room_name: str, prompt: str, output_schema: dict):
     try:
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
-            response = await room.agents.ask(
-                agent="meshagent.schema_planner",
-                arguments={"prompt": prompt, "output_schema": output_schema},
+            response = await room.agents.invoke_tool(
+                toolkit="llmtaskrunner",
+                tool="run_llmtaskrunner_task",
+                arguments={"prompt": prompt, "tools": [], "model": None},
             )
             log.info(f"Response: {response}")
             return response
     except Exception as e:
-        print(f"Connection failed: {e}")
+        log.error(f"Connection failed:{e}")
+        raise
 
-
-# Try it with a sample schema
-product_schema = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "title": {"type": "string"},
-        "price": {"type": "number"},
-        "features": {"type": "array", "items": {"type": "string"}},
-        "description": {"type": "string"},
-    },
-    "required": ["title", "price", "features", "description"],
-}
 
 asyncio.run(
-    run_schema_planner(
+    invoke_taskrunner(
         room_name="quickstart",
-        prompt="Create a product listing for a bluetooth speaker",
-        output_schema=product_schema,
+        prompt="Write a poem about AI agents",
     )
 )

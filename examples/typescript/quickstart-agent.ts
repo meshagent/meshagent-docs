@@ -27,10 +27,10 @@ async function main() {
             arguments: { },
         });
 
-        // Ask an agent to do some work in the document.
-        // The "meshagent.document-writer" agent writes content to the document.
-        await room.agents.ask({
-            agentName: 'meshagent.document-writer',
+        // Invoke the TaskRunner tool to write content to the document.
+        await room.agents.invokeTool({
+            toolkit: 'meshagent.document-writer',
+            tool: 'run_meshagent.document-writer_task',
             arguments: {
                 path,
                 prompt: 'write a paragraph about AI and how agents are shaping the future',
@@ -48,4 +48,3 @@ async function main() {
 }
 
 main();
-

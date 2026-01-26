@@ -2,6 +2,7 @@ import json
 import asyncio
 import logging
 import os
+from typing import Optional
 from datetime import date, datetime
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
@@ -68,7 +69,7 @@ class TranslationTaskRunner(TaskRunner):
             output_schema=TranslationResult.model_json_schema(),
         )
 
-    async def ask(self, *, context, arguments):
+    async def ask(self, *, context, arguments, attachment: Optional[bytes] = None):
         room = context.room
 
         inputs = TranslationInput(**arguments)

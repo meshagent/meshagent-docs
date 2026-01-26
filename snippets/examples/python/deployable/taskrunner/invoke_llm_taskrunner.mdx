@@ -1,3 +1,4 @@
+```python Python
 import os
 import asyncio
 import logging
@@ -19,13 +20,13 @@ if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
-async def run_planner(room_name: str, prompt: str):
+async def invoke_taskrunner(room_name: str, prompt: str):
     """
-    Connect to a MeshAgent room and ask the built-in Planner to handle a one-turn task.
+    Connect to a MeshAgent room and invoke a joined LLMTaskRunner tool.
 
     Args:
-        room_name: Target room (will be created on first connect if it doesn't exist)
-        prompt:    The text to send to meshagent.planner
+        room_name: Target room
+        prompt: The text to send to the task runner
     """
     token = ParticipantToken(
         name="sample-participant",
@@ -42,10 +43,12 @@ async def run_planner(room_name: str, prompt: str):
     try:
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
-            response = await room.agents.ask(
-                agent="meshagent.runner", arguments={"prompt": prompt}
+            response = await room.agents.invoke_tool(
+                toolkit="llmtaskrunner",
+                tool="run_llmtaskrunner_task",
+                arguments={"prompt": prompt, "tools": [], "model": None},
             )
-            log.info(f"Response from agent:{response}")
+            log.info(f"Response: {response}")
             return response
     except Exception as e:
         log.error(f"Connection failed:{e}")
@@ -53,7 +56,11 @@ async def run_planner(room_name: str, prompt: str):
 
 
 asyncio.run(
-    run_planner(
-        room_name="quickstart", prompt="Write a product description for a bluetooth speaker"
+    invoke_taskrunner(
+        room_name="quickstart",
+        prompt="Write a poem about AI agents",
     )
 )
+
+```
+

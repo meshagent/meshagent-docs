@@ -34,12 +34,12 @@ async def main():
     ) as room:
         path = "sample-agent.document"
 
-        # We can ask an agent to perform some work in the document, in this case, we'll use the built in
-        # document_writer agent to write content to our document.
+        # Invoke the TaskRunner tool to write content to the document.
         # The document will automatically be created if it does not already exist.
 
-        await room.agents.ask(
-            agent="meshagent.document-writer",
+        await room.agents.invoke_tool(
+            toolkit="meshagent.document-writer",
+            tool="run_meshagent.document-writer_task",
             arguments={
                 "path": path,
                 "prompt": "write a paragraph about ai and how agents are shaping the future",

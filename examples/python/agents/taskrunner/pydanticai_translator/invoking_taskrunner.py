@@ -24,7 +24,7 @@ if not api_key:
 async def call_agent(
     room_name: str, agent_name: str, arguments: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Call a MeshAgent agent with the given arguments."""
+    """Invoke a TaskRunner tool with the given arguments."""
     token = ParticipantToken(
         name="sample-participant",
         grants=[
@@ -40,7 +40,12 @@ async def call_agent(
     try:
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
-            result = await room.agents.ask(agent=agent_name, arguments=arguments)
+            tool_name = f"run_{agent_name}_task"
+            result = await room.agents.invoke_tool(
+                toolkit=agent_name,
+                tool=tool_name,
+                arguments=arguments,
+            )
             # Extract JSON data from JsonBody response
             return result.json if hasattr(result, "json") else result
     except Exception as e:

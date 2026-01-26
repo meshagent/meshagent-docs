@@ -5,12 +5,32 @@ from meshagent.tools import Tool, ToolContext, RemoteToolkit
 from meshagent.api.messaging import JsonResponse
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
+from meshagent.agents.llmrunner import LLMTaskRunner
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
+from meshagent.tools.storage import StorageToolkitBuilder
+from meshagent.tools.database import DatabaseToolkitBuilder
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
 log.setLevel(logging.DEBUG) # switch to info later 
 
 service = ServiceHost()
+
+
+class ResumeTaskRunner(LLMTaskRunner):
+    def __init__(self):
+        super().__init__(
+            llm_adapter=OpenAIResponsesAdapter(),
+            supports_tools=True,
+        )
+
+    def get_toolkit_builders(self):
+        return [
+            WebSearchToolkitBuilder(),
+            StorageToolkitBuilder(),
+            DatabaseToolkitBuilder(),
+        ]
 
 # Tool for Mailbot to trigger the resume processing
 class ProcessResume(Tool):
@@ -69,20 +89,23 @@ class ProcessResume(Tool):
         resume_processing_prompt = os.getenv("RESUME_PROCESSING_PROMPT") or DEFAULT_RESUME_PROMPT
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
-        resume_response = await context.room.agents.ask(
-            agent="meshagent.runner",
-            arguments={"prompt":resume_processing_prompt, 
-                       "model":"gpt-5.2", 
-                       "tools":[
-                           {"name":"storage"}, # remove this later ? 
-                           {"name":"web_search"},
-                           {
-                               "name": "database",
-                               "tables": ["candidates"], # add specific tools? 
-                               "read_only": False,
-                           },
-                        ]
+        runner = ResumeTaskRunner()
+        resume_response = await runner.run(
+            room=context.room,
+            caller=context.caller,
+            arguments={
+                "prompt": resume_processing_prompt,
+                "model": "gpt-5.2",
+                "tools": [
+                    {"name": "storage"},
+                    {"name": "web_search"},
+                    {
+                        "name": "database",
+                        "tables": ["candidates"],
+                        "read_only": False,
                     },
+                ],
+            },
         )
 
         log.info(f"TaskRunner Processed Resume: {resume_response}")
@@ -150,8 +173,9 @@ class ProcessResume(Tool):
 
                 log.info("Scoring candidate for role '%s'", role.get("job_title"))
                 try:
-                    resume_score_response = await context.room.agents.ask(
-                        agent="meshagent.runner",
+                    resume_score_response = await runner.run(
+                        room=context.room,
+                        caller=context.caller,
                         arguments={
                             "prompt": prompt,
                             "model": "gpt-5.2",

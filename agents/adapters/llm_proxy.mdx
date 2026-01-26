@@ -1,0 +1,90 @@
+---
+title: "LLM Proxy"
+---
+
+The MeshAgent LLM proxy is a room-scoped HTTP proxy that lets services call OpenAI and Anthropic without shipping provider API keys in your code. You can use MeshAgent API keys by default, or bring your own API key. The LLM proxy authenticates with the MeshAgent room token and attributes LLM usage to rooms, sessions, and participants.
+
+## Proxied endpoints
+### OpenAI
+Base URL: `{room_url}/openai/v1` (also accepts `{room_url}/v1` for OpenAI compatible clients).
+
+Supported endpoints:
+- `/v1/chat/completions`
+- `/v1/responses`
+- `/v1/responses/compact`
+- `/v1/responses/input_tokens`
+- `/v1/embeddings`
+- `/v1/audio/speech`
+- `/v1/audio/transcriptions`
+- `/v1/audio/translations`
+- `/v1/images/*`
+- `/v1/models` and `/v1/models/*`
+
+### Anthropic
+Base URL: `{room_url}/anthropic/v1`.
+
+Supported endpoints:
+- `/v1/messages`
+- `/v1/messages/count_tokens`
+- `/v1/messages/batches*`
+- `/v1/complete`
+- `/v1/models` and `/v1/models/*`
+
+Requests to other paths are rejected.
+
+## Using the proxy
+Use the proxy helpers so the MeshAgent token and headers are applied automatically:
+
+```python Python
+from meshagent.openai.proxy import get_client as get_openai_client
+from meshagent.anthropic.proxy import get_client as get_anthropic_client
+
+openai_client = get_openai_client(room=room)
+anthropic_client = get_anthropic_client(room=room)
+```
+
+For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to the room proxy and pass the MeshAgent room token as `api_key`. Room containers set `OPENAI_BASE_URL` and `ANTHROPIC_BASE_URL` automatically.
+
+## Automatic usage tracking
+The proxy inspects responses and streams to record usage and cost:
+- OpenAI streaming tracks `response.completed` (Responses API) or the final `usage` chunk (Chat Completions).
+- Anthropic streaming deduplicates cumulative usage fields to avoid double counting.
+- Image usage is inferred from response count plus request `model/size/quality`.
+- Audio speech usage counts input characters.
+- Models without pricing data are rejected so costs remain accurate.
+
+Usage is emitted as OpenTelemetry metrics/traces and also appears in MeshAgent's built-in dashboards (view from MeshAgent Studio usage and billing tabs). If you configure your own OTEL endpoint, the same data can be exported to your provider.
+
+## API key protection
+- Clients authenticate with the MeshAgent room token (not a provider key).
+- OpenAI proxy requires `Authorization: Bearer <room_token>`.
+- Anthropic proxy accepts either `Authorization: Bearer <room_token>` or `x-api-key: <room_token>`.
+- The proxy strips client auth headers and injects provider keys from server-side env vars.
+- Provider keys never need to exist inside room containers or client code.
+- Optional HTTP logging clients redact auth headers by default.
+
+## Using a custom API key
+If you want to use your own provider key, bypass the proxy and construct the SDK client yourself, then pass it into the adapter:
+
+```python Python
+from openai import AsyncOpenAI
+from meshagent.openai import OpenAIResponsesAdapter
+
+client = AsyncOpenAI(api_key="sk-your-key", base_url="https://api.openai.com/v1")
+adapter = OpenAIResponsesAdapter(client=client)
+```
+
+Repeat the same pattern for Anthropic by constructing an `AsyncAnthropic` client with your key and passing it to `AnthropicMessagesAdapter`.
+
+For project-wide defaults, use MeshAgent Studio (Integrations > LLM Router) to set provider keys and optional base URLs. If you automate project settings, you can also update them via the [Project Settings REST API](../../rest_api/overview).
+
+## Environment variables
+- **Provider keys (router/proxy):** You can set your own default `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL` from MeshAgent Studio or the REST API to use your own API keys across your MeshAgent rooms.
+- **Room service defaults:** Certain environment variables are auto-injected for services running inside a room. You can override them in a service template/container env if you need a different base URL. Examples: `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `MESHAGENT_SESSION_ID`.
+- **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model to use or set a default by updating the `OPENAI_MODEL` or `ANTHROPIC_MODEL` environment variable.
+
+## Related topics
+- [Adapters Overview](./index)
+- [OpenAI Responses Adapter](./openai_responses_adapter)
+- [Anthropic Messages Adapter](./anthropic_messages_adapter)
+- [Observability](../../observability/intro)

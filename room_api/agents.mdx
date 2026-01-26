@@ -1,15 +1,12 @@
 ## Overview
 
-The `AgentsClient` defines methods to call agents, ask questions, list available toolkits, list available agents, and invoke specific tools. It uses an underlying `RoomClient` to send requests.
+The `AgentsClient` defines methods to call agents, list available toolkits, and invoke specific tools. It uses an underlying `RoomClient` to send requests.
 
-- **AgentsClient**: The main client class for interacting with agents. It handles:
+- **AgentsClient**: The main client class for interacting with agents and tools. It handles:
   - Calling agents
-  - Asking questions to agents
   - Listing available toolkits
-  - Listing available agents
   - Invoking specific tools
 
-- **AgentDescription**: Describes an agent, its input/output schemas, requirements, labels, etc.
 - **ToolDescription**: Describes an individual tool, including metadata and input schemas.
 - **ToolkitDescription**: Groups multiple tools under one toolkit name, allowing retrieval of individual tools by name.
 - **ToolkitConfiguration**: Describes which tools in a toolkit you want to enable or use.
@@ -71,76 +68,6 @@ await room.Agents.MakeCall(
 
 ---
 
-### Ask
-
-- **Description**:  
-  Send a prompt to an agent and get a JSON answer. Optionally allow specific toolkits for the request.
-- **Parameters**:
-  - `agent`: Agent name.
-  - `arguments`: Payload for the agent.
-  - `requires` *(optional)*: List of allowed toolkits/tools.
-  - `on_behalf_of` / `onBehalfOf` *(optional)*: Act as another participant.
-- **Returns**: `JsonResponse` with an `answer` object.
-
-<CodeGroup>
-```python Python
-answer = await room.agents.ask(
-  agent="example-agent",
-  requires=[RequiredToolkit(name="example-toolkit", tools=["toolA", "toolB"])],
-  arguments={
-    "prompt": "Explain quantum computing in simple terms."
-  }
-)
-print(answer)  # logs the JSON structure from the agent
-```
-```javascript NodeJs
-const answer = await room.agents.ask({
-  agent: "example-agent",
-  requires: [new RequiredToolkit({ name: "example-toolkit", tools: ["toolA", "toolB"] })],
-  arguments: {
-    prompt: "Explain quantum computing in simple terms."
-  }
-});
-console.log(answer); // logs the JSON structure from the agent
-```
-```typescript TypeScript
-const answer = await room.agents.ask({
-  agent: "example-agent",
-  requires: [new RequiredToolkit({ name: "example-toolkit", tools: ["toolA", "toolB"] })],
-  arguments: {
-    prompt: "Explain quantum computing in simple terms."
-  }
-});
-console.log(answer); // logs the JSON structure from the agent
-```
-```dart Dart
-final answer = await room.agents.ask(
-  agentName: "example-agent",
-  requires: [RequiredToolkit(name: "example-toolkit", tools: ["toolA", "toolB"])],
-  arguments: {
-    "prompt": "Explain quantum computing in simple terms."
-  }
-);
-print(answer); // logs the JSON structure from the agent
-```
-```dotnet C#
-var answer = await room.Agents.Ask(
-  "example-agent",
-  new Dictionary<string, object?>
-  {
-    ["prompt"] = "Explain quantum computing in simple terms."
-  },
-  requires: new List<Requirement>
-  {
-     new RequiredToolkit("example-toolkit", new List<string> { "toolA", "toolB" })
-  }
-);
-Console.WriteLine(answer); // logs the JSON structure from the agent
-```
-</CodeGroup>
-
----
-
 ### List toolkits
 
 - **Description**: Get all available toolkits and their tools.
@@ -193,55 +120,11 @@ foreach (var toolkit in toolkits)
 
 ---
 
-### List agents
-
-- **Description**: List agents available in the room.
-- **Parameters**: None.
-- **Returns**: Array of `AgentDescription`.
-
-<CodeGroup>
-```python Python
-agents = await room.agents.list_agents()
-for agent in agents:
-  print(f"Agent: {agent.name}, Title: {agent.title}")
-```
-```javascript NodeJs
-const agents = await room.agents.listAgents();
-
-agents.forEach((agent) => {
-  console.log(`Agent: ${agent.name}, Title: ${agent.title}`);
-});
-```
-```typescript TypeScript
-const agents = await room.agents.listAgents();
-
-agents.forEach((agent) => {
-  console.log(`Agent: ${agent.name}, Title: ${agent.title}`);
-});
-```
-```dart Dart
-final agents = await room.agents.listAgents();
-
-for (final agent in agents) {
-  print('Agent: ${agent.name}, Title: ${agent.title}');
-}
-```
-```dotnet C#
-var agents = await room.Agents.ListAgents();
-foreach (var item in agents)
-{
-  Console.WriteLine($"{item.Name} - {item.Title}");
-}
-
-```
-</CodeGroup>
-
----
-
 ### Invoke tool
 
 - **Description**:  
   Invoke a specific tool inside a toolkit directly (without going through an agent).
+  TaskRunners are exposed as toolkits, so invoke their `run_<agent_name>_task` tool to run them.
 - **Parameters**:
   - `toolkit`: Toolkit name.
   - `tool`: Tool name.
@@ -328,34 +211,22 @@ response = await room.agents.invoke_request_tool(
    const room = new RoomClient({protocol});
    ```
 
-2. **List Available Agents and Toolkits**  
+2. **List Available Toolkits**  
    ```javascript NodeJs
-   const agents = await room.agents.listAgents();
    const toolkits = await room.agents.listToolkits();
    ```
 
-3. **Ask a Question to an Agent**  
+3. **Invoke a TaskRunner Tool**  
    ```javascript NodeJs
-   const toolkit = new RequiredToolkit({ name: "quantum-toolkit", tools: ["add"] });
-   const result = await room.agents.ask({
-     agent: "my-agent",
-     requires: [toolkit],
+   const result = await room.agents.invokeTool({
+     toolkit: "mytaskrunner",
+     tool: "run_mytaskrunner_task",
      arguments: { prompt: "Explain the concept of entanglement." }
    });
-   console.log("Agent Answer:", result);
+   console.log("Tool Result:", result);
    ```
 
-4. **Invoke a Specific Tool** (If needed)  
-   ```javascript NodeJs
-   const toolResponse = await room.agents.invokeTool({
-     toolkit: "example-toolkit",
-     tool: "toolA",
-     arguments: { foo: "bar" }
-   });
-   console.log("Tool Response:", toolResponse);
-   ```
-
-5. **Call an Agent Directly** (If the agent supports such calls)  
+4. **Call an Agent Directly** (If the agent supports such calls)  
    ```javascript NodeJs
    await room.agents.call({
      name: "myAgent",
@@ -364,62 +235,6 @@ response = await room.agents.invoke_request_tool(
    });
    ```
 
----
-
-## AgentDescription
-
-Represents an agent’s descriptive information, including schemas for input/output data and any special requirements the agent may have (for instance, a required toolkit or schema).
-
-<Tabs>
-  <Tab title="Python">
-
-  - **`name`**: The agent name
-  - **`title`**: The agent title.
-  - **`description`**: Detailed description of the agent’s behavior or purpose.
-  - **`input_schema`**: JSON schema describing the input format the agent expects.
-  - **`output_schema`** *(optional)*: JSON schema describing the agent's output format.
-  - **`requires`** *(optional)*: A list of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`).
-  - **`supports_tools`** Indicates whether the agent can use external tools.
-  - **`labels`** *(optional)*: Tags associated with the agent.
-
-  </Tab>
-  <Tab title="Dart">
-
-  - **`name`**: The agent name
-  - **`title`**: The agent title.
-  - **`description`**: Detailed description of the agent’s behavior or purpose.
-  - **`inputSchema`** *(optional)*: JSON schema describing the input format the agent expects.
-  - **`outputSchema`** *(optional)*: JSON schema describing the agent's output format.
-  - **`requires`** *(optional)*: A list of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`).
-  - **`supportsTools`**: Indicates whether the agent can use external tools.
-  - **`labels`** *(optional)*: Tags associated with the agent.
-
-  </Tab>
-  <Tab title="TypeScript">
-
-  - **`name`**: The agent name
-  - **`title`**: The agent title.
-  - **`description`**: Detailed description of the agent’s behavior or purpose.
-  - **`inputSchema`** *(optional)*: JSON schema describing the input format the agent expects.
-  - **`outputSchema`** *(optional)*: JSON schema describing the agent's output format.
-  - **`requires`** *(optional)*: A list of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`).
-  - **`supportsTools`**: Indicates whether the agent can use external tools.
-  - **`labels`** *(optional)*: Tags associated with the agent.
-
-  </Tab>
-  <Tab title=".NET">
-
-  - **`Name`**: The agent's internal name.
-  - **`Title`** *(optional)*: A short, human-readable title for the agent.
-  - **`Description`** *(optional)*: Detailed description of the agent’s behavior or purpose.
-  - **`InputSchema`**: JSON schema describing the input format the agent expects.
-  - **`OutputSchema`**: JSON schema describing the agent's output format.
-  - **`Requires`** *(optional)*: A list of `Requirement` objects (e.g., `RequiredToolkit`, `RequiredSchema`).
-  - **`SupportsTools`**: Indicates whether the agent can use external tools.
-  - **`Labels`** *(optional)*: Tags associated with the agent.
-
-  </Tab>
-</Tabs>
 ---
 
 ## ToolDescription
@@ -523,6 +338,6 @@ Specifies how a particular toolkit should be used. It can indicate whether to us
 
 ## Conclusion
 
-The `AgentsClient` module provides a flexible, high-level API for managing and interacting with agents and toolkits in a distributed or plugin-based environment. Use `AgentsClient` for routine operations—listing agents and toolkits, invoking tools, or asking questions—and rely on the description classes (`AgentDescription`, `ToolDescription`, and `ToolkitDescription`) to manage the metadata and validation for those resources.
+The `AgentsClient` module provides a flexible, high-level API for managing and interacting with agents and toolkits in a distributed or plugin-based environment. Use `AgentsClient` for routine operations—listing toolkits, invoking tools, or calling agents—and rely on the description classes (`ToolDescription` and `ToolkitDescription`) to manage the metadata and validation for those resources.
 
 For more details on the underlying request/response flow, refer to your implementation of `RoomClient`, `Response`, and `JsonResponse`.

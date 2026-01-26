@@ -50,11 +50,5 @@ class Program
             }
         }
 
-        var agents = await room.Agents.ListAgents();
-        LogProvider.GetLogger().LogInformation("The agents in the room are:");
-        foreach (var agent in agents)
-        {
-            LogProvider.GetLogger().LogInformation($"Agent: {agent.Name}");
-        }
     }
 }
