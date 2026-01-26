@@ -32,11 +32,11 @@ The base `TaskRunner` is intentionally minimal which allows you to **bring-your-
 **This guide focuses on `LLMTaskRunner`** which extends the base TaskRunner by adding LLM reasoning (and optional tools). 
 
 **Three ways to use LLMTaskRunner:**
-1. **Built-in instances** - `meshagent.runner` (LLMTaskRunner) and `meshagent.schema_planner` (DynamicLLMTaskRunner) are pre-deployed in every room
+1. **Built-in instances** - `meshagent.runner` and `meshagent.schema_planner` are pre-deployed in every room
 2. **CLI** - Launch your own instance via `meshagent task-runner join` with custom tools/rules  
-3. **SDK** - Extend `LLMTaskRunner` or `DynamicLLMTaskRunner` for custom logic
+3. **SDK** - Extend `LLMTaskRunner` or implement `TaskRunner` for custom logic
 
-The `LLMTaskRunner` uses a fixed output schema defined at initialization (default: text response) while the `DynamicLLMTaskRunner` uses an output schema provided per-request, allowing different response structures for each task.
+The `LLMTaskRunner` uses a fixed output schema defined at initialization (default: text response). For per-request structured output, use `meshagent.schema_planner` and pass an `output_schema` with each call.
 
 If you need a multi-turn conversation, use [ChatBot](./chatbot). For real-time speech, use [VoiceBot](./voicebot). For background queue work, use [Worker](./worker) and for email use [MailBot](./mailbot).
 
@@ -153,7 +153,7 @@ meshagent service create --file meshagent.yaml --room quickstart
 
 ## Build and deploy a TaskRunner with the SDK
 ### Step 1: Create a TaskRunner
-This example shows how to create your own `LLMTaskRunner` and `DynamicLLMTaskRunner` instances using `ServiceHost`. These work like the built-in `meshagent.runner` and `meshagent.schema_planner`.
+This example shows how to create your own `LLMTaskRunner` instances using `ServiceHost`. These work like the built-in `meshagent.runner` and `meshagent.schema_planner`.
 
 <CodeGroup>
     <LLMTaskRunnerService />
@@ -167,7 +167,7 @@ meshagent service run "main.py" --room=quickstart
 ```
 
 ### Step 3: Invoke the TaskRunner
-From a different tab in your terminal invoke either the `LLMTaskRunner` or `DynamicLLMTaskRunner` from the CLI: 
+From a different tab in your terminal invoke the `LLMTaskRunner` from the CLI: 
 
 
 <CodeGroup>
@@ -259,7 +259,7 @@ The TaskRunner is now deployed to the `quickstart` room! Now the agent will alwa
 ## How TaskRunner Works
 ### TaskRunner vs LLMTaskRunner
 - `TaskRunner` is the base class. You implement `ask(...)` and define input/output schemas.
-- `LLMTaskRunner` or `DynamicLLMTaskRunner` is a concrete implementation that calls an LLM adapter, resolves toolkits, and returns the model output.
+- `LLMTaskRunner` is a concrete implementation that calls an LLM adapter, resolves toolkits, and returns the model output.
 - The CLI `task-runner` command builds an `LLMTaskRunner` for you.
 
 ### Constructor Parameters
