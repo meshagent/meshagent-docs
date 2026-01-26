@@ -10,6 +10,9 @@ from meshagent.api import (
 )
 from meshagent.api.helpers import websocket_room_url
 from meshagent.otel import otel_config
+from meshagent.agents.llmrunner import LLMTaskRunner
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.api.messaging import JsonResponse, TextResponse
 
 otel_config(service_name="taskrunner")
 log = logging.getLogger("taskrunner")
@@ -19,13 +22,13 @@ if not api_key:
     raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
 
 
-async def run_planner(room_name: str, prompt: str):
+async def run_once(room_name: str, prompt: str):
     """
-    Connect to a MeshAgent room and invoke the built-in TaskRunner tool.
+    Connect to a MeshAgent room and execute a TaskRunner directly (no toolkit registration).
 
     Args:
         room_name: Target room (will be created on first connect if it doesn't exist)
-        prompt:    The text to send to meshagent.planner
+        prompt: The text to send to the task runner
     """
     token = ParticipantToken(
         name="sample-participant",
@@ -42,12 +45,20 @@ async def run_planner(room_name: str, prompt: str):
     try:
         async with RoomClient(protocol=protocol) as room:
             log.info(f"Connected to room: {room.room_name}")
-            response = await room.agents.invoke_tool(
-                toolkit="meshagent.runner",
-                tool="run_meshagent.runner_task",
-                arguments={"prompt": prompt, "tools":[], "model":"null"},
+            runner = LLMTaskRunner(
+                llm_adapter=OpenAIResponsesAdapter(),
+                supports_tools=True,
             )
-            log.info(f"Response from agent:{response}")
+            response = await runner.run(
+                room=room,
+                arguments={"prompt": prompt, "tools": [], "model": None},
+            )
+            if isinstance(response, JsonResponse):
+                log.info(response.json)
+            elif isinstance(response, TextResponse):
+                log.info(response.text)
+            else:
+                log.info(response)
             return response
     except Exception as e:
         log.error(f"Connection failed:{e}")
@@ -55,7 +66,7 @@ async def run_planner(room_name: str, prompt: str):
 
 
 asyncio.run(
-    run_planner(
+    run_once(
         room_name="quickstart", prompt="Write a product description for a bluetooth speaker"
     )
 )
