@@ -5,7 +5,9 @@ import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
-from meshagent.api.messaging import TextResponse
+from meshagent.api.messaging import TextResponse, JsonResponse
+from meshagent.agents.llmrunner import LLMTaskRunner
+from meshagent.openai import OpenAIResponsesAdapter
 
 otel_config(service_name="my-service")
 log = logging.getLogger("my-service")
@@ -125,22 +127,32 @@ class Survey(Tool):
 
         # summarize results
         log.info("Summarizing survey results")
-        summary_resp = await context.room.agents.invoke_tool(
-            toolkit="meshagent.schema_planner",
-            tool="run_meshagent.schema_planner_task",
+        summary_schema = {
+            "type": "object",
+            "properties": {"summary": {"type": "string"}},
+            "required": ["summary"],
+            "additionalProperties": False,
+        }
+        runner = LLMTaskRunner(
+            llm_adapter=OpenAIResponsesAdapter(),
+            output_schema=summary_schema,
+        )
+        summary_resp = await runner.run(
+            room=context.room,
             arguments={
                 "prompt": f"Summarize these survey results:\n{json.dumps(summary)}",
-                "tools":[],
-                "model":"null",
-                "output_schema": {
-                    "type": "object",
-                    "properties": {"summary": {"type": "string"}},
-                    "required": ["summary"],
-                    "additionalProperties": False,
-                },
+                "model": None,
             },
+            caller=context.caller,
         )
-        summary_text = summary_resp.json["summary"]
+        if isinstance(summary_resp, JsonResponse):
+            summary_text = summary_resp.json.get("summary") or summary_resp.json.get(
+                "result", ""
+            )
+        elif isinstance(summary_resp, TextResponse):
+            summary_text = summary_resp.text
+        else:
+            summary_text = str(summary_resp)
         log.info("Saving survey result summary")
         await save_to_storage(
             room=context.room,
@@ -166,4 +178,3 @@ print(f"running on port {service.port}")
 asyncio.run(service.run())
 
 ```
-

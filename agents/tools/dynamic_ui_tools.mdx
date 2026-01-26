@@ -35,20 +35,22 @@ The survey fields are dynamically generated so that we can gather a variety of i
   <PrivateToolCall />
 </CodeGroup>
 
-Copy this code and activate your virtual environment, you will need two tabs open in your terminal. 
+Copy this code and activate your virtual environment then run the service: 
 
-In the first tab run:
-```bash bash
-python survey.py
-``` 
-
-In the second tab run: 
 ```bash bash
 meshagent setup # this will prompt you to authenticate to MeshAgent, select your project and API keys
-meshagent call tool --room=surveyroom --url=http://localhost:7777/survey --participant-name=survey
+meshagent service run "main.py" --room survey
 ```
 
-Next go to [studio.meshagent.com](https://studio.meshagent.com) and click into the ``surveyroom``. Once inside the room, select the menu icon and click "Run Task", the click "Add Tools" and you will see the survey-toolkit. Click on the invoke button. 
+Next go to [studio.meshagent.com](https://studio.meshagent.com) and click into the ``survey``. You will need to have the Studio open to fill in the form. We can invoke the survey tool by invoking it from a separate tab in the terminal:
+
+```bash bash 
+meshagent room agents invoke-tool \
+  --room survey \
+  --toolkit survey-toolkit \
+  --tool survey \
+  --arguments '{"subject":"Hiring feedback","description":"What did you think of the candidate?","name":"feedback"}'
+```
 
 You will be prompted to fill out information that will be used in the survey. For example you might fill in details stating that this survey is to collect feedback on the employee onboarding experience, and you might ask for specific feedback regarding any questions or concerns the employees have and what they learned from the training, you might title the form something like "Onboarding Feedback July". Once you fill in these details, the agent will survey other users in the room and collect their feedback asynchronously. Once the results are captured you will receive a summary of the results and both the summary and raw results will be saved to the room database for future use/access. 
 
