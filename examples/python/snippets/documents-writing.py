@@ -23,7 +23,7 @@ async def main():
 
     async with RoomClient(
         protocol=WebSocketClientProtocol(
-            url=websocket_room_url(room_name=room_name, base_url=meshagent_base_url()),
+            url=websocket_room_url(room_name=room_name),
             token=ParticipantToken(
                 name="participant",
                 project_id=env("MESHAGENT_PROJECT_ID"),
