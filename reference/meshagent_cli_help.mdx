@@ -3489,6 +3489,12 @@ Create a table with optional schema + optional initial data.
 Schema JSON format matches your DataType.to_json() structure, e.g.:
   &#123;&quot;id&quot;:&#123;&quot;type&quot;:&quot;int&quot;&#125;, &quot;body&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;, &quot;embedding&quot;:&#123;&quot;type&quot;:&quot;vector&quot;,&quot;size&quot;:1536,&quot;element_type&quot;:&#123;&quot;type&quot;:&quot;float&quot;&#125;&#125;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3502,6 +3508,7 @@ $ meshagent room database create [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--schema-json TEXT`: Schema JSON as a string
 * `--schema-file TEXT`: Path to schema JSON file
 * `--data-json TEXT`: Initial rows (JSON list)
@@ -3531,6 +3538,12 @@ Add columns. JSON supports either:
   - DataType JSON: &#123;&quot;col&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;
   - or server default SQL expr strings: &#123;&quot;col&quot;:&quot;&#x27;default&#x27;&quot;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3543,6 +3556,7 @@ $ meshagent room database add-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--columns-json TEXT`: JSON object of new columns
 * `--help`: Show this message and exit.
 
