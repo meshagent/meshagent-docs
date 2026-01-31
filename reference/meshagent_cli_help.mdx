@@ -790,6 +790,7 @@ $ meshagent mcp [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `sse`: Connect an MCP server over SSE and...
+* `http`: Connect an MCP server over streamable HTTP...
 * `stdio`: Run an MCP server over stdio and register...
 * `http-proxy`: Expose a stdio MCP server over streamable...
 * `sse-proxy`: Expose a stdio MCP server over SSE
@@ -812,6 +813,31 @@ $ meshagent mcp sse [OPTIONS]
 * `--name TEXT`: Participant name  [default: cli]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: SSE URL for the MCP server  [required]
+* `-H, --header TEXT`: Request header (KEY=VALUE). Repeat for multiple headers
+* `--header-secret TEXT`: Header from secret (HEADER=SECRET_ID[:KEY])
+* `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+### `meshagent mcp http`
+
+Connect an MCP server over streamable HTTP and register it as a toolkit
+
+**Usage**:
+
+```console
+$ meshagent mcp http [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--name TEXT`: Participant name  [default: cli]
+* `--role TEXT`: [default: tool]
+* `--url TEXT`: Streamable HTTP URL for the MCP server  [required]
+* `-H, --header TEXT`: Request header (KEY=VALUE). Repeat for multiple headers
+* `--header-secret TEXT`: Header from secret (HEADER=SECRET_ID[:KEY])
 * `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
@@ -2924,7 +2950,7 @@ $ meshagent room secrets [OPTIONS] COMMAND [ARGS]...
 * `oauth`: Run an OAuth2 request test between two...
 * `request`: Request a secret from another participant.
 * `get`: Get a stored secret by secret id.
-* `set`: Set/store a secret (bytes from stdin or...
+* `set`: Set/store a secret (bytes from stdin,...
 * `list`: list secrets
 * `delete`: delete a secret
 
@@ -2996,7 +3022,7 @@ $ meshagent room secrets get [OPTIONS]
 
 #### `meshagent room secrets set`
 
-Set/store a secret (bytes from stdin or file).
+Set/store a secret (bytes from stdin, file, text, or base64).
 
 **Usage**:
 
@@ -3012,7 +3038,10 @@ $ meshagent room secrets set [OPTIONS]
 * `--type TEXT`: Secret type
 * `--name TEXT`: Optional secret name
 * `--delegated-to TEXT`: Store a secret delegated to this participant name
-* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin  [default: -]
+* `--for-identity TEXT`: Store a secret for a specific identity
+* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin
+* `--text TEXT`: Provide secret as UTF-8 text
+* `--base64 TEXT`: Provide secret as base64-encoded data
 * `--help`: Show this message and exit.
 
 #### `meshagent room secrets list`
