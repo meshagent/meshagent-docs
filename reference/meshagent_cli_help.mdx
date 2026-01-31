@@ -18,7 +18,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `exec`: Open an interactive websocket‑based TTY.
 * `version`: Print the version
 * `setup`: Perform initial login and project/api key...
 * `call`: Trigger agent/tool calls via URL
@@ -43,30 +42,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `task-runner`: Join a taskrunner to a room
 * `worker`: Join a worker agent to a room
 * `room`: Operate within a room
-
-## `meshagent exec`
-
-Open an interactive websocket‑based TTY.
-
-**Usage**:
-
-```console
-$ meshagent exec [OPTIONS] [COMMAND]...
-```
-
-**Arguments**:
-
-* `[COMMAND]...`: Command to execute (omit when using `--tty`)
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--name TEXT`: Optional exec session name
-* `--image TEXT`: Optional container image to use for the exec session
-* `--tty / --no-tty`: Allocate an interactive TTY (requires a real terminal)  [default: no-tty]
-* `--room-storage-path TEXT`: Room storage mount path (default: /data)  [default: /data]
-* `--help`: Show this message and exit.
 
 ## `meshagent version`
 
@@ -624,8 +599,9 @@ $ meshagent service create [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `-f, --file TEXT`: File path to a service definition  [required]
-* `--room TEXT`: The name of a room to create the service for
+* `-f, --file TEXT`: File path to a service definition
+* `--url TEXT`: URL to a service definition
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service update`
@@ -642,9 +618,10 @@ $ meshagent service update [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--id TEXT`
-* `-f, --file TEXT`: File path to a service definition  [required]
+* `-f, --file TEXT`: File path to a service definition
+* `--url TEXT`: URL to a service definition
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
-* `--room TEXT`: The name of a room to update the service for
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service validate`
@@ -675,10 +652,11 @@ $ meshagent service create-template [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `-f, --file TEXT`: File path to a service template  [required]
+* `-f, --file TEXT`: File path to a service template
+* `--url TEXT`: URL to a service template
 * `--values-file TEXT`: File path to template values
 * `-v, --value TEXT`: Template value override (key=value)
-* `--room TEXT`: The name of a room to create the service for
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service update-template`
@@ -695,11 +673,12 @@ $ meshagent service update-template [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--id TEXT`
-* `-f, --file TEXT`: File path to a service template  [required]
+* `-f, --file TEXT`: File path to a service template
+* `--url TEXT`: URL to a service template
 * `--values-file TEXT`: File path to template values
 * `-v, --value TEXT`: Template value override (key=value)
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
-* `--room TEXT`: The name of a room to update the service for
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service validate-template`
@@ -733,7 +712,7 @@ $ meshagent service run [OPTIONS] COMMAND
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
-* `--room TEXT`: A room name to test the service in (must not be currently running)
+* `--room TEXT`: Room name
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
@@ -754,6 +733,7 @@ $ meshagent service show [OPTIONS] SERVICE_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service list`
@@ -770,7 +750,7 @@ $ meshagent service list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `-o, --output TEXT`: output format   [default: table]
-* `--room TEXT`: The name of a room to list the services for
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ### `meshagent service delete`
@@ -790,6 +770,7 @@ $ meshagent service delete [OPTIONS] SERVICE_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
 ## `meshagent mcp`
@@ -1382,7 +1363,7 @@ $ meshagent mailbox create [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `-a, --address TEXT`: Mailbox email address (unique per project)  [required]
-* `-r, --room TEXT`: Room name to route inbound mail into  [required]
+* `--room TEXT`: Room name
 * `-q, --queue TEXT`: Queue name to deliver inbound messages to  [required]
 * `--public`: Queue name to deliver inbound messages to
 * `--help`: Show this message and exit.
@@ -1441,6 +1422,7 @@ $ meshagent mailbox list [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -1848,6 +1830,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -1901,6 +1884,7 @@ $ meshagent chatbot service [OPTIONS]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -1959,6 +1943,7 @@ $ meshagent chatbot spec [OPTIONS]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2017,6 +2002,7 @@ $ meshagent chatbot deploy [OPTIONS]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2077,6 +2063,7 @@ $ meshagent chatbot run [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2176,6 +2163,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the name of the mail queue
@@ -2221,6 +2209,7 @@ $ meshagent mailbot service [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2271,6 +2260,7 @@ $ meshagent mailbot spec [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2321,6 +2311,7 @@ $ meshagent mailbot deploy [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2398,6 +2389,7 @@ $ meshagent task-runner join [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2438,6 +2430,7 @@ $ meshagent task-runner run [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2477,6 +2470,7 @@ $ meshagent task-runner service [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2519,6 +2513,7 @@ $ meshagent task-runner spec [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2561,6 +2556,7 @@ $ meshagent task-runner deploy [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2633,6 +2629,7 @@ $ meshagent worker join [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2676,6 +2673,7 @@ $ meshagent worker service [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2731,6 +2729,7 @@ $ meshagent worker spec [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2786,6 +2785,7 @@ $ meshagent worker deploy [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -2839,6 +2839,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages
 * `storage`: Manage storage for a room
+* `services`: Manage services in a room
 * `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
 * `container`: Manage containers and images in a room
@@ -2968,7 +2969,7 @@ $ meshagent room secrets request [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
 * `--url TEXT`: Secret URL identifier  [required]
-* `--type TEXT`: Secret MIME type  [default: application/octet-stream]
+* `--type TEXT`: Secret type  [default: application/octet-stream]
 * `--delegate-to TEXT`: Delegate secret to this participant name
 * `--timeout INTEGER`: Timeout in seconds  [default: 300]
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
@@ -3008,7 +3009,7 @@ $ meshagent room secrets set [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--secret-id TEXT`: Secret ID  [required]
-* `--type TEXT`: Secret MIME type
+* `--type TEXT`: Secret type
 * `--name TEXT`: Optional secret name
 * `--delegated-to TEXT`: Store a secret delegated to this participant name
 * `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin  [default: -]
@@ -3048,7 +3049,7 @@ $ meshagent room secrets delete [OPTIONS] ID
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
-* `--delegated-to TEXT`: The value of the delegated_to field of the secret  [required]
+* `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
 ### `meshagent room queue`
@@ -3302,6 +3303,41 @@ $ meshagent room storage ls [OPTIONS] PATH
 * `-r`: List subfolders/files recursively
 * `--help`: Show this message and exit.
 
+### `meshagent room services`
+
+Manage services in a room
+
+**Usage**:
+
+```console
+$ meshagent room services [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List services running in a room
+
+#### `meshagent room services list`
+
+List services running in a room
+
+**Usage**:
+
+```console
+$ meshagent room services list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
 ### `meshagent room developer`
 
 Developer utilities for a room
@@ -3428,6 +3464,12 @@ Create a table with optional schema + optional initial data.
 Schema JSON format matches your DataType.to_json() structure, e.g.:
   &#123;&quot;id&quot;:&#123;&quot;type&quot;:&quot;int&quot;&#125;, &quot;body&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;, &quot;embedding&quot;:&#123;&quot;type&quot;:&quot;vector&quot;,&quot;size&quot;:1536,&quot;element_type&quot;:&#123;&quot;type&quot;:&quot;float&quot;&#125;&#125;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3441,6 +3483,7 @@ $ meshagent room database create [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--schema-json TEXT`: Schema JSON as a string
 * `--schema-file TEXT`: Path to schema JSON file
 * `--data-json TEXT`: Initial rows (JSON list)
@@ -3470,6 +3513,12 @@ Add columns. JSON supports either:
   - DataType JSON: &#123;&quot;col&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;
   - or server default SQL expr strings: &#123;&quot;col&quot;:&quot;&#x27;default&#x27;&quot;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3482,6 +3531,7 @@ $ meshagent room database add-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--columns-json TEXT`: JSON object of new columns
 * `--help`: Show this message and exit.
 
