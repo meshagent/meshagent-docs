@@ -39,7 +39,7 @@ class SimpleChatbot(ChatBot):
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             llm_adapter=OpenAIResponsesAdapter(),
-            requires=[RequiredToolkit(name="ui"), RequiredSchema(name="document")],
+            requires=[RequiredToolkit(name="ui")],
             toolkits=[
                 MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),
@@ -67,7 +67,7 @@ class SimpleVoicebot(VoiceBot):
                 "Before closing the document, ask the user if they would like any additional modifications to be made to the document, and if so, make them. continue to ask the user until they are happy with the contents. you are not finished until the user is happy.",
                 "Blob URLs MUST not be added to documents, they must be saved as files first",
             ],
-            requires=[RequiredToolkit(name="ui"), RequiredSchema(name="document")],
+            requires=[RequiredToolkit(name="ui")],
             toolkits=[
                 MarkItDownToolkit(),
                 DocumentAuthoringToolkit(),

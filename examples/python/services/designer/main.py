@@ -58,7 +58,6 @@ class Designer(ChatBot):
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
-                RequiredSchema(name="gallery"),
             ],
             toolkits=[
                 Toolkit(name="local", tools=[SaveFileFromUrlTool()]),

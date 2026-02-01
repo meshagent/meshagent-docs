@@ -34,7 +34,6 @@ class RagChatBot(ChatBot):
                 "after opening a document, display it, before writing to it",
             ],
             requires=[
-                RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
