@@ -30,10 +30,17 @@ To call the MeshAgent REST API, authenticate with a project API key. The simples
 ### 1. Set up the SDK
 
 ```bash
-python -m venv .venv
+# Install uv if needed
+curl -LsSf https://astral.sh/uv/install.sh | sh 
+
+# Create a virtual environment with python 3.13 (required for MeshAgent)
+uv venv --python 3.13 
+
+# Activate virtual environment
 source .venv/bin/activate
-pip install "meshagent[all]"
-pip install python-dotenv
+
+# Install SDK and other dependencies
+uv pip install "meshagent[all]" python-dotenv
 ```
 
 ### 2. Create a new API key and store it in `.env`
@@ -56,7 +63,8 @@ MESHAGENT_API_KEY=your-api-key-value
 MESHAGENT_PROJECT_ID=your-project-id
 ```
 
-### 3. Create a MeshAgent client (dotenv)
+### 3. Create a MeshAgent client
+Now we can create the MeshAgent client and use it to do something like list all the rooms in our project. 
 
 <CodeGroup>
      <MeshAgentClient />
