@@ -18,7 +18,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `exec`: Open an interactive websocket‑based TTY.
 * `version`: Print the version
 * `setup`: Perform initial login and project/api key...
 * `call`: Trigger agent/tool calls via URL
@@ -43,30 +42,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `task-runner`: Join a taskrunner to a room
 * `worker`: Join a worker agent to a room
 * `room`: Operate within a room
-
-## `meshagent exec`
-
-Open an interactive websocket‑based TTY.
-
-**Usage**:
-
-```console
-$ meshagent exec [OPTIONS] [COMMAND]...
-```
-
-**Arguments**:
-
-* `[COMMAND]...`: Command to execute (omit when using `--tty`)
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--name TEXT`: Optional exec session name
-* `--image TEXT`: Optional container image to use for the exec session
-* `--tty / --no-tty`: Allocate an interactive TTY (requires a real terminal)  [default: no-tty]
-* `--room-storage-path TEXT`: Room storage mount path (default: /data)  [default: /data]
-* `--help`: Show this message and exit.
 
 ## `meshagent version`
 
@@ -815,6 +790,7 @@ $ meshagent mcp [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `sse`: Connect an MCP server over SSE and...
+* `http`: Connect an MCP server over streamable HTTP...
 * `stdio`: Run an MCP server over stdio and register...
 * `http-proxy`: Expose a stdio MCP server over streamable...
 * `sse-proxy`: Expose a stdio MCP server over SSE
@@ -837,6 +813,31 @@ $ meshagent mcp sse [OPTIONS]
 * `--name TEXT`: Participant name  [default: cli]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: SSE URL for the MCP server  [required]
+* `-H, --header TEXT`: Request header (KEY=VALUE). Repeat for multiple headers
+* `--header-secret TEXT`: Header from secret (HEADER=SECRET_ID[:KEY])
+* `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+### `meshagent mcp http`
+
+Connect an MCP server over streamable HTTP and register it as a toolkit
+
+**Usage**:
+
+```console
+$ meshagent mcp http [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--name TEXT`: Participant name  [default: cli]
+* `--role TEXT`: [default: tool]
+* `--url TEXT`: Streamable HTTP URL for the MCP server  [required]
+* `-H, --header TEXT`: Request header (KEY=VALUE). Repeat for multiple headers
+* `--header-secret TEXT`: Header from secret (HEADER=SECRET_ID[:KEY])
 * `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
@@ -1854,6 +1855,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
@@ -1865,6 +1867,7 @@ $ meshagent chatbot join [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--database-namespace TEXT`: Use a specific database namespace
@@ -1908,6 +1911,7 @@ $ meshagent chatbot service [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
@@ -1919,6 +1923,7 @@ $ meshagent chatbot service [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--database-namespace TEXT`: Use a specific database namespace
@@ -1967,6 +1972,7 @@ $ meshagent chatbot spec [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
@@ -1978,6 +1984,7 @@ $ meshagent chatbot spec [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--database-namespace TEXT`: Use a specific database namespace
@@ -2026,6 +2033,7 @@ $ meshagent chatbot deploy [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-computer-use]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
@@ -2037,6 +2045,7 @@ $ meshagent chatbot deploy [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--database-namespace TEXT`: Use a specific database namespace
@@ -2087,6 +2096,7 @@ $ meshagent chatbot run [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--script-tool / --no-script-tool`: Enable script tool calling  [default: no-script-tool]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
@@ -2098,6 +2108,7 @@ $ meshagent chatbot run [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
 * `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
 * `--database-namespace TEXT`: Use a specific database namespace
@@ -2188,6 +2199,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
@@ -2234,6 +2246,7 @@ $ meshagent mailbot service [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
@@ -2285,6 +2298,7 @@ $ meshagent mailbot spec [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
@@ -2336,6 +2350,7 @@ $ meshagent mailbot deploy [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
@@ -2414,6 +2429,7 @@ $ meshagent task-runner join [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2495,6 +2511,7 @@ $ meshagent task-runner service [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2538,6 +2555,7 @@ $ meshagent task-runner spec [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2581,6 +2599,7 @@ $ meshagent task-runner deploy [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2644,6 +2663,7 @@ $ meshagent worker join [OPTIONS]
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the queue to consume  [required]
@@ -2654,6 +2674,7 @@ $ meshagent worker join [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2698,6 +2719,7 @@ $ meshagent worker service [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2705,6 +2727,7 @@ $ meshagent worker service [OPTIONS]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2754,6 +2777,7 @@ $ meshagent worker spec [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2761,6 +2785,7 @@ $ meshagent worker spec [OPTIONS]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2810,6 +2835,7 @@ $ meshagent worker deploy [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
 * `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
@@ -2817,6 +2843,7 @@ $ meshagent worker deploy [OPTIONS]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
+* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
 * `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -2949,7 +2976,7 @@ $ meshagent room secrets [OPTIONS] COMMAND [ARGS]...
 * `oauth`: Run an OAuth2 request test between two...
 * `request`: Request a secret from another participant.
 * `get`: Get a stored secret by secret id.
-* `set`: Set/store a secret (bytes from stdin or...
+* `set`: Set/store a secret (bytes from stdin,...
 * `list`: list secrets
 * `delete`: delete a secret
 
@@ -2994,7 +3021,7 @@ $ meshagent room secrets request [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
 * `--url TEXT`: Secret URL identifier  [required]
-* `--type TEXT`: Secret MIME type  [default: application/octet-stream]
+* `--type TEXT`: Secret type  [default: application/octet-stream]
 * `--delegate-to TEXT`: Delegate secret to this participant name
 * `--timeout INTEGER`: Timeout in seconds  [default: 300]
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
@@ -3021,7 +3048,7 @@ $ meshagent room secrets get [OPTIONS]
 
 #### `meshagent room secrets set`
 
-Set/store a secret (bytes from stdin or file).
+Set/store a secret (bytes from stdin, file, text, or base64).
 
 **Usage**:
 
@@ -3034,10 +3061,13 @@ $ meshagent room secrets set [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--secret-id TEXT`: Secret ID  [required]
-* `--type TEXT`: Secret MIME type
+* `--type TEXT`: Secret type
 * `--name TEXT`: Optional secret name
 * `--delegated-to TEXT`: Store a secret delegated to this participant name
-* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin  [default: -]
+* `--for-identity TEXT`: Store a secret for a specific identity
+* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin
+* `--text TEXT`: Provide secret as UTF-8 text
+* `--base64 TEXT`: Provide secret as base64-encoded data
 * `--help`: Show this message and exit.
 
 #### `meshagent room secrets list`
@@ -3074,7 +3104,7 @@ $ meshagent room secrets delete [OPTIONS] ID
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
-* `--delegated-to TEXT`: The value of the delegated_to field of the secret  [required]
+* `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
 ### `meshagent room queue`
@@ -3489,6 +3519,12 @@ Create a table with optional schema + optional initial data.
 Schema JSON format matches your DataType.to_json() structure, e.g.:
   &#123;&quot;id&quot;:&#123;&quot;type&quot;:&quot;int&quot;&#125;, &quot;body&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;, &quot;embedding&quot;:&#123;&quot;type&quot;:&quot;vector&quot;,&quot;size&quot;:1536,&quot;element_type&quot;:&#123;&quot;type&quot;:&quot;float&quot;&#125;&#125;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3502,6 +3538,7 @@ $ meshagent room database create [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--schema-json TEXT`: Schema JSON as a string
 * `--schema-file TEXT`: Path to schema JSON file
 * `--data-json TEXT`: Initial rows (JSON list)
@@ -3531,6 +3568,12 @@ Add columns. JSON supports either:
   - DataType JSON: &#123;&quot;col&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;
   - or server default SQL expr strings: &#123;&quot;col&quot;:&quot;&#x27;default&#x27;&quot;&#125;
 
+Column definitions via --columns/-c use SQL-like syntax:
+  names vector(20) null, test text not null, age int
+
+Allowed types: int, bool, date, timestamp, float, text, binary, vector.
+Vector syntax: vector(size[, element_type]).
+
 **Usage**:
 
 ```console
@@ -3543,6 +3586,7 @@ $ meshagent room database add-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
 * `--columns-json TEXT`: JSON object of new columns
 * `--help`: Show this message and exit.
 

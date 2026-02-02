@@ -52,7 +52,6 @@ class SampleVoiceAgentWithTools(VoiceBot):
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
-                RequiredSchema(name="presentation"),
             ],
             toolkits=[
                 MarkItDownToolkit(),

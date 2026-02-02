@@ -34,7 +34,6 @@ class RagChatBot(ChatBot):
                 "after opening a document, display it, before writing to it",
             ],
             requires=[
-                RequiredSchema(name="document"),
                 RequiredToolkit(
                     name="ui", tools=["ask_user", "display_document", "show_toast"]
                 ),
@@ -46,7 +45,7 @@ class RagChatBot(ChatBot):
                     schema=document_schema, document_type="document"
                 ),
             ],
-            labels=["chatbot", "rag"],
+            annotations=["chatbot", "rag"],
         )
     async def start(self, *, room):
         rag_toolkit = RagToolkit(
@@ -70,7 +69,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         *,
         title="storage indexer",
         description="watch storage and index any uploaded pdfs or office documents",
-        labels=["watchers", "rag"],
+        annotations=["watchers", "rag"],
         chunker=None,
         embedder=None,
         table="rag-index",
@@ -80,7 +79,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         super().__init__(
             title=title,
             description=description,
-            labels=labels,
+            annotations=annotations,
             chunker=chunker,
             embedder=embedder,
             table=table,
