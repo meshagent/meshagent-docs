@@ -53,7 +53,7 @@ class RagChatBot(ChatBot):
                 ),
                 self._rag_toolkit,
             ],
-            labels=["chatbot", "rag"],
+            annotations=["chatbot", "rag"],
         )
 
     async def start(self, *, room):
@@ -82,7 +82,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         name="storage_indexer",
         title="storage indexer",
         description="watch storage and index any uploaded pdfs or office documents",
-        labels=["watchers", "rag"],
+        annotations=["watchers", "rag"],
         chunker=None,
         embedder=None,
         table="rag-index",
@@ -94,7 +94,7 @@ class MarkitDownFileIndexer(StorageIndexer):
             name=name,
             title=title,
             description=description,
-            labels=labels,
+            annotations=annotations,
             chunker=chunker,
             embedder=embedder,
             table=table,
