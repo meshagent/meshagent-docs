@@ -23,24 +23,49 @@ For room-specific operations such as working with agents, databases, or queues u
 
 To call the MeshAgent REST API, authenticate with a project API key. The simplest path is:
 
-1) **Set up a Python environment** and install the SDK  and python-dotenv
-2) **Use the CLI to create and activate an API key**, then store it in `.env`  
+1) **Set up a Python environment** with the MeshAgent SDK installed (requires Python 3.13)
+2) **Use the MeshAgent CLI to create and activate an API key**, then store it in a `.env`  file
 3) **Load the key from `.env`** and create a `Meshagent()` client
 
+> MeshAgent requires **Python 3.13**. We recommend using `uv`, which manages Python versions, virtual environments, and dependencies automatically. 
+
 ### 1. Set up the SDK
+
+Install uv, then create a project and virtual environment with MeshAgent installed:
 
 ```bash
 # Install uv if needed
 curl -LsSf https://astral.sh/uv/install.sh | sh 
 
-# Create a virtual environment with python 3.13 (required for MeshAgent)
-uv venv --python 3.13 
+# Create and navigate to your project directory
+mkdir meshagent-project && cd meshagent-project 
 
-# Activate virtual environment
+# Initialize the project and pin Python 3.13 
+uv init --python 3.13
+
+# Create virtual environment (uv will download python 3.13 if not already installed on your machine)
+uv venv --python 3.13
+
+# Install MeshAgent SDK and other dependencies
+uv add "meshagent[all]" python-dotenv
+```
+
+Activate your virtual environment:
+<CodeGroup>
+```bash macOS/Linux
 source .venv/bin/activate
+```
+```bash Windows
+.venv\Scripts\activate
+```
+</CodeGroup>
 
-# Install SDK and other dependencies
-uv pip install "meshagent[all]" python-dotenv
+> **Note**: You'll know your virtual environment is active when you see `(.venv)` at the start of your terminal prompt. When the environment is activated, you can run commands directly (e.g. `meshagent setup` or `python main.py`). If the environment is not activated, prefix commands with `uv run` (e.g. `uv run meshagent setup` or `uv run python main.py`). 
+
+To upgrade dependencies later, run:
+```bash 
+uv lock --upgrade
+uv sync
 ```
 
 ### 2. Create a new API key and store it in `.env`

@@ -4,130 +4,53 @@ title: Machine Setup Guide
 
 ## Python Development Environment Setup
 
-This page takes you from zero tooling to the point where you can run any command in the [**Getting Started**](../introduction/get_started) guide.
+In this guide you will set up your machine to use the MeshAgent Python SDK. Note that **MeshAgent requires Python 3.13**. 
 
-In this document we will walk through: 
-- Setting up your IDE, terminal, and GitHub account
-- Installing Python
-- Choosing and installing a Python package manager (we recommend uv)
-- Creating a Repository and Project Folder to run the code
-- Setting up a virtual environment
-- Installing MeshAgent
+We recommend using **uv**, a modern Python tool that:
+- Installs the correct Python version automatically
+- Creates and manages virtual environments
+- Installs dependencies consistently across platforms
 
-## Step 0: Install an IDE, terminal, and create a GitHub account
-
-If you don't already have a code editor installed, download one of your choice, for example [VS Code](https://code.visualstudio.com/), [Windsurf](https://windsurf.com/), or [Cursor](https://cursor.com/en). 
-
-You can also install a more sophisticated terminal like [warp](https://www.warp.dev/) which makes development even easier.
-
-Creating a [GitHub](https://github.com/) account will make it easier for you to manage your code projects. We recommend creating an account and installing the [GitHub Command Line Interface (CLI)](https://cli.github.com/) to make GitHub management seamless. Follow the installation instructions for the GitHub CLI based on your machine.
-
-## Step 1: Install Python 3.13+
-
-### Windows
-
-1. Download Python from [python.org](https://www.python.org/downloads/windows/).
-2. **Important:** Check **“Add Python to PATH”** during the installer.
-3. Verify in your terminal: 
-<CodeGroup>
-```bash powershell
-python --version
-# → Python 3.13.x
-```
-</CodeGroup>
-
-### macOS
-
-Open your terminal and run the following to install python and verify the version
-
-<CodeGroup>
-```bash bash
-brew install python@3.13
-python3 -V
-```
-</CodeGroup>
-
-### Linux
-Most distros already ship a recent python version but if not run 
-
-<CodeGroup>
-```bash bash
-sudo apt-get install python3.13 python3.13-venv
-```
-</CodeGroup>
-
-## Step 2: Choose your Python package manager
-You can either use pip or uv as your Python package manager. Pip is the classic package manager, uv is a newer, faster drop-in replacement for pip. We recommend using uv since it makes package management easier. 
-
-### Installing uv (recommended)
-Verify the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/#installation-methods) for your machine on the astral website. You will likely run: 
-
+## Step 1: Install uv
 <CodeGroup>
 ```bash curl
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-</CodeGroup>
 
-Verify uv is installed correctly:
-<CodeGroup>
-```bash bash
+# verify installation 
 uv --version
 ```
 </CodeGroup>
 
-### Using pip (alternative)
-If you prefer to use pip, it should already be installed with Python. Verify it's working:
+## Step 2: Create a project directory
+Create a folder where you’ll run the MeshAgent examples:
 
-<CodeGroup>
-```bash bash
-pip --version
+```bash bash 
+mkdir meshagent-getting-started && cd meshagent-getting-started
 ```
-</CodeGroup>
 
+If you are using GitHub, clone your repository instead and `cd` into it.
 
-## Step 3: Create a repository and / or project folder 
-### Option A: With GitHub (Recommended)
-If you have a GitHub account, create a repository and then clone it to your machine:
+## Step 3: Initialize the project, create a virtual environment, and install MeshAgent
+```bash bash 
+# Pin Python 3.13 for the project and create standard project files
+uv init --python 3.13
 
-1. Create a repository on the GitHub website and fill in the appropriate details
-2. Once created, you'll see a green "Code" button - click it
-3. Click the "GitHub CLI" tab (assuming you set up the GitHub CLI) and copy the command
-4. It will look like `gh repo clone YOUR_REPO_NAME`
-5. Paste this into your terminal to clone the repository
+# Create a virtual environment and download Python 3.13 if not already installed on your machine
+uv venv --python 3.13
 
-<CodeGroup>
-```bash gitrepo
-gh repo clone YOUR_REPO_NAME
-cd YOUR_REPO_NAME
+# Install MeshAgent
+uv add "meshagent[all]"
 ```
-</CodeGroup>
 
-### Option B: Local Folder Only
-If you don't have a GitHub account, create a new project folder where we'll run the code samples:
-<CodeGroup>
-```bash bash
-mkdir meshagent-getting-started
-cd meshagent-getting-started
-```
-</CodeGroup>
+> ### How uv commands fit together
+> - `uv init` initializes the project and records the required Python version
+> - `uv venv` ensures that Python version is available and creates the virtual environment
+> - `uv add` installs dependencies into the virtual environment
 
+## Step 4: Running commands and activating your virtual environment
+With `uv`, you can either activate the virtual environment and run commands normally, or run commands through `uv` using `uv run`, which automatically uses the project’s virtual environment without activation.
 
-## Step 4: Create your virtual environment
-Virtual environments are important because they isolate your project dependencies from your system Python installation. This prevents version conflicts between different projects and keeps your system clean.
-
-In your terminal, inside the project folder, run the following commands to create your virtual environment based on the package manager you are using:
-
-<CodeGroup>
-```bash uv
-uv init # only run this the first time you are creating a project 
-uv venv # create the virtual environment (only run the first time)
-```
-```bash pip
-python -m venv .venv
-```
-</CodeGroup>
-
-Now activate the virtual environment (you will do this every time you cd into the project folder where you're running your code)
+### Option A: Activate the virtual environment (recommended for frequent CLI use)
 
 <CodeGroup>
 ```bash macOS/Linux
@@ -138,53 +61,41 @@ source .venv/bin/activate
 ```
 </CodeGroup>
 
-You'll know your virtual environment is active when you see ``.venv`` at the beginning of your terminal prompt.
+You’ll know the environment is active when you see `(.venv)` at the start of your terminal prompt. With the environment activated you can run commands directly: 
 
-## Step 5: Install MeshAgent
-
-Now that you have your virtual environment setup you can install MeshAgent! 
-
-<CodeGroup>
-```bash uv
-uv add 'meshagent[all]' # use quotes since we are installing all of the packages
+```bash bash 
+meshagent setup
+python your_script.py
 ```
-```bash pip
-pip install 'meshagent[all]' # use quotes since we are installing all of the packages
-```
-</CodeGroup>
 
-**Note**: Any shell that does glob-expansion (zsh, fish, PowerShell) treats the square brackets as a wildcard unless they’re quoted or back-escaped, this is why you need to put quotes around the ``meshagent[all]`` install command. Installing ``meshagent[all]`` is beneficial because you will get all of the python libraries associated with MeshAgent. If you are installing individual packages with Python you do not need to run the install command with quotes. For example, if you only wanted to install one of the MeshAgent libraries, like the MeshAgent CLI, you would run the command like this:
+### Option B: Use `uv run` (no env activation required)
+If you prefer not to activate the virtual environment, prefix commands with `uv run`:
 
-<CodeGroup>
-```bash uv
-uv add "meshagent[cli]"
+```bash bash 
+uv run meshagent setup
+uv run python your_script.py
 ```
-```bash pip
-pip install "meshagent[cli]" 
-```
-</CodeGroup>
 
-**Note**: Inside an activated virtual-env pip already points to the right interpreter, so ``pip`` or ``pip3`` both work. Outside a venv you may need to run ``pip3`` to avoid Python 2 leftovers.
+## Keeping your environment up to date
+To upgrade MeshAgent and other dependencies to their latest compatible versions, run:
+
+```bash bash 
+uv lock --upgrade
+uv sync
+```
+
+> ### `uv lock` vs `uv sync`
+> - `uv lock` updates the dependency versions recorded for the project
+> - `uv sync` installs the versions recorded in the lockfile into your virtual environment
+
 
 ## Next Steps
+You're ready to continue with the [Getting Started](../introduction/get_started) guide.
 
-Congratulations! You now have everything set up to run the examples in the [Getting Started](../introduction/get_started) guide.
+### Troubleshooting 
+Command not found (`meshagent`, `python`):
+- Make sure the virtual environment is activated and you are in the correct project directory
+- Or use `uv run meshagent` or `uv run pyhton…```
 
-### Important Reminders
-- Always activate your virtual environment before working on your project: 
-<CodeGroup>
-```bash macOS/Linux
-source .venv/bin/activate
-```
-```bash Windows
-.venv\Scripts\activate
-```
-</CodeGroup>
-
-- If using uv, you can use ``uv run python your_script.py`` to automatically use the virtual environment. If your virtual environment is already activated you can also just run ``python your_script.py``.
-- Keep your virtual environment activated while following the [Getting Started](../introduction/get_started) guide
-
-### Troubleshooting Common Issues
-- Python not found: Make sure Python was added to your PATH during installation (Windows) or use python3 instead of python (macOS/Linux).
-- Permission errors: On macOS/Linux, you might need to restart your terminal after installing uv, or run source ~/.bashrc or source ~/.zshrc.
-- Virtual environment not activating: Make sure you're in the correct project directory when running the activation commands.
+Permission issues:
+- On macOS/Linux, you might need to restart your terminal after installing uv, or run source ~/.bashrc or source ~/.zshrc.
