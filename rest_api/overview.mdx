@@ -1,8 +1,7 @@
 ---
 title: REST API
 ---
-import GetDynamicToken from "/snippets/examples/python/rest_api/get_token_dynamically.mdx"
-import GetCLIToken from "/snippets/examples/python/rest_api/get_token_from_cli_session.mdx"
+import MeshAgentClient from "/snippets/examples/python/rest_api/rest_api_example.mdx"
 
 The MeshAgent REST API exposes administrative and lifecycle operations for projects, rooms, users, permissions, services, storage, billing, sessions, and integrations.
 
@@ -22,54 +21,85 @@ For room-specific operations such as working with agents, databases, or queues u
 
 ## Getting started
 
-To call the MeshAgent REST API you must authenticate using **OAuth**. The simplest path is:
+To call the MeshAgent REST API, authenticate with a project API key. The simplest path is:
 
-1) **Create an OAuth client** in [MeshAgent Studio](https://studio.meshagent.com)  
-2) **Log in with the CLI** (this stores a session token locally)  
-3) **Use the stored access token** or fetch one dynamically in your application
+1) **Set up a Python environment** with the MeshAgent SDK installed (requires Python 3.13)
+2) **Use the MeshAgent CLI to create and activate an API key**, then store it in a `.env`  file
+3) **Load the key from `.env`** and create a `Meshagent()` client
 
-### 1. Create an OAuth Client in [MeshAgent Studio](https://studio.meshagent.com)
-1. In [MeshAgent Studio](https://studio.meshagent.com), open the **OAuth** tab  
-2. Click **New OAuth Client**  
-3. Name your client  
-   - You do not need to configure scopes or redirect URIs for REST API usage  
-4. Click **Create**  
-5. Copy the generated credentials:
-   - `OAUTH_CLIENT_ID`
-   - `OAUTH_CLIENT_SECRET`
+> MeshAgent requires **Python 3.13**. We recommend using `uv`, which manages Python versions, virtual environments, and dependencies automatically. To learn more about `uv` see the [Machine Setup Guide for Python](../reference/machine_setup)
 
-### 2. Authenticate with the CLI
+### 1. Set up the SDK
 
-Export your credentials and run setup:
+Install uv, then create a project and virtual environment with MeshAgent installed:
 
 ```bash
-export OAUTH_CLIENT_ID="xxx"
-export OAUTH_CLIENT_SECRET="xxx"
-meshagent setup
+# Install uv if needed
+curl -LsSf https://astral.sh/uv/install.sh | sh 
+
+# Create and navigate to your project directory
+mkdir meshagent-project && cd meshagent-project 
+
+# Initialize the project and pin Python 3.13 
+uv init --python 3.13
+
+# Create virtual environment (uv will download python 3.13 if not already installed on your machine)
+uv venv --python 3.13
+
+# Install MeshAgent SDK and other dependencies
+uv add "meshagent[all]" python-dotenv
+```
+
+Activate your virtual environment:
+<CodeGroup>
+```bash macOS/Linux
+source .venv/bin/activate
+```
+```bash Windows
+.venv\Scripts\activate
+```
+</CodeGroup>
+
+> **Note**: You'll know your virtual environment is active when you see `(.venv)` at the start of your terminal prompt. When the environment is activated, you can run commands directly (e.g. `meshagent setup` or `python main.py`). If the environment is not activated, prefix commands with `uv run` (e.g. `uv run meshagent setup` or `uv run python main.py`). 
+
+To upgrade dependencies later, run:
+```bash 
+uv lock --upgrade
+uv sync
+```
+
+### 2. Create a new API key and store it in `.env`
+
+```bash
+# Authenticate to MeshAgent if not already signed in
+meshagent setup # this will also print your project ID
+
+# Get your current project ID
+meshagent project list # the project with the * next to it is the current active project
+
+# Create an API Key
+meshagent api-key create --activate my-key
+```
+
+Create a `.env` file in your project and paste the key value:
+
+```bash
+MESHAGENT_API_KEY=your-api-key-value
+MESHAGENT_PROJECT_ID=your-project-id
 ```
 
 ### 3. Create a MeshAgent client
-You can authenticate in one of two ways:
-
-**Option A**: Fetch an access token dynamically
+Now we can create the MeshAgent client and use it to do something like list all the rooms in our project. 
 
 <CodeGroup>
-    <GetDynamicToken />
-</CodeGroup>
-
-**Option B**: Use the saved CLI session token
-
-<CodeGroup>
-    <GetCLIToken />
+     <MeshAgentClient />
 </CodeGroup>
 
 ### Client configuration
 The `Meshagent()` client accepts a `base_url` and `token`.
 - `base_url`: defaults to `MESHAGENT_API_URL` (defaults to https://api.meshagent.com)
 - `token`: a bearer token for the Authorization header. 
-    - This will default to `MESHAGENT_API_KEY`. API Keys are scoped to a specific project and cannot be used for global account based tasks like listing projects. API keys can be used for non user-specific operations like updating a service. 
-    - For most REST API operations, you will need an OAuth access token (from get_access_token() or CLI session shown above). 
-    this should be a valid OAuth access token (from get_access_token() or CLI session). OAuth access tokens are required for account wide operations such as listing projects.
+    - This will default to `MESHAGENT_API_KEY`. API keys are scoped to a specific project, so most REST calls will also require a `project_id`.
 
 Every method raises `meshagent.api.RoomException` on non-2xx responses and validates responses with Pydantic models, so malformed payloads surface as rich errors.
 
