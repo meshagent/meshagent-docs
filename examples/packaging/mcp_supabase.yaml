@@ -1,15 +1,24 @@
-kind: Service
+kind: ServiceTemplate
 version: v1
 metadata:
   name: mcp-supabase
   description: "Expose a Supabase MCP server"
+variables:
+  - name: supabase_project_ref
+    description: "Supabase project ref (from project settings)"
+  - name: supabase_access_token
+    description: "Supabase access token (service role key or JWT)"
+    obscure: true
 ports:
   - num: 443
     type: http
     endpoints:
-      - path: /
+      - path: /mcp?project_ref={{ supabase_project_ref }}
         mcp:
           label: "mcp-supabase"
           description: "Supabase MCP tools"
+          headers:
+            Authorization: "Bearer {{ supabase_access_token }}"
+            # apikey: "{{ supabase_access_token }}"
 external:
-  url: "https://mcp.supabase.com/mcp"
+  url: "https://mcp.supabase.com"
