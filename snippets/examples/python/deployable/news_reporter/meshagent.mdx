@@ -44,8 +44,7 @@ ports:
       identity: news-reporter
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
-  command: >
-    !template /usr/bin/meshagent multi service
+  command: /usr/bin/meshagent multi service
     -c "chatbot --agent-name=news-reporter --require-web-search --require-toolkit=email --require-storage --rule='You are a newsroom assistant. When asked, you can send a news digest email using the email toolkit. Make sure that the news briefing is detailed and includes links to relevant sources' --room-rules='agents/news-reporter/chatbotrules.txt';
         mailbot --agent-name=news-reporter --queue=news_email --email-address={{ email }} --toolkit-name=email --require-web-search --enable-attachments --rule='You are a news reporter. When replying to inbound emails, use web search when applicable. Ensure that the news briefings you share are detailed and include links to relevant sources.' --room-rules='agents/news-reporter/mailbotrules.txt';
         worker --agent-name=news-reporter --queue=news_updates --require-toolkit=email --require-storage --require-web-search --rule='Create a daily AI news digest covering market moves, funding, major product announcements, and policy updates. Use web search and include the links to your sources. Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md. Send the digest email to {{ send_to_email }} using the email toolkit.' --room-rules='agents/news-reporter/workerrules.txt'"

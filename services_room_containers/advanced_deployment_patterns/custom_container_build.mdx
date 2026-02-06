@@ -1,0 +1,60 @@
+---
+title: Custom Container Build and Push
+---
+
+Use a custom container when you need system packages or a non-standard runtime. Build and push your image, then reference it from your service spec.
+
+Dockerfile example:
+
+```dockerfile Dockerfile
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libsndfile1 \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY . /app
+
+RUN pip install -r requirements.txt
+
+ENTRYPOINT ["python3", "main.py"]
+```
+
+Build and push:
+
+```bash
+docker buildx build . \
+  -t registry.example.com/support-chatbot:1.0 \
+  --platform linux/amd64 \
+  --push
+```
+
+`meshagent.yaml` example:
+
+```yaml
+kind: Service
+version: v1
+metadata:
+  name: support-chatbot
+  description: "Custom container with system deps"
+agents:
+  - name: support-chatbot
+    description: "ChatBot for support"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: "*"
+    type: http
+    endpoints:
+      - path: /chat
+        meshagent:
+          identity: support-chatbot
+container:
+  image: "registry.example.com/support-chatbot:1.0"
+  command: "python3 /app/main.py"
+  pull_secret: "registry-pull-secret"
+```
+
+Deploy it with `meshagent service create --file meshagent.yaml`.

@@ -1,0 +1,44 @@
+---
+title: Base Image + Code Image Mount
+---
+
+Use a runtime base image for the SDK and mount a small code-only image into the container. This keeps runtime images stable and code images tiny.
+
+Code-only image Dockerfile:
+
+```dockerfile Dockerfile
+FROM scratch
+COPY . /src
+```
+
+`meshagent.yaml` example:
+
+```yaml
+kind: Service
+version: v1
+metadata:
+  name: support-chatbot
+  description: "Runtime image + mounted code image"
+agents:
+  - name: support-chatbot
+    description: "ChatBot for support"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: "*"
+    type: http
+    endpoints:
+      - path: /chat
+        meshagent:
+          identity: support-chatbot
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
+  command: "python3 /src/main.py"
+  storage:
+    images:
+      - image: "registry.example.com/support-chatbot-code:1.0"
+        path: /src
+        read_only: true
+```
+
+Build and push the code-only image, then deploy the service with `meshagent service create --file meshagent.yaml`.

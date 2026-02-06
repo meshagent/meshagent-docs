@@ -1,0 +1,19 @@
+kind: Service
+version: v1
+metadata:
+  name: external-support-service
+  description: "Register a chatbot hosted outside MeshAgent"
+agents:
+  - name: external-support
+    description: "External support chatbot"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+ports:
+  - num: 443
+    type: http
+    endpoints:
+      - path: /agent
+        meshagent:
+          identity: external-support
+external:
+  url: "https://api.example.com"
