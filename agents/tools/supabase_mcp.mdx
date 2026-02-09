@@ -1,0 +1,76 @@
+---
+title: "Supabase MCP"
+---
+
+import MCPSupabaseYAML from "/snippets/examples/packaging/mcp_supabase.mdx"
+
+Supabase is an open-source backend platform that provides a hosted Postgres database, auth, storage, and realtime APIs. The Supabase MCP server exposes these capabilities as tools that can be used in MeshAgent.
+
+In this guide you'll learn how to:
+- Create a Supabase account and access token
+- Test the Supabase MCP server locally with MeshAgent
+- Deploy the Supabase MCP server as a MeshAgent service
+
+## Step 1: Create a Supabase account and access token 
+Create a Supabase account and a project at https://supabase.com. From the Project Settings -> General page you will see the Project ID/Project Reference. Copy this ID so you can connect to it through MCP. 
+
+Next, create a Supabase access token from your account page under [Account Settings -> Access Tokens](https://supabase.com/dashboard/account/tokens) generate an new token and set an expiration date for it. Keep this value private.
+
+## Step 2: Test the MCP Server locally with the MeshAgent CLI
+Make sure you have your project ref, access token, and a configured MeshAgent CLI.
+
+1. Export the Supabase project ref and access token.
+
+```bash
+export SUPABASE_PROJECT_REF="your_project_ref"
+export SUPABASE_ACCESS_TOKEN="your_access_token"
+```
+
+2. Create a room scoped secret to store the Supabase access token. 
+
+```bash
+meshagent room secrets set \
+  --room myroom \
+  --secret-id supabase-access-token \
+  --name supabase-access-token \
+  --for-identity supabase \
+  --text "$SUPABASE_ACCESS_TOKEN"
+```
+
+This creates a room secret that `--header-secret` can resolve. 
+
+3. Start an MCP session and register the Supabase toolkit in your room. This command initializes the MCP session and exposes it to the room. This requires you to be authenticated to MeshAgent with a token that has both `api.secrets` and `api.admin` grants because you are setting a secret for another identity. You must also be a room admin. 
+
+```bash
+meshagent mcp http \
+  --room myroom \
+  --url "https://mcp.supabase.com/mcp?project_ref=$SUPABASE_PROJECT_REF" \
+  --header-secret "Authorization=supabase-access-token:token" \
+  --toolkit-name supabase
+```
+
+4. In another terminal tab, start an agent that requires the Supabase toolkit.
+
+```bash
+meshagent chatbot join --room tula --agent-name supachatty --require-toolkit supabase
+```
+
+5. Try the agent and toolkit in MeshAgent Studio
+
+Now that you've tried it in MeshAgent Studio you can deploy...
+
+## Step 3: Deploy the Supabase MCP Server as a service
+Create a ServiceTemplate configuration file that defines how we should run the service. 
+
+<CodeGroup>
+  <MCPSupabaseYAML />
+</CodeGroup>
+
+Deploy the service template:
+
+```bash
+meshagent service create-template \
+  --file meshagent.template.yaml \
+  --values-file meshagent.values.yaml \
+  --room myroom
+```
