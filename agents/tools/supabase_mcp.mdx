@@ -21,9 +21,9 @@ In this guide you'll learn how to:
 ## Quickstart: Install via Powerboards
 If you want to get up and running without using the MeshAgent CLI, you can install the Supabase toolkit directly into [Powerboards](https://app.powerboards.com). 
 
-1. Click the link below to open the supabase toolkit installer: [Install Supabase Toolkit in Powerboards]().
+1. Click the link below to open the supabase toolkit installer: [Install Supabase Toolkit in Powerboards](https://app.powerboards.com/install?url=https://gist.githubusercontent.com/tmasterman/314481e88893b7e0107f91f9c2248a14/raw/bb7754ec7c79ec1cdfe69372fa309212e6a5c311/meshagent.yaml).
 2. Powerboards will walk you through the setup, you will sign in, create/select a Project, create/select a room, then install the toolkit. You will need to paste in your Supabase Project ID and Supabase Access Token you generated above. Powerboards will automatically store the access token as a secret. 
-3. Next, click the link to install an agent that uses the toolkit: [Install Agent that Uses Supabase Toolkit in Powerboards]().
+3. Next, click the link to install an agent that uses the toolkit: [Install Agent that Uses Supabase Toolkit in Powerboards](https://app.powerboards.com/install?url=).
 4. Follow the same process to install the agent. 
 
 Once installed, the Supabase toolkit will be available in your room. Any agent in the room with access to the toolkit can use it to interact with your Supabase project.
@@ -33,9 +33,12 @@ This path walks you through connecting and testing the Supabase MCP server local
 
 ### Prerequisites
 Before you begin, make sure you have:
-- The [MeshAgent CLI](../cli/getting_started) installed (either a global install e.g. `brew install meshagent` or in a python environment `uv add "meshagent[all]"`) and connected to the MeshAgent project you want to work in (run `meshagent setup` then select your project).
-- Room admin access to the room you plan to use. (How to check this? Or do it in the studio?)
-- A participant token with `api.secrets` and `api.admin` grants (this is granted by...)
+- The [MeshAgent CLI](../cli/getting_started) installed (either globally via `brew install meshagent` or in a python environment via `uv add "meshagent[all]"`)
+- Connected to the MeshAgent project you want to work in (run `meshagent setup` to authenticate and select your project)
+- Room admin access to the room you plan to use
+- Your Supabase Project Reference and Access Token from the setup step above
+
+**Permissions note:** Step 2 of this guide creates a room secret for another identity (the supabase toolkit). This requires you to be a room admin and have a participant token with `api.secrets` and `api.admin` grants. If you’re a room admin or project owner, when you run `meshagent setup` the CLI mints a participant token for you with those grants automatically. If you do not have a token with these grants ask an admin to do Step 2 for you.
 
 ### Step 1: Export your credentials
 Export your Supabase credentials so the following commands can reference them:
@@ -59,7 +62,52 @@ meshagent room secrets set \
   --text "$SUPABASE_ACCESS_TOKEN"
 ```
 
-> **Note** Running this command requires you to be authenticated to MeshAgent with a token that has both `api.secrets` and `api.admin` grants because you are setting a secret for another identity. You must also be a room admin to set secrets for a room.
+<Accordion title="Managing secrets for other identities">
+When you create a room secret with `--for-identity supabase`, that secret belongs to the `supabase` identity — not to you. Running `meshagent room secrets list --room myroom` while authenticated as yourself won't show it.
+
+To view or delete secrets for another identity, you need to generate a participant token for that identity and temporarily act as them.
+
+**1. Create a token request file** (e.g. `supabase_token.yaml`):
+```yaml
+version: v1
+kind: ParticipantToken
+identity: supabase
+room: myroom
+api:
+  secrets: {}
+```
+
+**2. Generate the token:**
+```bash
+meshagent token generate --input supabase_token.yaml
+```
+
+Copy the token value, then export it along with your project and room:
+```bash
+export MESHAGENT_TOKEN="the_generated_token"
+export MESHAGENT_ROOM="myroom"
+export MESHAGENT_PROJECT_ID="your_project_id"
+```
+
+You can find your project ID by running `meshagent project list` or from the output of `meshagent setup`.
+
+**3. View or delete the secrets:**
+```bash
+meshagent room secrets list --room myroom
+meshagent room secrets delete --room myroom --secret-id supabase
+```
+
+**4. Unset the environment variables when you're done** — otherwise your CLI will continue executing commands using the token you created:
+```bash
+unset MESHAGENT_TOKEN MESHAGENT_ROOM MESHAGENT_PROJECT_ID
+```
+
+**5. Reauthenticate and connect as yourself**
+```bash 
+meshagent setup
+```
+
+</Accordion>
 
 ### Step 3: Start the MCP Session 
 This command connects to the Supabase MCP server and exposes it as a toolkit in your room. The `{supabase}` placeholder in `--header-secret` resolves to the room secret you created in Step 2 (matching the `--secret-id supabase`).
@@ -103,6 +151,8 @@ meshagent chatbot join \
   --room-rules "agents/supabase-agent/rules.txt" \
   --rule "You are an agent who helps users work with Supabase. Use the Supabase toolkit to interact with a specific Supabase project. If the web search tool is enabled, you can search the web to learn more about the latest updates to Supabase."
 ```
+
+> **Note**: The `--room-rules` flag is optional. It creates a file at the specified path that anyone in the room can edit to customize the agent's rules. This is useful if you want to tweak the agent's behavior without redeploying it.
 
 Try it out in [MeshAgent Studio](https://studio.meshagent.com): 
 1. Enter `myroom` 
@@ -156,3 +206,5 @@ Once you're happy with your service template, you can make it installable via Po
 Anyone who clicks that link will be able to install the toolkit into their own room — Powerboards handles secret creation and configuration for them.
 
 > Powerboards note: the ServiceTemplate includes a `supabase_access_token` variable with `meshagent.secret.*` annotations. Powerboards uses that to prompt for the token and store the room secret automatically. The CLI ignores those annotations, so you still need to set the room secret yourself before deploying the toolkit that uses the service from the command line.
+
+
