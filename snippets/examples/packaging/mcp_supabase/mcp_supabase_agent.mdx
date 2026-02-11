@@ -1,0 +1,31 @@
+```yaml Yaml
+version: v1
+kind: Service
+metadata:
+  name: supabase-agent
+  annotations:
+    meshagent.service.id: supabase-agent
+agents:
+- name: supabase-agent
+  annotations:
+    meshagent.agent.type: ChatBot
+container:
+  image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
+  command: meshagent chatbot service --agent-name supabase-agent --require-toolkit
+    supabase --web-search --room-rules agents/supabase-agent/rules.txt --rule 'You
+    are an agent who helps users work with Supabase. Use the Supabase toolkit to interact
+    with a specific Supabase project. If the web search tool is enabled, you can search
+    the web to learn more about the latest updates to Supabase.'
+  private: true
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: supabase-agent
+        api:
+          agents:
+            register_agent: true
+            call: true
+            use_agents: true
+            use_tools: true
+```
+
