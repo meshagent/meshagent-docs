@@ -2,7 +2,6 @@
 title: Packaging and Deploying Services
 ---
 import ServiceSpecChatbot from "/snippets/examples/packaging/service_chatbot.mdx"
-import ServiceTemplateChatbotMailbot from "/snippets/examples/packaging/service_template_chatbot_mailbot.mdx"
 
 MeshAgent allows you to deploy any code as a service. Services can be anything from pre-built agents to custom code to external integrations and can be deployed as either a room service (scoped to a specific MeshAgent room) or a project service (available in every room in your project). 
 
@@ -331,86 +330,10 @@ Set in `variables[].annotations`. `ServiceTemplate` only.
 Step-by-step guides for common deployment patterns:
 
 - [Deploy an agent with a single command](./packaging_and_deploying/deploy_from_cli) — Deploy a prebuilt agent with a single command, no YAML required.
-- [Deploy a customizable multi-agent service](./packaging_and_deploying/base_image_join) — Deploy a chatbot and mailbot where users can create their own email. 
+- [Deploy a customizable multi-agent service](./packaging_and_deploying/multi_image_service) — Deploy a chatbot and mailbot where users can create their own email. 
+- [Deploy a terminal based agent](./packaging_and_deploying/terminal_based_agents) - Deploy a terminal based agent like Codex into a Room. 
 - [Run a startup script in your service](./packaging_and_deploying/base_image_custom_script) — Enable custom behavior like populating room storage on boot by emmbedding a startup script directly in the YAML. 
 - [Mount additional code into your service](./packaging_and_deploying/base_image_code_mount) — Mount a code-only image onto a MeshAgent base image.
 - [Bring your own container](./packaging_and_deploying/custom_container) — Build and push your own container image. Great for running agents from other frameworks. 
 - [Connect to an external MCP server](./packaging_and_deploying/external_mcp_service) — Connect to a third-party MCP server. 
 - [Publish to Powerboards](../share_agents_in_powerboards) — Turn any ServiceTemplate into a one-click install link.
-
-#### REMOVE LATER
-
-## Example: Deploy an agent from the MeshAgent CLI 
-All MeshAgent's prebuilt agents ([ChatBot](../agents/standard/chatbot), [MailBot](../agents/standard/mailbot), [VoiceBot](../agents/standard/voicebot), [TaskRunner](../agents/standard/taskrunner), and [Worker](../agents/standard/worker)) can be deployed directly from the CLI. Using the `meshagent <agent_type> deploy` command. This command will generate the service configuration for the agent and deploy it for you. 
-
-For example, to deploy a basic ChatBot with web search and storage tools run: 
-```bash
-meshagent setup # Authenticate to MeshAgent
-
-meshagent chatbot deploy \
-  --service-name my-chatbot \
-  --service-description "Chatbot with web search and storage tools" \
-  --agent-name my-chatbot \
-  --rule "You are a helpful assistant" \
-  --require-web-search \
-  --require-storage \
-  --path /chat \
-  --room myroom
-```
-
-Alternatively, you can use the CLI to generate the service configuration YAML for you, save the configuration as a `meshagent.yaml` file, then deploy it. For example: 
-
-```bash
-meshagent chatbot spec \
-  --service-name my-chatbot \
-  --service-description "Chatbot with web search and storage tools" \
-  --agent-name my-chatbot \
-  --rule "You are a helpful assistant" \
-  --require-web-search \
-  --require-storage \
-  --path /chat 
-```
-
-Then save the result and deploy it by running `meshagent service create --file=meshagent.yaml`. 
-
-### Example 2: ServiceSpec YAML (Containerized Chatbot)
-Create a `meshagent.yaml` by hand and deploy it with `meshagent service create`.
-
-<CodeGroup>
-  <ServiceSpecChatbot />
-</CodeGroup>
-
-Deploy it:
-
-```bash
-meshagent service validate --file meshagent.yaml
-meshagent service create --file meshagent.yaml --room myroom
-```
-
-### Example 3: ServiceTemplate YAML (Chatbot + Mailbot)
-Use a template when users must supply values at deployment time.
-
-<CodeGroup>
-  <ServiceTemplateChatbotMailbot />
-</CodeGroup>
-
-Values file example:
-
-```yaml
-support_email: support@company.com
-```
-
-Deploy it:
-
-```bash
-meshagent service validate-template --file meshagent.template.yaml
-meshagent service create-template --file meshagent.template.yaml --values-file meshagent.values.yaml --room myroom
-```
-
-
-## Advanced Deployment Patterns
-- [Base image + custom script](./advanced_deployment_patterns/base_image_custom_script)
-- [Base image + code image mount](./advanced_deployment_patterns/base_image_code_mount)
-- [Custom container build and push](./advanced_deployment_patterns/custom_container_build)
-- [External service hosted elsewhere](./advanced_deployment_patterns/external_service)
-- [External MCP service](./advanced_deployment_patterns/external_mcp_service)

@@ -1,0 +1,122 @@
+---
+title: "Deploy a Customizable Multi-Agent Service"
+---
+
+import NewsReporter from "/snippets/examples/packaging/news_reporter.mdx"
+
+## Overview
+
+This example deploys a daily news reporter service with three agents working together: a **ChatBot** for interactive conversation, a **MailBot** for sending and receiving email, and a **Worker** that runs on a daily schedule to compose and send a news digest.
+
+Because different users will want their own email address and recipient, this example uses a **ServiceTemplate** so users provide their values at deploy time.
+
+Use this pattern when your service needs multiple agents coordinating in a room and users need to supply their own configuration.
+
+## Prerequisites
+**Powerboards path (fastest)**
+- A Powerboards/MeshAgent account and a room to install into.
+- Your email address for notifications (Powerboards creates the agent's mailbox automatically).
+- You can [install the news reporter using this link](https://app.powerboards.com/install?url=https://gist.githubusercontent.com/tmasterman/a9ec28e021e1f08434636183b7244f27/raw/a21c55124b55781b3fee0deeda5009f359fdcc79/meshagent.yaml). Powerboards will prompt you to select the Project and Room to install the news reporter. It will also ask for a mailbox for the agent and a recipient email address.
+
+**CLI path (manual)**
+- MeshAgent CLI installed and signed in (`meshagent setup`).
+- A room to deploy into.
+- A mailbox address for the mailbot (ask a project admin to create one if you can’t, or create one from the CLI or MeshAgent Studio).
+
+## The Configuration
+
+Create a file called `meshagent.yaml`:
+
+<CodeGroup>
+  <NewsReporter />
+</CodeGroup>
+
+
+You can validate the template by running: 
+
+```bash 
+meshagent service validate-template --file meshagent.yaml
+```
+
+Next, create the mailbox for the agent (Powerboards will handle mailbox creation automatically):
+
+```bash 
+meshagent mailbox create \
+  --address news@mail.meshagent.com \ # UPDATE with your desired address
+  --room myroom \
+  --queue news@mail.meshagent.com  # match the queue to the email
+```
+
+> Optional: add the `--public` flag if you want the mailbox to accept mail from anyone. By default it will only accept mail from room members.
+
+Then deploy the agent, **update the email and send_to_email** with the mailbox you created and the email address you want to receive notifications at. 
+
+```bash
+meshagent service create-template \
+  --file meshagent.yaml \
+  --value email=news@mail.meshagent.com \
+  --value send_to_email=you@example.com \
+  --room myroom
+```
+
+## How it Works
+
+### Three agents, one service
+
+This service runs three agents under a single identity (`news-reporter`), each with a different role declared via the `meshagent.agent.type` annotation:
+
+- **ChatBot** — An interactive agent in the room with access to web search, email tools, and storage. Users can chat with it to request a news briefing on demand.
+- **MailBot** — Handles inbound and outbound email. The `meshagent.agent.schedule` annotation configures it to trigger the daily digest at 9:00 AM UTC.
+- **Worker** — Processes queued tasks. When the schedule fires, the worker searches the web for news, saves a report to room storage, and sends the digest email.
+
+All three are started together by `meshagent multi join`, which runs multiple agents in a single container. 
+
+### User-provided variables
+
+Because this is a `ServiceTemplate`, two values are left for the user to fill in:
+
+- `email` — The mailbot's email address. The `type: email` hint tells MeshAgent and Powerboards this should be a valid email address.
+- `send_to_email` — Where the daily digest gets sent.
+
+These appear as `{{email}}` and `{{send_to_email}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](../packaging#variables-servicetemplate-only) in the field reference.
+
+### Container command
+
+The `command` field runs `meshagent multi join`, which starts multiple agents in one container. The `-c` flag takes a semicolon-separated list of agent configurations. Each agent definition specifies its type, name, tools it needs access to (e.g., `--require-web-search`, `--require-toolkit=email`), its system prompt (`--rule`), and optionally room-editable rules files (`--room-rules`).
+
+> **Room-editable rules**
+> - Each agent references `--room-rules` files like `agents/news-reporter/chatbotrules.txt`. 
+> - These are files in the room's storage that anyone in the room can edit to customize the agent's behavior after deployment — no redeployment needed. 
+> - In this example you'll notice all three agents share the `news-reporter-rules.txt` file so you can apply global rules for the agents. The agents also each have their own individual `rules.txt` file for their unique rules. 
+
+### Participant token
+
+The [`environment`](../packaging#containerenvironment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../rest_api/api_scopes) granting the service permissions for messaging, storage, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
+
+### Room storage
+
+The [`storage.room`](../packaging#containerstorage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
+
+## Verify It Works
+
+After deploying, confirm the service is running:
+
+```bash
+meshagent room agents list --room myroom
+```
+
+You should see the `news-reporter` agent listed. Open [MeshAgent Studio](https://studio.meshagent.com), navigate to `myroom`, and chat with the news-reporter to request a briefing on demand. The scheduled daily digest will start sending at the next 9:00 AM UTC.
+
+## Variations
+
+**Publish to Powerboards** — To let others install this with one click, push the YAML to a [GitHub Gist](https://gist.github.com/), copy the raw URL, and construct an install link: `https://app.powerboards.com/install?url=YOUR_RAW_URL`. Powerboards will prompt users for the `email` and `send_to_email` values. See [Sharing via Powerboards](../share_agents_in_powerboards).
+
+**Customize the schedule** — The `meshagent.agent.schedule` annotation uses cron syntax. Change `"0 9 * * *"` to run at a different time (e.g. `"0 14 * * 1-5"` for 2 PM on weekdays).
+
+**Add more agents** — Extend the `meshagent multi join` command with additional semicolon-separated agent definitions in the `-c` flag.
+
+## Related Topics
+- [Packaging services](./packaging)
+- [Deploy from the CLI](./deploy_from_cli)
+- [Sharing via Powerboards](../share_agents_in_powerboards)
+- [Terminal-based agents](./terminal_based_agents)
