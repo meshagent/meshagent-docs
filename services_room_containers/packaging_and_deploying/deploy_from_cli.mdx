@@ -1,0 +1,66 @@
+
+---
+title: Deploy an Agent with a Single Command
+---
+
+## Overview
+
+Use `meshagent <agent_type> deploy` to create and deploy a service in one command. This is the fastest path for prebuilt agents like [ChatBot](../agents/standard/chatbot), [MailBot](../agents/standard/mailbot), [VoiceBot](../agents/standard/voicebot), [TaskRunner](../agents/standard/taskrunner), and [Worker](../agents/standard/worker). This command deploys a container-based service using the `meshagent-cli` image (not an external service).
+
+Behind the scenes, the CLI generates a Service spec for you, then calls the service create API. You can always generate the YAML yourself if you want to customize it further.
+
+These services deploy a container-based service that uses the `meshagent-cli` base image.
+
+## Prerequisites
+- [MeshAgent CLI](../cli/getting_started) installed and signed in (`meshagent setup`).
+- A room to deploy into.
+
+## Step 1: Deploy the agent
+This deploys a ChatBot service with web search and storage enabled. Run `meshagent chatbot deploy --help` to see the other available flags for the agent. MeshAgent provides a variety of tools you can add to the agent out of the box. There are two flag styles:
+- `--require-<tool>` (e.g. `--require-web-search`, `--require-storage`): tool is always enabled and not toggleable in the UI.
+- `--<tool>` (e.g. `--web-search`, `--storage`): tool is available, but users can toggle it per turn in the UI.
+If you omit both, the tool is not available.
+
+### Option A: Deploy directly
+```bash
+meshagent setup # Authenticate to MeshAgent
+
+meshagent chatbot deploy \
+  --service-name my-chatbot \
+  --service-description "Chatbot with web search and storage tools" \
+  --agent-name my-chatbot \
+  --rule "You are a helpful assistant" \
+  --require-web-search \
+  --require-storage \
+  --room myroom
+```
+
+### Option B: Generate a configuration YAML and deploy
+If you want to review or edit the config before deploying you can use the CLI to generate the configuration YAML:
+
+```bash
+meshagent chatbot spec \
+  --service-name my-chatbot \
+  --service-description "Chatbot with web search and storage tools" \
+  --agent-name my-chatbot \
+  --rule "You are a helpful assistant" \
+  --require-web-search \
+  --require-storage \
+```
+
+This will print the YAML to the console. Save the output to a file called `meshagent.yaml`, validate the service, then deploy:
+
+```bash
+meshagent service validate --file "meshagent.yaml"
+
+meshagent service create --file "meshagent.yaml"
+```
+
+## Step 2: Try it out
+After deploying the agent it will be available to use in [MeshAgent Studio](https://studio.meshagent.com) and [Powerboards](https://app.powerboards.com). From either navigate to `myroom`, select the `my-chatbot` agent, and begin working with the agent. 
+
+## Related Topics
+- [Packaging services](./packaging)
+- [Deploy a customizable multi-agent service](./multi_agent_service)
+- [Sharing via Powerboards](../share_agents_in_powerboards)
+- [Terminal-based agents](./terminal_based_agents)
