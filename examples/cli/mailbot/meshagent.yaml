@@ -1,5 +1,5 @@
 version: v1
-kind: Service
+kind: ServiceTemplate
 metadata:
   name: mailbot
   annotations:
@@ -8,14 +8,19 @@ agents:
 - name: mailbot
   annotations:
     meshagent.agent.type: MailBot
-ports:
-- num: "*"
-  type: http
-  endpoints:
-  - path: /agent
-    meshagent:
-      identity: mailbot
+variables:
+  - name: email_address
+    type: email
+    description: "Email address for the mailbot (e.g. myagent@mail.meshagent.com)"
 container:
   image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
-  command: meshagent mailbot service --agent-name mailbot --queue quickstart --enable-attachments --email-address
-    <youremailaddress>@mail.meshagent.life # be sure this is the email you created
+  command: >-
+    meshagent mailbot join
+    --agent-name mailbot
+    --enable-attachments
+    --require-web-search
+    --email-address {{email_address}}
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: mailbot

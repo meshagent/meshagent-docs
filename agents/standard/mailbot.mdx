@@ -96,13 +96,8 @@ meshagent mailbot deploy --room quickstart --service-name mailbot --agent-name m
   --enable-attachments --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
 ```
 
-**Option 2: Generate a YAML spec**
-```bash
-meshagent mailbot spec --service-name mailbot --agent-name mailbot \
-  --enable-attachments --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
-```
-
-Copy the output into `meshagent.yaml`:
+**Option 2: Deploy a YAML spec**
+Create a `meshagent.yaml` that defines how to run the service. In this case we can create a `ServiceTemplate` that allows us to pass an email as the variable
 
 <CodeGroup>
     <CliMailbotYaml />
@@ -111,7 +106,7 @@ Copy the output into `meshagent.yaml`:
 Then deploy it:
 
 ```bash bash
-meshagent service create --file meshagent.yaml --room quickstart
+meshagent service create-template --file meshagent.yaml --room quickstart --value email_address="$EMAIL_ADDRESS"
 ```
 
 Be sure to pass the `--room` flag so the agent is deployed properly to your room. The email and queue are only associated to a specific room. 
