@@ -1,0 +1,51 @@
+---
+title: Deploy a Terminal Based Agent
+---
+
+import CodexYAML from "/snippets/examples/packaging/codex.mdx"
+
+Terminal-based agents run a full shell inside a container and expose a CLI tool into your room. This is useful when you want a real terminal session, a long-lived workspace, or a tool like Codex/OpenCode/Dexter that runs from the terminal.
+
+This example will demonstrate how to create a configuration file to run Codex in Powerboards.
+
+## Example: Codex terminal agent
+Create a ServiceTemplate configuration file called `meshagent.yaml`:
+
+<CodeGroup>
+  <CodexYAML />
+</CodeGroup>
+
+### How it works
+Key parts of the template:
+- `meshagent.service.shell.command` defines how MeshAgent attaches to the shell session (here it reattaches to a tmux session).
+- `meshagent.tool.*` registers a tool in the room and defines the command used to execute a prompt.
+- `on_demand: true` starts the container only when the tool is invoked.
+- `storage.room` mounts the room storage at `/data` for a persistent workspace.
+
+If the CLI you are running needs external credentials (for example `OPENAI_API_KEY`), inject them via environment variables and secrets.
+
+## Install via Powerboards (recommended)
+You can install the agent using this [powerboards install link](https://app.powerboards.com/install?url=https://gist.githubusercontent.com/jezell/f7f732b6c8c7dfb31b423895fba460e7/raw/a2e281684d3358054a1265122cfcb7f0696762f5/codex.yaml)
+
+Alternatively you can create and publish your own install link that can be shared with others: 
+1. Copy the `meshagent.yaml` above to a [GitHub Gist](https://gist.github.com/).
+2. Click the **Raw** button to get the direct URL to the file.
+3. Construct the Powerboards install link:
+
+```
+https://app.powerboards.com/install?url=YOUR_RAW_URL
+```
+
+## Try it out
+Open the Powerboards install link, choose a project and room, and install the agent. Once installed, select **Codex** from the agents drop down and click **Start** the terminal will appear and you'll be able to use the agent. 
+
+## Adapting this to other terminal agents
+You can use the same pattern for other terminal-based agents like OpenCode or Dexter:
+- Swap the `container.image` to the agent's base image.
+- Update `meshagent.tool.name`, `meshagent.tool.description`, and `meshagent.tool.commands`.
+- Adjust the shell attach command if the agent uses a different session manager.
+
+## Related Topics
+- [Packaging services](./packaging)
+- [Sharing via Powerboards](../share_agents_in_powerboards)
+- [Deploy from the CLI](./deploy_from_cli)

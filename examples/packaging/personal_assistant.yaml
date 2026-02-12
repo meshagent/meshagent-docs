@@ -1,0 +1,346 @@
+version: v1
+kind: ServiceTemplate
+metadata:
+  name: PersonalAssistant
+  description: A collection of agents that handles property, auto and travel tracking with email support.
+  annotations:
+    meshagent.service.id: PersonalAssistant
+    meshagent.service.readme: |
+              This is a personal assistant agent that can help you with organzing your travel, auto and home information.  
+              Just share your receipts, insurance policies travel plans, etc with the chat bot or by sending email the following address: {{email}}
+container:
+  command: bash /app/script.sh
+  image: "us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz"
+  storage:
+    files:
+      - path: /rules/email.txt
+        text: |
+          #file access rules for email agent           
+            all files are in the /data folder
+          
+          #Email reply rules
+            never respond in JSON or HTML, only in text. never reply in JSON.  Include the origial email content at the top of your response with nice and professional formatting, clearly delineated from your response. 
+            YOU MUST USE the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files
+            Always respond with details of what you did, each step.  
+            frormating should be professional.  Use bolding when appropriate, but keep font sizes the same, standard.
+          
+          #subagent interaction rules
+            For travel questions, use the run_TravelAssistant_task tool. to update tables related to travel, use this agent.  this agent has acccess to flightinfo table and hotelinfo table.
+            For property questions, use the run_PropertyAssistant_task tool. to update tables related to proeprties, use this agent. tables that this agent has access to include the proeprtyinsurance table and the propertyexpenses table. 
+            For auto questions, use the run_AutoAssistant_task tool.  to update tables related to cars, use this agent. tables that this agent has access to include the autoinsurance table and the autoexpense and  the autoregistration  table. 
+          
+          #filing rules
+            store the content that looks like a receipt, store it in the receipts folder under the /data directory, if a folder doesn't exist, create it in the /data directory
+            if you see content that looks like an insurance policy, store it in the insurance folder under the /data directory, if doesn't exist, create it in the /data directory
+            if you see content that looks like a contract, store it in the contracts folder under the /data directory, if it doesnt exist, create it in the /data dirctory.
+            if you are not sure what to do, ask for directions.
+            for any content associated with a house, car or travel, update the appropriate database tables. 
+      - path: /rules/worker.txt
+        text: |
+          Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files if you are
+          asked to send an email, send it to {NotificationEmail}
+      - path: /rules/personal-assistant.txt
+        text: |
+          You are a personal assistant.
+          
+          #file access rules
+            all files are in the /data folder.
+            Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files 
+          
+          #subagent interaction rules
+            For travel questions, use the run_TravelAssistant_task tool. to update tables related to travel, use this agent.  this agent has acccess to flightinfo table and hotelinfo table.
+            For property questions, use the run_PropertyAssistant_task tool. to update tables related to proeprties, use this agent. tables that this agent has access to include the proeprtyinsurance table and the propertyexpenses table. 
+            For auto questions, use the run_AutoAssistant_task tool.  to update tables related to cars, use this agent. tables that this agent has access to include the autoinsurance table and the autoexpense and  the autoregistration  table. 
+         
+          #email attachment access rules
+            if you need to access email attachments, they are under the /data/.emails folder.
+              when using new_email_thread, do not include the /data on the path.  attachment paths for the new_email_thread should not include /data prefixes.
+          
+          #filing rules
+            store the content that looks like a receipt, store it in the receipts folder under the /data directory, if a folder doesn't exist, create it in the /data directory
+            if you see content that looks like an insurance policy, store it in the insurance folder under the /data directory, if doesn't exist, create it in the /data directory
+            if you see content that looks like a contract, store it in the contracts folder under the /data directory, if it doesnt exist, create it in the /data dirctory.
+            if you are not sure what to do, ask for directions.
+          
+        
+       
+
+      - path: /rules/property-assistant.txt
+        text: |
+          #file access rules
+            all files are in the /data folder. 
+            you can use the read_file tool to read your rules. You can use the write_file tool to update the contents of the rules file or other text files.
+            Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files. 
+         
+         
+         
+          #email access rules
+            you have access to the email tool, and you can send out emails.  
+          
+          #other rules
+            You have customizable rules stored in agents/PropertyAssistant/assistantrules.txt,        
+            If the web search tool is enabled you can search the web. If the image gen tool is enabled you can generate images. 
+          
+          #table access rules
+            you have access to two tables, propertyinsurance and propertyexpenses,  
+            Use these tables when you are asked to update or get information related to propertyinsurance or propertyexpenses respectively. 
+            When adding records, use the uuid tool to add id to the field uuid in propertyexpenses table and propertyinsurance tables,
+            always check  propertyinsurance table for answering questions  or udpates about home  insurance always check  propertyexpenses for questions or updates about home expenses.  
+            Property Address should be shared first when responding to questiosn about insurance, then expiration date, then other information.  
+            if you are asked to update or retrieve information, you may need to match partially. For example, the entire address might not be entered, you should try to find closest match. 
+            Before deleting rows, check to see how many rows would be deleted and confirm that it is ok to delete those rows by sending the query and the results 
+            and waiting for a confirmation.        
+            
+            never delete rows without explicit authorization from user
+          
+      - path: /rules/auto-assistant.txt
+        text: |
+          #file rules
+            all files are in the /data folder.  
+            you can use the read_file tool to read your rules. You can use the write_file tool to update the contents of the rules file or other text files. 
+            Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files. 
+          
+          #email rules
+            you have access to the email tool, and you can send out emails. 
+          
+          #other rules
+            You have customizable rules stored in agents/AutoAssistant/assistantrules.txt, 
+            If the web search tool is enabled you can search the web. If the image gen tool is enabled you can generate images. 
+            
+          #table access rules 
+            When adding records, use the uuid tool to add id to the field uuid
+            in autoexpenses table when adding new records. autoregistration and autoinsurance tables,  
+            always check  autoinsurance table for answering questions or udpates about auto insurance 
+            always check autoexpenses for questions or updates about auto expenses, 
+            always check the autoregistration table for questions about registration.   
+            if you are asked to update or retrieve information, you may need to match partially. 
+            Before deleting rows, check to see how many rows would be deleted and confirm that it is ok to delete those rows by sending the query and the results and waiting for 
+            a confirmation. 
+            never delete rows without explicit authorization from user.
+            
+      - path: /rules/travel-assistant.txt
+        text: |
+          
+          #file access rules
+            all files are in the /data folder.  
+            Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files.
+            you can use the read_file tool to read your rules. You can use the write_file tool to update
+            the contents of the rules file or other text files.
+            
+          #email rules 
+            you have access to the email tool, and you can send out emails.  
+            
+          #table rules
+            for each name on the itinerary, create a new record in flight info, for flight information, and in hotelinfo for hotel information
+            When adding records, use the uuid tool to add id to the field uuid in flightinfo table, and the hotelinfo table as needed
+            Always check  flightinfo table for answering questions or udpates about flight.  always check the hotelinfo table for answering questions about hotel stays
+            if you are asked to update or retrieve information, you may need to match partially. For example, the entire address might not be entered, you should try to find closest match.  
+            Before deleting rows, check to see how many rows would be deleted and confirm that it is ok to delete those rows by sending the query and the results and waiting for a
+            confirmation. 
+            
+            if you have the same reservation number, update the row, do not create a new one. never delete rows without explicit authorization from user.
+          
+          #other rules
+            You have customizable rule stored in agents/TravelAssistant/assistantrules.txt 
+            If the web search tool is enabled you can search the web. If the image gen tool is enabled you can generate images. 
+          
+         
+      - path: /app/script.sh
+        text: |
+          MEMBERS_JSON=/var/run/meshagent/room/members.json
+          INPUT_JSON="$(
+          python3 - <<'PY'
+          import json, os, sys
+          path = os.environ.get("MEMBERS_JSON", "/var/run/meshagent/room/members.json")
+          def fmt_member(m):
+              # best-effort formatting across possible shapes
+              if isinstance(m, dict):
+                  name = m.get("name") or m.get("display_name") or m.get("participant_name")
+                  email = m.get("email")
+                  if name and email:
+                      return f"{name} <{email}>"
+                  return email or name or json.dumps(m, ensure_ascii=False)
+              return str(m)
+          try:
+              with open(path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+          except FileNotFoundError:
+              data = None
+          members_list = []
+          if isinstance(data, list):
+              members_list = [fmt_member(m) for m in data]
+          elif isinstance(data, dict):
+              if isinstance(data.get("members"), list):
+                  members_list = [fmt_member(m) for m in data["members"]]
+              else:
+                  # fallback: treat the dict itself as “members info”
+                  members_list = [json.dumps(data, ensure_ascii=False)]
+          members_str = ", ".join(members_list) if members_list else "(no members found)"
+          payload = {
+              "prompt": (
+                  "send an email to the room members with a greeting and an explanation of what you can do,  please explain that they can interact both through the chatbot in the room as well as by sending emai to the email address if the file "
+                  "/agents/PropertyAssistant/first-run.txt does not exist. create the file after "
+                  "you successfully send the message.\n\n"
+                  f"Room members: {members_str}"
+              ),
+              "model": None,
+          }
+          print(json.dumps(payload, ensure_ascii=False))
+          PY
+          )"
+          
+          echo "$INPUT_JSON"
+          meshagent task-runner run \
+          --toolkit=paemail \
+          --require-storage \
+          --input "$INPUT_JSON" &
+          MESHAGENT_TOKEN=$MESHAGENT_TOKEN_PROPERTY meshagent task-runner join  --require-shell --storage-tool-room-path=\/:\/data --require-uuid --rules-file=/rules/property-assistant.txt   --require-storage  --require-table-write=propertyinsurance --require-table-write=propertyexpenses -rr='agents/PropertyAssistant/assistantrules.txt' &
+          MESHAGENT_TOKEN=$MESHAGENT_TOKEN_AUTO meshagent task-runner join  --require-shell --storage-tool-room-path=\/:\/data --require-uuid --rules-file=/rules/auto-assistant.txt   --require-storage   --require-table-write=autoinsurance  --require-table-write=autoregistration --require-table-write=autoexpenses -rr='agents/AutoAssistant/assistantrules.txt' &
+          MESHAGENT_TOKEN=$MESHAGENT_TOKEN_TRAVEL meshagent task-runner join  --require-shell --storage-tool-room-path=\/:\/data --require-uuid --rules-file=/rules/travel-assistant.txt  --require-storage  --require-table-write=flightinfo --require-table-write=hotelinfo  -rr='agents/TravelAssistant/assistantrules.txt' &
+          
+          meshagent multi join -c "\
+          
+          chatbot --rules-file=/rules/personal-assistant.txt --require-toolkit=PropertyAssistant       --require-toolkit=TravelAssistant   --require-toolkit=AutoAssistant --agent-name=PersonalAssistant  --image-generation=gpt-image-1 --require-storage  --require-shell --storage-tool-room-path=\/:\/data --require-toolkit=paemail --web-search -rr='agents/PersonalAssistant/rules.txt';\
+          mailbot --rules-file=/rules/email.txt              --require-toolkit=PropertyAssistant      --require-toolkit=TravelAssistant          --require-toolkit=AutoAssistant     --reply-all --enable-attachments   --queue={{email}}  --require-uuid -rr='agents/PersonalAssistant/emailrules.txt' --require-storage --require-shell --storage-tool-room-path=\/:\/data --email-address={{email}} --require-web-search --toolkit-name=paemail;\
+          worker  --rules-file=/rules/worker.txt              --rules-file=/rules/personal-assistant.txt --require-toolkit=PropertyAssistant --require-toolkit=TravelAssistant --require-toolkit=AutoAssistant --require-storage --room-rules='agents/PersonalAssistant/rules.txt' --require-toolkit=paemail --queue=sendupdate\
+          "
+        
+  environment: 
+    - name: MESHAGENT_TOKEN
+      token: 
+          identity: PersonalAssistant
+          api:
+            livekit: {}
+            queues:
+              list: true
+            messaging:
+              broadcast: true
+              list: true
+              send: true
+            database:
+              list_tables: true
+            sync: {}
+            storage: {}
+            containers:
+              logs: true
+              use_containers: true
+            developer:
+              logs: true
+            agents:
+              register_agent: true
+              register_public_toolkit: true
+              register_private_toolkit: true
+              call: true
+              use_agents: true
+              use_tools: true
+              allowed_toolkits: null
+
+    - name: MESHAGENT_TOKEN_AUTO
+      token: 
+          identity: AutoAssistant
+          api:
+            livekit: {}
+            queues:
+              list: true
+            messaging:
+              broadcast: true
+              list: true
+              send: true
+            database:
+              list_tables: true
+            sync: {}
+            storage: {}
+            containers:
+              logs: true
+              use_containers: true
+            developer:
+              logs: true
+            agents:
+              register_agent: true
+              register_public_toolkit: true
+              register_private_toolkit: true
+              call: true
+              use_agents: true
+              use_tools: true
+              allowed_toolkits: null
+    
+    - name: MESHAGENT_TOKEN_TRAVEL
+      token: 
+          identity: TravelAssistant
+          api:
+            livekit: {}
+            queues:
+              list: true
+            messaging:
+              broadcast: true
+              list: true
+              send: true
+            database:
+              list_tables: true
+            sync: {}
+            storage: {}
+            containers:
+              logs: true
+              use_containers: true
+            developer:
+              logs: true
+            agents:
+              register_agent: true
+              register_public_toolkit: true
+              register_private_toolkit: true
+              call: true
+              use_agents: true
+              use_tools: true
+              allowed_toolkits: null
+    
+    - name: MESHAGENT_TOKEN_PROPERTY
+      token: 
+          identity: PropertyAssistant
+          api:
+            livekit: {}
+            queues:
+              list: true
+            messaging:
+              broadcast: true
+              list: true
+              send: true
+            database:
+              list_tables: true
+            sync: {}
+            storage: {}
+            containers:
+              logs: true
+              use_containers: true
+            developer:
+              logs: true
+            agents:
+              register_agent: true
+              register_public_toolkit: true
+              register_private_toolkit: true
+              call: true
+              use_agents: true
+              use_tools: true
+              allowed_toolkits: null                                  
+agents:
+  - name: PersonalAssistant
+    annotations:
+      meshagent.agent.type: ChatBot
+  - name: PersonalAssistant
+    annotations:
+      meshagent.agent.database.schema: | 
+        {"tables":[
+        {"table":"propertyexpenses","schema":{"property_id":{"type":"text"},"propertystreet":{"type":"text"},"propertycity":{"type":"text"},"propertystate":{"type":"text"},"date":{"type":"text"},"category":{"type":"text"},"description":{"type":"text"},"amount":{"type":"float"},"vendor":{"type":"text"},"notes":{"type":"text"},"updatetime":{"type":"timestamp"}}},
+        {"table":"propertyinsurance","schema":{"provider":{"type":"text"},"policynumber":{"type":"text"},"namedinsured":{"type":"text"},"propertyaddress":{"type":"text"},"effectivedate":{"type":"text"},"expirationdate":{"type":"text"},"dwellingcoverage":{"type":"text"},"personalpropertycoverage":{"type":"text"},"lossofusecoverage":{"type":"text"},"liabilitycoverage":{"type":"text"},"premium":{"type":"text"}}},
+        {"table":"flightinfo","schema":{"flightnumber":{"type":"text","nullable":true,"metadata":null},"airline":{"type":"text","nullable":true,"metadata":null},"departuredate":{"type":"text","nullable":true,"metadata":null},"departuretime":{"type":"text","nullable":true,"metadata":null},"departureairport":{"type":"text","nullable":true,"metadata":null},"destinationairport":{"type":"text","nullable":true,"metadata":null},"arrivaltime":{"type":"text","nullable":true,"metadata":null},"confirmationcode":{"type":"text","nullable":true,"metadata":null},"travelername":{"type":"text","nullable":true,"metadata":null},"flightcost":{"type":"text","nullable":true,"metadata":null},"uuid":{"type":"text","nullable":true,"metadata":null}}},
+        {"table":"hotelinfo","schema":{"reservationnumber":{"type":"text","nullable":true,"metadata":null},"name":{"type":"text","nullable":true,"metadata":null},"checkindate":{"type":"text","nullable":true,"metadata":null},"checkoutdate":{"type":"text","nullable":true,"metadata":null},"cost":{"type":"text","nullable":true,"metadata":null},"address":{"type":"text","nullable":true,"metadata":null},"city":{"type":"text","nullable":true,"metadata":null},"state":{"type":"text","nullable":true,"metadata":null},"country":{"type":"text","nullable":true,"metadata":null},"notes":{"type":"text","nullable":true,"metadata":null},"uuid":{"type":"text","nullable":true,"metadata":null},"contactinfo":{"type":"text","nullable":true,"metadata":null}}},
+        {"table":"autoexpenses","schema":{"licenseplate":{"type":"text","nullable":true,"metadata":null},"date":{"type":"text","nullable":true,"metadata":null},"category":{"type":"text","nullable":true,"metadata":null},"description":{"type":"text","nullable":true,"metadata":null},"amount":{"type":"float","nullable":true,"metadata":null},"odometer":{"type":"int","nullable":true,"metadata":null},"vendor":{"type":"text","nullable":true,"metadata":null},"paymentmethod":{"type":"text","nullable":true,"metadata":null},"paymentduedate":{"type":"text","nullable":true,"metadata":null},"paymentdate":{"type":"text","nullable":true,"metadata":null},"notes":{"type":"text","nullable":true,"metadata":null},"uuid":{"type":"text","nullable":true,"metadata":null},"make":{"type":"text","nullable":true,"metadata":null},"model":{"type":"text","nullable":true,"metadata":null},"vin":{"type":"text","nullable":true,"metadata":null},"year":{"type":"int","nullable":true,"metadata":null}}},
+        {"table":"autoinsurance","schema":{"policyNumber":{"type":"text","nullable":true,"metadata":null},"effectivedate":{"type":"text","nullable":true,"metadata":null},"expirationdate":{"type":"text","nullable":true,"metadata":null},"uuid":{"type":"text","nullable":true,"metadata":null},"make":{"type":"text","nullable":true,"metadata":null},"model":{"type":"text","nullable":true,"metadata":null},"vin":{"type":"text","nullable":true,"metadata":null},"year":{"type":"text","nullable":true,"metadata":null},"insurer":{"type":"text","nullable":true,"metadata":null},"notes":{"type":"text","nullable":true,"metadata":null},"premium":{"type":"text","nullable":true,"metadata":null}}},{"table":"autoregistration","schema":{"make":{"type":"text","nullable":true,"metadata":null},"model":{"type":"text","nullable":true,"metadata":null},"vin":{"type":"text","nullable":true,"metadata":null},"license":{"type":"text","nullable":true,"metadata":null},"fee":{"type":"text","nullable":true,"metadata":null},"uuid":{"type":"text","nullable":true,"metadata":null},"renewaldate":{"type":"date","nullable":true,"metadata":null},"year":{"type":"int","nullable":true,"metadata":null}}}
+        ]}
+      meshagent.agent.schedule: '{"schedule":"0 0 * * MON","queue":"sendupdate","name":"CheckExpiration","payload":{"prompt": "Review the propertyinsurance database and send an email of for all policies with expirationdate within 30 days, format it nicely, i do not need to know the id field."}}'
+      meshagent.agent.type: MailBot
+variables: 
+  - name: email
+    type: email
+    description: "Choose an email for your agent, you can send your emails to this address.  This agent will only accept emails from peopel(emails) that have been granted access to the room."
+  - name: NotificationEmail
+    description: "This email is used by the agent to send you scheduled updates.  It is an outbound email address that already"

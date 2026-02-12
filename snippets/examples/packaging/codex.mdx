@@ -1,0 +1,49 @@
+```yaml Yaml
+version: v1
+kind: ServiceTemplate
+metadata:
+  name: Codex
+  description: Runs Codex in your room
+  annotations:
+    meshagent.service.id: "meshagent.codex"
+    # Best attach behavior in containers (multi-attach + create/reattach)
+    meshagent.service.shell.command: |
+    
+      bash -lc '
+        until tmux has-session -t codex 2>/dev/null; do
+          sleep 0.2
+        done
+        tmux attach -t codex
+      '
+
+    meshagent.tool.type: script
+    meshagent.tool.name: codex
+    meshagent.tool.description: uses the codex cli to write and execute code
+    meshagent.tool.commands: bash -lc 'codex exec --yolo --skip-git-repo-check "$PROMPT"'
+container:
+  image: us-central1-docker.pkg.dev/meshagent-public/images/shell-codex:{SERVER_VERSION}-esgz
+  command: bash -lc /var/run/start.sh
+  on_demand: true
+  writable_root_fs: true
+  storage:
+    room:
+    - path: /data
+  environment:
+    - name: COLORTERM
+      value: truecolor
+    - name: TERM
+      value: xterm-256color
+    - name: LANG
+      value: C.UTF-8
+    - name: LC_ALL
+      value: C.UTF-8
+    - name: OPENAI_API_KEY
+      token:
+        identity: codex
+        
+agents:
+  - name: Codex
+    annotations:
+      meshagent.agent.type: Shell
+```
+
