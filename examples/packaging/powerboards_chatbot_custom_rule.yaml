@@ -1,0 +1,27 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: my-chatbot
+  description: "A customizable chatbot with web search"
+  annotations:
+    meshagent.service.id: "my-chatbot"
+variables:
+  - name: agent_rule
+    description: "Instructions for the chatbot (e.g. 'You are a helpful research assistant')"
+agents:
+  - name: my-chatbot
+    description: "A chatbot with web search"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: >-
+    meshagent chatbot join
+    --agent-name my-chatbot
+    --require-web-search
+    --rule "{{ agent_rule }}"
+    --room-rules "agents/my-chatbot/rules.txt"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: my-chatbot

@@ -2,116 +2,71 @@
 title: Share Agents in Powerboards
 ---
 
-[Powerboards](https://www.powerboards.com/) is a (soon to be) open-source, AI-native app built entirely on MeshAgent. You can use Powerboards as-is to share your agents today, or adapt the source code into your own MeshAgent-powered application.
+import PowerboardsChatbotTemplate from "/snippets/examples/packaging/powerboards_chatbot_template.mdx"
+import PowerboardsChatbotCustomRule from "/snippets/examples/packaging/powerboards_chatbot_custom_rule.mdx"
 
-Powerboards is included in your MeshAgent account and gives teams a shared space to collaborate, create, and grow together. While [MeshAgent Studio](https://studio.meshagent.com) is a great tool for developers building agents with MeshAgent, Powerboards is designed for your end users so they can easily interact with the agents you build from day one. Since the app will be open-source you can also adapt it to your needs!
+[Powerboards](https://www.powerboards.com/) is a (soon to be) open-source, AI-native app built entirely on MeshAgent. It gives teams a shared space to interact with the agents you build. While [MeshAgent Studio](https://studio.meshagent.com) is a great tool for developers building agents with MeshAgent, Powerboards is designed for your end users so they can easily interact with the agents you build from day one.
+
+Powerboards is included in your MeshAgent account. You can use it as-is to share your agents today, or adapt the source code into your own MeshAgent-powered application.
+
+## How agents get into Powerboards
+There are two ways agents appear in Powerboards:
+1. **Share your agent with anyone via an install link** 
+   - If you want anyone to be able to install your agent into their own room — even in projects you don't control — you can create an install link from a service configuration file that's hosted publicly. When someone clicks the link, Powerboards walks them through adding the agent to their own Project and Room.  
+    - This allows you to easily share agents at scale. 
+2. **Deploy agents in projects/rooms you're a member of with the MeshAgent CLI** 
+   - The CLI allows you to deploy agents directly with commands like  `meshagent chatbot deploy...` or from a configuration file using commands like `meshagent service create...` for static configurations or `meshagent service create-template...` for dynamic configurations (e.g. if a user needs to provide an email for an agent). 
+   - Agents deployed with the MeshAgent CLI automatically appear in the corresponding Powerboards room. 
 
 ## Installing an agent from a link
 The fastest way to install an agent in Powerboards is from a link. 
 
-When you click an install link: 
-1. Powerboards prompts you to sign in or create an account.
-2. You select a **Project** and **Room** to deploy the agent.
-3. The agent is installed into the Room and ready to use!
+When you click an install link, Powerboards will: 
+1. Prompt you to sign in or create an account.
+2. Ask you to select a **Project** and **Room** to deploy the service.
+3. Prompt for any required values defined in the ServiceTemplate's `variables` (such as API keys, email addresses, or settings).
+4. Create any necessary secrets and deploy the service automatically.
 
-Install links look like this: `https://app.powerboards.com/install?url=SERVICE_TEMPLATE_SPEC_URL`
+Install links look like this: 
+  ```
+  https://app.powerboards.com/install?url=SERVICE_TEMPLATE_SPEC_URL
+  ```
 
 If you already have an install link you can start using the agent immediately, you don't need to write any code or use the CLI. Just click the link and follow the prompts. 
 
 The rest of this page explains how to make agents show up in Powerboards and package an agent so that it can be shared with an install link. 
 
-## How agents get into Powerboards
-Conversational agents ([ChatBots](../agents/standard/chatbot) and [VoiceBots](../agents/standard/voicebot)) deployed with MeshAgent can be used in Powerboards automatically. Once deployed, your agent appears in the Powerboards agents dropdown alongside the built-in defaults (assistant, voice, developer, transcriber) and users can install it into their Room.
+## Creating an install link
+To make your service shareable via an install link, you need a `ServiceTemplate` YAML hosted at a publicly accessible URL. For more information on Services and ServiceTemplates see the [packaging and deploying](./packaging_and_deploying/packaging) guide. 
 
-There are two ways to get agents into Powerboards: 
-1. **Share your agent with anyone via install link** 
-   - Use a `ServiceTemplate` YAML file hosted publicly. 
-   - Anyone can click the link and install the agent into their own Project and Room. This allows you to easily share agents at scale. 
-2. **Deploy directly to a Room you control** 
-  - Use a `Service` YAML file and the MeshAgent CLI. 
-  - You deploy the agent into a specific Room in a Project you own, then install it from the Powerboards UI.
+### Step 1: Write the configuration file
+Your `ServiceTemplate` must include `meshagent.service.id` in `metadata.annotations` so Powerboards can identify the service. 
 
-Both approaches rely on the same core idea: Package your agent as a MeshAgent service, mark it as a `ChatBot` or `VoiceBot`, and expose a `meshagent` endpoint. Powerboards then makes it installable.
+If your service provides agents, include the agents section with `meshagent.agent.type` annotations so Powerboards knows how to display them. Include a `variables` section for any values users need to provide at install time.
 
-### Prerequisites
-Before sharing agents in Powerboards, you should understand:
-- How to [package](./packaging) services using service definition files
-- How to [package and deploy](./packaging) services using the MeshAgent CLI
-**Use MeshAgent base images when possible.** They are optimized for common scenarios and published to:
-- Docker Hub: https://hub.docker.com/r/meshagent/
-- Google Artifact Registry: https://console.cloud.google.com/artifacts/docker/meshagent-public/us-central1/images
+Here's a simple example — a chatbot with a web search tool that users can customize with an initial rule when they install it: 
 
-Check out the [optimizing containers](./containers/optimizing_containers) documentation to learn more about improving agent/service start time for custom images. 
+<CodeGroup>
+  <PowerboardsChatbotCustomRule />
+</CodeGroup>
 
-## Path 1: Sharing your agent with a link
-Use this path when you want anyone to be able to install your agent, even in Projects you don’t control.
+When a user installs this via Powerboards, they'll be prompted to input `agent_rule`. Powerboards fills in the `{{ }} ` placeholder and deploys the service. The agent will appear in Powerboards under the service name — in this case, "my-chatbot."
 
-You will:
-1. Write a `ServiceTemplate` manifest that describes your agent.
-2. Host that YAML file at a URL accessible by the browser.
-3. Construct and share an install link that points to that URL.
+### Step 2: Host the YAML
 
-### 1. Create a ServiceTemplate YAML
+The easiest way to host a `ServiceTemplate` is using a [GitHub Gist](https://gist.github.com/).
 
-Your `ServiceTemplate` must include:
-- `meshagent.service.id` under `annotations` in the service metadata.
-- `meshagent.agent.type` set to `ChatBot` or `VoiceBot`.
-- A `meshagent` endpoint with the appropriate identity.
+1. Create a new gist (public or secret - either is fine, as long as anyone with the link can read it).
+2. Paste your YAML and name the file (for example `meshagent.yaml`).
+3. Save the gist.
+4. Click **Raw** and copy the **raw file URL from the browser bar**.
 
-**Example ServiceTemplate for an agent that always responds in Spanish**
-```yaml yaml
-version: v1
-kind: ServiceTemplate
-metadata:
-  name: spanish
-  description: An agent that speaks spanish
-  repo: 
-  icon: 
-  annotations:
-    meshagent.service.id: spanish
-agents:
-- name: spanish
-  description: 
-  annotations:
-    meshagent.agent.type: ChatBot
-variables: []
-ports:
-- num: "*"
-  type: http
-  endpoints:
-  - path: "/agent"
-    meshagent:
-      identity: spanish
-      api: 
-    mcp: 
-  liveness: "/"
-container:
-  environment: 
-  image: us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz
-  command: "/usr/bin/meshagent chatbot service --agent-name=spanish --image-generation=gpt-image-1.5 --require-read-only-storage --model=gpt-5.2 --rule='speak spanish' -rr=/agents/spanish/rules.txt"
-  storage: 
-external: 
-```
+Powerboards loads the template **from the browser**, so the URL must be accessible over CORS. Raw GitHub Gist URLs already work with CORS by default, so you don’t have to configure anything.
 
-### 2. Host the template (recommended: GitHub Gist)
+You can also use any other public URL, but if you’re hosting it yourself you’ll need to make sure the YAML is publicly reachable and that the server allows cross-origin GET requests from the Powerboards web app.
 
-The easiest way to host a `ServiceTemplate` for Powerboards is using a [GitHub Gist](https://gist.github.com/).
-
-1. Create a **public or secret** [GitHub Gist](https://gist.github.com/) (either is fine, as long as anyone with the link can read it).
-2. Paste your YAML.
-3. Name the file (for example `meshagent.yaml`).
-4. Save the gist.
-5. Click **Raw** and copy the **raw file URL from the browser bar**.
-
-Powerboards loads the template **from the browser**, so the URL must be accessible over CORS.  
-Raw GitHub Gist URLs already work with CORS by default, so you don’t have to configure anything.
-
-You can also use any other public URL, but if you’re hosting it yourself you’ll need to make sure:
-- The YAML is publicly reachable.
-- The server allows cross-origin GET requests from the Powerboards web app.
-
-### 3. Construct and share the install link
-Next add the link to your the raw file URL to the install part. 
+### Step 3. Construct and share the install link
+Prefix your raw URL with the Powerboards install path:
 
 ``https://app.powerboards.com/install?url=SERVICE_TEMPLATE_SPEC_URL``
 
@@ -119,93 +74,26 @@ Where `SERVICE_TEMPLATE_SPEC_URL` is the URL-encoded version of your YAML file�
 
 Now you can share the link with anyone! They will be prompted to choose a Project and Room to install their agent! 
 
-## Path 2: Deploy an agent directly to your own Room
-Use this path when you control the Project and Room and want to deploy an agent directly, without a public link.
+## Managing Agents in Powerboards
+Agents deployed via the CLI or install links can be managed from Powerboards:
+1. Open our room in [Powerboards](https://app.powerboards.com).
+2. Select the Agents dropdown → Manage Agents.
+3. From here you can uninstall agents you no longer need.
 
-You will: 
-1. Write a `Service` manifest that describes your agent.
-2. Deploy it to a Room with the MeshAgent CLI.
-3. Install it from the Powerboards UI. 
-4. Invite teammates.
-
-### 1: Package your agent
-Create a service definition file (`meshagent.yaml`) that includes: 
-- A `meshagent.service.id` under `annotations` in the `metadata` section
-- An `agents` entry with a valid `meshagent.agent.type` annotation (either `ChatBot` or `VoiceBot`).
-- Expose a `meshagent` endpoint in the `ports` section
-
-These fields are what make the service show up as an installable agent in Powerboards.
-
-**Example Agent Service YAML**
-```yaml meshagent.yaml
-kind: Service
-version: v1
-metadata:
-  name: chatbot
-  description: "ChatBot with custom rules for Studio and Powerboards"
-  annotations:
-    meshagent.service.id: "meshagent.chatbot"  # required for agent to appear in Powerboards
-agents:                                        # section required for agent to appear in Powerboards
-  - name: chatbot
-    annotations:
-      meshagent.agent.type: "ChatBot"
-ports:
-  - num: "*"
-    type: http
-    liveness: "/"
-    endpoints:
-      - path: /agent
-        meshagent:                             # section required for agent to appear in Powerboards
-          identity: chatbot
-container:
-  image: "meshagent/cli:latest"                # use MeshAgent CLI image
-  command: 
-    "/usr/bin/meshagent chatbot service
-    --agent-name=chatbot
-    --rule="You are a MeshAgent ChatBot running inside Powerboards. Powerboards is an AI-native collaboration app built entirely on MeshAgent, the operating layer for agentic AI. Use the same language the user is using; do not switch languages unless they do. If you need context about the room or project, ask concise follow-up questions first."  # optional: applies base rules to agent
-    --room-rules=agents/chatbot/rules.txt   # optional: makes rules editable by room members
-    --web-search"                          # optional: enable web search tool
-```
-
-### 2. Deploy the agent
-Next deploy it to a specific room using the MeshAgent CLI
-
-```bash bash 
-meshagent service create --file meshagent.yaml --room myroom
-```
-
-Once deployed, the agent automatically appears in MeshAgent Studio where you can test it. It will also appear in Powerboards where room owners can choose to install it. 
-
-### 3. Install the agent in Powerboards
-After deploying the agent, room owners can install it in Powerboards: 
-
-1. Go to [Powerboards](https://www.powerboards.com/) 
-2. Open your Room (`myroom`)
-2. Select the Agents dropdown --> Manage Agents --> Install agent
-3. Choose your deployed agent and install it.
-
-### 4. Invite team members
-Once your agent is installed, invite people to your Room to use the agent with you: 
-1. Select the Room menu --> Permissions
-2. Invite users via email (they must be members of the project already or you must be a project admin to invite them)
-3. Invited users can instantly join the room and interact with your agents
+To invite others to use the agents in your room, click the **Invite** button at the top of the screen or select the Room menu → Permissions and invite users via email. They must be members of the project already, or you must be a project admin to invite them.
 
 ## Editable agent rules and collaboration in Powerboards
-Powerboards lets Room members customize agent behavior together. The default agents (`assistant`, `developer`, `voice`) each have an editable `rules.txt` file in Room storage that users can edit to steer the agent’s behavior.
+Powerboards lets room members customize agent behavior together. The default agents (`assistant`, `developer`, `voice`) each have an editable `rules.txt` file in Room storage that users can edit to steer the agent’s behavior. When you create your own agents and share them in Powerboards, you control if and how editable those rules are.
 
-When you create your own agents and share them in Powerboards, you control if and how editable those rules are.
+There are three ways to provide rules to an agent: 
+- `--rule`: Inline rules baked into the service definition. These are fixed and cannot be edited after deployment. Best for core instructions that should never change.
+- `--room-rules`: Creates a file in room storage (e.g. agents/my-chatbot/rules.txt) that anyone in the room can edit. Changes take effect without redeploying the service. Best for instructions that teams should be able to refine as they work with the agent.
+- `--rules-file`: Reads a rules file baked into the container image. Not editable by room members. Useful for custom images with fixed instructions.
 
-In the example above, we deployed a `ChatBot` to Powerboards using a `Service` YAML that points to the MeshAgent CLI image. You can pass tools and rules to the `ChatBot` by adding flags like `--web-search` and `--rule` to the `meshagent chatbot service` command.
 
-To enable collaboration on rules, use the `--room-rules` flag. This will add a `rules.txt` file for your agent to the room so that anyone in the Room can edit the agent's rules.
+You can combine these, for example, use `--rule` for fixed baseline behavior and `--room-rules` for editable customization on top. The example `ServiceTemplate` above uses both `--rule` and `--room-rules` together.
 
-**Rules options**
-- `--rule`: Inline, non-editable rules baked into the service definition. Best for fixed instructions.
-- `--room-rules`: Allow team members to edit the agents rules as they work with it in the Room. Passing this flag will create a path in room storage (e.g., agents/chatbot/rules.txt) that room members can edit to customize agent behavior.
-- `--rules-file`: Reads a file baked into your Docker image (non-editable by room). Useful for custom images and fixed instructions.
-
-Using `--room-rules` enables true collaboration - team members can refine the agent's instructions during the session without redeploying the ChatBot service. Once the service is deployed (as described above) and installed in [Powerboards](https://www.powerboards.com) (**Agents → Manage agents → Install agent**), Room members can edit the rules file (for example `agents/chatbot/rules.txt`) directly in Powerboards to customize the agent’s behavior.
-
+When an agent with `--room-rules` is deployed and available in Powerboards, room members can edit the rules file directly from the Powerboards UI to customize the agent's behavior.
 
 ## Related topics
 - [Packaging and Deploying Services](./packaging): Learn how to create a YAML file to package your service and deploy it with the MeshAgent CLI.
