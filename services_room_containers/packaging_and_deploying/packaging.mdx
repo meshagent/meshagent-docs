@@ -2,6 +2,7 @@
 title: Packaging and Deploying Services
 ---
 import ServiceSpecChatbot from "/snippets/examples/packaging/service_chatbot.mdx"
+import ServiceTemplateSpecChatbot from "/snippets/examples/packaging/service_template_chatbot.mdx"
 
 MeshAgent allows you to deploy any code as a service. Services can be anything from pre-built agents to custom code to external integrations and can be deployed as either a room service (scoped to a specific MeshAgent room) or a project service (available in every room in your project). 
 
@@ -25,7 +26,7 @@ This determines **whether configuration is fixed or user-provided**.
 - **Service** (`kind: Service`) — A concrete spec that MeshAgent can run immediately. Configuration is baked into the YAML. Deploy with `meshagent service create`.
 - **ServiceTemplate** (`kind: ServiceTemplate`) — A parameterized spec that collects user inputs (API keys, names, settings) at deploy time, then renders a Service from them. Uses `{{ variable_name }}` placeholders (Jinja templating) and an additional `variables` section to define what users provide. Deploy with `meshagent service create-template --file meshagent.yaml`.
 
-> ServiceTemplates can only be deployed to a specific room, not your entire project.
+> `ServiceTemplate`s can only be deployed to a specific room, not your entire project.
 
 ### 3. What kind of service is running: Container vs External
 Each YAML configuration file can run either a containerized service or an external service. 
@@ -56,13 +57,105 @@ Every service configuration starts with`version: v1`, a `kind` (`Service` or `Se
                       (ServiceTemplate only) 
 ```
 
-`metadata` — The service's name, description, and display information. Required.
-`agents` — Declares the participant identities this service provides to the room. 
-`container` or `external` — Defines what runs. container provides an image for MeshAgent to run; external points to a URL you host. One or the other is required.
-`ports` — Defines HTTP endpoints MeshAgent can route traffic to. Optional. Services that connect directly to the room using a participant token don't require ports.
-`variables` — Inputs that users provide at deploy time. `ServiceTemplate` only. Values are substituted into the YAML using `{{ variable_name }}` placeholders. 
+- `metadata` — The service's name, description, and display information. Required.
+- `agents` — Declares the participant identities this service provides to the room. 
+- `container` or `external` — Defines what runs. container provides an image for MeshAgent to run; external points to a URL you host. One or the other is required.
+- `ports` — Defines HTTP endpoints MeshAgent can route traffic to. Optional. Services that connect directly to the room using a participant token don't require ports.
+- `variables` — Inputs that users provide at deploy time. `ServiceTemplate` only. Values are substituted into the YAML using `{{ variable_name }}` placeholders. 
 
-## Field Reference 
+## Example 1: Deploying a `Service`
+Let's deploy a simple ChatBot with web search and storage tools. This is a `kind: Service` where configuration is fixed and it runs as-is.
+
+<CodeGroup>
+  <ServiceSpecChatbot />
+</CodeGroup>
+
+Here's what each section does:
+- `kind` - Declares the type of configuration file. In this case a `Service`.
+- `metadata` — Names the service `my-chatbot` and sets `meshagent.service.id` so Powerboards and MeshAgent Studio can identify it.
+- `agents` — Declares a single agent identity (`my-chatbot`) with `meshagent.agent.type: ChatBot` so Powerboards knows to display it as a chatbot in the UI.
+- `container.image` — Uses a MeshAgent base image, which includes the MeshAgent CLI and all prebuilt agent types.
+- `container.command` — Runs `meshagent chatbot join` with flags for web search, storage, an inline rule (`--rule`), and a room-editable rules file (`--room-rules`).
+- `container.environment` — Injects a `MESHAGENT_TOKEN` so the agent can connect to the room as the my-chatbot identity.
+- `container.storage` — Mounts room storage at `/data` so the agent can read and write files.
+
+Validate and deploy to a room:
+
+```bash bash
+meshagent service validate --file "meshagent.yaml"
+
+meshagent service create --file "meshagent.yaml" --room myroom
+``` 
+
+> To deploy as a project service drop the `--room` flag
+
+## Example 2: Deploying a `ServiceTemplate`
+Now let's convert the chatbot from Example 1 into a `ServiceTemplate`. We'll add a variables section so users can choose a language for the chatbot to respond in.
+
+<CodeGroup>
+  <ServiceTemplateSpecChatbot />
+</CodeGroup>
+
+The differences from Example 1:
+- `kind` changed from `Service` to `ServiceTemplate`.
+- `variables` added with a single variable, `language`. This is what users provide at deploy time.
+- `container.command` now includes `{{ language }}` in the `--rule` flag. MeshAgent substitutes the user's value when rendering the template into a Service.
+
+Validate and deploy, providing the variable value:
+
+```bash bash
+meshagent service validate-template --file "meshagent.yaml"
+
+meshagent service create-template --file "meshagent.yaml" --value language=Spanish --room myroom
+```
+
+## Deploying and Managing Services CLI Reference
+
+### Deploy commands
+Deploy a `Service`:
+
+```bash bash 
+# To a specific room
+meshagent service create --file meshagent.yaml --room myroom
+
+# To the entire project (available in every room)
+meshagent service create --file meshagent.yaml
+```
+
+Deploy a `ServiceTemplate` (room only):
+
+```bash bash
+meshagent service create-template --file meshagent.yaml --value key=value --room myroom
+```
+
+### List services
+View services deployed to a room:
+```bash 
+meshagent service list --room myroom
+```
+This returns each service's ID, name, and the applicable image associated to it. You'll need the service ID for update and delete commands.
+
+### Update a service
+
+```bash bash
+# Update a Service
+meshagent service update --file meshagent.yaml --room myroom --id SERVICE_ID
+
+# Update a ServiceTemplate
+meshagent service update-template --file meshagent.yaml --value key=value --room myroom --id SERVICE_ID
+```
+
+### Delete a service
+
+```bash bash
+# Delete a Service or ServiceTemplate
+meshagent service delete --file meshagent.yaml --room myroom --id SERVICE_ID
+```
+
+### Managing Services from MeshAgent Studio
+You can also manage deployed services from [MeshAgent Studio](https://studio.meshagent.com). Navigate to your room or project to view, edit, and remove services from the UI.
+
+## Service Configuration Field Reference 
 The tables below document every field in the service configuration YAML. 
 
 ### Top-Level Fields
@@ -332,8 +425,5 @@ Step-by-step guides for common deployment patterns:
 - [Deploy an agent with a single command](./packaging_and_deploying/deploy_from_cli) — Deploy a prebuilt agent with a single command, no YAML required.
 - [Deploy a customizable multi-agent service](./packaging_and_deploying/multi_image_service) — Deploy a chatbot and mailbot where users can create their own email. 
 - [Deploy a terminal based agent](./packaging_and_deploying/terminal_based_agents) - Deploy a terminal based agent like Codex into a Room. 
-- [Run a startup script in your service](./packaging_and_deploying/base_image_custom_script) — Enable custom behavior like populating room storage on boot by emmbedding a startup script directly in the YAML. 
-- [Mount additional code into your service](./packaging_and_deploying/base_image_code_mount) — Mount a code-only image onto a MeshAgent base image.
-- [Bring your own container](./packaging_and_deploying/custom_container) — Build and push your own container image. Great for running agents from other frameworks. 
 - [Connect to an external MCP server](./packaging_and_deploying/external_mcp_service) — Connect to a third-party MCP server. 
 - [Publish to Powerboards](../share_agents_in_powerboards) — Turn any ServiceTemplate into a one-click install link.

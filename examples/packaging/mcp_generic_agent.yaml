@@ -1,0 +1,25 @@
+kind: Service
+version: v1
+metadata:
+  name: mcp-assistant
+  description: "A chatbot that can use MCP tools in the room"
+  annotations:
+    meshagent.service.id: "mcp-assistant"
+agents:
+  - name: mcp-assistant
+    description: "Research assistant with access to MCP tools"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: >-
+    meshagent chatbot join
+    --agent-name mcp-assistant
+    --require-web-search
+    --mcp
+    --rule "You are a research assistant. Use the available MCP tools when users ask about them."
+    --room-rules "agents/mcp-assistant/rules.txt"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: mcp-assistant

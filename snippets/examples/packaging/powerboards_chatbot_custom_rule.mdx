@@ -1,14 +1,17 @@
 ```yaml Yaml
-kind: Service
+kind: ServiceTemplate
 version: v1
 metadata:
   name: my-chatbot
-  description: "A chatbot with web search and storage"
+  description: "A customizable chatbot with web search"
   annotations:
     meshagent.service.id: "my-chatbot"
+variables:
+  - name: agent_rule
+    description: "Instructions for the chatbot (e.g. 'You are a helpful research assistant')"
 agents:
   - name: my-chatbot
-    description: "A helpful chatbot"
+    description: "A chatbot with web search"
     annotations:
       meshagent.agent.type: "ChatBot"
 container:
@@ -17,16 +20,11 @@ container:
     meshagent chatbot join
     --agent-name my-chatbot
     --require-web-search
-    --require-storage
-    --rule "You are a helpful assistant. Use web search to find current information and save important findings to storage."
+    --rule "{{ agent_rule }}"
     --room-rules "agents/my-chatbot/rules.txt"
   environment:
     - name: MESHAGENT_TOKEN
       token:
         identity: my-chatbot
-  storage:
-    room:
-      - path: /data
-        read_only: false
 ```
 

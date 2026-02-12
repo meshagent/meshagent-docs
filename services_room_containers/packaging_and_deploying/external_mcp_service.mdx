@@ -1,12 +1,102 @@
 ---
-title: External MCP Service
+title: Connect to an External MCP Server
 ---
-import McpServiceExample from "/snippets/examples/packaging/mcp_service.mdx"
 
-Use an external MCP service to expose tools from a Model Context Protocol server.
+import McpDeepWikiExample from "/snippets/examples/packaging/mcp_deepwiki.mdx"
+import McpGenericAgentExample from "/snippets/examples/packaging/mcp_generic_agent.mdx"
+
+
+## Overview
+
+This example connects an MCP server that's already hosted elsewhere to a MeshAgent room. Once connected, the MCP server's tools become available to any agent in the room that supports MCP.
+
+Use this pattern when you want to bring tools from a third-party MCP server into your room without running the server yourself. In this example, we'll connect [DeepWiki](https://mcp.deepwiki.com) — an MCP server that provides tools for searching and reading documentation from open-source repositories.
+
+> **Note**: MCP services and the agents that use them are deployed as separate services, each with their own YAML file. This is different from containerized examples where everything is in a single configuration.
+
+## Prerequisites
+- [MeshAgent CLI](../cli/getting_started) installed and signed in (`meshagent setup`)
+- A running MCP server (this example uses DeepWiki)
+
+## Step 1: Create the Configuration file
+
+You'll need one YAML file for the MCP service. You can also create a YAML file for an agent to use the service, but any of the built in MeshAgent agents like the assistant, or claude can use deployed MCP tools by default. So the second YAML is not required.
+
+### mcp-service.yaml
+
+This configuration tells MeshAgent where the MCP server is and which tools to expose in the room.
 
 <CodeGroup>
-  <McpServiceExample />
+  <McpDeepWikiExample />
 </CodeGroup>
 
-`allowed_tools` lets you filter the tools that are discoverable by participants.
+
+#### How it Works
+Unlike containerized services, an external MCP service doesn't run inside MeshAgent — MeshAgent just routes traffic to it. The configuration tells MeshAgent three things:
+
+- **`external.url`** — Where the MCP server lives. MeshAgent sends requests to this URL.
+- **`ports` and `endpoints`** — The HTTP path MeshAgent should route to. The `mcp` endpoint type tells MeshAgent to treat this as an MCP server and register its tools in the room.
+- **`allowed_tools`** — Filters which tools from the MCP server are discoverable by agents. Setting `read_only: true` signals that these tools don't modify data. If you omit `allowed_tools`, all tools from the server are exposed.
+
+### agent.yaml (optional)
+
+If you don't already have an agent in the room, deploy one that can use MCP tools. Any agent deployed with the `--mcp` flag will automatically discover MCP services in the room.
+
+For example:
+
+<CodeGroup>
+  <McpGenericAgentExample />
+</CodeGroup>
+
+> You don't need a separate agent YAML if you already have an agent in the room that supports MCP. Built-in agents like the assistant can discover MCP tools automatically.
+
+### How agents discover MCP tools
+
+When an agent is deployed with the `--mcp` flag, it's able to detect available MCP services. Any MCP services deployed to the room are automatically discovered. The agent can then call those tools as part of its normal workflow.
+
+This means the MCP service and the agent don't need to know about each other in advance. You can deploy the MCP service first, then add agents later, or vice versa. As long as both are in the same room, discovery happens automatically.
+
+## Step 2: Deploy the Services
+
+Deploy the MCP service first:
+
+```bash
+meshagent service validate --file mcp-service.yaml
+meshagent service create --file mcp-service.yaml --room myroom
+```
+
+Then deploy the agent (if you need one):
+
+```bash
+meshagent service validate --file agent.yaml
+meshagent service create --file agent.yaml --room myroom
+```
+
+## Step 3: Try it Out
+
+Open [MeshAgent Studio](https://studio.meshagent.com) and navigate to your room. Select the **mcp-assistant** (or whichever MCP-enabled agent you're using like the built in assistant or claude) and try asking it to look something up. For example:
+
+- "What does the MeshAgent Python SDK's Room class do?"
+- "Search the LangChain docs for how to create a custom tool"
+- "Read the contributing guide for the FastAPI repository"
+
+The agent will use the DeepWiki MCP tools to search and read the documentation, then summarize what it finds.
+
+## Variations
+
+**Restrict tools further** — If the MCP server exposes many tools and you only want a few, list exactly which ones to allow in `allowed_tools`. This keeps the agent's tool list focused and avoids confusion.
+
+**Add authentication** — If your MCP server requires OAuth, add an `oauth` configuration to the `mcp` endpoint. See the [`oauth` fields](../packaging#mcp-endpoint) in the field reference.
+
+**Require approval for tool calls** — Add `require_approval: "always"` to the `mcp` endpoint to require a human to approve each tool call before it executes.
+
+**Connect multiple MCP servers** — Deploy additional MCP service YAMLs to the same room. Agents with `--mcp` will discover all of them.
+
+## Other Ways to Connect MCP Tools
+- [Supabase MCP Example](../agents/tools/supabase_mcp) — Deploy a Supabase MCP server as a MeshAgent toolkit. 
+- [OpenAI Connectors + MCP](../agents/tools/openai_connectors_mcp) — Connect external tools via OpenAI Connectors.
+
+## Related Topics
+- [Packaging & Deploying Services](../packaging) — Service configuration reference and key concepts.
+- [MCP endpoint fields](../packaging#mcp-endpoint) — Full field reference for MCP endpoint configuration.
+- [Sharing via Powerboards](../../share_agents_in_powerboards) — Turn any ServiceTemplate into a one-click install link.

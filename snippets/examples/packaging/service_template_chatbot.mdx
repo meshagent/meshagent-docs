@@ -1,0 +1,35 @@
+```yaml Yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: my-language-chatbot
+  description: "A chatbot with web search and storage that responds in your chosen language"
+  annotations:
+    meshagent.service.id: "my-language-chatbot"
+variables:
+  - name: language
+    description: "The language the chatbot should respond in (e.g. English, Spanish, French)"
+agents:
+  - name: my-language-chatbot
+    description: "A helpful chatbot"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: >-
+    meshagent chatbot join
+    --agent-name my-language-chatbot
+    --require-web-search
+    --require-storage
+    --rule "You are a helpful assistant. Always respond in {{ language }}. Use web search to find current information and save important findings to storage."
+    --room-rules "agents/my-language-chatbot/rules.txt"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: my-language-chatbot
+  storage:
+    room:
+      - path: /data
+        read_only: false
+```
+

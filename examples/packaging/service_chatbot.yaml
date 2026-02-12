@@ -1,32 +1,28 @@
 kind: Service
 version: v1
 metadata:
-  name: support-chatbot
-  description: "Chatbot with web search and storage tools"
+  name: my-chatbot
+  description: "A chatbot with web search and storage"
   annotations:
-    meshagent.service.id: "support-chatbot"
+    meshagent.service.id: "my-chatbot"
 agents:
-  - name: support-chatbot
-    description: "ChatBot that answers support questions"
+  - name: my-chatbot
+    description: "A helpful chatbot"
     annotations:
       meshagent.agent.type: "ChatBot"
-ports:
-  - num: "*"
-    type: http
-    liveness: "/"
-    endpoints:
-      - path: /chat
-        meshagent:
-          identity: support-chatbot
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
-  command: >
-    /usr/bin/meshagent chatbot service
-    --agent-name=support-chatbot
-    --path=/chat
+  command: >-
+    meshagent chatbot join
+    --agent-name my-chatbot
     --require-web-search
     --require-storage
-    --rule="You are a helpful support chatbot. Use web search when needed."
+    --rule "You are a helpful assistant. Use web search to find current information and save important findings to storage."
+    --room-rules "agents/my-chatbot/rules.txt"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: my-chatbot
   storage:
     room:
       - path: /data
