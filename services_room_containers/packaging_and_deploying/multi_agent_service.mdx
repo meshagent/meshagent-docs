@@ -6,14 +6,14 @@ import NewsReporter from "/snippets/examples/packaging/news_reporter.mdx"
 
 ## Overview
 
-This example deploys a daily news reporter service with three agents working together: a [ChatBot](../agents/standard/chatbot) for interactive conversation, a [MailBot](../agents/standard/mailbot) for sending and receiving email, and a [Worker](../agents/standard/worker) that runs on a daily schedule to compose and send a news digest.
+This example deploys a daily news reporter service with three agents working together: a [ChatBot](../../agents/standard/chatbot) for interactive conversation, a [MailBot](../../agents/standard/mailbot) for sending and receiving email, and a [Worker](../../agents/standard/worker) that runs on a daily schedule to compose and send a news digest.
 
 Because different users will want their own email address and recipient, this example uses a **ServiceTemplate** so users provide their values at deploy time. This example deploys a container-based service that uses the `meshagent-cli` base image.
 
 Use this pattern when your service needs multiple agents coordinating in a room and users need to supply their own configuration.
 
 ## Prerequisites
-- [MeshAgent CLI](../cli/getting_started) installed and signed in (`meshagent setup`).
+- [MeshAgent CLI](../../cli/getting_started) installed and signed in (`meshagent setup`).
 - A mailbox address for the mailbot (ask a project admin to create one if you can’t, or create one from the CLI or MeshAgent Studio. See example below).
 
 ## Step 1: Create the configuration file
@@ -51,7 +51,7 @@ Because this is a `ServiceTemplate`, two values are left for the user to fill in
 - `email` — The mailbot's email address. The `type: email` hint tells MeshAgent and Powerboards this should be a valid email address.
 - `send_to_email` — Where the daily digest gets sent.
 
-These appear as `{{email}}` and `{{send_to_email}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](../packaging#variables-servicetemplate-only) in the field reference.
+These appear as `{{email}}` and `{{send_to_email}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./packaging#variables-servicetemplate-only) in the field reference.
 
 #### Container command
 
@@ -64,11 +64,11 @@ The `command` field runs `meshagent multi join`, which starts multiple agents in
 
 #### Participant token
 
-The [`environment`](../packaging#containerenvironment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../rest_api/api_scopes) granting the service permissions for messaging, storage, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
+The [`environment`](./packaging#containerenvironment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
 
 #### Room storage
 
-The [`storage.room`](../packaging#containerstorage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
+The [`storage.room`](./packaging#containerstorage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
 
 ## Step 2: Create the mailbox
 The MailBot agent needs a mailbox to send and receive email. Create one before deploying — update the address with your desired mailbox name: 
