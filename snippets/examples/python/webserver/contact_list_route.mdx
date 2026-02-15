@@ -1,3 +1,4 @@
+```python Python
 from __future__ import annotations
 
 from html import escape
@@ -134,15 +135,16 @@ _PAGE_HTML = """<!doctype html>
 
 def _render_contacts(contacts: list[dict]) -> str:
     if not contacts:
-        return "<p class=\"empty\">No contacts yet. Submit the contact form to add one.</p>"
+        return (
+            '<p class="empty">No contacts yet. Submit the contact form to add one.</p>'
+        )
 
     items: list[str] = []
     for contact in contacts:
         name = escape(str(contact.get("name", "")).strip()) or "Unknown"
         email = escape(str(contact.get("email", "")).strip()) or "Not provided"
         message = (
-            escape(str(contact.get("message", "")).strip())
-            or "No message provided."
+            escape(str(contact.get("message", "")).strip()) or "No message provided."
         )
         items.append(
             """<article class="item">
@@ -158,9 +160,7 @@ def _render_contacts(contacts: list[dict]) -> str:
             )
         )
 
-    return "<section class=\"items\">{items}</section>".format(
-        items="\n".join(items)
-    )
+    return '<section class="items">{items}</section>'.format(items="\n".join(items))
 
 
 async def handler(*, room, req: web.Request) -> web.StreamResponse:
@@ -183,3 +183,6 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
         list_html=_render_contacts(contacts),
     )
     return web.Response(text=html, content_type="text/html")
+
+```
+
