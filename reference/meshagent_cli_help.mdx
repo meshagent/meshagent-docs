@@ -37,7 +37,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `meeting-transcriber`: Join a meeting transcriber to a room
 * `port`: Port forwarding into room containers
 * `webserver`: Run a webserver connected to a room
-* `codex`: Join a codex chatbot to a room
+* `codex`: Codex-backed agents
 * `multi`: Connect agents and tools to a room
 * `voicebot`: Join a voicebot to a room
 * `chatbot`: Join a chatbot to a room
@@ -1796,7 +1796,7 @@ $ meshagent webserver deploy [OPTIONS]
 
 ## `meshagent codex`
 
-Join a codex chatbot to a room
+Codex-backed agents
 
 **Usage**:
 
@@ -1810,14 +1810,38 @@ $ meshagent codex [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `join`
+* `chatbot`: Run codex chatbot agents
+* `task-runner`: Run codex task-runner agents
 
-### `meshagent codex join`
+### `meshagent codex chatbot`
+
+Run codex chatbot agents
 
 **Usage**:
 
 ```console
-$ meshagent codex join [OPTIONS]
+$ meshagent codex chatbot [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `join`
+* `service`
+* `spec`
+* `deploy`
+* `run`
+* `use`
+
+#### `meshagent codex chatbot join`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot join [OPTIONS]
 ```
 
 **Options**:
@@ -1834,11 +1858,378 @@ $ meshagent codex join [OPTIONS]
 * `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
 * `--command TEXT`: Command used to launch codex app-server
 * `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
 * `--skill-dir TEXT`: An agent skills directory
 * `--key TEXT`: An api key to sign the token with
+* `--help`: Show this message and exit.
+
+#### `meshagent codex chatbot service`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot service [OPTIONS]
+```
+
+**Options**:
+
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the chatbot
+* `--description TEXT`: A description for the chatbot
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex chatbot spec`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the chatbot
+* `--description TEXT`: A description for the chatbot
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex chatbot deploy`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: The name of a room to create the service for
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the chatbot
+* `--description TEXT`: A description for the chatbot
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex chatbot run`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot run [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: Role to use for the agent token  [default: agent]
+* `--agent-name TEXT`: Name of the agent to run
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
+* `--title TEXT`: A friendly title for the chatbot
+* `--description TEXT`: A description for the chatbot
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--key TEXT`: An api key to sign the token with
+* `--thread-path TEXT`: Thread path to use for chat history
+* `--message TEXT`: Optional one-shot message
+* `--use-web-search / --no-use-web-search`: Request the web search tool
+* `--use-image-gen / --no-use-image-gen`: Request the image generation tool
+* `--use-storage / --no-use-storage`: Request the storage tool
+* `--help`: Show this message and exit.
+
+#### `meshagent codex chatbot use`
+
+**Usage**:
+
+```console
+$ meshagent codex chatbot use [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--agent-name TEXT`: Name of the agent to call
+* `--thread-path TEXT`: Thread path to use for chat history
+* `--message TEXT`: Optional one-shot message
+* `--use-web-search / --no-use-web-search`: Request the web search tool
+* `--use-image-gen / --no-use-image-gen`: Request the image generation tool
+* `--use-storage / --no-use-storage`: Request the storage tool
+* `--help`: Show this message and exit.
+
+### `meshagent codex task-runner`
+
+Run codex task-runner agents
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `join`
+* `run`
+* `service`
+* `spec`
+* `deploy`
+
+#### `meshagent codex task-runner join`
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner join [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: Role to use for the agent token  [default: agent]
+* `--agent-name TEXT`: Name of the agent to run
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--title TEXT`: A friendly title for the task runner
+* `--description TEXT`: A description for the task runner
+* `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--key TEXT`: An api key to sign the token with
+* `--help`: Show this message and exit.
+
+#### `meshagent codex task-runner run`
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner run [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: Role to use for the agent token  [default: agent]
+* `--agent-name TEXT`: Name of the agent to run
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--title TEXT`: A friendly title for the task runner
+* `--description TEXT`: A description for the task runner
+* `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--key TEXT`: An api key to sign the token with
+* `--input TEXT`: JSON input for the task runner, or &#x27;-&#x27; for stdin
+* `--with-caller / --no-with-caller`: Whether to invoke the tool with the currently logged in user as the caller  [default: with-caller]
+* `--help`: Show this message and exit.
+
+#### `meshagent codex task-runner service`
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner service [OPTIONS]
+```
+
+**Options**:
+
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the task runner
+* `--description TEXT`: A description for the task runner
+* `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex task-runner spec`
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the task runner
+* `--description TEXT`: A description for the task runner
+* `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex task-runner deploy`
+
+**Usage**:
+
+```console
+$ meshagent codex task-runner deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: The name of a room to create the service for
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--title TEXT`: A friendly title for the task runner
+* `--description TEXT`: A description for the task runner
+* `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--skill-dir TEXT`: An agent skills directory
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
 * `--help`: Show this message and exit.
 
 ## `meshagent multi`
