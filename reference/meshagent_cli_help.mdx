@@ -1719,11 +1719,10 @@ $ meshagent webserver join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `--key TEXT`: an api key to sign the token with
-* `--file-route TEXT`: Expose a local folder as /route:/path (repeatable)
-* `--python-route TEXT`: Mount a python handler as /route:/path.py (repeatable)
+* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
 * `--host TEXT`: Host to bind the server  [default: 127.0.0.1]
 * `--port INTEGER`: Port to bind the server  [default: 8000]
-* `--watch`: Reload python routes when files change
+* `--watch`: Reload routes when the routes file or python handlers change
 * `--help`: Show this message and exit.
 
 ### `meshagent webserver service`
@@ -1737,8 +1736,7 @@ $ meshagent webserver service [OPTIONS]
 **Options**:
 
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--file-route TEXT`: Expose a local folder as /route:/path (repeatable)
-* `--python-route TEXT`: Mount a python handler as /route:/path.py (repeatable)
+* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1760,8 +1758,7 @@ $ meshagent webserver spec [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--file-route TEXT`: Expose a local folder as /route:/path (repeatable)
-* `--python-route TEXT`: Mount a python handler as /route:/path.py (repeatable)
+* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1783,8 +1780,7 @@ $ meshagent webserver deploy [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--file-route TEXT`: Expose a local folder as /route:/path (repeatable)
-* `--python-route TEXT`: Mount a python handler as /route:/path.py (repeatable)
+* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1853,6 +1849,7 @@ $ meshagent codex chatbot join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -1885,6 +1882,7 @@ $ meshagent codex chatbot service [OPTIONS]
 * `--title TEXT`: A friendly title for the chatbot
 * `--description TEXT`: A description for the chatbot
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -1922,6 +1920,7 @@ $ meshagent codex chatbot spec [OPTIONS]
 * `--title TEXT`: A friendly title for the chatbot
 * `--description TEXT`: A description for the chatbot
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -1961,6 +1960,7 @@ $ meshagent codex chatbot deploy [OPTIONS]
 * `--title TEXT`: A friendly title for the chatbot
 * `--description TEXT`: A description for the chatbot
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -1999,6 +1999,7 @@ $ meshagent codex chatbot run [OPTIONS]
 * `--title TEXT`: A friendly title for the chatbot
 * `--description TEXT`: A description for the chatbot
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2080,6 +2081,7 @@ $ meshagent codex task-runner join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2117,6 +2119,7 @@ $ meshagent codex task-runner run [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2155,6 +2158,7 @@ $ meshagent codex task-runner service [OPTIONS]
 * `--description TEXT`: A description for the task runner
 * `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2193,6 +2197,7 @@ $ meshagent codex task-runner spec [OPTIONS]
 * `--description TEXT`: A description for the task runner
 * `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2233,6 +2238,7 @@ $ meshagent codex task-runner deploy [OPTIONS]
 * `--description TEXT`: A description for the task runner
 * `--supports-tools / --no-supports-tools`: Whether the task runner supports tools  [default: supports-tools]
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2296,6 +2302,7 @@ $ meshagent codex worker join [OPTIONS]
 * `--prompt TEXT`: Override prompt used for each message
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2332,6 +2339,7 @@ $ meshagent codex worker service [OPTIONS]
 * `--prompt TEXT`: Override prompt used for each message
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2373,6 +2381,7 @@ $ meshagent codex worker spec [OPTIONS]
 * `--prompt TEXT`: Override prompt used for each message
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
@@ -2416,6 +2425,7 @@ $ meshagent codex worker deploy [OPTIONS]
 * `--prompt TEXT`: Override prompt used for each message
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
+* `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
 * `-rs, --require-schema TEXT`: The name or url of a required schema
