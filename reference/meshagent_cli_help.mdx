@@ -36,7 +36,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `route`: Manage routes for your project
 * `meeting-transcriber`: Join a meeting transcriber to a room
 * `port`: Port forwarding into room containers
-* `webserver`: Run a webserver connected to a room
+* `webserver`: Run an HTTP webserver connected to a...
 * `codex`: Codex-backed agents
 * `multi`: Connect agents and tools to a room
 * `voicebot`: Join a voicebot to a room
@@ -1684,7 +1684,42 @@ $ meshagent port forward [OPTIONS]
 
 ## `meshagent webserver`
 
-Run a webserver connected to a room
+Run an HTTP webserver connected to a MeshAgent room.
+
+The webserver mounts static folders and python handlers from a routes file.
+Python handlers run with access to the active room and request objects.
+This lets you build web applications that take advantage of the MeshAgent
+room&#x27;s full feature set.
+
+Default routes file: webserver.yaml
+
+Add routes with the CLI:
+  meshagent webserver add --path / --python handlers/home.py
+  meshagent webserver add --path /assets --static ./public
+
+Example routes file:
+kind: WebServer
+version: v1
+host: 0.0.0.0
+port: 8000
+routes:
+  - path: /
+    methods:
+      - GET
+    python: handlers/home.py
+  - path: /assets
+    static: ./public
+
+Example python handler (handlers/home.py):
+from aiohttp import web
+from meshagent.api import RoomClient
+
+async def handler(
+    *,
+    room: RoomClient,
+    req: web.Request,
+) -&gt; web.StreamResponse:
+    return web.Response(text=&quot;hello&quot;)
 
 **Usage**:
 
@@ -1698,10 +1733,67 @@ $ meshagent webserver [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `check`: Validate a routes file and print the...
+* `init`: Create a routes file scaffold.
+* `add`: Add a route entry to the routes file.
 * `join`
 * `service`
 * `spec`
 * `deploy`
+
+### `meshagent webserver check`
+
+Validate a routes file and print the resolved routes.
+
+**Usage**:
+
+```console
+$ meshagent webserver check [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--help`: Show this message and exit.
+
+### `meshagent webserver init`
+
+Create a routes file scaffold.
+
+Add routes with the CLI:
+  meshagent webserver add --path / --python handlers/home.py
+  meshagent webserver add --path /assets --static ./public
+
+**Usage**:
+
+```console
+$ meshagent webserver init [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--force`: Overwrite existing routes file
+* `--help`: Show this message and exit.
+
+### `meshagent webserver add`
+
+Add a route entry to the routes file.
+
+**Usage**:
+
+```console
+$ meshagent webserver add [OPTIONS]
+```
+
+**Options**:
+
+* `--path TEXT`: Route path to add (must start with &#x27;/&#x27;)  [required]
+* `--python TEXT`: Python handler path (relative to routes file); scaffolded if missing
+* `--static TEXT`: Static directory path (relative to routes file)
+* `-m, --method TEXT`: HTTP method for python routes (repeatable)
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--help`: Show this message and exit.
 
 ### `meshagent webserver join`
 
@@ -1719,7 +1811,7 @@ $ meshagent webserver join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `--key TEXT`: an api key to sign the token with
-* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--host TEXT`: Host to bind the server  [default: 127.0.0.1]
 * `--port INTEGER`: Port to bind the server  [default: 8000]
 * `--watch`: Reload routes when the routes file or python handlers change
@@ -1736,7 +1828,7 @@ $ meshagent webserver service [OPTIONS]
 **Options**:
 
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1758,7 +1850,7 @@ $ meshagent webserver spec [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1780,7 +1872,7 @@ $ meshagent webserver deploy [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `--routes-file TEXT`: Path to a routes.yaml file with route definitions  [required]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -2485,9 +2577,10 @@ chatbot ...;
 mailbot ...;
 worker ...;
 voicebot ...;
+webserver ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.  [required]
+chatbot, worker, mailbot, voicebot, and webserver command arguments mirror those of the respective meshagent chatbot service, meshagent worker service, meshagent mailbot service, meshagent voicebot service, and meshagent webserver service commands.  [required]
 * `--service-name TEXT`: service name  [required]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
@@ -2512,9 +2605,10 @@ chatbot ...;
 mailbot ...;
 worker ...;
 voicebot ...;
+webserver ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.  [required]
+chatbot, worker, mailbot, voicebot, and webserver command arguments mirror those of the respective meshagent chatbot service, meshagent worker service, meshagent mailbot service, meshagent voicebot service, and meshagent webserver service commands.  [required]
 * `--service-name TEXT`: service name  [required]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
@@ -2541,9 +2635,10 @@ chatbot ...;
 mailbot ...;
 worker ...;
 voicebot ...;
+webserver ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.
+chatbot, worker, mailbot, voicebot, and webserver command arguments mirror those of the respective meshagent chatbot service, meshagent worker service, meshagent mailbot service, meshagent voicebot service, and meshagent webserver service commands.
 * `--help`: Show this message and exit.
 
 ### `meshagent multi join`
@@ -2565,9 +2660,10 @@ chatbot ...;
 mailbot ...;
 worker ...;
 voicebot ...;
+webserver ...;
 python path-to-python-file.py --name=NameOfModule;
 
-chatbot, worker, and mailbot command arguments mirror those of the respective meshagent chatbot service, meshagent mailbot service, meshagent voicebot service, and meshagent worker service commands.
+chatbot, worker, mailbot, voicebot, and webserver command arguments mirror those of the respective meshagent chatbot service, meshagent worker service, meshagent mailbot service, meshagent voicebot service, and meshagent webserver service commands.
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
 * `--room TEXT`: Room name  [required]
 * `--key TEXT`: an api key to sign the token with
