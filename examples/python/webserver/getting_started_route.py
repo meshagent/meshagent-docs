@@ -1,0 +1,402 @@
+from __future__ import annotations
+
+from html import escape
+
+from aiohttp import web
+
+from meshagent.agents.llmrunner import LLMTaskRunner
+from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
+
+METHODS = ["GET", "POST"]
+
+_PAGE_HTML = """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MeshAgent getting started</title>
+    <style>
+      :root {{
+        color-scheme: light;
+        --ink: #151b26;
+        --muted: #516074;
+        --surface: #ffffff;
+        --accent: #146c6c;
+        --accent-2: #0f4d4f;
+        --border: #d7dce6;
+        --shadow: 0 18px 40px rgba(26, 31, 41, 0.12);
+        --radius: 18px;
+        --font: "Instrument Sans", "Space Grotesk", "Segoe UI", sans-serif;
+      }}
+      * {{ box-sizing: border-box; }}
+      body {{
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(1100px 600px at 0% 0%, #e3f1ef 0%, transparent 60%),
+          radial-gradient(900px 500px at 100% 0%, #e8efff 0%, transparent 60%),
+          #f6f7fb;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px 20px;
+      }}
+      .card {{
+        width: min(820px, 100%);
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid #eef1f6;
+        padding: 28px 28px 24px;
+      }}
+      header {{
+        display: grid;
+        gap: 8px;
+        margin-bottom: 20px;
+      }}
+      h1 {{
+        font-size: clamp(26px, 4vw, 36px);
+        margin: 0;
+        letter-spacing: -0.02em;
+      }}
+      p {{
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }}
+      .steps {{
+        display: grid;
+        gap: 16px;
+        margin: 18px 0 22px;
+      }}
+      .step {{
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        background: #fcfdff;
+      }}
+      .step h2 {{
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }}
+      pre {{
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        overflow-x: auto;
+        margin: 0;
+        font-size: 0.95rem;
+      }}
+      form {{
+        display: grid;
+        gap: 12px;
+        margin-top: 6px;
+      }}
+      label {{
+        display: grid;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }}
+      textarea {{
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 1rem;
+        font-family: var(--font);
+        background: #fcfdff;
+        min-height: 110px;
+      }}
+      .actions {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }}
+      .spinner {{
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid rgba(20, 108, 108, 0.2);
+        border-top-color: var(--accent);
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }}
+      .is-loading .spinner {{
+        display: inline-block;
+      }}
+      .is-loading button {{
+        opacity: 0.7;
+        cursor: wait;
+      }}
+      @keyframes spin {{
+        to {{ transform: rotate(360deg); }}
+      }}
+      .hint {{
+        font-size: 0.9rem;
+        color: var(--muted);
+      }}
+      button {{
+        border: none;
+        border-radius: 999px;
+        padding: 12px 22px;
+        background: linear-gradient(135deg, var(--accent), #13a29b);
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(20, 108, 108, 0.2);
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+      }}
+      button:hover {{ transform: translateY(-1px); box-shadow: 0 12px 24px rgba(20, 108, 108, 0.24); }}
+      button:active {{ transform: translateY(0); }}
+      .result {{
+        margin-top: 18px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        background: #f8fbff;
+        color: var(--ink);
+      }}
+      .result p {{
+        color: var(--muted);
+      }}
+      .result > * + * {{
+        margin-top: 12px;
+      }}
+      .result h2 {{
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }}
+      .result pre {{
+        background: #0b1220;
+        margin: 0;
+      }}
+      .result ul {{
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }}
+      .result li {{
+        margin: 6px 0;
+      }}
+      .result li::marker {{
+        color: currentColor;
+      }}
+      .result pre + pre {{
+        margin-top: 12px;
+      }}
+      .result pre + ul {{
+        margin-top: 12px;
+      }}
+      .result ul + pre {{
+        margin-top: 12px;
+      }}
+      .result code {{
+        font-family: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+        font-size: 0.95rem;
+      }}
+      @media (max-width: 520px) {{
+        .card {{ padding: 22px; }}
+      }}
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <header>
+        <h1>MeshAgent getting started</h1>
+        <p>Install the CLI, connect a chatbot to your room, then pick your next move.</p>
+      </header>
+      <section class="steps">
+        <article class="step">
+          <h2>1. Install the CLI</h2>
+          <pre>uv add "meshagent[cli]"
+meshagent --help</pre>
+        </article>
+        <article class="step">
+          <h2>2. Authenticate</h2>
+          <pre>meshagent setup</pre>
+        </article>
+        <article class="step">
+          <h2>3. Connect a chatbot to your room</h2>
+          <pre>meshagent chatbot join --room quickstart --agent-name mybot</pre>
+        </article>
+      </section>
+      {result_block}
+      <form method="post">
+        <label>
+          What do you want to do next?
+          <textarea name="next_focus" placeholder="Example: add web search to my bot, deploy a service, or build a tool"></textarea>
+        </label>
+        <div class="actions">
+          <button type="submit">Generate next steps</button>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="hint">Uses a TaskRunner with web search over docs.meshagent.com.</span>
+        </div>
+      </form>
+      <script>
+        const form = document.currentScript?.previousElementSibling;
+        if (form && form.tagName === "FORM") {{
+          const textarea = form.querySelector("textarea[name='next_focus']");
+          form.addEventListener("submit", () => {{
+            form.classList.add("is-loading");
+          }});
+          if (textarea) {{
+            textarea.addEventListener("keydown", (event) => {{
+              if (event.key === "Enter" && !event.shiftKey) {{
+                event.preventDefault();
+                form.requestSubmit();
+              }}
+            }});
+          }}
+        }}
+        const result = document.querySelector(".result");
+        if (result) {{
+          window.requestAnimationFrame(() => {{
+            window.scrollTo({{ top: document.body.scrollHeight, behavior: "smooth" }});
+          }});
+        }}
+      </script>
+    </main>
+  </body>
+</html>
+"""
+
+
+def _render_list(items: list[str]) -> str:
+    if not items:
+        return ""
+    return "<ul>{items}</ul>".format(
+        items="".join(["<li>{}</li>".format(escape(item)) for item in items if item])
+    )
+
+
+def _render_result(
+    *,
+    prompt: str,
+    intro: str,
+    steps: list[str],
+    commands: list[str],
+    notes: list[str],
+    links: list[str],
+) -> str:
+    commands_block = "".join(
+        ["<pre><code>{}</code></pre>".format(escape(cmd)) for cmd in commands if cmd]
+    )
+    links_block = "".join(
+        [
+            '<li><a href="{url}" target="_blank" rel="noreferrer">{url}</a></li>'.format(
+                url=escape(link)
+            )
+            for link in links
+            if link
+        ]
+    )
+    links_html = "<ul>{}</ul>".format(links_block) if links_block else ""
+
+    return """<section class="result">
+  <h2>Recommended next steps</h2>
+  <p><strong>Focus:</strong> {prompt}</p>
+  <p>{intro}</p>
+  {steps}
+  {commands}
+  {notes}
+  {links}
+</section>""".format(
+        prompt=escape(prompt),
+        intro=escape(intro),
+        steps=_render_list(steps),
+        commands=commands_block,
+        notes=_render_list(notes),
+        links=links_html,
+    )
+
+
+async def handler(*, room, req: web.Request) -> web.StreamResponse:
+    if req.method == "GET":
+        html = _PAGE_HTML.format(result_block="")
+        return web.Response(text=html, content_type="text/html")
+
+    form = await req.post()
+    next_focus = (form.get("next_focus") or "").strip()
+    if not next_focus:
+        next_focus = "Help me pick the next MeshAgent workflow to try."
+
+    steps_taken = (
+        "Steps already completed and already shown to the user:\n"
+        "1) Install the CLI:\n"
+        '   uv add "meshagent[cli]"\n'
+        "   meshagent --help\n"
+        "2) Authenticate:\n"
+        "   meshagent setup\n"
+        "3) Connect a chatbot to your room:\n"
+        "   meshagent chatbot join --room quickstart --agent-name mybot\n"
+    )
+
+    prompt = (
+        "Use the web_search tool and the docs at https://docs.meshagent.com to "
+        "create next steps for this goal. Keep it concise (4-6 bullets), include "
+        "CLI commands or code snippets when relevant, and focus on the immediate "
+        "actions the user should take. Do NOT repeat the steps already completed. "
+        "Return only the single next step the user must take to achieve their goal, "
+        "based on their input. Do not include extra advice or follow-on steps. "
+        "If CLI commands are required, include them in the commands array. "
+        "Return JSON only that matches the output schema. "
+        "Use concise, plain-text strings.\n\n"
+        f"{steps_taken}\n"
+        f"User input: {next_focus}"
+    )
+
+    class GettingStartedTaskRunner(LLMTaskRunner):
+        def __init__(self):
+            super().__init__(
+                llm_adapter=OpenAIResponsesAdapter(),
+                supports_tools=True,
+                output_schema={
+                    "type": "object",
+                    "required": ["next_step", "commands"],
+                    "additionalProperties": False,
+                    "properties": {
+                        "next_step": {"type": "string"},
+                        "commands": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+            )
+
+        def get_toolkit_builders(self):
+            return [WebSearchToolkitBuilder()]
+
+    runner = GettingStartedTaskRunner()
+    response = await runner.run(
+        room=room,
+        arguments={
+            "prompt": prompt,
+            "model": "gpt-5.2",
+            "tools": [{"name": "web_search"}],
+        },
+    )
+    print(response)
+    next_step = ""
+    commands: list[str] = []
+    if hasattr(response, "json"):
+        payload = response.json
+        next_step = str(payload.get("next_step", "")).strip()
+        raw_commands = payload.get("commands")
+        if isinstance(raw_commands, list):
+            commands = [str(cmd).strip() for cmd in raw_commands if cmd]
+
+    html = _PAGE_HTML.format(
+        result_block=_render_result(
+            prompt=next_focus,
+            intro="Next step",
+            steps=[next_step] if next_step else [],
+            commands=commands,
+            notes=[],
+            links=[],
+        ),
+    )
+    return web.Response(text=html, content_type="text/html")
