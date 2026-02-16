@@ -1812,6 +1812,7 @@ $ meshagent codex [OPTIONS] COMMAND [ARGS]...
 
 * `chatbot`: Run codex chatbot agents
 * `task-runner`: Run codex task-runner agents
+* `worker`: Run codex worker agents
 
 ### `meshagent codex chatbot`
 
@@ -1864,6 +1865,7 @@ $ meshagent codex chatbot join [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--key TEXT`: An api key to sign the token with
@@ -1895,6 +1897,7 @@ $ meshagent codex chatbot service [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
@@ -1931,6 +1934,7 @@ $ meshagent codex chatbot spec [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
@@ -1969,6 +1973,7 @@ $ meshagent codex chatbot deploy [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
@@ -2006,6 +2011,7 @@ $ meshagent codex chatbot run [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--key TEXT`: An api key to sign the token with
@@ -2089,6 +2095,7 @@ $ meshagent codex task-runner join [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--key TEXT`: An api key to sign the token with
@@ -2125,6 +2132,7 @@ $ meshagent codex task-runner run [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--key TEXT`: An api key to sign the token with
@@ -2159,6 +2167,7 @@ $ meshagent codex task-runner service [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
@@ -2196,6 +2205,7 @@ $ meshagent codex task-runner spec [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
@@ -2235,6 +2245,190 @@ $ meshagent codex task-runner deploy [OPTIONS]
 * `--working-directory TEXT`: Working directory passed to codex app-server
 * `--approval-policy TEXT`: Codex approval policy
 * `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
+* `--skill-dir TEXT`: An agent skills directory
+* `--verbose`: Log codex app-server JSON-RPC requests/responses
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+### `meshagent codex worker`
+
+Run codex worker agents
+
+**Usage**:
+
+```console
+$ meshagent codex worker [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `join`
+* `service`
+* `spec`
+* `deploy`
+
+#### `meshagent codex worker join`
+
+**Usage**:
+
+```console
+$ meshagent codex worker join [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: Role to use for the agent token  [default: agent]
+* `--agent-name TEXT`: Name of the agent to run
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
+* `--queue TEXT`: The queue to consume  [required]
+* `--title TEXT`: A friendly title for the worker
+* `--description TEXT`: A description for the worker
+* `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
+* `--prompt TEXT`: Override prompt used for each message
+* `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
+* `--skill-dir TEXT`: An agent skills directory
+* `--verbose`: Log codex app-server JSON-RPC requests/responses
+* `--key TEXT`: An api key to sign the token with
+* `--help`: Show this message and exit.
+
+#### `meshagent codex worker service`
+
+**Usage**:
+
+```console
+$ meshagent codex worker service [OPTIONS]
+```
+
+**Options**:
+
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--queue TEXT`: The queue to consume  [required]
+* `--title TEXT`: A friendly title for the worker
+* `--description TEXT`: A description for the worker
+* `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
+* `--prompt TEXT`: Override prompt used for each message
+* `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
+* `--skill-dir TEXT`: An agent skills directory
+* `--verbose`: Log codex app-server JSON-RPC requests/responses
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex worker spec`
+
+**Usage**:
+
+```console
+$ meshagent codex worker spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--queue TEXT`: The queue to consume  [required]
+* `--title TEXT`: A friendly title for the worker
+* `--description TEXT`: A description for the worker
+* `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
+* `--prompt TEXT`: Override prompt used for each message
+* `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
+* `--skill-dir TEXT`: An agent skills directory
+* `--verbose`: Log codex app-server JSON-RPC requests/responses
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--help`: Show this message and exit.
+
+#### `meshagent codex worker deploy`
+
+**Usage**:
+
+```console
+$ meshagent codex worker deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: Service name  [required]
+* `--service-description TEXT`: Service description
+* `--service-title TEXT`: A display name for service
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: The name of a room to create the service for
+* `--agent-name TEXT`: Name of the agent to run  [required]
+* `--queue TEXT`: The queue to consume  [required]
+* `--title TEXT`: A friendly title for the worker
+* `--description TEXT`: A description for the worker
+* `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
+* `--prompt TEXT`: Override prompt used for each message
+* `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
+* `-r, --rule TEXT`: A system rule
+* `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: The name or url of a required toolkit
+* `-rs, --require-schema TEXT`: The name or url of a required schema
+* `--model TEXT`: Codex model to use  [default: gpt-5.2-codex]
+* `--command TEXT`: Command used to launch codex app-server
+* `--ws-url TEXT`: Websocket URL for an existing codex app-server
+* `--codex-image TEXT`: Container image used to run codex app-server; use &#x27;none&#x27; to disable  [default: meshagent/shell-codex:default]
+* `--mount-room-path TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--mount-project-path TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--working-directory TEXT`: Working directory passed to codex app-server
+* `--approval-policy TEXT`: Codex approval policy
+* `--sandbox-policy TEXT`: Codex sandbox policy
+* `--mode [default|yolo|workspace-write|read-only]`: Preset Codex mode: default | yolo | workspace-write | read-only
 * `--skill-dir TEXT`: An agent skills directory
 * `--verbose`: Log codex app-server JSON-RPC requests/responses
 * `--host TEXT`: Host to bind the service on
