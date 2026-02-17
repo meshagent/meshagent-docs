@@ -1706,10 +1706,19 @@ View the site from your local machine:
 Use the host/port from webserver.yaml (or explicit --host/--port or --web-host/--web-port overrides).
 
 To make the site available outside your machine:
-  meshagent webserver deploy --service-name my-web --agent-name my-web --room my-room -f webserver.yaml
+  meshagent webserver deploy --service-name my-web --agent-name my-web --room my-room -f webserver.yaml --domain my-web.meshagent.app
+
+`--domain` automatically creates or updates the route to the deployed room and webserver port.
+If the domain already targets a different room, deploy fails to avoid accidental repoints.
+Without `--domain`, create the route manually:
   meshagent route create --room my-room --port 8000 --domain my-web.meshagent.app
 
-You must configure a route that targets the same room and port as the deployed webserver.
+Route source path rules:
+- `python` and `static` sources that start with `/` resolve to `&#123;cwd&#125;/...`.
+- `python` and `static` sources without a leading `/` resolve relative to the routes file.
+- `static` supports both files and directories.
+- Set `--app-dir` to control Python import root (defaults to routes file directory).
+
 
 Example routes file:
 kind: WebServer
@@ -1767,7 +1776,8 @@ $ meshagent webserver check [OPTIONS]
 
 **Options**:
 
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--help`: Show this message and exit.
 
 ### `meshagent webserver init`
@@ -1786,7 +1796,7 @@ $ meshagent webserver init [OPTIONS]
 
 **Options**:
 
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--force`: Overwrite existing routes file
 * `--help`: Show this message and exit.
 
@@ -1804,9 +1814,9 @@ $ meshagent webserver add [OPTIONS]
 
 * `--path TEXT`: Route path to add (must start with &#x27;/&#x27;)  [required]
 * `--python TEXT`: Python handler path (relative to routes file); scaffolded if missing
-* `--static TEXT`: Static directory path (relative to routes file)
+* `--static TEXT`: Static file or directory path (relative to routes file)
 * `-m, --method TEXT`: HTTP method for python routes (repeatable)
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
 * `--help`: Show this message and exit.
 
 ### `meshagent webserver join`
@@ -1825,7 +1835,8 @@ $ meshagent webserver join [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `--key TEXT`: an api key to sign the token with
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--host TEXT`: Host to bind the server  [default: 127.0.0.1]
 * `--port INTEGER`: Port to bind the server  [default: 8000]
 * `--watch`: Reload routes when the routes file or python handlers change
@@ -1842,7 +1853,8 @@ $ meshagent webserver service [OPTIONS]
 **Options**:
 
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1864,7 +1876,8 @@ $ meshagent webserver spec [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1887,7 +1900,8 @@ $ meshagent webserver deploy [OPTIONS]
 * `--service-description TEXT`: service description
 * `--service-title TEXT`: a display name for the service
 * `--agent-name TEXT`: Name of the agent to call  [required]
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
+* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
 * `--host TEXT`: Host to bind the service on
@@ -1895,6 +1909,7 @@ $ meshagent webserver deploy [OPTIONS]
 * `--path TEXT`: HTTP path to mount the service at
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
+* `--domain TEXT`: Domain to create/update route for this deploy (must already target this room if it exists)
 * `--website-path TEXT`: Room storage subpath to upload route-referenced files (under the routes file directory) and the routes config file into and mount at runtime
 * `--help`: Show this message and exit.
 
