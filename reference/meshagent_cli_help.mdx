@@ -1697,6 +1697,20 @@ Add routes with the CLI:
   meshagent webserver add --path / --python handlers/home.py
   meshagent webserver add --path /assets --static ./public
 
+Start it locally by joining a room:
+  meshagent webserver join --room my-room --agent-name my-web -f webserver.yaml --watch
+
+View the site from your local machine:
+  http://127.0.0.1:8000
+
+Use the host/port from webserver.yaml (or explicit --host/--port or --web-host/--web-port overrides).
+
+To make the site available outside your machine:
+  meshagent webserver deploy --service-name my-web --agent-name my-web --room my-room -f webserver.yaml
+  meshagent route create --room my-room --port 8000 --domain my-web.meshagent.app
+
+You must configure a route that targets the same room and port as the deployed webserver.
+
 Example routes file:
 kind: WebServer
 version: v1
@@ -1856,6 +1870,7 @@ $ meshagent webserver spec [OPTIONS]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
+* `--website-path TEXT`: Room storage subpath for route-referenced files (under the routes file directory) and the routes config file; adds a room storage mount so routes resolve in container
 * `--help`: Show this message and exit.
 
 ### `meshagent webserver deploy`
@@ -1880,6 +1895,7 @@ $ meshagent webserver deploy [OPTIONS]
 * `--path TEXT`: HTTP path to mount the service at
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
+* `--website-path TEXT`: Room storage subpath to upload route-referenced files (under the routes file directory) and the routes config file into and mount at runtime
 * `--help`: Show this message and exit.
 
 ## `meshagent codex`
