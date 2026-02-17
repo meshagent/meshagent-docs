@@ -1778,7 +1778,6 @@ $ meshagent webserver [OPTIONS] COMMAND [ARGS]...
 * `init`: Create a routes file scaffold.
 * `add`: Add a route entry to the routes file.
 * `join`: Join a room and run the configured...
-* `service`: Run the webserver as a MeshAgent service...
 * `spec`: Generate a service spec for deploying this...
 * `deploy`: Deploy this webserver as a service,...
 
@@ -1860,28 +1859,6 @@ $ meshagent webserver join [OPTIONS]
 * `--host TEXT`: Host to bind the server  [default: 127.0.0.1]
 * `--port INTEGER`: Port to bind the server  [default: 8000]
 * `--watch`: Reload routes when the routes file or python handlers change
-* `--help`: Show this message and exit.
-
-### `meshagent webserver service`
-
-Run the webserver as a MeshAgent service in the current runtime.
-
-**Usage**:
-
-```console
-$ meshagent webserver service [OPTIONS]
-```
-
-**Options**:
-
-* `--agent-name TEXT`: Name of the agent to call  [required]
-* `-f, --routes-file TEXT`: Path to routes file (default: webserver.yaml). YAML format: kind: WebServer, version: v1, host?, port?, routes: [&#123;path, methods?, python?|static?&#125;]. Route source resolution: &#x27;/x&#x27; -&gt; &#x27;&#123;cwd&#125;/x&#x27;; &#x27;x&#x27; -&gt; relative to routes file. &#x27;static&#x27; supports files and directories. Use --app-dir to control Python import root (defaults to routes file directory). When --host/--port (or --web-host/--web-port) are not explicitly set, host/port from the routes file are used. Python handler signature: handler(*, room: RoomClient, req: web.Request) -&gt; web.StreamResponse. Do not define METHOD/METHODS in handler files.  [default: webserver.yaml]
-* `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
-* `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
-* `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
-* `--host TEXT`: Host to bind the service on
-* `--port INTEGER`: Port to bind the service on
-* `--path TEXT`: HTTP path to mount the service at
 * `--help`: Show this message and exit.
 
 ### `meshagent webserver spec`
