@@ -4282,17 +4282,16 @@ $ meshagent room secrets [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `oauth`: Run an OAuth2 request test between two...
+* `oauth`: Request an OAuth token from another...
 * `request`: Request a secret from another participant.
-* `get`: Get a stored secret by secret id.
-* `set`: Set/store a secret (bytes from stdin,...
-* `list`: list secrets
-* `delete`: delete a secret
+* `get`: Fetch a stored secret by ID.
+* `set`: Store a secret by ID.
+* `list`: List secrets in the room.
+* `delete`: Delete a secret by ID.
 
 #### `meshagent room secrets oauth`
 
-Run an OAuth2 request test between two participants in the same room.
-One will act as the consumer, the other as the provider.
+Request an OAuth token from another participant.
 
 **Usage**:
 
@@ -4338,7 +4337,7 @@ $ meshagent room secrets request [OPTIONS]
 
 #### `meshagent room secrets get`
 
-Get a stored secret by secret id.
+Fetch a stored secret by ID.
 
 **Usage**:
 
@@ -4357,7 +4356,7 @@ $ meshagent room secrets get [OPTIONS]
 
 #### `meshagent room secrets set`
 
-Set/store a secret (bytes from stdin, file, text, or base64).
+Store a secret by ID.
 
 **Usage**:
 
@@ -4381,7 +4380,7 @@ $ meshagent room secrets set [OPTIONS]
 
 #### `meshagent room secrets list`
 
-list secrets
+List secrets in the room.
 
 **Usage**:
 
@@ -4397,7 +4396,7 @@ $ meshagent room secrets list [OPTIONS]
 
 #### `meshagent room secrets delete`
 
-delete a secret
+Delete a secret by ID.
 
 **Usage**:
 
@@ -4432,10 +4431,12 @@ $ meshagent room queue [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `send`
-* `receive`
+* `send`: Send a JSON message to a room queue.
+* `receive`: Receive a message from a room queue.
 
 #### `meshagent room queue send`
+
+Send a JSON message to a room queue.
 
 **Usage**:
 
@@ -4453,6 +4454,8 @@ $ meshagent room queue send [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room queue receive`
+
+Receive a message from a room queue.
 
 **Usage**:
 
@@ -4555,15 +4558,15 @@ $ meshagent room storage [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `exists`: Check if a file/folder exists in remote...
-* `cp`
-* `show`: Print the contents of a file (local or...
-* `rm`: Remove files (and optionally folders)...
-* `ls`: List files/folders either locally or in...
+* `exists`: Check whether a path exists in room storage.
+* `cp`: Copy files between local paths and room...
+* `show`: Print file contents from local disk or...
+* `rm`: Remove files or directories from local...
+* `ls`: List files and directories locally or in...
 
 #### `meshagent room storage exists`
 
-Check if a file/folder exists in remote storage.
+Check whether a path exists in room storage.
 
 **Usage**:
 
@@ -4582,6 +4585,8 @@ $ meshagent room storage exists [OPTIONS] PATH
 * `--help`: Show this message and exit.
 
 #### `meshagent room storage cp`
+
+Copy files between local paths and room storage.
 
 **Usage**:
 
@@ -4602,7 +4607,7 @@ $ meshagent room storage cp [OPTIONS] SOURCE_PATH DEST_PATH
 
 #### `meshagent room storage show`
 
-Print the contents of a file (local or remote) to the console.
+Print file contents from local disk or room storage.
 
 **Usage**:
 
@@ -4623,9 +4628,7 @@ $ meshagent room storage show [OPTIONS] PATH
 
 #### `meshagent room storage rm`
 
-Remove files (and optionally folders) either locally or in remote storage.
-- Supports wildcards on the source path (for files).
-- Fails if trying to remove a directory/folder without --recursive/-r.
+Remove files or directories from local disk or room storage.
 
 **Usage**:
 
@@ -4646,9 +4649,7 @@ $ meshagent room storage rm [OPTIONS] PATH
 
 #### `meshagent room storage ls`
 
-List files/folders either locally or in remote storage.
-- Supports wildcards on the path (e.g. *.txt).
-- Use -r for recursive listing.
+List files and directories locally or in room storage.
 
 **Usage**:
 
@@ -4752,27 +4753,29 @@ $ meshagent room database [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `tables`
-* `inspect`
-* `install`: Create a database from a json file...
-* `create`: Create a table with optional schema +...
-* `drop`
-* `add-columns`: Add columns.
-* `drop-columns`
-* `insert`
-* `merge`
+* `tables`: List database tables in a room.
+* `inspect`: Inspect a table schema in a room database.
+* `install`: Install required tables from a...
+* `create`: Create a room database table with optional...
+* `drop`: Drop a room database table.
+* `add-columns`: Add columns to a room database table.
+* `drop-columns`: Drop columns from a room database table.
+* `insert`: Insert records into a room database table.
+* `merge`: Upsert records into a room database table.
 * `update`: Update rows in a room database table.
 * `delete`: Delete rows from a room database table.
-* `search`
-* `optimize`
-* `versions`
-* `checkout`
-* `restore`
-* `indexes`
-* `index-create`
-* `index-drop`
+* `search`: Search rows in a room database table.
+* `optimize`: Optimize a room database table.
+* `versions`: List versions for a room database table.
+* `checkout`: Check out a room database table at a...
+* `restore`: Restore a room database table to a...
+* `indexes`: List indexes on a room database table.
+* `index-create`: Create an index on a room database table.
+* `index-drop`: Drop an index from a room database table.
 
 #### `meshagent room database tables`
+
+List database tables in a room.
 
 **Usage**:
 
@@ -4788,6 +4791,8 @@ $ meshagent room database tables [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database inspect`
+
+Inspect a table schema in a room database.
 
 **Usage**:
 
@@ -4806,7 +4811,7 @@ $ meshagent room database inspect [OPTIONS]
 
 #### `meshagent room database install`
 
-Create a database from a json file containing a list of RequiredTables.
+Install required tables from a requirements JSON file.
 
 **Usage**:
 
@@ -4823,16 +4828,7 @@ $ meshagent room database install [OPTIONS]
 
 #### `meshagent room database create`
 
-Create a table with optional schema + optional initial data.
-
-Schema JSON format matches your DataType.to_json() structure, e.g.:
-  &#123;&quot;id&quot;:&#123;&quot;type&quot;:&quot;int&quot;&#125;, &quot;body&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;, &quot;embedding&quot;:&#123;&quot;type&quot;:&quot;vector&quot;,&quot;size&quot;:1536,&quot;element_type&quot;:&#123;&quot;type&quot;:&quot;float&quot;&#125;&#125;&#125;
-
-Column definitions via --columns/-c use SQL-like syntax:
-  names vector(20) null, test text not null, age int
-
-Allowed types: int, bool, date, timestamp, float, text, binary, vector.
-Vector syntax: vector(size[, element_type]).
+Create a room database table with optional schema and seed data.
 
 **Usage**:
 
@@ -4856,6 +4852,8 @@ $ meshagent room database create [OPTIONS]
 
 #### `meshagent room database drop`
 
+Drop a room database table.
+
 **Usage**:
 
 ```console
@@ -4873,15 +4871,7 @@ $ meshagent room database drop [OPTIONS]
 
 #### `meshagent room database add-columns`
 
-Add columns. JSON supports either:
-  - DataType JSON: &#123;&quot;col&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;
-  - or server default SQL expr strings: &#123;&quot;col&quot;:&quot;&#x27;default&#x27;&quot;&#125;
-
-Column definitions via --columns/-c use SQL-like syntax:
-  names vector(20) null, test text not null, age int
-
-Allowed types: int, bool, date, timestamp, float, text, binary, vector.
-Vector syntax: vector(size[, element_type]).
+Add columns to a room database table.
 
 **Usage**:
 
@@ -4901,6 +4891,8 @@ $ meshagent room database add-columns [OPTIONS]
 
 #### `meshagent room database drop-columns`
 
+Drop columns from a room database table.
+
 **Usage**:
 
 ```console
@@ -4917,6 +4909,8 @@ $ meshagent room database drop-columns [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database insert`
+
+Insert records into a room database table.
 
 **Usage**:
 
@@ -4935,6 +4929,8 @@ $ meshagent room database insert [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database merge`
+
+Upsert records into a room database table.
 
 **Usage**:
 
@@ -4995,6 +4991,8 @@ $ meshagent room database delete [OPTIONS]
 
 #### `meshagent room database search`
 
+Search rows in a room database table.
+
 **Usage**:
 
 ```console
@@ -5019,6 +5017,8 @@ $ meshagent room database search [OPTIONS]
 
 #### `meshagent room database optimize`
 
+Optimize a room database table.
+
 **Usage**:
 
 ```console
@@ -5034,6 +5034,8 @@ $ meshagent room database optimize [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database versions`
+
+List versions for a room database table.
 
 **Usage**:
 
@@ -5052,6 +5054,8 @@ $ meshagent room database versions [OPTIONS]
 
 #### `meshagent room database checkout`
 
+Check out a room database table at a specific version.
+
 **Usage**:
 
 ```console
@@ -5068,6 +5072,8 @@ $ meshagent room database checkout [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database restore`
+
+Restore a room database table to a specific version.
 
 **Usage**:
 
@@ -5086,6 +5092,8 @@ $ meshagent room database restore [OPTIONS]
 
 #### `meshagent room database indexes`
 
+List indexes on a room database table.
+
 **Usage**:
 
 ```console
@@ -5102,6 +5110,8 @@ $ meshagent room database indexes [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database index-create`
+
+Create an index on a room database table.
 
 **Usage**:
 
@@ -5121,6 +5131,8 @@ $ meshagent room database index-create [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database index-drop`
+
+Drop an index from a room database table.
 
 **Usage**:
 
@@ -5153,14 +5165,16 @@ $ meshagent room container [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `ps`
-* `stop`
-* `logs`
-* `exec`
+* `ps`: List containers in a room.
+* `stop`: Stop a running container in a room.
+* `logs`: Print container logs from a room.
+* `exec`: Execute a command inside a running container.
 * `run`: Run a container inside a room.
 * `images`: Image operations
 
 #### `meshagent room container ps`
+
+List containers in a room.
 
 **Usage**:
 
@@ -5177,6 +5191,8 @@ $ meshagent room container ps [OPTIONS]
 
 #### `meshagent room container stop`
 
+Stop a running container in a room.
+
 **Usage**:
 
 ```console
@@ -5191,6 +5207,8 @@ $ meshagent room container stop [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room container logs`
+
+Print container logs from a room.
 
 **Usage**:
 
@@ -5207,6 +5225,8 @@ $ meshagent room container logs [OPTIONS]
 * `--help`: Show this message and exit.
 
 #### `meshagent room container exec`
+
+Execute a command inside a running container.
 
 **Usage**:
 
@@ -5269,7 +5289,7 @@ $ meshagent room container images [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List container images available in a room.
 * `delete`: Delete a container image from a room.
-* `pull`
+* `pull`: Pull a container image into a room.
 
 ##### `meshagent room container images list`
 
@@ -5305,6 +5325,8 @@ $ meshagent room container images delete [OPTIONS]
 * `--help`: Show this message and exit.
 
 ##### `meshagent room container images pull`
+
+Pull a container image into a room.
 
 **Usage**:
 
