@@ -39,7 +39,7 @@ async def main():
         await room.agents.invoke_tool(
             toolkit="meshagent.document-writer",
             tool="run_meshagent.document-writer_task",
-            arguments={
+            input={
                 "path": path,
                 "prompt": "write a paragraph about ai and how agents are shaping the future",
             },

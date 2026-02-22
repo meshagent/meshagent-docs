@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
-from meshagent.api.messaging import JsonChunk
+from meshagent.api.messaging import JsonContent
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 from meshagent.agents.llmrunner import LLMTaskRunner
@@ -76,7 +76,7 @@ class ProcessResume(Tool):
             finally:
                 await context.room.storage.close(handle=handle)
         except Exception as e:
-            return JsonChunk(
+            return JsonContent(
                 json={
                     "status": "error",
                     "error": f"Failed to copy resume: {e}",
@@ -119,7 +119,7 @@ class ProcessResume(Tool):
             open_roles = await context.room.database.search(table="open_roles")
         except Exception as e:
             log.exception("Failed to fetch open roles for scoring: %s", e)
-            return JsonChunk(
+            return JsonContent(
                 json={
                     "status": "error",
                     "error": f"Failed to fetch open roles for scoring: {e}",
@@ -220,7 +220,7 @@ class ProcessResume(Tool):
                         exc_info=result,
                     )
 
-        return JsonChunk(
+        return JsonContent(
             json={
                 "status": "ok",
                 "resume_path": target_path,

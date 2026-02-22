@@ -44,9 +44,9 @@ async def call_agent(
             result = await room.agents.invoke_tool(
                 toolkit=agent_name,
                 tool=tool_name,
-                arguments=arguments,
+                input=arguments,
             )
-            # Extract JSON data from JsonChunk response
+            # Extract JSON data from JsonContent response
             return result.json if hasattr(result, "json") else result
     except Exception as e:
         log.error(f"Connection failed:{e}")

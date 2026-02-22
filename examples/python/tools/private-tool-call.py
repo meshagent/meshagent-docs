@@ -4,7 +4,7 @@ import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
-from meshagent.api.messaging import TextChunk, JsonChunk
+from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
 
@@ -67,7 +67,7 @@ class Survey(Tool):
                         toolkit="ui",
                         tool="ask_user",
                         participant_id=p.id,
-                        arguments={
+                        input={
                             "subject": subject,
                             "description": description,
                             "form": [
@@ -144,11 +144,11 @@ class Survey(Tool):
             },
             caller=context.caller,
         )
-        if isinstance(summary_resp, JsonChunk):
+        if isinstance(summary_resp, JsonContent):
             summary_text = summary_resp.json.get("summary") or summary_resp.json.get(
                 "result", ""
             )
-        elif isinstance(summary_resp, TextChunk):
+        elif isinstance(summary_resp, TextContent):
             summary_text = summary_resp.text
         else:
             summary_text = str(summary_resp)
@@ -159,7 +159,7 @@ class Survey(Tool):
             data=summary_text.encode("utf-8"),
         )
 
-        return TextChunk(text=summary_text)
+        return TextContent(text=summary_text)
 
 
 @service.path(path="/survey", identity="survey-toolkit")

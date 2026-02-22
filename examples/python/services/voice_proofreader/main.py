@@ -15,7 +15,7 @@ import livekit.agents.cli.log
 
 from meshagent.agents import ListenerContext
 from typing import Optional
-from meshagent.api import Element, JsonChunk
+from meshagent.api import Element, JsonContent
 from meshagent.api.schema_document import Text
 from meshagent.markitdown.tools import MarkItDownToolkit
 
@@ -152,7 +152,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                             response = await self.room.agents.invoke_tool(
                                 toolkit="meshagent.schema_planner",
                                 tool="run_meshagent.schema_planner_task",
-                                arguments={
+                                input={
                                     "prompt": f"if this statement is wrong, respond with a corrected statement (correction) and respond like a good friend might about your disagreement (response). Limit your response to a maximum one sentence, the shorter the better: {text}",
                                     "output_schema": {
                                         "type": "object",
@@ -178,7 +178,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                                 },
                             )
 
-                            if isinstance(response, JsonChunk):
+                            if isinstance(response, JsonContent):
                                 data = response.json
                                 print(response.json)
 

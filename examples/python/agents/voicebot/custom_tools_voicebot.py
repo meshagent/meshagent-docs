@@ -15,7 +15,7 @@ from meshagent.tools.document_tools import (
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.markitdown.tools import MarkItDownToolkit
-from meshagent.api.messaging import TextChunk, JsonChunk
+from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.tools import Tool, Toolkit, ToolContext
 from meshagent.otel import otel_config
 
@@ -47,7 +47,7 @@ class WriteTask(Tool):
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
             ],
         )
-        return TextChunk(text="Task added!")
+        return TextContent(text="Task added!")
 
 
 class GetTasks(Tool):
@@ -65,7 +65,7 @@ class GetTasks(Tool):
         )
 
     async def execute(self, context):
-        return JsonChunk(
+        return JsonContent(
             json={"values": await context.room.database.search(table="tasks")}
         )
 
