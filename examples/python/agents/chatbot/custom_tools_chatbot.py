@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 
-from meshagent.api import RequiredToolkit, RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
@@ -13,7 +12,7 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
-from meshagent.api.messaging import TextResponse, JsonResponse
+from meshagent.api.messaging import TextChunk, JsonChunk
 from meshagent.tools import Tool, Toolkit
 from meshagent.otel import otel_config
 
@@ -45,7 +44,7 @@ class WriteTask(Tool):
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
             ],
         )
-        return TextResponse(text="Task added!")
+        return TextChunk(text="Task added!")
 
 
 class GetTasks(Tool):
@@ -63,9 +62,10 @@ class GetTasks(Tool):
         )
 
     async def execute(self, context):
-        return JsonResponse(
+        return JsonChunk(
             json={"values": await context.room.database.search(table="tasks")}
         )
+
 
 @service.path(path="/chat", identity="mychatbot")
 class SimpleChatbot(ChatBot):
@@ -84,15 +84,13 @@ class SimpleChatbot(ChatBot):
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             llm_adapter=OpenAIResponsesAdapter(),
-            toolkits=[ # Add built in and custom tools here!
+            toolkits=[  # Add built in and custom tools here!
                 StorageToolkit(),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
-                Toolkit(
-                    name="tasktracker", tools=[WriteTask(), GetTasks()]
-                ),  
+                Toolkit(name="tasktracker", tools=[WriteTask(), GetTasks()]),
             ],
         )
 
@@ -106,12 +104,10 @@ class SimpleChatbot(ChatBot):
         # One tiny table:
         await room.database.create_table_with_schema(
             name="tasks",
-            schema={
-                "task_id": TextDataType(), 
-                "taskdescription": TextDataType()
-                },
+            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
             mode="create_if_not_exists",
             data=None,
         )
+
 
 asyncio.run(service.run())

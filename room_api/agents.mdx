@@ -131,7 +131,7 @@ foreach (var toolkit in toolkits)
   - `arguments`: Payload for the tool.
   - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
   - `caller_context` *(optional, Python)*: Additional context metadata for the call.
-- **Returns**: `Response` (`JsonResponse` in most SDKs) with tool output.
+- **Returns**: `Response` (`JsonChunk` in most SDKs) with tool output.
 
 <CodeGroup>
 ```python Python
@@ -173,36 +173,6 @@ var toolArgs = new Dictionary<string, object?> { { "param1", "value1" } };
 var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
 ```
 </CodeGroup>
-
----
-
-### Invoke tool (with request body)
-
-- **Description**:  
-  Send a `Request` object (with optional binary payload) directly to a tool.  
-- **Availability**: Python SDK (`invoke_request_tool`); other SDKs can send raw arguments via `invokeTool`.
-- **Parameters**:
-  - `toolkit`: Toolkit name.
-  - `tool`: Tool name.
-  - `request`: A `Request` object carrying headers/args and optional bytes via `get_data()`.
-  - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
-  - `caller_context` *(optional, Python)*: Extra context metadata.
-- **Returns**: `Response` (`JsonResponse` or stream) from the tool.
-
-<CodeGroup>
-```python Python
-from meshagent.api.messaging import Request
-
-req = Request(arguments={"param1": "value1"}, data=b"raw-bytes-if-needed")
-response = await room.agents.invoke_request_tool(
-    toolkit="example-toolkit",
-    tool="toolA",
-    request=req,
-)
-```
-</CodeGroup>
-
----
 
 ## Typical Workflow
 
@@ -340,4 +310,4 @@ Specifies how a particular toolkit should be used. It can indicate whether to us
 
 The `AgentsClient` module provides a flexible, high-level API for managing and interacting with agents and toolkits in a distributed or plugin-based environment. Use `AgentsClient` for routine operations—listing toolkits, invoking tools, or calling agents—and rely on the description classes (`ToolDescription` and `ToolkitDescription`) to manage the metadata and validation for those resources.
 
-For more details on the underlying request/response flow, refer to your implementation of `RoomClient`, `Response`, and `JsonResponse`.
+For more details on the underlying request/response flow, refer to your implementation of `RoomClient`, `Response`, and `JsonChunk`.

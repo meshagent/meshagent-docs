@@ -12,7 +12,7 @@ from meshagent.api.helpers import websocket_room_url
 from meshagent.otel import otel_config
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.api.messaging import JsonResponse, TextResponse
+from meshagent.api.messaging import JsonChunk, TextChunk
 
 otel_config(service_name="taskrunner")
 log = logging.getLogger("taskrunner")
@@ -53,9 +53,9 @@ async def run_once(room_name: str, prompt: str):
                 room=room,
                 arguments={"prompt": prompt, "tools": [], "model": None},
             )
-            if isinstance(response, JsonResponse):
+            if isinstance(response, JsonChunk):
                 log.info(response.json)
-            elif isinstance(response, TextResponse):
+            elif isinstance(response, TextChunk):
                 log.info(response.text)
             else:
                 log.info(response)
@@ -67,6 +67,7 @@ async def run_once(room_name: str, prompt: str):
 
 asyncio.run(
     run_once(
-        room_name="quickstart", prompt="Write a product description for a bluetooth speaker"
+        room_name="quickstart",
+        prompt="Write a product description for a bluetooth speaker",
     )
 )

@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import (
@@ -15,7 +15,7 @@ from meshagent.tools.document_tools import (
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.markitdown.tools import MarkItDownToolkit
-from meshagent.api.messaging import TextResponse, JsonResponse
+from meshagent.api.messaging import TextChunk, JsonChunk
 from meshagent.tools import Tool, Toolkit, ToolContext
 from meshagent.otel import otel_config
 
@@ -47,7 +47,7 @@ class WriteTask(Tool):
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
             ],
         )
-        return TextResponse(text="Task added!")
+        return TextChunk(text="Task added!")
 
 
 class GetTasks(Tool):
@@ -65,7 +65,7 @@ class GetTasks(Tool):
         )
 
     async def execute(self, context):
-        return JsonResponse(
+        return JsonChunk(
             json={"values": await context.room.database.search(table="tasks")}
         )
 

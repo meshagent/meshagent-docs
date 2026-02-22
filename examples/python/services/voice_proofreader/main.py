@@ -1,6 +1,6 @@
 from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.tools import Toolkit
 import asyncio
 from meshagent.tools.document_tools import (
@@ -15,7 +15,7 @@ import livekit.agents.cli.log
 
 from meshagent.agents import ListenerContext
 from typing import Optional
-from meshagent.api import Element, JsonResponse
+from meshagent.api import Element, JsonChunk
 from meshagent.api.schema_document import Text
 from meshagent.markitdown.tools import MarkItDownToolkit
 
@@ -178,7 +178,7 @@ class SampleVoiceAgentWithTools(VoiceBot):
                                 },
                             )
 
-                            if isinstance(response, JsonResponse):
+                            if isinstance(response, JsonChunk):
                                 data = response.json
                                 print(response.json)
 

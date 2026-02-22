@@ -46,7 +46,7 @@ async def call_agent(
                 tool=tool_name,
                 arguments=arguments,
             )
-            # Extract JSON data from JsonBody response
+            # Extract JSON data from JsonChunk response
             return result.json if hasattr(result, "json") else result
     except Exception as e:
         log.error(f"Connection failed:{e}")

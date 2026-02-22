@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from meshagent.tools import Tool, ToolContext, RemoteToolkit
-from meshagent.api.messaging import JsonResponse
+from meshagent.api.messaging import JsonChunk
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 from meshagent.agents.llmrunner import LLMTaskRunner
@@ -13,7 +13,7 @@ from meshagent.tools.database import DatabaseToolkitBuilder
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
-log.setLevel(logging.DEBUG) # switch to info later 
+log.setLevel(logging.DEBUG)  # switch to info later
 
 service = ServiceHost()
 
@@ -31,6 +31,7 @@ class ResumeTaskRunner(LLMTaskRunner):
             StorageToolkitBuilder(),
             DatabaseToolkitBuilder(),
         ]
+
 
 # Tool for Mailbot to trigger the resume processing
 class ProcessResume(Tool):
@@ -75,18 +76,20 @@ class ProcessResume(Tool):
             finally:
                 await context.room.storage.close(handle=handle)
         except Exception as e:
-            return JsonResponse(
+            return JsonChunk(
                 json={
                     "status": "error",
                     "error": f"Failed to copy resume: {e}",
                     "attachment_path": attachment_path,
                 }
             )
-        
+
         # Invoke the TaskRunner to process the resume
         DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You must also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information in the candidates table in the database."
 
-        resume_processing_prompt = os.getenv("RESUME_PROCESSING_PROMPT") or DEFAULT_RESUME_PROMPT
+        resume_processing_prompt = (
+            os.getenv("RESUME_PROCESSING_PROMPT") or DEFAULT_RESUME_PROMPT
+        )
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
         runner = ResumeTaskRunner()
@@ -116,11 +119,11 @@ class ProcessResume(Tool):
             open_roles = await context.room.database.search(table="open_roles")
         except Exception as e:
             log.exception("Failed to fetch open roles for scoring: %s", e)
-            return JsonResponse(
+            return JsonChunk(
                 json={
                     "status": "error",
-                    "error": f"Failed to fetch open roles for scoring: {e}"
-                    }
+                    "error": f"Failed to fetch open roles for scoring: {e}",
+                }
             )
 
         if not open_roles:
@@ -137,11 +140,11 @@ class ProcessResume(Tool):
                 log.warning(f"Could not load candidate details for scoring:{e}")
 
             DEFAULT_SCORING_PROMPT = (
-                    "Score the candidate resume stored at {resume_path} against the open role below. "
-                    "Return a score from 1-10 (1=poor fit, 10=perfect fit) and short reasoning. "
-                    "Write the result into the candidate_role_scores table.\n\nOpen role:\n{role}"
-                )
-            
+                "Score the candidate resume stored at {resume_path} against the open role below. "
+                "Return a score from 1-10 (1=poor fit, 10=perfect fit) and short reasoning. "
+                "Write the result into the candidate_role_scores table.\n\nOpen role:\n{role}"
+            )
+
             resume_scoring_prompt_template = (
                 os.getenv("RESUME_SCORING_PROMPT") or DEFAULT_SCORING_PROMPT
             )
@@ -201,17 +204,23 @@ class ProcessResume(Tool):
                         role.get("job_title"),
                         e,
                     )
-                    return {"status": "error", "role": role.get("job_title"), "error": str(e)}
+                    return {
+                        "status": "error",
+                        "role": role.get("job_title"),
+                        "error": str(e),
+                    }
 
             tasks = [asyncio.create_task(score_role(role)) for role in open_roles]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             for role, result in zip(open_roles, results):
                 if isinstance(result, Exception):
                     log.exception(
-                        "Unexpected exception while scoring role %s", role.get("job_title"), exc_info=result
+                        "Unexpected exception while scoring role %s",
+                        role.get("job_title"),
+                        exc_info=result,
                     )
 
-        return JsonResponse(
+        return JsonChunk(
             json={
                 "status": "ok",
                 "resume_path": target_path,
@@ -219,7 +228,8 @@ class ProcessResume(Tool):
                 "candidate_email": candidate_email,
             }
         )
-    
+
+
 @service.path(identity="/mailbot-toolkit", path="/mailbot-toolkit")
 class MailBotToolkit(RemoteToolkit):
     def __init__(self):
@@ -227,9 +237,8 @@ class MailBotToolkit(RemoteToolkit):
             name="mailbot-toolkit",
             title="mailbot-toolkit",
             description="A Toolkit for the MailBot to kickoff resume processing",
-            tools=[
-                ProcessResume()
-            ],
-        )    
+            tools=[ProcessResume()],
+        )
+
 
 asyncio.run(service.run())
