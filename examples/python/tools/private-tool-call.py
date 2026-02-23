@@ -3,7 +3,7 @@ import asyncio
 import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
-from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
 from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
@@ -20,7 +20,7 @@ async def save_to_storage(room, path: str, data: bytes):
     await room.storage.close(handle=handle)
 
 
-class Survey(Tool):
+class Survey(FunctionTool):
     def __init__(self):
         super().__init__(
             name="survey",

@@ -13,7 +13,7 @@ from meshagent.tools.document_tools import (
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.api.messaging import TextContent, JsonContent
-from meshagent.tools import Tool, Toolkit
+from meshagent.tools import FunctionTool, Toolkit
 from meshagent.otel import otel_config
 
 service = ServiceHost()  # port defaults to an available port if not assigned
@@ -23,7 +23,7 @@ otel_config(
 )  # automatically enables telemetry data collection for your agents and tools
 
 
-class WriteTask(Tool):
+class WriteTask(FunctionTool):
     def __init__(self):
         super().__init__(
             name="WriteTask",
@@ -47,7 +47,7 @@ class WriteTask(Tool):
         return TextContent(text="Task added!")
 
 
-class GetTasks(Tool):
+class GetTasks(FunctionTool):
     def __init__(self):
         super().__init__(
             name="GetTasks",

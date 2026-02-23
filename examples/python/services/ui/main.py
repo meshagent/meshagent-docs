@@ -1,4 +1,4 @@
-from meshagent.tools import Tool, RemoteToolkit, Toolkit
+from meshagent.tools import FunctionTool, RemoteToolkit, Toolkit
 from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
 from meshagent.api import MeshDocument
@@ -10,7 +10,7 @@ import asyncio
 service = ServiceHost()
 
 
-class ProductWidget(Tool):
+class ProductWidget(FunctionTool):
     def __init__(self):
         super().__init__(
             name="products",
@@ -77,7 +77,7 @@ class DynamicUI(RemoteToolkit):
         super().__init__(name="renderer", tools=[ProductWidget()])
 
 
-class InsertProductListingTool(Tool):
+class InsertProductListingTool(FunctionTool):
     def __init__(self, thread: MeshDocument):
         self.thread = thread
         super().__init__(

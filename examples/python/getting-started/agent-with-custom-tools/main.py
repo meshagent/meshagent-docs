@@ -17,14 +17,14 @@ from meshagent.tools.document_tools import (
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.messaging import TextContent, JsonContent
-from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.tools import FunctionTool, Toolkit, ToolContext
 
 
 # MeshAgent Service, Tools, and Agent
 service = ServiceHost()
 
 
-class WriteTask(Tool):
+class WriteTask(FunctionTool):
     def __init__(self):
         super().__init__(
             name="WriteTask",
@@ -48,7 +48,7 @@ class WriteTask(Tool):
         return TextContent(text="Task added!")
 
 
-class GetTasks(Tool):
+class GetTasks(FunctionTool):
     def __init__(self):
         super().__init__(
             name="GetTasks",

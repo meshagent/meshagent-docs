@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
 from meshagent.api.messaging import JsonContent
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
@@ -34,7 +34,7 @@ class ResumeTaskRunner(LLMTaskRunner):
 
 
 # Tool for Mailbot to trigger the resume processing
-class ProcessResume(Tool):
+class ProcessResume(FunctionTool):
     def __init__(self):
         super().__init__(
             name="process-resume",
