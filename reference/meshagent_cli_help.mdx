@@ -1301,6 +1301,7 @@ $ meshagent rooms create [OPTIONS]
 * `--name TEXT`: Room name  [required]
 * `--if-not-exists / --no-if-not-exists`: Do not error if the room already exists  [default: no-if-not-exists]
 * `--metadata TEXT`: Optional JSON object for room metadata
+* `--annotations TEXT`: Optional JSON object for room annotations, e.g. &#123;&quot;meshagent.storage.class&quot;:&quot;ephemeral&quot;&#125;
 * `--help`: Show this message and exit.
 
 ### `meshagent rooms delete`
@@ -1336,6 +1337,7 @@ $ meshagent rooms update [OPTIONS]
 * `--id TEXT`: Room ID (preferred)
 * `--name TEXT`
 * `--new-name TEXT`: New room name  [required]
+* `--annotations TEXT`: Optional JSON object for room annotations, e.g. &#123;&quot;meshagent.storage.class&quot;:&quot;ephemeral&quot;&#125;
 * `--help`: Show this message and exit.
 
 ### `meshagent rooms list`
@@ -2836,6 +2838,7 @@ $ meshagent voicebot join [OPTIONS]
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`: Message to send automatically when the bot joins
 * `--auto-greet-prompt TEXT`: Prompt to generate an auto-greet message
+* `--voice TEXT`: OpenAI Realtime voice preset to use
 * `--key TEXT`: an api key to sign the token with
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--help`: Show this message and exit.
@@ -2857,6 +2860,7 @@ $ meshagent voicebot service [OPTIONS]
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`: Message to send automatically when the bot joins
 * `--auto-greet-prompt TEXT`: Prompt to generate an auto-greet message
+* `--voice TEXT`: OpenAI Realtime voice preset to use
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
@@ -2885,6 +2889,7 @@ $ meshagent voicebot spec [OPTIONS]
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`: Message to send automatically when the bot joins
 * `--auto-greet-prompt TEXT`: Prompt to generate an auto-greet message
+* `--voice TEXT`: OpenAI Realtime voice preset to use
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
@@ -2913,6 +2918,7 @@ $ meshagent voicebot deploy [OPTIONS]
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--auto-greet-message TEXT`: Message to send automatically when the bot joins
 * `--auto-greet-prompt TEXT`: Prompt to generate an auto-greet message
+* `--voice TEXT`: OpenAI Realtime voice preset to use
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
@@ -3370,6 +3376,7 @@ $ meshagent mailbot join [OPTIONS]
 * `--database-namespace TEXT`: Use a specific database namespace
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3424,6 +3431,7 @@ $ meshagent mailbot service [OPTIONS]
 * `--database-namespace TEXT`: Use a specific database namespace
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3483,6 +3491,7 @@ $ meshagent mailbot spec [OPTIONS]
 * `--database-namespace TEXT`: Use a specific database namespace
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3542,6 +3551,7 @@ $ meshagent mailbot deploy [OPTIONS]
 * `--database-namespace TEXT`: Use a specific database namespace
 * `--require-table-read TEXT`: Enable table read tools for a specific table
 * `--require-table-write TEXT`: Enable table write tools for a specific table
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3626,6 +3636,7 @@ $ meshagent task-runner join [OPTIONS]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
 * `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3693,6 +3704,7 @@ $ meshagent task-runner run [OPTIONS]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
 * `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -3760,6 +3772,7 @@ $ meshagent task-runner service [OPTIONS]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
@@ -3831,6 +3844,7 @@ $ meshagent task-runner spec [OPTIONS]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
@@ -3901,6 +3915,7 @@ $ meshagent task-runner deploy [OPTIONS]
 * `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
 * `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--shell-image TEXT`: an image tag to use to run shell commands in
@@ -4000,6 +4015,7 @@ $ meshagent worker join [OPTIONS]
 * `--database-namespace TEXT`: Use a specific database namespace (JSON list or dotted)
 * `--require-table-read TEXT`: Enable table read tools for these tables
 * `--require-table-write TEXT`: Enable table write tools for these tables
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -4060,6 +4076,7 @@ $ meshagent worker service [OPTIONS]
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-table-read TEXT`: Require table read tool for table (repeatable)
 * `--require-table-write TEXT`: Require table write tool for table (repeatable)
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -4125,6 +4142,7 @@ $ meshagent worker spec [OPTIONS]
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-table-read TEXT`: Require table read tool for table (repeatable)
 * `--require-table-write TEXT`: Require table write tool for table (repeatable)
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -4189,6 +4207,7 @@ $ meshagent worker deploy [OPTIONS]
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-table-read TEXT`: Require table read tool for table (repeatable)
 * `--require-table-write TEXT`: Require table write tool for table (repeatable)
+* `--require-computer-use / --no-require-computer-use`: Enable computer use (requires computer-use-preview model)  [default: no-require-computer-use]
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
 * `--working-dir TEXT`: The default working directory for shell commands
@@ -4228,6 +4247,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `services`: Manage services in a room
 * `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
+* `memory`: Manage memories in a room
 * `container`: Manage containers and images in a room
 * `sync`: Inspect and update mesh documents in a room
 
@@ -4887,7 +4907,7 @@ $ meshagent room database create [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
-* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
 * `--schema-json TEXT`: Schema JSON as a string
 * `--schema-file TEXT`: Path to schema JSON file
 * `--data-json TEXT`: Initial rows (JSON list)
@@ -4929,8 +4949,8 @@ $ meshagent room database add-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
-* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, test text not null, age int&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector. Vector syntax: vector(size[, element_type]).
-* `--columns-json TEXT`: JSON object of new columns
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
+* `--columns-json TEXT`: JSON object of new columns. Supports DataType JSON including list/struct (e.g. &#x27;&#123;&quot;meta&quot;:&#123;&quot;type&quot;:&quot;struct&quot;,&quot;fields&quot;:&#123;&quot;owner&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;&#125;&#125;&#x27;).
 * `--help`: Show this message and exit.
 
 #### `meshagent room database drop-columns`
@@ -5191,6 +5211,366 @@ $ meshagent room database index-drop [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--name TEXT`: Index name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+### `meshagent room memory`
+
+Manage memories in a room
+
+**Usage**:
+
+```console
+$ meshagent room memory [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List memories in a room namespace.
+* `create`: Create a room memory store.
+* `drop`: Drop a room memory store.
+* `inspect`: Inspect metadata and datasets for a memory.
+* `query`: Run a SQL-like query against memory datasets.
+* `upsert-table`: Upsert records from JSON into memory tables.
+* `upsert-nodes`: Upsert entity nodes into memory.
+* `upsert-relationships`: Upsert relationship edges into memory.
+* `ingest-text`: Extract memory from input text.
+* `ingest-image`: Extract memory from an image.
+* `ingest-file`: Extract memory from local file/text content.
+* `ingest-from-table`: Extract memory from table rows.
+* `ingest-from-storage`: Extract memory from room storage paths.
+* `recall`: Recall entities and relationships from...
+* `optimize`: Optimize memory datasets.
+
+#### `meshagent room memory list`
+
+List memories in a room namespace.
+
+**Usage**:
+
+```console
+$ meshagent room memory list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory create`
+
+Create a room memory store.
+
+**Usage**:
+
+```console
+$ meshagent room memory create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--overwrite`: Overwrite existing memory
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory drop`
+
+Drop a room memory store.
+
+**Usage**:
+
+```console
+$ meshagent room memory drop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--ignore-missing`: Ignore missing memory
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory inspect`
+
+Inspect metadata and datasets for a memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory inspect [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory query`
+
+Run a SQL-like query against memory datasets.
+
+**Usage**:
+
+```console
+$ meshagent room memory query [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-s, --statement TEXT`: Statement, e.g. &quot;MATCH (e:Entity) RETURN e.name LIMIT 10&quot;  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory upsert-table`
+
+Upsert records from JSON into memory tables.
+
+**Usage**:
+
+```console
+$ meshagent room memory upsert-table [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--records-json TEXT`: JSON array of records
+* `--records-file TEXT`: Path to JSON file with records
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--merge / --no-merge`: Merge with existing records  [default: merge]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory upsert-nodes`
+
+Upsert entity nodes into memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory upsert-nodes [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `--records-json TEXT`: JSON array of MemoryEntityRecord objects
+* `--records-file TEXT`: Path to JSON file with entity records
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--merge / --no-merge`: Merge with existing nodes  [default: merge]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory upsert-relationships`
+
+Upsert relationship edges into memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory upsert-relationships [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `--records-json TEXT`: JSON array of MemoryRelationshipRecord objects
+* `--records-file TEXT`: Path to JSON file with relationship records
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--merge / --no-merge`: Merge with existing relationships  [default: merge]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory ingest-text`
+
+Extract memory from input text.
+
+**Usage**:
+
+```console
+$ meshagent room memory ingest-text [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `--text TEXT`: Text content to ingest
+* `-f, --file TEXT`: Path to UTF-8 text file
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--strategy [heuristic|llm]`: Ingest strategy: heuristic or llm  [default: heuristic]
+* `--llm-model TEXT`: Model name for llm strategy
+* `--llm-temperature FLOAT`: Temperature for llm strategy
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory ingest-image`
+
+Extract memory from an image.
+
+**Usage**:
+
+```console
+$ meshagent room memory ingest-image [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-f, --file TEXT`: Path to image file
+* `--caption TEXT`: Optional image caption
+* `--mime-type TEXT`: Image mime type
+* `--source TEXT`: Source identifier/path
+* `--annotations-json TEXT`: Optional JSON map of string annotations, e.g. &#123;&quot;origin&quot;:&quot;camera&quot;&#125;
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--strategy [heuristic|llm]`: Ingest strategy: heuristic or llm  [default: heuristic]
+* `--llm-model TEXT`: Model name for llm strategy
+* `--llm-temperature FLOAT`: Temperature for llm strategy
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory ingest-file`
+
+Extract memory from local file/text content.
+
+**Usage**:
+
+```console
+$ meshagent room memory ingest-file [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `--path TEXT`: File path available to the room server
+* `--text TEXT`: Inline text content
+* `--text-file TEXT`: Path to local UTF-8 text file
+* `--mime-type TEXT`: Optional mime type
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--strategy [heuristic|llm]`: Ingest strategy: heuristic or llm  [default: heuristic]
+* `--llm-model TEXT`: Model name for llm strategy
+* `--llm-temperature FLOAT`: Temperature for llm strategy
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory ingest-from-table`
+
+Extract memory from table rows.
+
+**Usage**:
+
+```console
+$ meshagent room memory ingest-from-table [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-t, --table TEXT`: Source table name  [required]
+* `--text-column TEXT`: Source text columns (repeatable)
+* `--table-namespace TEXT`: Namespace path segments for the source table (repeatable)
+* `--limit INTEGER`: Maximum source rows
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--strategy [heuristic|llm]`: Ingest strategy: heuristic or llm  [default: heuristic]
+* `--llm-model TEXT`: Model name for llm strategy
+* `--llm-temperature FLOAT`: Temperature for llm strategy
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory ingest-from-storage`
+
+Extract memory from room storage paths.
+
+**Usage**:
+
+```console
+$ meshagent room memory ingest-from-storage [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-p, --path TEXT`: Room storage path to ingest (repeatable)  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--strategy [heuristic|llm]`: Ingest strategy: heuristic or llm  [default: heuristic]
+* `--llm-model TEXT`: Model name for llm strategy
+* `--llm-temperature FLOAT`: Temperature for llm strategy
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory recall`
+
+Recall entities and relationships from memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory recall [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-q, --query TEXT`: Recall query text  [required]
+* `--limit INTEGER`: Max entities to return  [default: 5]
+* `--include-relationships / --no-include-relationships`: Include related edges for recalled entities  [default: include-relationships]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory optimize`
+
+Optimize memory datasets.
+
+**Usage**:
+
+```console
+$ meshagent room memory optimize [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--compact / --no-compact`: Compact dataset fragments  [default: compact]
+* `--cleanup / --no-cleanup`: Cleanup old dataset versions  [default: cleanup]
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
 ### `meshagent room container`
