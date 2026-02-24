@@ -1,11 +1,9 @@
-import os
 import logging
 import asyncio
 from meshagent.otel import otel_config
 from meshagent.agents.worker import Worker
 from meshagent.openai.tools import (
     OpenAIResponsesAdapter,
-    OpenAIResponsesToolResponseAdapter,
 )
 from meshagent.api.services import ServiceHost
 from meshagent.tools.storage import StorageToolkit
@@ -24,7 +22,6 @@ class StorageWorker(Worker):
             title="storage worker sample",
             description="this sample reads messages from a queue",
             llm_adapter=OpenAIResponsesAdapter(),
-            tool_adapter=OpenAIResponsesToolResponseAdapter(),
             toolkits=[StorageToolkit()],
             rules=[
                 "you will receive a message with instructions, process it and do what it says",
