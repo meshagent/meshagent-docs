@@ -4829,6 +4829,7 @@ $ meshagent room database [OPTIONS] COMMAND [ARGS]...
 * `update`: Update rows in a room database table.
 * `delete`: Delete rows from a room database table.
 * `search`: Search rows in a room database table.
+* `sql`: Execute SQL against room database tables.
 * `optimize`: Optimize a room database table.
 * `versions`: List versions for a room database table.
 * `checkout`: Check out a room database table at a...
@@ -5076,6 +5077,30 @@ $ meshagent room database search [OPTIONS]
 * `--select TEXT`: Columns to select (repeatable)
 * `--limit INTEGER`: Max rows to return
 * `--offset INTEGER`: Rows to skip
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room database sql`
+
+Execute SQL against room database tables.
+
+**Usage**:
+
+```console
+$ meshagent room database sql [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-q, --query TEXT`: SQL query to execute  [required]
+* `-t, --table TEXT`: Table name to register in SQL context (repeatable)
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--tables-json TEXT`: JSON array of table refs (e.g. &#x27;[&#123;&quot;name&quot;:&quot;users&quot;,&quot;alias&quot;:&quot;u&quot;,&quot;namespace&quot;:[&quot;prod&quot;]&#125;]&#x27;)
+* `--tables-file TEXT`: Path/URL to JSON array of table refs (same format as --tables-json)
+* `--params-json TEXT`: JSON object of SQL parameters for DataFusion param binding
+* `--params-file TEXT`: Path/URL to JSON object of SQL parameters
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
