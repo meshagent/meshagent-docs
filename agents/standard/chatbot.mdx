@@ -245,7 +245,7 @@ All of this happens automatically once your bot is started.
 
 ### Key Behaviors and Hooks
 - **Thread management:** Every conversation lives inside a MeshDocument thread. The ChatBot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
-- **Context building:** `init_chat_context()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
+- **Context building:** `init_session()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
 - **Static tool resolution:** `get_thread_toolkits()` gathers toolkits declared in `requires`, and any always-on toolkits passed through `toolkits`.
 - **Dynamic tool providers:** `get_toolkit_builders()` lists the `ToolkitBuilder` factories the ChatBot is willing to spin up on demand (MCP, storage uploads, local shell, image generation, etc.). The chat UI calls this hook first to learn which tool toggles to display, and later sends back matching configs so the ChatBot can hydrate those toolkits with `make_tools()`.
 - **Message-specific toolkits:** When the user sends a message with a `tools` payload, `make_tools()` combines the selected configs with the provider list to hydrate just the toolkits needed for that turn before the LLM is invoked. (For example, in MeshAgent Studio, when the user selects which tools to add to an agent, these tools are added to the `tools` payload so the agent can use them.)
@@ -256,7 +256,7 @@ All of this happens automatically once your bot is started.
 ### Key Methods
 | Method                                                         | Description                                                                                 |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `async def init_chat_context()`                                | Creates a new chat context using the configured `llm_adapter` and applies rules.            |
+| `async def init_session()`                                     | Creates a new session context using the configured `llm_adapter` and applies rules.            |
 | `async def get_thread_toolkits(thread_context, participant)`   | Resolves all always-on toolkits for a participant, including built-in reasoning tools.      |
 | `def get_toolkit_builders()`                                   | Returns the `ToolkitBuilder` list the UI can offer for message-level tool selection.         |
 | `async def open_thread(path)` / `async def close_thread(path)` | Opens or closes a thread adapter that persists the thread document.                          |
