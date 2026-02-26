@@ -23,6 +23,10 @@ AnthropicMessagesAdapter(
     message_options: Optional[dict] = None,
     provider: str = "anthropic",
     log_requests: bool = False,
+    context_management: Literal["auto", "none"] = "none",
+    compaction_threshold: int = 150000,
+    compaction_pause_after: bool = False,
+    compaction_instructions: Optional[str] = None,
 )
 ```
 - `model` - default model name; can be overridden per call.
@@ -31,6 +35,12 @@ AnthropicMessagesAdapter(
 - `message_options` - extra parameters passed to `messages.create` (for example `temperature`, `top_p`, `tools`, `betas`).
 - `provider` - label emitted in telemetry and logs.
 - `log_requests` - when true, uses a logging HTTP client for debugging.
+- `context_management` - `auto` enables Anthropic beta context management compaction edits only for Claude model versions newer than `4.5` (for example `claude-sonnet-4-6`); `none` disables automatic compaction configuration.
+- `compaction_threshold` - input token threshold for triggering `compact_20260112` when `context_management="auto"` (minimum `50000`).
+- `compaction_pause_after` - when true, compaction can return a `compaction` block and pause before continuing.
+- `compaction_instructions` - optional summarization instructions passed to compaction.
+
+When `context_management="auto"` is enabled, the adapter uses Anthropic's `compact-2026-01-12` beta on `client.beta.messages.*` and injects a `compact_20260112` edit into the request's `context_management`.
 
 ## MCP connector support
 Anthropic's official MCP connector can be enabled by adding an MCP toolkit to your toolkits list. The adapter applies MCP middleware to the request, which injects `mcp_servers` and an MCP toolset into the top-level `tools` array (and ensures the required `betas` flag is present).

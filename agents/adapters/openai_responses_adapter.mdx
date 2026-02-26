@@ -11,7 +11,7 @@ The OpenAI Responses adapter is our reference `LLMAdapter` implementation. It en
 - **Streaming support:** Consumes the streaming response API, emitting events such as reasoning summaries, partial content, and tool call updates.
 - **Parallel tool calls:** Optionally enables OpenAI’s `parallel_tool_calls` setting (disabled automatically for models that do not support it).
 - **Structured output:** If `output_schema` is provided to `next()`, requests JSON schema output and validates the result.
-- **Automatic compaction:** Uses the OpenAI Responses compaction API to shrink the context when the next request would exceed the model window.
+- **Automatic compaction:** Uses OpenAI Responses auto-compaction (`context_management`) by default.
 
 ## Constructor parameters
 ```python Python
@@ -24,6 +24,8 @@ OpenAIResponsesAdapter(
     provider: str = "openai",
     log_requests: bool = False,
     max_output_tokens: Optional[int] = 32000,
+    context_management: Literal["auto", "standalone", "none"] = "auto",
+    compaction_threshold: int = 200000,
 )
 ```
 - `model` – default model name; can be overridden per message.
@@ -34,6 +36,11 @@ OpenAIResponsesAdapter(
 - `provider` – label emitted in telemetry and logs.
 - `log_requests` – when true, logs HTTP requests for debugging.
 - `max_output_tokens` – cap output tokens per response; also used when deciding whether to compact the context.
+- `context_management` – controls compaction behavior:
+  - `auto` attaches `context_management` to each request and lets Responses handle compaction.
+  - `standalone` uses manual `responses.compact` preflight in the adapter.
+  - `none` disables both auto and manual compaction.
+- `compaction_threshold` – threshold used for compaction (`compact_threshold` in Responses `context_management` entries and manual preflight trigger in `standalone` mode).
 
 ## Tool provider integration
 The adapter includes several builders and tools for OpenAI native tools. Agents can use them directly, or override them with agent-specific wrappers that add persistence (for example, the ChatBot’s thread-aware image generation builder that saves partial/final images to room storage and updates the thread document).
@@ -56,7 +63,13 @@ When `next()` is called it:
 6. **Returns Result** - Gives you the final output (text or structured data)
 
 ## Context compaction
-`OpenAIResponsesAdapter` stores token usage from the last response in the chat context metadata. Before issuing the next request it checks whether the prior input + output usage would overflow the model's context window (while reserving `max_output_tokens` for the reply). If so, it calls `responses.compact`, replaces the context messages with the compacted output, and then proceeds with the new request. This is automatic; you do not need to call compaction manually.
+`OpenAIResponsesAdapter` defaults to `context_management="auto"` and sends:
+
+`context_management=[{"type":"compaction","compact_threshold":200000}]`
+
+You can switch to:
+- `context_management="standalone"` to use manual `responses.compact` before a turn when usage crosses the threshold.
+- `context_management="none"` to disable compaction management.
 
 ## Related Topics
 - [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters
