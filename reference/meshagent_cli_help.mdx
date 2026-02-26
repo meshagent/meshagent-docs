@@ -5304,6 +5304,8 @@ $ meshagent room memory [OPTIONS] COMMAND [ARGS]...
 * `ingest-from-table`: Extract memory from table rows.
 * `ingest-from-storage`: Extract memory from room storage paths.
 * `recall`: Recall entities and relationships from...
+* `delete-entities`: Delete entities (and related edges) from...
+* `delete-relationships`: Delete relationship edges from memory.
 * `optimize`: Optimize memory datasets.
 
 #### `meshagent room memory list`
@@ -5609,6 +5611,47 @@ $ meshagent room memory recall [OPTIONS]
 * `-q, --query TEXT`: Recall query text  [required]
 * `--limit INTEGER`: Max entities to return  [default: 5]
 * `--include-relationships / --no-include-relationships`: Include related edges for recalled entities  [default: include-relationships]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory delete-entities`
+
+Delete entities (and related edges) from memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory delete-entities [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-e, --entity-id TEXT`: Entity ID to delete (repeatable)  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory delete-relationships`
+
+Delete relationship edges from memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory delete-relationships [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `--records-json TEXT`: JSON array of MemoryRelationshipSelector objects
+* `--records-file TEXT`: Path to JSON file with relationship selectors
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
