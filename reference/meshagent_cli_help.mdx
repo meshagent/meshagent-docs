@@ -5298,6 +5298,7 @@ $ meshagent room memory [OPTIONS] COMMAND [ARGS]...
 * `upsert-table`: Upsert records from JSON into memory tables.
 * `upsert-nodes`: Upsert entity nodes into memory.
 * `upsert-relationships`: Upsert relationship edges into memory.
+* `import`: Import entities and relationships from a...
 * `ingest-text`: Extract memory from input text.
 * `ingest-image`: Extract memory from an image.
 * `ingest-file`: Extract memory from local file/text content.
@@ -5465,6 +5466,31 @@ $ meshagent room memory upsert-relationships [OPTIONS]
 * `--records-file TEXT`: Path to JSON file with relationship records
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--merge / --no-merge`: Merge with existing relationships  [default: merge]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory import`
+
+Import entities and relationships from a FalkorDB dump.rdb file.
+
+**Usage**:
+
+```console
+$ meshagent room memory import [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-m, --name TEXT`: Memory name  [required]
+* `-f, --rdb-file PATH`: Path to FalkorDB dump.rdb file  [required]
+* `--graph-name TEXT`: FalkorDB graph key name. Auto-detected when unambiguous.
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--merge / --no-merge`: Merge with existing records  [default: merge]
+* `--batch-size INTEGER RANGE`: Rows per GRAPH.QUERY batch while importing  [default: 250; x&gt;=1]
+* `--docker-image TEXT`: Docker image to use for temporary FalkorDB container  [default: falkordb/falkordb:latest]
+* `--startup-timeout-seconds FLOAT RANGE`: Max seconds to wait for FalkorDB startup  [default: 30.0; x&gt;=1.0]
+* `--create-memory / --no-create-memory`: Create the target memory when missing  [default: create-memory]
 * `--help`: Show this message and exit.
 
 #### `meshagent room memory ingest-text`
@@ -5891,6 +5917,7 @@ $ meshagent room sync [OPTIONS] COMMAND [ARGS]...
 * `inspect`: Print the document schema JSON
 * `create`: Create a new document at a path
 * `update`: Apply a JSON patch to a document
+* `import`: Import external exports into room documents
 
 #### `meshagent room sync show`
 
@@ -6004,5 +6031,46 @@ $ meshagent room sync update [OPTIONS] PATH
 * `--room TEXT`: Room name  [required]
 * `--patch TEXT`: JSON patch array
 * `--patch-file PATH`: Path to JSON patch array
+* `--help`: Show this message and exit.
+
+#### `meshagent room sync import`
+
+Import external exports into room documents
+
+**Usage**:
+
+```console
+$ meshagent room sync import [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `threads`: Import Anthropic Claude GDPR conversations...
+
+##### `meshagent room sync import threads`
+
+Import Anthropic Claude GDPR conversations into room thread documents.
+
+**Usage**:
+
+```console
+$ meshagent room sync import threads [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-f, --file PATH`: Path to Claude GDPR conversations.json  [required]
+* `--thread-dir TEXT`: Directory where imported .thread files will be stored  [default: .threads/anthropic]
+* `--overwrite`: Overwrite existing imported thread files
+* `--limit INTEGER RANGE`: Maximum number of conversations to import  [x&gt;=1]
+* `--user-name, --human-name TEXT`: Author name used for user/human messages  [default: human]
+* `--assistant-name TEXT`: Author name used for assistant messages  [default: assistant]
+* `--include-empty-messages`: Include messages that normalize to empty text
 * `--help`: Show this message and exit.
 
