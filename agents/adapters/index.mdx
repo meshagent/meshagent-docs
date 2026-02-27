@@ -61,13 +61,13 @@ LLM adapters can optionally compact a chat context before a new request when the
 4. **Be mindful of cancellation and telemetry.** Make appropriate operations async, apply appropriate timeouts/retries, and emit tracing data if you integrate with OpenTelemetry (the base adapters do).
 
 ## `ToolResponseAdapter`
-While `LLMAdapter` talks to the model, a `ToolResponseAdapter` decides how to surface tool outputs to the ongoing conversation and exposes a plain-text view when the host needs one. Every tool invocation returns a `Response` (`TextResponse`, `JsonResponse`, `FileResponse`, `LinkResponse`, `EmptyResponse`, `ErrorResponse`, `RawOutputs`, etc.). The adapter translates that object into the concrete payloads that should be appended to the chat context and, optionally, into a readable string.
+While `LLMAdapter` talks to the model, a `ToolResponseAdapter` decides how to surface tool outputs to the ongoing conversation and exposes a plain-text view when the host needs one. Every tool invocation returns a `Response` (`TextChunk`, `JsonChunk`, `FileChunk`, `LinkChunk`, `EmptyChunk`, `ErrorChunk`, `RawOutputsChunk`, etc.). The adapter translates that object into the concrete payloads that should be appended to the chat context and, optionally, into a readable string.
 
 ### Core responsibilities
 - **Chat context updates:** Return message objects from `create_messages` that the LLM adapter will append to the conversation. The structure is provider-specific (for OpenAI Responses the payloads are `{"type": "function_call_output", ...}` objects rather than assistant-role messages).
 - **Plain-text representation:** Provide a best-effort human-readable string via `to_plain_text`. Callers decide if and where to display it.
-- **Attachment handling:** Convert `FileResponse`, `LinkResponse`, or other rich responses into whatever metadata the LLM provider expects (e.g., base64-encoded blobs or image inputs for OpenAI Responses).
-- **Passthrough outputs:** Some adapters support provider-native payloads (like `RawOutputs`) for cases where you already have the final message objects.
+- **Attachment handling:** Convert `FileChunk`, `LinkChunk`, or other rich responses into whatever metadata the LLM provider expects (e.g., base64-encoded blobs or image inputs for OpenAI Responses).
+- **Passthrough outputs:** Some adapters support provider-native payloads (like `RawOutputsChunk`) for cases where you already have the final message objects.
 
 ### Base interface
 ```python Python

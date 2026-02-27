@@ -6,7 +6,7 @@ from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.livekit.agents.voice import VoiceBot
@@ -17,15 +17,15 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
-from meshagent.api.messaging import TextResponse, JsonResponse
-from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.api.messaging import TextContent, JsonContent
+from meshagent.tools import FunctionTool, Toolkit, ToolContext
 
 
 # MeshAgent Service, Tools, and Agent
 service = ServiceHost()
 
 
-class WriteTask(Tool):
+class WriteTask(FunctionTool):
     def __init__(self):
         super().__init__(
             name="WriteTask",
@@ -46,10 +46,10 @@ class WriteTask(Tool):
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
             ],
         )
-        return TextResponse(text="Task added!")
+        return TextContent(text="Task added!")
 
 
-class GetTasks(Tool):
+class GetTasks(FunctionTool):
     def __init__(self):
         super().__init__(
             name="GetTasks",
@@ -64,7 +64,7 @@ class GetTasks(Tool):
         )
 
     async def execute(self, context):
-        return JsonResponse(
+        return JsonContent(
             json={"values": await context.room.database.search(table="tasks")}
         )
 

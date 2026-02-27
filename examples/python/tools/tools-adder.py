@@ -1,13 +1,13 @@
 import asyncio
 from meshagent.api.services import ServiceHost
-from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
 from meshagent.otel import otel_config
 
 otel_config(service_name="math_tools")
 service = ServiceHost()
 
 
-class Add(Tool):
+class Add(FunctionTool):
     def __init__(self):
         super().__init__(
             name="add",
@@ -30,7 +30,7 @@ class Add(Tool):
         return result
 
 
-class Subtract(Tool):
+class Subtract(FunctionTool):
     def __init__(self):
         super().__init__(
             name="subtract",

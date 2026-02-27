@@ -45,7 +45,7 @@ async def invoke_taskrunner(room_name: str, prompt: str):
             response = await room.agents.invoke_tool(
                 toolkit="llmtaskrunner",
                 tool="run_llmtaskrunner_task",
-                arguments={"prompt": prompt, "tools": [], "model": None},
+                input={"prompt": prompt, "tools": [], "model": None},
             )
             log.info(f"Response: {response}")
             return response

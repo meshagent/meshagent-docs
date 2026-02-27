@@ -235,7 +235,7 @@ A ``Worker`` accepts everything from ``SingleRoomAgent`` (``title``, ``descripti
 1. Wait for work (long-polling). The worker listens for jobs using: ``message = await room.queues.receive(name=self._queue, create=True, wait=True)``
     With ``wait=True``, the call long-polls the queue: instead of returning immediately when the queue is empty, it waits asynchronously for a short window until a message arrives (or the wait times out). This is more efficient than tight polling and ensures the worker can pick up jobs immediately when they’re published.
 
-2. Build context and tools. Create a fresh chat context (``init_chat_context()``), apply any rules, and resolve toolkits from requires plus local toolkits.
+2. Build context and tools. Create a fresh chat context (``init_session()``), apply any rules, and resolve toolkits from requires plus local toolkits.
 3. Represent the job in context. By default, ``append_message_context(...)`` serializes the message as a user message (JSON). Override this to customize how the payload is injected.
 4. Process the job. ``process_message(...)`` runs the task (default implementation calls your ``llm_adapter.next()`` with the prepared context and toolkits).
 5. Handle errors & keep running. Errors are logged. On receive failures, the loop backs off exponentially and retries; otherwise it immediately waits for the next message.

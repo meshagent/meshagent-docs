@@ -1,9 +1,8 @@
-import time
 import asyncio
 import httpx
 import logging
 from meshagent.api.services import ServiceHost
-from meshagent.tools import Tool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
 from meshagent.otel import otel_config
 from opentelemetry import trace, metrics
 from opentelemetry.trace import Status, StatusCode
@@ -24,7 +23,7 @@ errors = meter.create_counter(
 )
 
 
-class WeatherTool(Tool):
+class WeatherTool(FunctionTool):
     def __init__(self):
         super().__init__(
             name="get_weather",
@@ -73,7 +72,6 @@ class WeatherTool(Tool):
             span.set_attribute("http.url", api_url)
             span.set_attribute("http.method", "GET")
             span.set_attribute("api.provider", "wttr.in")
-            start = time.perf_counter()
 
             span.add_event("api_request_start")
 

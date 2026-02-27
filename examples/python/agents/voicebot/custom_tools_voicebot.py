@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.livekit.agents.voice import VoiceBot
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import (
@@ -15,8 +15,8 @@ from meshagent.tools.document_tools import (
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.markitdown.tools import MarkItDownToolkit
-from meshagent.api.messaging import TextResponse, JsonResponse
-from meshagent.tools import Tool, Toolkit, ToolContext
+from meshagent.api.messaging import TextContent, JsonContent
+from meshagent.tools import FunctionTool, Toolkit, ToolContext
 from meshagent.otel import otel_config
 
 service = ServiceHost()
@@ -26,7 +26,7 @@ otel_config(
 )  # automatically enables telemetry data collection for your agents and tools
 
 
-class WriteTask(Tool):
+class WriteTask(FunctionTool):
     def __init__(self):
         super().__init__(
             name="WriteTask",
@@ -47,10 +47,10 @@ class WriteTask(Tool):
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
             ],
         )
-        return TextResponse(text="Task added!")
+        return TextContent(text="Task added!")
 
 
-class GetTasks(Tool):
+class GetTasks(FunctionTool):
     def __init__(self):
         super().__init__(
             name="GetTasks",
@@ -65,7 +65,7 @@ class GetTasks(Tool):
         )
 
     async def execute(self, context):
-        return JsonResponse(
+        return JsonContent(
             json={"values": await context.room.database.search(table="tasks")}
         )
 
