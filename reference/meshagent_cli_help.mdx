@@ -34,6 +34,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `rooms`: Create, list, and manage rooms in a project
 * `mailbox`: Manage mailboxes for your project
 * `route`: Manage routes for your project
+* `scheduled-task`: Manage scheduled tasks for your project
 * `meeting-transcriber`: Join a meeting transcriber to a room
 * `port`: Port forwarding into room containers
 * `webserver`: Run an HTTP webserver connected to a...
@@ -1634,6 +1635,48 @@ $ meshagent route delete [OPTIONS] DOMAIN
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent scheduled-task`
+
+Manage scheduled tasks for your project
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `add`: Add a scheduled task.
+
+### `meshagent scheduled-task add`
+
+Add a scheduled task.
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task add [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-r, --room TEXT`: Room name
+* `-q, --queue TEXT`: Queue name to dispatch the task to  [required]
+* `-s, --schedule TEXT`: Cron schedule for task execution  [required]
+* `--payload TEXT`: JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
+* `--payload-file TEXT`: Path to a file containing JSON payload
+* `--id TEXT`: Optional task id
+* `--once`: Run once and then deactivate
+* `--active / --inactive`: Initial active state  [default: active]
+* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
 ## `meshagent meeting-transcriber`
