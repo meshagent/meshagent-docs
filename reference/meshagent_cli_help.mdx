@@ -592,6 +592,8 @@ $ meshagent service [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `spec`: Render a service or template YAML spec...
+* `service-id`: Render YAML with meshagent.service.id...
 * `create`: Create a service attached to the project.
 * `update`: Create a service attached to the project.
 * `validate`: Validate a service spec from a YAML file.
@@ -602,6 +604,43 @@ $ meshagent service [OPTIONS] COMMAND [ARGS]...
 * `show`: Show a services for the project.
 * `list`: List all services for the project.
 * `delete`: Delete a service.
+
+### `meshagent service spec`
+
+Render a service or template YAML spec without creating a service.
+
+**Usage**:
+
+```console
+$ meshagent service spec [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: File path to a service definition
+* `--url TEXT`: URL to a service definition
+* `--mcp TEXT`: MCP server URL. Auto-discovers metadata and generates a service spec without creating it.
+* `--format [service|template]`: Output format. &#x27;service&#x27; emits Service YAML. &#x27;template&#x27; emits ServiceTemplate YAML.  [default: service]
+* `--help`: Show this message and exit.
+
+### `meshagent service service-id`
+
+Render YAML with meshagent.service.id annotation applied.
+
+**Usage**:
+
+```console
+$ meshagent service service-id [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: File path to a service definition
+* `--url TEXT`: URL to a service definition
+* `--mcp TEXT`: MCP server URL. Auto-discovers metadata and generates a spec before adding meshagent.service.id.
+* `--service-id TEXT`: Value for meshagent.service.id. Defaults to metadata.name when omitted.
+* `--format [service|template]`: Output format. &#x27;service&#x27; emits Service YAML. &#x27;template&#x27; emits ServiceTemplate YAML.  [default: service]
+* `--help`: Show this message and exit.
 
 ### `meshagent service create`
 
@@ -618,6 +657,7 @@ $ meshagent service create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
+* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and creates an external MCP service configured for dynamic client registration.
 * `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
@@ -637,6 +677,7 @@ $ meshagent service update [OPTIONS]
 * `--id TEXT`
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
+* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and builds an external MCP service configured for dynamic client registration.
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
 * `--room TEXT`: Room name
 * `--help`: Show this message and exit.
