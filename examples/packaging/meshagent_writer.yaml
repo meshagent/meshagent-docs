@@ -1,0 +1,177 @@
+version: v1
+kind: ServiceTemplate
+variables:
+  - name: email
+    type: email
+    description: "Email address for the mailbot (e.g. writer@mail.meshagent.com)."
+  - name: notification_email
+    description: "Recipient email for completion notifications."
+
+metadata:
+  name: meshagent_writer
+  description: "Codex-based writer that drafts MeshAgent SDK tutorials and blog posts."
+  annotations:
+    meshagent.service.id: "meshagent_writer"
+    meshagent.service.readme: "Nightly example generator."
+
+agents:
+  - name: meshagent_writer
+    description: "Chatbot that drafts or triggers tutorial jobs."
+    annotations:
+      meshagent.agent.type: "ChatBot"
+      # meshagent.chatbot.threading: default-new
+  - name: meshagent_writer
+    description: "Mailbot for inbound requests and outbound notifications."
+    annotations:
+      meshagent.agent.type: "MailBot"
+  - name: meshagent_writer
+    description: "Nightly worker that writes a beginner tutorial blog post."
+    annotations:
+      meshagent.agent.type: "Worker"
+      meshagent.agent.schedule: '{"schedule":"0 2 * * *","queue":"meshagent_writer_jobs","name":"NightlyMeshAgentWriter","payload":{"prompt":"Create a beginner MeshAgent SDK tutorial blog post. Choose one SDK area (for example, Room API) and one concrete item (for example, database). Explain what it is, how it works, and what it can do. Provide CLI-first setup steps, schema creation, and usage examples, then add a simple agent example that uses it. Test the steps so you know that the guide works and note any assumptions. Save the blog to /data/blogs/<topic>.md."}}'
+
+container:
+  image: meshagent/shell-codex:default
+  command: /bin/bash /var/start.sh
+  storage:
+    room:
+      - path: /data
+        read_only: false
+    files:
+      - path: /var/start.sh
+        text: |
+          #!/bin/bash
+          set -e
+
+          mkdir -p /data/skills
+          if [ -d /skills ]; then
+            cp -R -n /skills/* /data/skills/ 2>/dev/null || true
+          fi
+
+          skill_args=()
+          while IFS= read -r -d '' skill_md; do
+            skill_dir="$(dirname "$skill_md")"
+            skill_args+=(--skill-dir "$skill_dir")
+          done < <(find /data/skills -type f -iname 'skill.md' -print0)
+
+          skill_args_str="${skill_args[*]}"
+
+          /usr/bin/meshagent codex chatbot join \
+            --agent-name=meshagent_writer \
+            --model=gpt-5-codex \
+            --threading-mode=default-new \
+            --mount-room-path=/:/data:rw \
+            --working-dir=/data \
+            --require-toolkit=email \
+            --mode=yolo \
+            --delegate-shell-token \
+            --room="${MESHAGENT_ROOM}" \
+            ${skill_args_str} \
+            --rule='You are a MeshAgent tutorial writer. The MeshAgent SDK source is available at /src/meshagent-sdk, use it as the source of truth for APIs and CLI examples.' \
+            --rule='You help write beginner-friendly blog posts about MeshAgent, when writing blogs include CLI-first steps and save each draft to /data/blogs/<topic>.md. Mention the saved path in your reply.' \
+            --rule='When asked to run the nightly job on-demand, use the shell tool to send a JSON payload to the meshagent_writer_jobs queue via meshagent room queue send.' \
+            --rule='when building, copy the source to be built into /build to build inside your container, and copy output back to a folder within /data for the user to find it' \
+            --rule='the mount in /data is a FUSE mount, so avoid using it for operations which are problematic on a FUSE mount' \
+            --rule='The root of the filesystem that the user sees (the Room files) has been mounted in the /data folder. If the user is currently viewing a file, the file path is relative to /data. To write a file the user can see, you must write it inside /data and tell them the path, relative to /data, not including the data folder.' &
+          chatbot_pid=$!
+
+          /usr/bin/meshagent mailbot join \
+            --agent-name=meshagent_writer \
+            --queue={{email}} \
+            --email-address={{email}} \
+            --toolkit-name=email \
+            --require-storage \
+            --storage-tool-room-path=/:/data \
+            --room="${MESHAGENT_ROOM}" \
+            --rule='You send updates about MeshAgent blogs.' &
+          mailbot_pid=$!
+
+          /usr/bin/meshagent codex worker join \
+            --agent-name=meshagent_writer \
+            --queue=meshagent_writer_jobs \
+            --model=gpt-5.3-codex \
+            --mount-room-path=/:/data:rw \
+            --working-dir=/data \
+            --require-toolkit=email \
+            --mode=yolo \
+            --delegate-shell-token \
+            --room="${MESHAGENT_ROOM}" \
+            ${skill_args_str} \
+            --rule='You are a MeshAgent tutorial writer. The MeshAgent SDK source is available at /src/meshagent-sdk, use it as the source of truth for APIs and CLI examples.' \
+            --rule='Each job produces a beginner tutorial blog post. Choose one SDK area and one item, explain what it is, how it works, and what it can do, then show CLI-first steps including setup, schema, and usage. Add a simple agent example that uses the item. Test steps when possible and note any assumptions.' \
+            --rule='when building, copy the source to be built into /build to build inside your container, and copy output back to a folder within /data for the user to find it' \
+            --rule='the mount in /data is a FUSE mount, so avoid using it for operations which are problematic on a FUSE mount' \
+            --rule='Save the blog to /data/blogs/<topic>.md and include a short completion summary in the job output.' \
+            --rule='Send a short completion email with the file path to {{notification_email}} using the email toolkit.' &
+          worker_pid=$!
+
+          wait "$chatbot_pid" "$mailbot_pid" "$worker_pid"
+
+      - path: /skills/creating-meshagent-examples/SKILL.md
+        text: |
+          ---
+          name: creating-meshagent-examples
+          description: Draft beginner MeshAgent SDK tutorials by inspecting the SDK, validating steps, and publishing a CLI-first blog post.
+          ---
+
+          # Creating MeshAgent Examples
+
+          Use this skill when the task is to create a new MeshAgent SDK tutorial or blog post.
+
+          ## Goal
+
+          Produce a beginner-friendly tutorial that explains a single MeshAgent SDK concept and shows how to build, test, and deploy a small example. Prefer CLI steps over long code samples when possible.
+
+          ## Process
+
+          1. Pick a focused area (example: Room API) and one concrete item (example: database).
+          2. Read the MeshAgent SDK source under /src/meshagent-sdk to confirm behavior and APIs.
+          3. Design a minimal, working example and list prerequisites.
+          4. Test the example steps in the shell when possible. If a step cannot be run, state the assumption.
+          5. Write the blog post for beginners with short explanations and clear steps.
+
+          ## Required Sections
+
+          - What the item is and when to use it.
+          - How it works at a high level.
+          - CLI-first setup steps (create, inspect, update).
+          - A simple schema or configuration example.
+          - A short agent example that uses the item.
+          - How to run or deploy the example.
+          - Next steps or variations.
+
+          ## Output
+
+          - Save the blog post as markdown to /data/blogs/<topic>.md.
+          - Include the file path in the response.
+          - If an email toolkit and a notification address are available, send a short completion note with the file path.
+
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: meshagent_writer
+        api:
+          livekit: {}
+          queues:
+            list: true
+          messaging:
+            broadcast: true
+            list: true
+            send: true
+          database:
+            list_tables: true
+          sync: {}
+          storage: {}
+          containers:
+            logs: true
+            use_containers: true
+          developer:
+            logs: true
+          agents:
+            register_agent: true
+            register_public_toolkit: true
+            register_private_toolkit: true
+            call: true
+            use_agents: true
+            use_tools: true
+            allowed_toolkits: null
