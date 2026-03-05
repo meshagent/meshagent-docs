@@ -2564,6 +2564,9 @@ $ meshagent codex worker join [OPTIONS]
 * `--description TEXT`: A description for the worker
 * `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
 * `--prompt TEXT`: Override prompt used for each message
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
 * `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2604,6 +2607,9 @@ $ meshagent codex worker service [OPTIONS]
 * `--description TEXT`: A description for the worker
 * `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
 * `--prompt TEXT`: Override prompt used for each message
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
 * `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2651,6 +2657,9 @@ $ meshagent codex worker spec [OPTIONS]
 * `--description TEXT`: A description for the worker
 * `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
 * `--prompt TEXT`: Override prompt used for each message
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
 * `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -2700,6 +2709,9 @@ $ meshagent codex worker deploy [OPTIONS]
 * `--description TEXT`: A description for the worker
 * `--supports-context / --no-supports-context`: Whether to merge caller context messages  [default: supports-context]
 * `--prompt TEXT`: Override prompt used for each message
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--toolkit-name TEXT`: Optional toolkit name to expose worker operations
 * `-r, --rule TEXT`: A system rule
 * `-rr, --room-rules TEXT`: A path to a rules file within the room that can be used to customize the agent&#x27;s behavior
@@ -4073,6 +4085,11 @@ $ meshagent worker join [OPTIONS]
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.2]
+* `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
+* `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
 * `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
@@ -4134,6 +4151,11 @@ $ meshagent worker service [OPTIONS]
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.2]
+* `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
+* `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
@@ -4202,6 +4224,11 @@ $ meshagent worker spec [OPTIONS]
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.2]
+* `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
+* `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
@@ -4267,6 +4294,11 @@ $ meshagent worker deploy [OPTIONS]
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-rs, --require-schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.2]
+* `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
+* `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
+* `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
+* `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
+* `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
 * `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
 * `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
