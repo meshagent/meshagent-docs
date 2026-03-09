@@ -30,6 +30,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
 * `secret`: Manage secrets for your project.
+* `helper`: Developer helper services
 * `helpers`: Developer helper services
 * `rooms`: Create, list, and manage rooms in a project
 * `mailbox`: Manage mailboxes for your project
@@ -987,6 +988,7 @@ $ meshagent secret [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List all secrets in the project (typed as...
 * `delete`: Delete a secret.
+* `key`: Create or update environment-based...
 * `keys`: Create or update environment-based...
 * `docker`: Create or update a Docker registry pull...
 * `acr`: Create or update an Azure Container...
@@ -1024,6 +1026,60 @@ $ meshagent secret delete [OPTIONS] SECRET_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secret key`
+
+Create or update environment-based key-value secrets.
+
+**Usage**:
+
+```console
+$ meshagent secret key [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a new &#x27;keys&#x27; secret (opaque env-vars).
+* `update`: Update an existing &#x27;keys&#x27; secret (opaque...
+
+#### `meshagent secret key create`
+
+Create a new &#x27;keys&#x27; secret (opaque env-vars).
+
+**Usage**:
+
+```console
+$ meshagent secret key create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Secret name  [required]
+* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent secret key update`
+
+Update an existing &#x27;keys&#x27; secret (opaque env-vars).
+
+**Usage**:
+
+```console
+$ meshagent secret key update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--secret-id TEXT`: Existing secret ID  [required]
+* `--name TEXT`: Secret name  [required]
+* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
 * `--help`: Show this message and exit.
 
 ### `meshagent secret keys`
@@ -1254,6 +1310,38 @@ $ meshagent secret gar update [OPTIONS]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
 * `--json-key TEXT`: Entire GCP service account JSON as string  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent helper`
+
+Developer helper services
+
+**Usage**:
+
+```console
+$ meshagent helper [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `service`: Run local helper HTTP services
+
+### `meshagent helper service`
+
+Run local helper HTTP services
+
+**Usage**:
+
+```console
+$ meshagent helper service [OPTIONS]
+```
+
+**Options**:
+
 * `--help`: Show this message and exit.
 
 ## `meshagent helpers`
@@ -4361,17 +4449,80 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `agent`: Interact with agents and toolkits
 * `agents`: Interact with agents and toolkits
+* `secret`: Manage secrets for your project
 * `secrets`: Manage secrets for your project
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages
 * `storage`: Manage storage for a room
+* `service`: Manage services in a room
 * `services`: Manage services in a room
 * `developer`: Developer utilities for a room
 * `database`: Manage database tables in a room
 * `memory`: Manage memories in a room
 * `container`: Manage containers and images in a room
 * `sync`: Inspect and update mesh documents in a room
+
+### `meshagent room agent`
+
+Interact with agents and toolkits
+
+**Usage**:
+
+```console
+$ meshagent room agent [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `invoke-tool`: Invoke a specific tool from a toolkit
+* `list-toolkits`: List toolkits (and tools) available in the...
+
+#### `meshagent room agent invoke-tool`
+
+Invoke a specific tool from a toolkit
+
+**Usage**:
+
+```console
+$ meshagent room agent invoke-tool [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--toolkit TEXT`: Toolkit name  [required]
+* `--tool TEXT`: Tool name  [required]
+* `--arguments TEXT`: JSON string with arguments for the tool  [required]
+* `--participant-id TEXT`: Optional participant ID to invoke the tool on
+* `--on-behalf-of-id TEXT`: Optional &#x27;on_behalf_of&#x27; participant ID
+* `--caller-context TEXT`: Optional JSON for caller context
+* `--timeout INTEGER`: How long to wait for the toolkit if the toolkit is not in the room  [default: 30]
+* `--help`: Show this message and exit.
+
+#### `meshagent room agent list-toolkits`
+
+List toolkits (and tools) available in the room
+
+**Usage**:
+
+```console
+$ meshagent room agent list-toolkits [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--role TEXT`: [default: user]
+* `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
 
 ### `meshagent room agents`
 
@@ -4431,6 +4582,155 @@ $ meshagent room agents list-toolkits [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
+
+### `meshagent room secret`
+
+Manage secrets for your project
+
+**Usage**:
+
+```console
+$ meshagent room secret [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `oauth`: Request an OAuth token from another...
+* `request`: Request a secret from another participant.
+* `get`: Fetch a stored secret by ID.
+* `set`: Store a secret by ID.
+* `list`: List secrets in the room.
+* `delete`: Delete a secret by ID.
+
+#### `meshagent room secret oauth`
+
+Request an OAuth token from another participant.
+
+**Usage**:
+
+```console
+$ meshagent room secret oauth [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--from-participant-id TEXT`: Participant ID to request the token from  [required]
+* `--client-id TEXT`: OAuth client ID  [required]
+* `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
+* `--token-endpoint TEXT`: OAuth token endpoint URL  [required]
+* `--scopes TEXT`: Comma-separated OAuth scopes
+* `--client-secret TEXT`: OAuth client secret (if required)  [required]
+* `--redirect-uri TEXT`: Redirect URI for the OAuth flow  [required]
+* `--pkce / --no-pkce`: Use PKCE (recommended)  [default: pkce]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secret request`
+
+Request a secret from another participant.
+
+**Usage**:
+
+```console
+$ meshagent room secret request [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
+* `--url TEXT`: Secret URL identifier  [required]
+* `--type TEXT`: Secret type  [default: application/octet-stream]
+* `--delegate-to TEXT`: Delegate secret to this participant name
+* `--timeout INTEGER`: Timeout in seconds  [default: 300]
+* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secret get`
+
+Fetch a stored secret by ID.
+
+**Usage**:
+
+```console
+$ meshagent room secret get [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Secret ID  [required]
+* `--delegated-to TEXT`: Fetch a secret delegated to this participant name
+* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secret set`
+
+Store a secret by ID.
+
+**Usage**:
+
+```console
+$ meshagent room secret set [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Secret ID  [required]
+* `--type TEXT`: Secret type
+* `--name TEXT`: Optional secret name
+* `--delegated-to TEXT`: Store a secret delegated to this participant name
+* `--for-identity TEXT`: Store a secret for a specific identity
+* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin
+* `--text TEXT`: Provide secret as UTF-8 text
+* `--base64 TEXT`: Provide secret as base64-encoded data
+* `--help`: Show this message and exit.
+
+#### `meshagent room secret list`
+
+List secrets in the room.
+
+**Usage**:
+
+```console
+$ meshagent room secret list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent room secret delete`
+
+Delete a secret by ID.
+
+**Usage**:
+
+```console
+$ meshagent room secret delete [OPTIONS] ID
+```
+
+**Arguments**:
+
+* `ID`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
 ### `meshagent room secrets`
@@ -4835,6 +5135,60 @@ $ meshagent room storage ls [OPTIONS] PATH
 * `-r`: List subfolders/files recursively
 * `--help`: Show this message and exit.
 
+### `meshagent room service`
+
+Manage services in a room
+
+**Usage**:
+
+```console
+$ meshagent room service [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List services running in a room
+* `restart`: Restart a running room service by stopping...
+
+#### `meshagent room service list`
+
+List services running in a room
+
+**Usage**:
+
+```console
+$ meshagent room service list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent room service restart`
+
+Restart a running room service by stopping its current container.
+
+**Usage**:
+
+```console
+$ meshagent room service restart [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Service ID to restart
+* `--name TEXT`: Service name to restart
+* `--help`: Show this message and exit.
+
 ### `meshagent room services`
 
 Manage services in a room
@@ -4940,6 +5294,7 @@ $ meshagent room database [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `table`: List database tables in a room.
 * `tables`: List database tables in a room.
 * `inspect`: Inspect a table schema in a room database.
 * `install`: Install required tables from a...
@@ -4954,12 +5309,31 @@ $ meshagent room database [OPTIONS] COMMAND [ARGS]...
 * `search`: Search rows in a room database table.
 * `sql`: Execute SQL against room database tables.
 * `optimize`: Optimize a room database table.
+* `version`: List versions for a room database table.
 * `versions`: List versions for a room database table.
 * `checkout`: Check out a room database table at a...
 * `restore`: Restore a room database table to a...
+* `index`: List indexes on a room database table.
 * `indexes`: List indexes on a room database table.
 * `index-create`: Create an index on a room database table.
 * `index-drop`: Drop an index from a room database table.
+
+#### `meshagent room database table`
+
+List database tables in a room.
+
+**Usage**:
+
+```console
+$ meshagent room database table [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
 
 #### `meshagent room database tables`
 
@@ -5245,6 +5619,25 @@ $ meshagent room database optimize [OPTIONS]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
+#### `meshagent room database version`
+
+List versions for a room database table.
+
+**Usage**:
+
+```console
+$ meshagent room database version [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
 #### `meshagent room database versions`
 
 List versions for a room database table.
@@ -5300,6 +5693,25 @@ $ meshagent room database restore [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `-v, --version INTEGER`: Table version  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room database index`
+
+List indexes on a room database table.
+
+**Usage**:
+
+```console
+$ meshagent room database index [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
 #### `meshagent room database indexes`
@@ -5808,9 +6220,11 @@ $ meshagent room container [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List containers in a room.
 * `stop`: Stop a running container in a room.
+* `log`: Print container logs from a room.
 * `logs`: Print container logs from a room.
 * `exec`: Execute a command inside a running container.
 * `run`: Run a container inside a room.
+* `image`: Image operations
 * `images`: Image operations
 
 #### `meshagent room container list`
@@ -5846,6 +6260,24 @@ $ meshagent room container stop [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `--id TEXT`: Container ID  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent room container log`
+
+Print container logs from a room.
+
+**Usage**:
+
+```console
+$ meshagent room container log [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Container ID  [required]
+* `--follow / --no-follow`: Stream logs  [default: no-follow]
 * `--help`: Show this message and exit.
 
 #### `meshagent room container logs`
@@ -5910,6 +6342,167 @@ $ meshagent room container run [OPTIONS]
 * `--participant-name TEXT`: Participant name to associate with the run
 * `--role TEXT`: Role to run the container as  [default: user]
 * `--container-name TEXT`: Optional container name
+* `--help`: Show this message and exit.
+
+#### `meshagent room container image`
+
+Image operations
+
+**Usage**:
+
+```console
+$ meshagent room container image [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `build`: Build a container image inside a room.
+* `list`: List container images available in a room.
+* `delete`: Delete a container image from a room.
+* `pull`: Pull a container image into a room.
+* `push`: Push a container image from a room.
+* `load`: Load an OCI image archive into a room.
+* `save`: Save an OCI image archive from a room.
+
+##### `meshagent room container image build`
+
+Build a container image inside a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image build [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
+* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path)  [required]
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
+* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/src:/workspace&#x27;
+* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
+* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
+* `--private / --public`: Whether the build container is private to the participant  [default: public]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image list`
+
+List container images available in a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image delete`
+
+Delete a container image from a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--image TEXT`: Image ref/tag to delete  [required]
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image pull`
+
+Pull a container image into a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image pull [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--tag TEXT`: Image tag/ref to pull  [required]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image push`
+
+Push a container image from a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image push [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--tag TEXT`: Image tag/ref to push  [required]
+* `--private / --public`: Whether the push container is private to the participant  [default: public]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image load`
+
+Load an OCI image archive into a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image load [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--archive-path TEXT`: Path to OCI archive inside one of the mounted paths (absolute path)  [required]
+* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/images:/workspace&#x27;
+* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
+* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
+* `--private / --public`: Whether the load container is private to the participant  [default: public]
+* `--help`: Show this message and exit.
+
+##### `meshagent room container image save`
+
+Save an OCI image archive from a room.
+
+**Usage**:
+
+```console
+$ meshagent room container image save [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--tag TEXT`: Image tag/ref to save  [required]
+* `--archive-path TEXT`: Path to write OCI archive inside one of the mounted paths (absolute path)  [required]
+* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/images:/workspace&#x27;
+* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
+* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
+* `--private / --public`: Whether the save container is private to the participant  [default: public]
 * `--help`: Show this message and exit.
 
 #### `meshagent room container images`
