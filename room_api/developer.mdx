@@ -1,60 +1,47 @@
 ## Overview
 
-The `DeveloperClient` streams structured logs into the room Developer Console and lets you subscribe to developer log events from other participants. Use it to debug agents, tools, and services during a live session.
+The `DeveloperClient` streams structured logs into the room Developer Console and lets you consume developer log streams from other participants. Use it to debug agents, tools, and services during a live session.
 
 Key concepts:
 
 - **Typed logs**: Each log has a `type` string and a `data` payload.
-- **Subscriptions**: Call `enable()` to start receiving developer log events.
+- **Streaming subscriptions**: Call `logs()` to open a log stream and stop by closing or breaking the stream.
 - **Fire-and-forget helpers**: Some SDKs include convenience methods for quick logging.
 
 > **Permissions**: Developer log forwarding is controlled by the `developer` scope. See [API Scopes](../rest_api/api_scopes).
 
 ---
 
-## Events
+## Streaming Logs
 
-- **`log`**  
-  Triggered when a developer log event is received. Handlers receive the log `type` and `data`.
+- **`logs()`**
+  Opens a streamed subscription to developer logs for the room. Stop receiving logs by closing the stream or breaking iteration.
 
 <CodeGroup>
 ```python Python
-def on_log(type: str, data: dict):
-    print(f"[{type}] {data}")
-
-room.developer.on("log", on_log)
-await room.developer.enable()
+async for event in room.developer.logs():
+    print(f"[{event.type}] {event.data}")
 ```
 ```javascript NodeJs
-room.developer.on("log", (event) => {
+for await (const event of room.developer.logs()) {
   console.log(`[${event.type}]`, event.data);
-});
-
-await room.developer.enable();
+}
 ```
 ```typescript TypeScript
-room.developer.on("log", (event) => {
+for await (const event of room.developer.logs()) {
   console.log(`[${event.type}]`, event.data);
-});
-
-await room.developer.enable();
+}
 ```
 ```dart Dart
-room.listen((RoomEvent event) {
-  if (event is RoomLogEvent) {
-    print("[${event.type}] ${event.data}");
-  }
-});
-
-await room.developer.enable();
+await for (final event in room.developer.logs()) {
+  print("[${event.type}] ${event.data}");
+}
 ```
 ```dotnet C#
-room.Developer.On("log", data =>
+await foreach (var log in room.Developer.Logs())
 {
-  Console.WriteLine($"[{data["type"]}] {data["data"]}");
-});
-
-await room.Developer.Enable();
+  Console.WriteLine($"[{log.Type}] {log.Data}");
+}
 ```
 </CodeGroup>
 
@@ -137,50 +124,35 @@ await room.developer.error("Sync failed", extra: {"reason": "timeout"});
 
 ---
 
-### enable
-- **Description**: Start receiving developer log events for the room.
+### logs
+- **Description**: Open a streamed subscription to developer logs for the room.
 - **Parameters**: None.
-- **Returns**: `None`
+- **Returns**: A stream / async iterator of log events.
 
 <CodeGroup>
 ```python Python
-await room.developer.enable()
+async for event in room.developer.logs():
+    print(event.type, event.data)
 ```
 ```javascript NodeJs
-await room.developer.enable();
+for await (const event of room.developer.logs()) {
+  console.log(event.type, event.data);
+}
 ```
 ```typescript TypeScript
-await room.developer.enable();
+for await (const event of room.developer.logs()) {
+  console.log(event.type, event.data);
+}
 ```
 ```dart Dart
-await room.developer.enable();
+await for (final event in room.developer.logs()) {
+  print(event.type);
+}
 ```
 ```dotnet C#
-await room.Developer.Enable();
-```
-</CodeGroup>
-
----
-
-### disable
-- **Description**: Stop receiving developer log events for the room.
-- **Parameters**: None.
-- **Returns**: `None`
-
-<CodeGroup>
-```python Python
-await room.developer.disable()
-```
-```javascript NodeJs
-await room.developer.disable();
-```
-```typescript TypeScript
-await room.developer.disable();
-```
-```dart Dart
-await room.developer.disable();
-```
-```dotnet C#
-await room.Developer.Disable();
+await foreach (var log in room.Developer.Logs())
+{
+  Console.WriteLine(log.Type);
+}
 ```
 </CodeGroup>
