@@ -1,0 +1,207 @@
+---
+title: "How Tools and Toolkits Work"
+---
+
+MeshAgent tools are not just for agents. Humans can use them too. This guide explains how tools, toolkits, and rooms fit together so both humans and AI agents can safely discover, call, and share capabilities. It also covers the two main toolkit patterns in MeshAgent: static toolkits that are always available and dynamic toolkits that are constructed for a specific turn.
+
+## Mental model
+
+- `Tool` = one discrete action an agent or human participant can take.
+- `ToolContext` = the execution context available when a tool runs.
+- `Toolkit` = a named bundle of related tools plus optional rules and descriptions.
+- `RemoteToolkit` = a toolkit that is registered with a room so other participants can discover and call it.
+- `ToolkitConfig` = the options used to construct a toolkit.
+- `ToolkitBuilder` = a factory that turns a config into a concrete toolkit.
+
+## Tools
+
+### `Tool`
+
+A `Tool` defines one action that an agent or person can perform. The tool declares what it expects in `input_schema` and what work to perform in `execute()`.
+
+**Constructor parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | ---: | --- |
+| `name` | `str` | — | Unique tool name within a toolkit. |
+| `input_schema` | `dict` | — | JSON Schema for the tool arguments. Enforced at call time. |
+| `title` | `Optional[str]` | `name` | Human-readable display name. |
+| `description` | `Optional[str]` | `""` | Short description of the tool. |
+| `rules` | `Optional[list[str]]` | `None` | Behavioral guidance for LLMs. |
+| `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail shown in UIs. |
+| `defs` | `Optional[dict[str, dict]]` | `None` | Reusable JSON Schema definitions merged into the schema via `$defs`. |
+| `supports_context` | `Optional[bool]` | `False` | Indicates the tool can use `caller_context` when provided. |
+
+**Method**
+
+```python Python
+async def execute(self, context: ToolContext, **kwargs) -> Response:
+    ...
+```
+
+### Tool return types
+
+Tools return subclasses of `Response` declared in `meshagent.api.messaging`.
+
+| Response type | When to use it |
+| --- | --- |
+| `JsonChunk` | Structured JSON output, such as API payloads or summarized data. |
+| `TextChunk` | Plain-text answers or status messages. |
+| `FileChunk` | Binary content such as generated documents, images, or archives. |
+| `LinkChunk` | A URL pointing to an external resource. |
+
+### `ToolContext`
+
+`ToolContext` carries the runtime information a tool needs.
+
+| Property | Description |
+| --- | --- |
+| `room` | A room client the tool can use to interact with the room or its participants. |
+| `caller` | The participant who called the tool. |
+| `on_behalf_of` | The participant a calling agent is acting for, if any. |
+| `caller_context` | Optional caller-specific context data. Useful for chat context, handoffs, or custom workflow state. |
+
+## Toolkits
+
+### Toolkit vs remote toolkit
+
+A `Toolkit` is best for in-process scenarios, usually when only one agent needs access to the tools.
+
+A `RemoteToolkit` is hosted and registered with the room so any participant can discover and call its tools. Use this when the toolkit should live outside the agent process or be shared across multiple participants.
+
+### `Toolkit`
+
+A `Toolkit` bundles related tools under a single name so callers can discover, invoke, and permission them together.
+
+**Constructor parameters**
+
+| Parameter | Type | Default | Description |
+| --- | --- | ---: | --- |
+| `name` | `str` | — | Toolkit identifier used for discovery and invocation. |
+| `tools` | `list[BaseTool]` | — | The tools this toolkit exposes. |
+| `rules` | `list[str]` | `list[str]` | Optional global guidance that applies to the toolkit. |
+| `title` | `Optional[str]` | `name` | Human-readable toolkit name. |
+| `description` | `Optional[str]` | `""` | Description used for discovery and display in MeshAgent Studio. |
+| `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail for the toolkit. |
+
+**Methods**
+
+- `get_tool(name)`: returns the named tool or raises a `RoomException` if it is not present.
+- `execute(context, name, arguments, optional attachment)`: validates input, invokes the tool, and returns a response.
+
+> Toolkits emit OpenTelemetry spans out of the box, so MeshAgent can track who called a tool, how long it took, and what room it ran in.
+
+### `RemoteToolkit`
+
+A `RemoteToolkit` adds lifecycle management around a `Toolkit` so it can be discoverable and callable by others.
+
+**Methods**
+
+- `start()`:
+  - starts child remote tools,
+  - subscribes to room messages for toolkit calls,
+  - registers the toolkit with the room.
+- `stop()`:
+  - stops child remote tools safely,
+  - unregisters the toolkit.
+
+## Toolkit patterns
+
+MeshAgent supports two complementary ways to make tools available during an agent turn.
+
+### Static toolkits
+
+Static toolkits stay attached to the agent for its full lifetime.
+
+- Construct the toolkit up front and pass it in the agent's `toolkits` list.
+- The toolkit is instantiated once and participates in every LLM turn.
+- Use this when the agent should always have a capability available.
+
+```python Python
+chatbot = ChatBot(
+    name="support-assistant",
+    llm_adapter=OpenAIResponsesAdapter(),
+    toolkits=[
+        StorageToolkit(),
+        DocumentAuthoringToolkit(),
+    ],
+)
+```
+
+### Dynamic toolkits
+
+Dynamic toolkits are created on demand from `ToolkitBuilder` and `ToolkitConfig` pairs.
+
+- Register one or more `ToolkitBuilder` instances.
+- The client or UI selects the tools for a turn and sends a `tools` array.
+- During the turn, `make_toolkits(...)` validates the configs and instantiates only the requested toolkits.
+- Use this for capabilities that should be opt-in, temporary, or user-selected, such as MCP connectors, local shell access, or turn-specific storage tools.
+
+```python Python
+message = {
+    "path": thread_path,
+    "text": "Generate a hero image and pull the latest market stats.",
+    "tools": [
+        {
+            "name": "image_generation",
+            "model": "gpt-image-1.5",
+            "size": "1024x1024",
+        },
+        {
+            "name": "mcp",
+            "servers": [
+                {
+                    "server_label": "research-bot",
+                    "server_url": "https://mcp.example.com",
+                    "authorization": "Bearer ${TOKEN}",
+                },
+            ],
+        },
+    ],
+}
+```
+
+> CLI note: CLI agents that expose toolkit builders follow the same dynamic pattern and accept a `tools` array for per-message selection. Flags like `--require-*` attach always-on toolkits in addition to any dynamic ones.
+
+## Dynamic toolkit flow
+
+1. The client asks the agent for supported toolkit builders.
+2. The user or calling application selects tools and sends configs for that turn.
+3. The agent merges any always-on toolkits with the requested dynamic toolkits.
+4. The LLM adapter converts the resulting toolkits into provider-specific tool definitions.
+5. Tool calls are routed back to the owning toolkit and executed.
+6. On the next message, the tool list is rebuilt again.
+
+## Tool access and availability
+
+### `RequiredToolkit`
+
+Agents can declare toolkit dependencies explicitly:
+
+```python Python
+from meshagent.api import RequiredToolkit
+
+requires = [
+    RequiredToolkit(name="my-toolkit-name", tools=[my_first_tool(), my_second_tool()])
+]
+```
+
+When the agent connects, the room server verifies the required toolkit is available. If not, the agent gets an error instead of starting with missing capabilities.
+
+### Tool access and permissions
+
+Tool access is controlled by the participant token's `ApiScope.agents` grant:
+
+- `register_public_toolkit` / `register_private_toolkit`: allow registering public or private toolkits.
+- `use_tools`: required to list or inspect toolkits.
+- `call`: required to invoke tools.
+
+Public toolkits are visible to any participant with `use_tools`. Private toolkits are only listed for the participant that registered them. Use [API scope grants](../../rest_api/api_scopes) to decide which services or users can register, inspect, and call tools.
+
+## Related guides
+
+- [Introduction to Tools](./intro)
+- [Built-in MeshAgent Toolkits](./built_in_toolkits)
+- [Tools Quickstart](./quickstart)
+- [Dynamic UI Tools](./dynamic_ui_tools)
+- [MCP and OpenAI Connectors](./openai_connectors_mcp)

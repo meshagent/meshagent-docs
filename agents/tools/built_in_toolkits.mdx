@@ -1,0 +1,98 @@
+---
+title: "Built-in MeshAgent Toolkits"
+---
+
+MeshAgent includes two different kinds of built-in toolkits:
+
+1. **Built-in room toolkits** that are exposed inside a room and can be called through the Room APIs.
+2. **First-party SDK toolkits and toolkit builders** that you attach to agents in code.
+
+This page gives you a directory of those built-in capabilities and links you to the right documentation. It is intentionally an overview page, not a per-method reference.
+
+## Built-in room toolkits
+
+These are the built-in toolkits that are available as part of the MeshAgent room runtime.
+
+- **`agents`**: call agents, inspect toolkits, and invoke tools. See [Agents API](../../room_api/agents).
+- **`containers`**: run and inspect containers inside a room. See [Containers API](../../room_api/containers).
+- **`database`**: manage room-scoped structured tables and search. See [Database API](../../room_api/database).
+- **`memory`**: maintain room-scoped structured memory and graph-style recall. See [Memory API](../../room_api/memory).
+- **`developer`**: emit and stream structured developer logs. See [Developer API](../../room_api/developer).
+- **`messaging`**: send direct messages, broadcast updates, and work with streams. See [Messaging API](../../room_api/messaging).
+- **`queue`**: send and receive room-scoped queue messages. See [Queues API](../../room_api/queue).
+- **`secrets`**: manage room-scoped secrets and secret delegation workflows. See [Secrets API](../../room_api/secrets).
+- **`storage`**: read and write room-scoped files and folders. See [Storage API](../../room_api/storage).
+- **`sync`**: create and synchronize live shared documents. See [Sync API](../../room_api/sync).
+
+These room toolkits are the same built-in capabilities that agents can use through room tool calls.
+
+## Using built-in toolkits from the CLI
+
+Built-in room toolkits are also exposed directly through the `meshagent room` CLI:
+
+```bash
+meshagent room storage ls --room my-room room://
+meshagent room database tables --room my-room
+meshagent room memory list --room my-room
+```
+
+Provider-driven and SDK-attached toolkits are commonly enabled when you start an agent from the CLI:
+
+```bash
+meshagent chatbot join --room my-room --agent-name GPTResearcher --model gpt-5.4 --web-search --mcp --require-storage --use-memory agents/gptresearcher/memories
+meshagent chatbot join --room my-room --agent-name ClaudeResearcher --model claude-sonnet-4-6 --web-search --mcp --require-storage --use-memory agents/clauderesearcher/memories
+```
+
+In those cases, the CLI is attaching the toolkit or toolkit builder to the agent you launch. The agent can then call those tools during a conversation.
+
+- `--web-search`, `--web-fetch`, and `--mcp` enable provider-driven toolkits.
+- `--require-storage` adds `StorageToolkit` directly as always-on tools.
+- `--storage` uses `StorageToolkitBuilder` instead, which is useful when you want storage exposed through toolkit-builder flow rather than always-on tools.
+- `--use-memory graph` adds `MemoriesToolkit(memory_name="graph")`, which is an agent-facing wrapper backed by `room.memory`.
+
+## First-party SDK toolkits
+
+These are first-party MeshAgent toolkits that you attach to agents or services in code.
+
+### Document and content tools
+
+- **`DocumentAuthoringToolkit`**: create and modify MeshDocuments.
+- **`DocumentTypeAuthoringToolkit`**: work with type-specific document structures.
+- **`MarkItDownToolkit`**: convert PDFs and Office documents into formats that are easier for LLMs to use.
+
+These are commonly used in document generation, website authoring, document intelligence, and RAG-style workflows.
+
+### Data and storage tools
+
+- **`StorageToolkit` / `StorageToolkitBuilder`**: expose room or mounted storage operations as tools.
+- **`MemoriesToolkit` / `MemoriesToolkitBuilder`**: expose room-backed memory tools such as add, search, inspect, and delete memory operations.
+- **`DatabaseToolkitBuilder`**: construct database tools for agent workflows.
+- **`UUIDToolkit`**: provide UUID generation helpers.
+
+### Provider and adapter-driven toolkits
+
+These toolkits are usually exposed through adapters or builders instead of being always on. Some of them switch implementation based on the model you choose, so the same CLI flag can work across providers even when the underlying tool definition is different.
+
+For adapter-specific details, see [OpenAI Responses Adapter](../adapters/openai_responses_adapter) and [Anthropic Messages Adapter](../adapters/anthropic_messages_adapter).
+
+- **`MCPToolkit` / `MCPToolkitBuilder`**: expose external MCP servers as MeshAgent tools.
+- **`WebFetchToolkitBuilder`**: add web-fetch tools. In the CLI, `--web-fetch` selects Anthropic's built-in Messages API web fetch tool for Claude models and MeshAgent's `WebFetchToolkitBuilder` for other models. That means the same flag works for both Anthropic and OpenAI-backed agents.
+- **`WebSearchToolkitBuilder`**: add web search tools. For Claude models this uses Anthropic's built-in Messages API `web_search_*` tool. For other model paths the CLI selects a different builder, so the same `--web-search` flag still works outside Anthropic.
+- **`ShellToolkitBuilder`**: add function-based shell execution tools. In the current CLI, `--shell` is wired for both Claude and OpenAI model paths.
+- **`LocalShellToolkitBuilder`**: expose OpenAI's native local shell tool. In the current CLI, `--local-shell` is OpenAI-only.
+- **`ImageGenerationToolkitBuilder`**: expose OpenAI-native image generation. In the current CLI, `--image-generation` is OpenAI-only.
+- **`ApplyPatchToolkitBuilder`**: expose OpenAI's patch-editing tool. In the current CLI, `--apply-patch` is OpenAI-only.
+- **`ScriptToolkitBuilder`**: construct script-based tools dynamically.
+
+## How to choose between room toolkits and SDK toolkits
+
+Use **room toolkits** when the capability is part of the built-in room runtime and you want to access it through the Room APIs or agent tool calls.
+
+Use **SDK toolkits or builders** when you are composing agent capabilities in code and want to decide which tools the agent exposes or constructs for a given workflow.
+
+## Related guides
+
+- [Introduction to Tools](./intro)
+- [How Tools and Toolkits Work](./tools_and_toolkits)
+- [Room API Overview](../../room_api/overview)
+- [MCP and OpenAI Connectors](./openai_connectors_mcp)
