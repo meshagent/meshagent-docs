@@ -21,6 +21,10 @@ Retrieves a list of all table names currently present in the database.
 - A promise that resolves to an array of table name strings.
 
 <CodeGroup>
+```bash CLI
+meshagent room database table \
+  --room myroom
+```
 ```python Python
 tables = await room.database.list_tables()
 
@@ -67,6 +71,13 @@ Console.WriteLine(string.Join(", ", tables)); // ["users", "orders", "products",
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database create \
+  --room myroom \
+  --table users \
+  --columns "id int, username text, email text" \
+  --data-json '[{"id":1,"username":"alice","email":"alice@example.com"},{"id":2,"username":"bob","email":"bob@example.com"}]'
+```
 ```python Python
 await room.database.create_table_with_schema(
   name="users",
@@ -159,6 +170,13 @@ await room.Database.CreateTableWithSchema(
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database create \
+  --room myroom \
+  --table orders \
+  --mode overwrite \
+  --data-json '[{"id":1,"product":"Laptop","quantity":2},{"id":2,"product":"Phone","quantity":5}]'
+```
 ```python Python
 await room.database.create_table_from_data(
   name="orders",
@@ -224,6 +242,12 @@ await room.Database.CreateTableFromData(
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database drop \
+  --room myroom \
+  --table temp_table \
+  --ignore-missing
+```
 ```python Python
 await room.database.drop_table(
   name="temp_table",
@@ -265,6 +289,12 @@ await room.Database.DropTable("temp_table", ignoreMissing: true);
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database add-columns \
+  --room myroom \
+  --table users \
+  --columns "isActive bool, createdAt timestamp"
+```
 ```python Python
 await room.database.add_columns(
   table="users",
@@ -325,6 +355,13 @@ await room.Database.AddColumns(
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database drop-columns \
+  --room myroom \
+  --table users \
+  --column deprecatedColumn1 \
+  --column deprecatedColumn2
+```
 ```python Python
 await room.database.drop_columns(
   table="users",
@@ -369,12 +406,18 @@ await room.Database.DropColumns(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database insert \
+  --room myroom \
+  --table users \
+  --json '[{"id":3,"username":"charlie","email":"charlie@example.com"},{"id":4,"username":"dana","email":"dana@example.com"}]'
+```
 ```python Python
 await room.database.insert(
   table="users",
   records=[
     { "id": 3, "username": "charlie", "email": "charlie@example.com" },
-    { "id": 4, "username": "dana", "email": "data@example.com" },
+    { "id": 4, "username": "dana", "email": "dana@example.com" },
   ],
 )
 ```
@@ -383,7 +426,7 @@ await room.database.insert({
   table: "users",
   records: [
     { id: 3, username: "charlie", email: "charlie@example.com" },
-    { id: 4, username: "dana", email: "data@example.com" },
+    { id: 4, username: "dana", email: "dana@example.com" },
   ],
 });
 ```
@@ -401,7 +444,7 @@ await room.database.insert({
   "table": "users",
   "records": [
     { "id": 3, "username": "charlie", "email": "charlie@example.com" },
-    { "id": 4, "username": "dana", "email": "data@example.com" },
+    { "id": 4, "username": "dana", "email": "dana@example.com" },
   ],
 });
 ```
@@ -411,7 +454,7 @@ await room.Database.Insert(
   new List<Dictionary<string, object?>>
   {
     new() { ["id"] = 3, ["username"] = "charlie", ["email"] = "charlie@example.com" },
-    new() { ["id"] = 4, ["username"] = "dana", ["email"] = "data@example.com" },
+    new() { ["id"] = 4, ["username"] = "dana", ["email"] = "dana@example.com" },
   }
 );
 ```
@@ -431,6 +474,14 @@ await room.Database.Insert(
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room database update \
+  --room myroom \
+  --table users \
+  --where "id = 3" \
+  --values-json '{"email":"newcharlie@example.com"}' \
+  --values-sql-json '{"loginCount":"loginCount + 1"}'
+```
 ```python Python
 await room.database.update(
   table="users",
@@ -484,6 +535,12 @@ await room.Database.Update(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database delete \
+  --room myroom \
+  --table users \
+  --where "id = 4"
+```
 ```python Python
 await room.database.delete(
   table="users",
@@ -528,6 +585,13 @@ await room.Database.Delete(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database merge \
+  --room myroom \
+  --table users \
+  --on id \
+  --json '[{"id":1,"username":"alice","email":"alice_new@example.com"},{"id":5,"username":"eric","email":"eric@example.com"}]'
+```
 ```python Python
 await room.database.merge(
   table="users",
@@ -597,6 +661,13 @@ await room.Database.Merge(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database search \
+  --room myroom \
+  --table users \
+  --where-json '{"username":"alice"}' \
+  --limit 1
+```
 ```python Python
 results = await room.database.search(
   table="users",
@@ -654,6 +725,11 @@ Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database optimize \
+  --room myroom \
+  --table users
+```
 ```python Python
 await room.database.optimize(table="users")
 ```
@@ -682,6 +758,13 @@ await room.Database.Optimize("users");
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database index-create \
+  --room myroom \
+  --table documents \
+  --column embedding \
+  --kind vector
+```
 ```python Python
 await room.database.create_vector_index(
   table="documents",
@@ -725,6 +808,13 @@ await room.Database.CreateVectorIndex(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database index-create \
+  --room myroom \
+  --table users \
+  --column email \
+  --kind scalar
+```
 ```python Python
 await room.database.create_scalar_index(
   table="users",
@@ -768,6 +858,13 @@ await room.Database.CreateScalarIndex(
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database index-create \
+  --room myroom \
+  --table articles \
+  --column content \
+  --kind fts
+```
 ```python Python
 await room.database.create_full_text_search_index(
   table="articles",
@@ -812,6 +909,12 @@ await room.Database.CreateFullTextSearchIndex(
 - **Availability**: Python SDK/server today; JS/TS/.NET may add a helper in a future release.
 
 <CodeGroup>
+```bash CLI
+meshagent room database index-drop \
+  --room myroom \
+  --table users \
+  --name email_idx
+```
 ```python Python
 await room.database.drop_index(table="users", name="email_idx")
 ```
@@ -829,6 +932,11 @@ await room.database.drop_index(table="users", name="email_idx")
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room database index \
+  --room myroom \
+  --table users
+```
 ```python Python
 indexes = await room.database.list_indexes(table="users")
 
@@ -898,6 +1006,11 @@ Console.WriteLine(indexes);
 - **Availability**: Python SDK/server today.
 
 <CodeGroup>
+```bash CLI
+meshagent room database version \
+  --room myroom \
+  --table users
+```
 ```python Python
 versions = await room.database.list_versions(table="users")
 await room.database.restore(table="users", version=versions[-1].version)

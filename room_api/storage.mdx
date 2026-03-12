@@ -175,6 +175,11 @@ Checks if a file or folder exists at the given path.
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room storage exists \
+  --room myroom \
+  room://folder/data.json
+```
 ```python Python
 if await room.storage.exists(path="folder/data.json"):
     print("Data file exists!")
@@ -372,6 +377,12 @@ Retrieves the content of a file from the remote storage. This loads the entire f
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage cp \
+  room://files/data.bin \
+  ./data.bin \
+  --room myroom
+```
 ```python Python
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
@@ -446,6 +457,11 @@ Lists the contents of a folder, returning file and subfolder names along with a 
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage ls \
+  --room myroom \
+  room://some_folder
+```
 ```python Python
 entries = await room.storage.list(path="some_folder")
 for e in entries:
@@ -495,6 +511,11 @@ Deletes a file or folder at the given path. A `file.deleted` event is typically 
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage rm \
+  --room myroom \
+  room://folder/old_file.txt
+```
 ```python Python
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")

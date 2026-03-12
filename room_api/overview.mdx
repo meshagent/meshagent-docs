@@ -1,62 +1,100 @@
-import RoomConnectPy from "/snippets/examples/python/snippets/room-connect.mdx"
-import RoomConnectJs from "/snippets/examples/javascript/room-connect.mdx"
-import RoomConnectTs from "/snippets/examples/typescript/room-connect.mdx"
-import RoomConnectDart from "/snippets/examples/dart/room-connect.mdx"
-import RoomConnectCs from "/snippets/examples/dotnet/room-connect.mdx"
-
 MeshAgent Rooms provide real-time collaborative workspaces for agents and participants. Each room dynamically manages participant lists, tracks presence, and enables information sharing. Rooms are automatically provisioned when participants join, ensuring effortless integration and minimizing synchronization complexity.
 
-Rooms also serve as gateways to several additional APIs accessible through the room object:
+## Room APIs
+
+Rooms also expose a set of room-scoped APIs through the room client:
 
 - **[Agents API](./agents) `AgentsClient`:** Manages agent interactions. 
 - **[Containers API](./containers) `ContainersClient`:** Interact with containers on demand in a room.
 - **[Database API](./database) `DatabaseClient`:** Provides a simple relational-like API for data storage and retrieval through tables.
+- **[Memory API](./memory) `MemoryClient`:** Manage room-scoped knowledge memories and recall context.
 - **[Developer API](./developer) `DeveloperClient`:** Send structured logs to the Developer Console and stream developer log events.
 - **[Messaging API](./messaging) `MessagingClient`:** Enables real-time chat messaging among participants.
 - **[Queues API](./queue) `QueuesClient`:** Facilitates reliable data/message exchange with other agents or participants.
 - **[Secrets API](./secrets) `SecretsClient`:** Create and manage oauth tokens and user secrets.
 - **[Storage API](./storage) `StorageClient`:** Manages file storage and retrieval.
 - **[Sync API](./sync) `SyncClient`:** Offers document synchronization capabilities, listing remote participants, allowing participants to collaborate on shared documents.
+- **`ServicesClient` (Python/Dart):** List and restart room services. For deployment patterns, see [Services & Containers](../services_room_containers/overview).
 
-For information on how to create and manage rooms and their permissions in a project check out the [REST API](../rest_api/overview) documentation. 
+## Room Toolkits
 
-### Let's connect to a room
+Most Room APIs are also exposed as built-in room toolkits. That means agents can use the same room capabilities through tool calls as well as through the CLI and SDKs. In practice, this is how agents use built-in toolkits like `storage`, `database`, `memory`, `sync`, `queues`, `messaging`, `secrets`, `developer`, and `containers`.
 
-First, be sure to have followed the [Getting Started with MeshAgent Docs](../introduction/get_started).
+## Using the Room APIs with the MeshAgent CLI
 
-Next, in your terminal authenticate to MeshAgent and export the environment variables needed to connect to your MeshAgent project. You can do this using the MeshAgent CLI.
+The Room APIs are accessible from both the MeshAgent CLI and SDKs. You can explore the CLI for each Room API by running:
 
-<CodeGroup>
-```bash bash
-meshagent auth login
-meshagent project activate -i
-# create an api key if necessary. The key value will be displayed only once.
-meshagent api-key create --activate my-key
-export MESHAGENT_API_KEY=[my-api-key-value]
+```bash CLI
+meshagent room agent --help
+meshagent room container --help
+meshagent room database --help
+meshagent room developer --help
+meshagent room memory --help
+meshagent room messaging --help
+meshagent room queue --help
+meshagent room secret --help
+meshagent room storage --help
+meshagent room sync --help
 ```
-</CodeGroup>
 
-Now run the code to connect to a MeshAgent room. 
+## Using Room APIs in Deployed Services
 
-<CodeGroup>
-    <RoomConnectPy />
-    <RoomConnectJs />
-    <RoomConnectTs />
-    <RoomConnectDart />
-    <RoomConnectCs />
-</CodeGroup>
+If you deploy a MeshAgent service and want that service to use the Room APIs, you must grant the service the appropriate Room API access through its participant token `api` scope. Deployment alone does not automatically give a service access to storage, database, secrets, containers, or the other Room APIs.
 
+The relevant places to configure that are:
 
-### Room Class Overview
+- **Service tokens injected through `container.environment[].token`**: set the token's `api` scope in the service manifest.
+- **MeshAgent endpoints in a service manifest**: set the endpoint `api` scope for the participant identity that joins the room.
 
-Rooms expose the same capabilities in every SDK, but the exact API mirrors the host language. Use the section below that matches your client library.
+Useful defaults:
+
+- `ApiScope.agent_default()` enables Agents, Queues, Messaging, Database, Sync, Storage, Containers, and Developer access.
+- `ApiScope.full()` adds Secrets, Admin, and Tunnels access on top of `agent_default()`.
+
+Many Room APIs can also be narrowed further inside the scope:
+
+- **Storage / Sync**: path-based grants
+- **Database**: table-level grants
+- **Queues**: send/receive/list controls
+- **Messaging**: broadcast/list/send controls
+- **Containers**: pull/run/log controls
+
+For the full scope model and manifest fields, see [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/participant_tokens), and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+For information on how to create and manage rooms and their permissions in a project check out the [REST API](../rest_api/overview) documentation.
+
+## Getting Started from the CLI
+
+If you want to start using the Room APIs quickly, the simplest path is:
+
+```bash bash
+meshagent setup
+meshagent rooms create --name myroom --if-not-exists
+```
+
+After that you can:
+
+- use the Room APIs from the CLI with `--room myroom`
+- connect to `myroom` from any SDK using the examples in [Getting Started](../introduction/get_started)
+- deploy room-scoped services into `myroom`
+
+If you are building your own application and minting participant tokens yourself, make sure the participant has both:
+
+- a room grant allowing it to join the room
+- an `api` scope granting access to the Room APIs it needs
+
+See [REST API overview](../rest_api/overview), [Participant Tokens](../rest_api/participant_tokens), and [API Scopes](../rest_api/api_scopes).
+
+## Room Class Overview
+
+Core Room behavior is consistent across SDKs, but available sub-clients vary by language. Use the section below that matches your client library.
 
 #### Python 
 `from meshagent.api import RoomClient`
 - Connect with `async with RoomClient(protocol=...) as room:`; the async context manager starts and stops the connection for you.
 - Issue requests with `await room.send_request(...)`; session metadata is available via `room.session_id`, `room.room_url`, and `room.room_name`.
 - Register event handlers with `room.on("room.status", handler)`; use `room.emit(...)` to publish custom events.
-- Access sub-clients through snake_case attributes such as `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, `room.secrets`, `room.storage`, `room.developer`, and `room.livekit`.
+- Access sub-clients through snake_case attributes such as `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.livekit`, `room.memory`, `room.messaging`, `room.queues`, `room.secrets`, `room.services`, `room.storage`, and `room.sync`.
 
 #### TypeScript / JavaScript 
 `RoomClient` in `@meshagent/...`
@@ -64,7 +102,7 @@ Rooms expose the same capabilities in every SDK, but the exact API mirrors the h
 - Clean up with `room.dispose()` when you are finished.
 - Send RPCs with `await room.sendRequest(type, payload, data?)`; readiness is exposed via `await room.ready`.
 - Emit events with `room.emit(event)` and consume them using `for await (const evt of room.listen())`.
-- Sub-clients are camelCase properties: `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, and `room.storage`.
+- Sub-clients are camelCase properties: `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.messaging`, `room.queues`, `room.secrets`, `room.storage`, and `room.sync`.
 
 #### Dart / Flutter 
 `RoomClient` in `package:meshagent/room_server_client.dart`
@@ -72,7 +110,7 @@ Rooms expose the same capabilities in every SDK, but the exact API mirrors the h
 - Dispose resources with `room.dispose()`; use `await room.exec(...)` for container execution helpers.
 - Send requests with `await room.sendRequest(type, payload, data: ...)`.
 - Observe room activity with `room.events.listen(handler)` or by keeping the `StreamSubscription` returned from `room.listen(...)`.
-- Access sub-clients via camelCase getters: `room.agents`, `room.database`, `room.messaging`, `room.sync`, `room.containers`, `room.queues`, `room.secrets`, `room.storage`, `room.developer`, and `room.livekit`.
+- Access sub-clients via camelCase getters: `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.memory`, `room.messaging`, `room.queues`, `room.secrets`, `room.services`, `room.storage`, and `room.sync`.
 
 #### .NET 
 `Meshagent.RoomClient`
@@ -80,4 +118,4 @@ Rooms expose the same capabilities in every SDK, but the exact API mirrors the h
 - Dispose with `await room.DisposeAsync();` or `await using var room = new RoomClient(protocol);`.
 - Send RPCs using `await room.SendRequest(type, payload, data);`; session metadata is available via `room.SessionId`, `room.RoomUrl`, and `room.RoomName`.
 - Register handlers with `room.On("room.status", handler)` and raise custom events through `room.Emit(name, data)`.
-- Sub-clients are exposed as PascalCase properties: `room.Agents`, `room.Database`, `room.Messaging`, `room.Sync`, `room.Containers`, `room.Queues`, `room.Storage`, `room.Developer`, and `room.Livekit`.
+- Sub-clients are exposed as PascalCase properties: `room.Agents`, `room.Database`, `room.Developer`, `room.Livekit`, `room.Messaging`, `room.Queues`, `room.Secrets`, `room.Storage`, and `room.Sync`.

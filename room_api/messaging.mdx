@@ -64,6 +64,20 @@ Below are some examples demonstrating how to use `MessagingClient` for basic mes
 
 
 <CodeGroup>
+```bash CLI
+meshagent room messaging list \
+  --room myroom
+
+meshagent room messaging send \
+  --room myroom \
+  --to-participant-id PARTICIPANT_ID \
+  --type chat \
+  --data '{"text":"Hello from the CLI!"}'
+
+meshagent room messaging broadcast \
+  --room myroom \
+  --data '{"content":"Hello everyone!"}'
+```
 ```python Python
 # Suppose you already have a RoomClient instance named `room`
 
@@ -74,17 +88,17 @@ await room.messaging.enable()
 my_participant = ... # type: RemoteParticipant
 
 # Send a simple message
-await room.messaging.send_message({
-  "to": my_participant,
-  "type": "chat",
-  "message": {"text": "Hello from Python!"}
-})
+await room.messaging.send_message(
+  to=my_participant,
+  type="chat",
+  message={"text": "Hello from Python!"},
+)
 
 # Broadcast a message to all participants
-await room.messaging.broadcast_message({
-  "type": "announcement",
-  "message": {"content": "Hello everyone!"}
-})
+await room.messaging.broadcast_message(
+  type="announcement",
+  message={"content": "Hello everyone!"},
+)
 
 # Disable messaging
 await room.messaging.disable()
@@ -378,13 +392,20 @@ Sends a message to a specific participant, optionally including a binary `attach
 
 
 <CodeGroup>
+```bash CLI
+meshagent room messaging send \
+  --room myroom \
+  --to-participant-id PARTICIPANT_ID \
+  --type chat \
+  --data '{"text":"Hey!"}'
+```
 ```python Python
-await room.messaging.send_message({
-  "to": my_participant,
-  "type": "chat",
-  "message": {"text": "Hey!"},
-  "attachment": b"\x01\x02\x03"
-})
+await room.messaging.send_message(
+  to=my_participant,
+  type="chat",
+  message={"text": "Hey!"},
+  attachment=b"\x01\x02\x03",
+)
 ```
 ```js NodeJs
 await room.messaging.sendMessage({
@@ -433,14 +454,19 @@ Broadcasts a message to **all** participants in the room.
 - `attachment` – (Optional) A `Uint8Array` of binary data to attach.
 
 <CodeGroup>
+```bash CLI
+meshagent room messaging broadcast \
+  --room myroom \
+  --data '{"title":"Server Maintenance","content":"We will be down tonight."}'
+```
 ```python Python
-await room.messaging.broadcast_message({
-  "type": "announcement",
-  "message": {
+await room.messaging.broadcast_message(
+  type="announcement",
+  message={
     "title": "Server Maintenance",
     "content": "We will be down tonight.",
-  }
-})
+  },
+)
 ```
 ```js NodeJs
 await room.messaging.broadcastMessage({
@@ -452,7 +478,7 @@ await room.messaging.broadcastMessage({
 });
 ```
 ```ts TypeScript
-await messagingClient.broadcastMessage({
+await room.messaging.broadcastMessage({
   "type": "announcement",
   "message": {
     "title": "Server Maintenance",
@@ -508,7 +534,7 @@ const writer = await room.messaging.createStream({
 });
 ```
 ```ts TypeScript
-const writer = await messagingClient.createStream({
+const writer = await room.messaging.createStream({
   to: myParticipant,
   header: {"purpose": "video-stream" },
 });
@@ -657,13 +683,13 @@ room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
 
-messagingClient.on("participant_added", (evt) => {
+room.messaging.on("participant_added", (evt) => {
    console.log("A new participant joined:", evt.message.message);
 });
 ```
 ```dart Dart
-room.messaging.on("participant_added", (evt) {
-   print("A new participant joined: ${evt.message.message}");
+room.messaging.on("message", (evt) {
+   print("Received a message of type: ${evt.message.type}");
 });
 
 room.messaging.on("participant_added", (evt) {
@@ -691,4 +717,3 @@ room.Messaging.On("participant_added", data =>
 
 5. **Performance**  
    For large or frequent streams, consider buffering or batching chunk writes in your client logic. The streaming mechanism in `MessagingClient` is designed to handle incremental data transfer, but network considerations remain important for efficient performance.
-
