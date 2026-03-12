@@ -1,11 +1,25 @@
-
 ## Overview
 
-The `QueuesClient` lets you manage lightweight room-scoped queues for simple task/message passing:
+The `QueuesClient` is the Room API for simple room-scoped work queues. Use it when one participant or service needs to hand off JSON work items to another participant or service asynchronously.
 
-- List queues with their current size.
-- Open/create queues (or auto-create via `send`/`receive` when `create=True`).
-- Send messages, receive messages (optionally waiting), and drain/close queues.
+## Why use the Queues API?
+
+- Decouple producers and consumers when work should happen later.
+- Build lightweight background workflows without adding another queueing system.
+- Coordinate multi-agent jobs where one participant produces work and another consumes it.
+
+## How it works
+
+A queue stores JSON messages until a consumer receives them. Senders and receivers can be different participants or services in the same room. SDKs can list, open, send, receive, drain, and close queues, while Python auto-creates queues during `send` or `receive` when `create=True`.
+
+## Permissions and grants
+
+If a deployed service needs to use room queues, its participant token needs the appropriate queue-related Room API grants. These grants can be scoped to list/send/receive capabilities. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: send and receive messages with `meshagent room queue ...`.
+- **SDKs**: helper methods cover `list`, `open`, `send`, `receive`, `drain`, and `close`, with the Python `open` difference noted below.
 
 ## API Methods
 
@@ -372,3 +386,9 @@ var received = await room.Queues.Receive("my-queue", create: true, wait: true);
 
 - **SDK availability**  
   The server supports `queues.open`, but the Python SDK doesn’t expose an `open` helper today—queues are auto-created when `create=True` on `send`/`receive`. JS/TS/Dart/.NET expose `open`.
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Messaging API](./messaging)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)

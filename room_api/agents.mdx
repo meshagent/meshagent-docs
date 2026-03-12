@@ -1,18 +1,31 @@
 ## Overview
 
-The `AgentsClient` is the room API for interacting with agents and toolkits. Use it to:
+The `AgentsClient` is the Room API for calling agents and discovering the toolkits available in a room. Use it when you want to send work to a deployed agent, inspect which built-in or service-provided toolkits are available, or call a tool directly.
 
-- Call a named agent endpoint.
-- List the toolkits currently available in the room.
-- Invoke a tool directly without going through an agent endpoint.
+## Why use the Agents API?
 
-Core concepts:
+- Call a named agent endpoint from the CLI or SDK instead of wiring your own service-to-service protocol.
+- Discover the tools available in the current room before handing work to an agent or rendering a tool picker.
+- Invoke a room toolkit directly when you already know which tool you want.
+
+## How it works
+
+The Agents API exposes three core concepts:
 
 - **Agent**: a named endpoint you call with `make_call` / `call`.
-- **Toolkit**: a named collection of tools returned by `list_toolkits`.
-- **Tool**: an individual operation inside a toolkit, invoked with `invoke_tool`.
+- **Toolkit**: a named collection of tools available in the room.
+- **Tool**: an individual operation inside a toolkit.
 
-`list_toolkits` returns toolkit metadata objects. Each toolkit contains a `tools` list with the corresponding tool metadata. That metadata is useful when you need to inspect available tools or render dynamic tool UIs, but most users only need the three methods below.
+`list_toolkits` returns toolkit metadata objects, and each toolkit contains a `tools` list with the corresponding tool metadata. That metadata is useful when you need to inspect available tools or render dynamic tool UIs, but most users only need the three methods below.
+
+## Permissions and grants
+
+If you want a deployed service to call agents or tools through the Room APIs, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: inspect toolkits and invoke tools with `meshagent room agent ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## API Methods
 
@@ -177,3 +190,9 @@ var toolArgs = new Dictionary<string, object?>
 var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
 ```
 </CodeGroup>
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
+- [Standard Agents](../agents/standard/intro)

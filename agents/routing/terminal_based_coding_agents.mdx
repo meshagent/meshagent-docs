@@ -1,0 +1,102 @@
+---
+title: "Terminal-Based Coding Agents"
+---
+
+Terminal-based coding agents such as Codex and similar CLI-driven tools can use the MeshAgent LLM proxy instead of calling OpenAI or Anthropic directly.
+
+This is useful when you want the coding agent's model traffic to stay inside a MeshAgent room boundary:
+- Provider API keys stay on the MeshAgent side instead of being distributed to every developer workstation or container.
+- LLM usage can be attributed to a room, session, and participant.
+- Organizations can monitor and meter routed model traffic in one place.
+
+## What this actually means
+The coding agent is still the thing generating prompts, deciding when to call the model, and interpreting responses. MeshAgent is not replacing the coding agent. MeshAgent is acting as the LLM gateway that the coding agent talks to.
+
+The request flow looks like this:
+1. The coding agent sends an OpenAI- or Anthropic-compatible request to a room-scoped proxy URL.
+2. The coding agent authenticates with a MeshAgent room token, not a provider API key.
+3. MeshAgent validates the token against the room, injects the upstream provider key, forwards the request, and records usage.
+4. Usage is attributed to the room/session/participant instead of being scattered across unmanaged local API keys.
+
+## What organizations get
+- **Key isolation:** Developers and local agent containers do not need direct access to the organization's upstream OpenAI or Anthropic keys.
+- **Usage attribution:** Routed requests are tied back to the room and session that produced them.
+- **Centralized controls:** Providers, base URLs, and pricing-aware routing stay managed in MeshAgent.
+
+## What organizations do not get automatically
+Routing a coding agent through the LLM proxy does **not** automatically give you full workstation or shell surveillance.
+
+By default, this setup gives visibility into the coding agent's **LLM traffic** and the corresponding usage/cost attribution. It does not automatically capture every shell command, file read/write, or arbitrary HTTP request the coding agent might perform outside of its model calls.
+
+## Requirements
+To use the room proxy directly, a coding agent needs to support these three things:
+- Override the model provider base URL.
+- Override the API key so you can send the MeshAgent room token instead of a provider key.
+- Attach a `Meshagent-Session` header, or otherwise run inside a MeshAgent-managed environment where session context is already available.
+
+For OpenAI-compatible clients the configuration conceptually looks like:
+
+```json
+{
+  "base_url": "https://<meshagent-host>/rooms/<room>/openai/v1",
+  "api_key": "<room_token>",
+  "headers": {
+    "Meshagent-Session": "<session_id>"
+  }
+}
+```
+
+For Anthropic-compatible clients it conceptually looks like:
+
+```json
+{
+  "base_url": "https://<meshagent-host>/rooms/<room>/anthropic",
+  "api_key": "<room_token>",
+  "headers": {
+    "Meshagent-Session": "<session_id>"
+  }
+}
+```
+
+> **Note:** Some desktop or terminal CLIs let you override the base URL and API key but do not expose custom headers. Those clients cannot use the room proxy directly unless they are wrapped by another process that adds the required session header.
+
+## Codex
+Codex is the concrete supported example in this repo.
+
+The MeshAgent Codex integration already wires Codex to the room proxy:
+- The CLI builds a room-scoped OpenAI base URL for Codex app-server.
+- Codex can be launched inside a MeshAgent-managed container with `OPENAI_BASE_URL` injected automatically.
+- MeshAgent can delegate the room token into the Codex environment so Codex authenticates with the room instead of a provider key.
+
+This is the practical path if you want a terminal-based coding agent that is clearly supported by MeshAgent today.
+
+For Codex-specific commands and options, see the [MeshAgent CLI reference](../../reference/meshagent_cli_help) and [Deploy a Terminal Based Agent](../../services_room_containers/packaging_and_deploying/terminal_based_agents).
+
+## Claude Code and similar agents
+The same architecture can apply to Claude Code or other terminal-based coding agents, but only if the tool exposes the required networking controls.
+
+In practice that means the agent must let you:
+- Point Anthropic traffic at the MeshAgent room proxy.
+- Send the MeshAgent room token as the API key.
+- Include the `Meshagent-Session` header on requests.
+
+If the tool does not let you supply a custom header, it is not a drop-in fit for the room proxy today.
+
+So the right mental model is:
+- **Codex:** supported path in this repo.
+- **Other coding agents:** potentially compatible if they expose enough transport configuration.
+
+## Best fit
+This pattern is strongest when:
+- You want developers or agent containers to use organization-managed provider access without sharing raw provider keys.
+- You want LLM usage attribution for coding-agent workloads.
+- You are already running the coding agent inside a MeshAgent room, service, or container.
+
+It is a weaker fit when:
+- You need complete endpoint-independent workstation monitoring.
+- The coding agent CLI does not expose base URL and header overrides.
+
+## Related Topics
+- [LLM Proxy](./llm_proxy)
+- [Deploy a Terminal Based Agent](../../services_room_containers/packaging_and_deploying/terminal_based_agents)
+- [MeshAgent CLI Reference](../../reference/meshagent_cli_help)

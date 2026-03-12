@@ -5,24 +5,29 @@ import StorageDownloadDart from "/snippets/examples/dart/storage-download.mdx"
 import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
 ## Overview
-The `StorageClient` manages files and folders within a room's remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
 
-Use it to check for files, create or overwrite them, append data across writes, download or get a direct URL, list folder contents, and delete files when no longer needed.
+The `StorageClient` is the Room API for room-scoped files and folders. Use it to store shared inputs, outputs, artifacts, and attachments that humans, agents, and services in the same room need to read or write.
 
-Key concepts include:
+## Why use the Storage API?
 
-- **Async Methods**: All I/O methods are asynchronous and return futures/promises.
-- **Paths**: Paths are relative to the room's storage root. Leading `/` is stripped, `.`/`..` segments are rejected, and `""` or `/` refer to the root.
-- **Handles**: Opening a file returns an object you can use for writing data and eventually closing.
-- **Finalize On Close**: Writes are flushed and a `file.updated` event is emitted when you close the handle.
-- **Events**: The storage system can emit events whenever a file is updated or deleted.
+- Share files between people, agents, and deployed services without wiring separate object storage access.
+- Store outputs such as reports, logs, generated media, or intermediate artifacts.
+- Download file contents directly or get a downloadable URL when you need to hand a file to another system.
 
-Permissions and access:
+## How it works
 
-- **Read/Write Grants**: `open`/`write`/`close` and `download`/`download_url` require a storage grant on the participant token for the target path.
-- **Listing And Existence**: `list`, `exists`, `stat`, and `delete` are not gated by storage grants in the current server implementation.
+Paths are relative to the room storage root. Opening a file returns a handle; writes become visible when you close that handle. The API also emits `file.updated` and `file.deleted` events so other participants can react to changes.
 
----
+> Current implementation note: the repo includes both local filesystem and GCS-backed storage providers. Deployed services can also mount room storage into the filesystem. The Room Storage API is the stable contract; bucket-mount details belong to service/runtime docs rather than the core API contract.
+
+## Permissions and grants
+
+`open`/`write`/`close` and `download`/`download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
+
+## CLI and SDK availability
+
+- **CLI**: file operations are available under `meshagent room storage ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## Events
 
@@ -562,6 +567,8 @@ This sequence demonstrates basic creation, reading, and deletion flows within a 
 
 ---
 
-## Conclusion
+## Related guides
 
-The storage interface offers asynchronous file operations, suitable for real-time collaboration scenarios. You can track file updates or deletions through event handlers and immediately sync or update your application. This design makes it easy to build experiences around shared data that are robust, flexible, and user-friendly.
+- [Room API Overview](./overview)
+- [Storage in Practice](../documents/storage_in_practice)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)

@@ -1,20 +1,31 @@
 ## Overview
 
-The `MemoryClient` manages room-scoped structured memories. Use it to:
+The `MemoryClient` is the Room API for room-scoped structured memory. Use it to build shared context that agents can ingest, query, and recall across workflows.
 
-- List, create, inspect, and drop memories.
-- Query and update memory datasets directly.
-- Ingest text, files, images, tables, and storage content.
-- Recall relevant entities and relationships for prompts and workflows.
-- Clean up or optimize memory datasets.
+## Why use the Memory API?
 
-> **SDK availability**
-> - **CLI**: full room-memory command set (`list`, `create`, `drop`, `inspect`, `query`, `recall`, `ingest`, `optimize`, and more).
-> - **Python**: full `MemoryClient` API.
-> - **Dart**: `list`, `create`, and `drop` helpers.
-> - **TypeScript/.NET**: no dedicated `MemoryClient` yet; use CLI or call toolkit `memory` via `room.invoke(...)` / `room.Invoke(...)`.
+- Preserve structured knowledge across tasks instead of reconstructing it from chat history each time.
+- Ingest text, files, images, tables, and room storage content into a shared memory.
+- Recall the most relevant entities and relationships when building prompts or workflows.
 
-## Core Methods
+## How it works
+
+A memory is a named dataset inside a room. You can create it, ingest data into it, inspect or query it directly, and use recall to retrieve relevant context. Some operations work at the entity and relationship level so you can maintain graph-like memory over time.
+
+> Current implementation: MeshAgent room memory is currently backed by [Lance Graph](https://github.com/lance-format/lance-graph), which stores entities and relationships in a graph-oriented format. Lance Graph is a Cypher-capable graph query engine.
+
+## Permissions and grants
+
+If a deployed service needs to use room memory, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: full room-memory command set (`list`, `create`, `drop`, `inspect`, `query`, `recall`, `ingest`, `optimize`, and more).
+- **Python**: full `MemoryClient` API.
+- **Dart**: `list`, `create`, and `drop` helpers.
+- **TypeScript/.NET**: use the CLI or call toolkit `memory` via `room.invoke(...)` / `room.Invoke(...)`.
+
+## Core API Methods
 
 ### list
 - **Description**: List memory names in a namespace.
@@ -407,3 +418,9 @@ result = await room.memory.optimize(
 print(result)
 ```
 </CodeGroup>
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Database API](./database)
+- [Storage API](./storage)

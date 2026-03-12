@@ -12,24 +12,26 @@ import DocumentsWritingCs from "/snippets/examples/dotnet/documents-writing.mdx"
 
 ## Overview
 
-The `SyncClient` lets you create, open, describe, and synchronize MeshDocuments through a `RoomClient`. Use it to:
+The `SyncClient` is the Room API for live shared documents (`MeshDocuments`). Use it when multiple humans or agents need to read and edit the same structured document in real time.
 
-- Create documents (with optional initial JSON) and infer schemas from file extensions.
-- Open documents (optionally creating them if missing) and auto-sync changes across participants.
-- Describe documents as JSON without opening a sync session.
-- Push raw sync payloads when you have pre-encoded changes.
+## Why use the Sync API?
 
-MeshDocuments enable your agents to share and synchronize information in real time across platforms. They resemble a web page's structure but offer much greater flexibility. For example, if you want to generate website content with your agents, you can start with a simple HTML-compatible document format:
+- Keep shared state in a live document instead of relying only on chat history.
+- Let multiple participants collaborate on the same structured content at once.
+- Define document schemas that help users and agents write valid data.
 
-```html
-<html>
-    <body>
-        <p class="content"></p>
-    </body>
-</html>
-```
+## How it works
 
-A MeshDocument, like an HTML document, is composed of elements that can have child elements and attributes. However, MeshDocuments introduce additional features and capabilities that go beyond standard HTML or XML.
+You create or open a document by path. Opening a document starts a live synchronization session so local changes propagate to other participants in the room. Use `describe` when you want the current JSON state without opening a sync session, and use `sync` only when you already have encoded changes to send.
+
+## Permissions and grants
+
+If a deployed service needs to synchronize room documents, its participant token needs the appropriate Room API grants for sync and the relevant room resources. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: create and inspect documents with `meshagent room sync ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: sync helpers are shown below.
 
 ## Defining Your Document Structure
 
@@ -346,3 +348,9 @@ await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
 
 - **Extensibility**  
   You can extend the `SyncClient` for specialized document operations—such as partial updates, conflict resolution logic, or customized schema handling—by adding new methods or composing it with other classes that also use `RoomClient`.
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Documents Quickstart](../documents/quickstart)
+- [Storage API](./storage)

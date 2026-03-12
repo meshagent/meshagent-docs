@@ -1,13 +1,27 @@
 ## Overview
 
-The `DatabaseClient`  serves as a high-level interface for interacting with a relational-like database. It lets you manage room-scoped tables and perform structured queries. Each method in the `DatabaseClient` corresponds to a particular request sent to the server, handling tasks like table creation, updates, deletions, and searches. The client leverages `JsonChunk` objects and typed parameters to streamline the process. Use it to:
+The `DatabaseClient` is the Room API for room-scoped structured data. Use it to create tables, insert and update rows, build indexes, and run text or vector search without provisioning a separate database.
 
-- List tables and create/drop them (with schema or from data, with create/overwrite/create_if_not_exists modes).
-- Modify schemas (add/drop columns) and data (insert, update, delete, merge/upsert).
-- Search with text filters, vector similarity, and indexed lookups; create indexes (scalar, vector, full-text) and drop them.
-- Optimize storage and (Python) inspect/restore table versions.
+## Why use the Database API?
 
----
+- Keep structured room data close to the agents and services that use it.
+- Support filtering, analytics, semantic search, and retrieval workflows in one place.
+- Manage schemas and indexes through the same Room API surface you already use for messaging, storage, and sync.
+
+## How it works
+
+Each room database contains named tables. You can create tables from a schema or from raw data, update rows, create scalar/full-text/vector indexes, and run searches that combine filters with text or vector similarity. Use it when your room needs structured records instead of only files or chat history.
+
+> Current implementation: MeshAgent room database is currently backed by [LanceDB](https://lancedb.com/), a storage engine that fits table, vector, text, and multimodal workloads.
+
+## Permissions and grants
+
+Deployed services need a database API grant to use this API, and those grants can be narrowed to specific tables. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: the full database surface is available under `meshagent room database ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## API Methods
 
@@ -1019,6 +1033,8 @@ await room.database.restore(table="users", version=versions[-1].version)
 
 ---
 
-## Conclusion
+## Related guides
 
-The database interface provides a convenient abstraction for managing a database within a room server environment. It covers a broad set of operations—ranging from table creation and schema management to complex operations like vector-based and full-text searches. By handling the request/response flow through `RoomClient`, it keeps your database interactions modular and maintainable.
+- [Room API Overview](./overview)
+- [Memory API](./memory)
+- [Indexer Example](../agents/standard/indexer)

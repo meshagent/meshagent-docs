@@ -1,64 +1,51 @@
-`MessagingClient` enables sending messages between participants and agents in a room, as well as handling streaming messages (`MessageStreamWriter` and `MessageStreamReader`).
-
----
-
 ## Overview
 
-Messaging is a cornerstone of any application that involves dynamic collaboration—whether that collaboration happens between two people, two software agents, or a mix of both. By layering real-time messaging capabilities on top of your existing MeshAgent-powered infrastructure, you gain the flexibility to handle an extensive variety of use cases—from a simple text-based chat between human users to a sophisticated communication pipeline where AI-driven agents and humans collaborate to accomplish tasks. 
+The `MessagingClient` is the Room API for real-time participant-to-participant communication. Use it to send direct messages, broadcast updates, receive live events, and open streams for larger or incremental payloads.
 
----
+## Why use the Messaging API?
 
-### Why Messaging?
+- Build chat, agent-human collaboration, and live status updates inside a room.
+- Send typed JSON payloads instead of inventing a custom messaging protocol.
+- Broadcast announcements to everyone in a room or send point-to-point messages to one participant.
+- Stream larger payloads or partial updates when a single message is not enough.
 
-1. **Real-time collaboration**  
-   Effective collaboration happens in real time. The Messaging API allows participants—be they humans or agents—to exchange messages instantly. This immediacy is essential for systems that demand quick feedback loops, like interactive help desk solutions, live analytics dashboards, or agent-based problem solving.
+## How it works
 
-2. **Uniform interface for agents and humans**  
-   The Messaging API treats all participants the same, regardless of whether they’re powered by artificial intelligence or controlled by a human. A single, consistent abstraction lowers the complexity of real-time, multi-user applications. You focus on creating features; the API handles participant states, message routing, and attachment handling.
+Messaging is participant-based. Once enabled, the client tracks remote participants and emits events for messages and participant changes. Use direct messages for one-to-one delivery, broadcasts for room-wide updates, and streams when the payload arrives in chunks or over time.
 
-3. **Structured data exchange**  
-   Our Messaging API supports sending JSON-based messages and optional binary attachments. This makes it easy to share structured data, multimedia files, or AI model outputs. Instead of rolling your own data-transmission system, you can rely on standardized endpoints and message formats.
+## Core concepts
 
-4. **Broadcast and point-to-point**  
-   Send targeted messages to a single participant or simultaneously reach everyone in a room. This flexibility simplifies building features like announcements, shared notifications, team-based workflows, or private agent-human DM channels.
+### Participant model
 
-5. **Extendable via Streams**  
-   For more advanced scenarios—like sending large files or streaming partial updates—the Messaging API provides a streaming protocol. Your agents can pass chunks of data incrementally, maintaining a continuous exchange without blocking the rest of your system.
+Messaging treats every room member as a `Participant`, whether that participant is a human, an agent, or another service. That gives you one delivery model for direct messages, broadcasts, and stream setup instead of separate APIs for different participant types.
 
----
+### Typed JSON messages
 
-## Core Features
+Each message has a `type` plus a JSON payload. That makes it easy to build simple chat flows, structured commands, workflow events, or agent-to-agent coordination on top of the same messaging surface.
 
-### Participant Model
-Any entity in a room—human or agent—gets represented by a `Participant`. Each `Participant` has a unique identifier and can be addressed individually for one-on-one interactions, or collectively for broadcasts. This single abstraction unifies how you approach messaging, so your app doesn’t need separate code paths for humans vs. agents.
+### Optional attachments
 
-### JSON-Powered Messages
-Your messages can include arbitrary JSON data, which makes them easy to parse and manipulate. Whether you’re sending a text prompt to an AI agent, user profile updates, or a command to start a workflow, JSON-serialization keeps your messages compatible across the entire system.
+Messages can also carry binary attachments. Use this when you need to send raw bytes along with the JSON payload, for example for images, voice snippets, or other generated artifacts.
 
-### Optional Attachments
-In addition to JSON, you can attach binary data directly to a message. This is especially useful for file uploads, voice notes, images, or model outputs that need to be transferred as raw bytes.
+### Streams for larger payloads
 
-### Stream Communication
-When your application requires transferring large or continuous data—like audio/video streams, logs, or sensor outputs—Streams help you break the data into manageable chunks, while preserving the real-time nature of the exchange.
+For large or incremental payloads, use streams instead of a single message. A stream opens between two participants, sends `MessageStreamChunk` values over time, and closes when the sender is done.
 
-### Event-Driven Architecture
-Register event handlers for specific message types so your application logic reacts immediately. For example, you can trigger a follow-up task whenever an agent returns a particular response, or display a system notification any time a participant updates their attributes.
+### Event-driven behavior
 
+Once messaging is enabled, the client can emit events for incoming messages, participant changes, and accepted streams. That makes it suitable for real-time workflows where your application reacts immediately when another participant joins, sends a message, or starts a stream.
 
+## Permissions and grants
 
+If a deployed service needs to send or receive room messages, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-- **`MessagingClient`** – A high-level client that:
-  - Sends and receives messages between room participants
-  - Manages stream-based messages via `createStream()`
-  - Tracks remote participants and their attributes
-  - Can enable or disable the messaging subsystem
-- **`MessageStreamChunk`** – Represents a single chunk in a stream, containing a header and optional binary data.
-- **`MessageStreamWriter`** – A writer for sending streaming data (chunks) to a remote participant.
-- **`MessageStreamReader`** – A reader that receives streaming data (chunks) from a remote participant.
+## CLI and SDK availability
 
-## Example Usage
+- **CLI**: inspect participants and send or broadcast simple messages with `meshagent room messaging ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: the live messaging client supports events and streams in addition to direct messages.
+- **Streams and event subscriptions**: use the SDKs for these; the CLI is mainly for inspection and simple message delivery.
 
-Below are some examples demonstrating how to use `MessagingClient` for basic messaging and streaming use cases.
+## Getting Started Example
 
 ### Basic Example: Sending and Receiving Messages
 
@@ -319,7 +306,9 @@ await streamWriter.Close();
 
 ---
 
-#### enable(onStreamAccept?)
+## API Methods
+
+### enable(onStreamAccept?)
 
 Enables the messaging subsystem on the server. Optionally provides a callback that is triggered whenever an incoming stream is opened by a remote participant.
 
@@ -355,7 +344,7 @@ await room.Messaging.Enable(onStreamAccept: reader =>
 
 ---
 
-#### disable()
+### disable()
 
 Disables the messaging subsystem on the server.
 
@@ -380,7 +369,7 @@ await room.Messaging.Disable();
 ---
 
 
-#### sendMessage(to, type, message, attachment?)
+### sendMessage(to, type, message, attachment?)
 
 Sends a message to a specific participant, optionally including a binary `attachment`.
 
@@ -444,7 +433,7 @@ await room.Messaging.SendMessage(
 ---
 
 
-#### broadcastMessage(type, message, attachment?)
+### broadcastMessage(type, message, attachment?)
 
 Broadcasts a message to **all** participants in the room.
 
@@ -508,7 +497,7 @@ await room.Messaging.BroadcastMessage(
 ---
 
 
-#### createStream(to, header)
+### createStream(to, header)
 
 Creates a new stream directed at a single participant. Returns a `MessageStreamWriter` once the remote participant accepts the stream.
 
@@ -556,7 +545,7 @@ var writer = await room.Messaging.CreateStream(
 
 ---
 
-#### remoteParticipants
+### remoteParticipants
 
 Provides an iterable collection of all known remote participants. 
 
@@ -656,7 +645,9 @@ await streamWriter.Close();
 
 
 
-1. **Event Emission**  
+## Additional Notes
+
+1. **Event emission**
    `MessagingClient` extends `EventEmitter<RoomMessageEvent>`. It emits events whenever messages are received or streams are opened/closed. You can listen for the `"message"` event or for custom events like `"participant_added"`, `"participant_removed"`, etc.:
 
 <CodeGroup>
@@ -717,3 +708,9 @@ room.Messaging.On("participant_added", data =>
 
 5. **Performance**  
    For large or frequent streams, consider buffering or batching chunk writes in your client logic. The streaming mechanism in `MessagingClient` is designed to handle incremental data transfer, but network considerations remain important for efficient performance.
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Queues API](./queue)
+- [Sync API](./sync)

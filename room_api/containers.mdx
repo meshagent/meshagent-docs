@@ -1,12 +1,25 @@
-##  Overview
+## Overview
 
-The `ContainersClient` lets you run containers on demand inside a Room via the `RoomClient`. This is particularly useful for ad-hoc tasks or testing code before deploying it as a Project or Room Service. With the Containers API you can:
+The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
 
-- Pull an image from a public or private registry
-- Run a container from an image
-- Stream logs for containers
-- Open an interactive terminal in a running container
-- Manage containers and images (list/stop/delete)
+## Why use the Containers API?
+
+- Pull and manage images without leaving the room context.
+- Run short-lived workloads or exploratory commands on demand.
+- Inspect logs or open an interactive terminal in a running container.
+
+## How it works
+
+Containers are room-scoped workloads. You can pull images, run a container, stream logs, exec into it, stop it, and delete its metadata when you are done. Deployed Room Services and Project Services rely on the same underlying container infrastructure, but the Containers API gives you direct, on-demand control.
+
+## Permissions and grants
+
+If you want a deployed service to use the Containers API, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: image and container lifecycle commands are available under `meshagent room container ...`.
+- **Python**: the page below shows the current helper surface.
 
 ## API Methods
 
@@ -229,5 +242,8 @@ await room.containers.delete(container_id=container_id)
 ```
 </CodeGroup>
 
-## Conclusion
-The Containers API makes it easy to run code ad-hoc inside a MeshAgent room. Containerized services rely on the Containers API behind the scenes to manage deployed Room and Project Services.
+## Related guides
+
+- [Room API Overview](./overview)
+- [Services Overview](../services_room_containers/overview)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
