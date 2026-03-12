@@ -54,7 +54,7 @@ Create a room-scoped secret so the MCP server can authenticate with Supabase. Th
 ```bash bash
 meshagent setup # authenticate to MeshAgent if not already signed in
 
-meshagent room secrets set \
+meshagent room secret set \
   --room myroom \
   --secret-id supabase \
   --name supabase \
@@ -63,7 +63,7 @@ meshagent room secrets set \
 ```
 
 <Accordion title="Managing secrets for other identities">
-When you create a room secret with `--for-identity supabase`, that secret belongs to the `supabase` identity — not to you. Running `meshagent room secrets list --room myroom` while authenticated as yourself won't show it.
+When you create a room secret with `--for-identity supabase`, that secret belongs to the `supabase` identity — not to you. Running `meshagent room secret list --room myroom` while authenticated as yourself won't show it.
 
 To view or delete secrets for another identity, you need to generate a participant token for that identity and temporarily act as them.
 
@@ -93,8 +93,8 @@ You can find your project ID by running `meshagent project list` or from the out
 
 **3. View or delete the secrets:**
 ```bash
-meshagent room secrets list --room myroom
-meshagent room secrets delete --room myroom --secret-id supabase
+meshagent room secret list --room myroom
+meshagent room secret delete --room myroom --secret-id supabase
 ```
 
 **4. Unset the environment variables when you're done** — otherwise your CLI will continue executing commands using the token you created:
@@ -134,7 +134,7 @@ INFO:mcp.client.streamable_http:Received session ID: ...
 Open a new terminal tab then run: 
 ```bash bash
 meshagent setup # authenticate and connect to the same project
-meshagent room agents list-toolkits --room myroom
+meshagent room agent list-toolkits --room myroom
 ```
 
 You should see the supabase toolkit listed along with all its available tools. You can also verify in [MeshAgent Studio](https://studio.meshagent.com). Navigate to `myroom`, open the menu in the upper left, and select **Toolkits**. You will see the **supabase** toolkit and its associated tools. 
