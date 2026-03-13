@@ -1,34 +1,58 @@
-
 ## Overview
 
-The `QueuesClient` lets you manage lightweight room-scoped queues for simple task/message passing:
+The `QueuesClient` is the Room API for simple room-scoped work queues. Use it when one participant or service needs to hand off JSON work items to another participant or service asynchronously.
 
-- List queues with their current size.
-- Open/create queues (or auto-create via `send`/`receive` when `create=True`).
-- Send messages, receive messages (optionally waiting), and drain/close queues.
+## Why use the Queues API?
+
+- Decouple producers and consumers when work should happen later.
+- Build lightweight background workflows without adding another queueing system.
+- Coordinate multi-agent jobs where one participant produces work and another consumes it.
+
+## How it works
+
+A queue stores JSON messages until a consumer receives them. Senders and receivers can be different participants or services in the same room. SDKs can list, open, send, receive, drain, and close queues, while Python auto-creates queues during `send` or `receive` when `create=True`.
+
+## Permissions and grants
+
+If a deployed service needs to use room queues, its participant token needs the appropriate queue-related Room API grants. These grants can be scoped to list/send/receive capabilities. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: send and receive messages with `meshagent room queue ...`.
+- **SDKs**: helper methods cover `list`, `open`, `send`, `receive`, `drain`, and `close`, with the Python `open` difference noted below.
 
 ## API Methods
 
 Below is an example of how you might use the `QueuesClient` in your code:
 
 <CodeGroup>
+```bash CLI
+meshagent room queue send \
+  --room myroom \
+  --queue my-queue \
+  --json '{"payload":"Hello World!"}'
+
+meshagent room queue receive \
+  --room myroom \
+  --queue my-queue
+```
 ```python Python
 # List existing Queues
 queues = await room.queues.list()
 print("Queues:", queues)
 
 # Send a messages
-await room.queues.send("my-queue", {"payload": "Hello World!"})
+await room.queues.send(name="my-queue", message={"payload": "Hello World!"})
 
 # Receive a message
-message = await room.queues.receive("my-queue")
+message = await room.queues.receive(name="my-queue")
 print("Received message:", message)
 
 # Drain a queue
-await room.queues.drain("my-queue")
+await room.queues.drain(name="my-queue")
 
 # Close the queue
-await room.queues.close("my-queue")
+await room.queues.close(name="my-queue")
 ```
 ```js NodeJs
 // List existing queues
@@ -223,7 +247,7 @@ await room.Queues.Open("my-queue");
 
 <CodeGroup>
 ```python Python
-await room.queues.drain("my-queue")
+await room.queues.drain(name="my-queue")
 ```
 ```js NodeJs
 await room.queues.drain("my-queue");
@@ -250,7 +274,7 @@ await room.Queues.Drain("my-queue");
 
 <CodeGroup>
 ```python Python
-await room.queues.close("my-queue")
+await room.queues.close(name="my-queue")
 ```
 ```js NodeJs
 await room.queues.close("my-queue");
@@ -276,8 +300,14 @@ await room.Queues.Close("my-queue");
 #### `send(name, message, create)`
 
 <CodeGroup>
+```bash CLI
+meshagent room queue send \
+  --room myroom \
+  --queue my-queue \
+  --json '{"foo":"bar"}'
+```
 ```python Python
-await room.queues.send("my-queue", {"foo": "bar"}, create=True)
+await room.queues.send(name="my-queue", message={"foo": "bar"}, create=True)
 ```
 ```js NodeJs
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
@@ -306,8 +336,13 @@ await room.Queues.Send("my-queue", message, create: true);
 #### `receive(name, create, wait)`
 
 <CodeGroup>
+```bash CLI
+meshagent room queue receive \
+  --room myroom \
+  --queue my-queue
+```
 ```python Python
-message = await room.queues.receive("my-queue", create=True, wait=True)
+message = await room.queues.receive(name="my-queue", create=True, wait=True)
 ```
 ```js NodeJs
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
@@ -351,3 +386,9 @@ var received = await room.Queues.Receive("my-queue", create: true, wait: true);
 
 - **SDK availability**  
   The server supports `queues.open`, but the Python SDK doesn’t expose an `open` helper today—queues are auto-created when `create=True` on `send`/`receive`. JS/TS/Dart/.NET expose `open`.
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Messaging API](./messaging)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)

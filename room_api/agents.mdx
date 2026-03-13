@@ -1,57 +1,71 @@
 ## Overview
 
-The `AgentsClient` defines methods to call agents, list available toolkits, and invoke specific tools. It uses an underlying `RoomClient` to send requests.
+The `AgentsClient` is the Room API for calling agents and discovering the toolkits available in a room. Use it when you want to send work to a deployed agent, inspect which built-in or service-provided toolkits are available, or call a tool directly.
 
-- **AgentsClient**: The main client class for interacting with agents and tools. It handles:
-  - Calling agents
-  - Listing available toolkits
-  - Invoking specific tools
+## Why use the Agents API?
 
-- **ToolDescription**: Describes an individual tool, including metadata and input schemas.
-- **ToolkitDescription**: Groups multiple tools under one toolkit name, allowing retrieval of individual tools by name.
-- **ToolkitConfiguration**: Describes which tools in a toolkit you want to enable or use.
+- Call a named agent endpoint from the CLI or SDK instead of wiring your own service-to-service protocol.
+- Discover the tools available in the current room before handing work to an agent or rendering a tool picker.
+- Invoke a room toolkit directly when you already know which tool you want.
 
----
+## How it works
+
+The Agents API exposes three core concepts:
+
+- **Agent**: a named endpoint you call with `make_call` / `call`.
+- **Toolkit**: a named collection of tools available in the room.
+- **Tool**: an individual operation inside a toolkit.
+
+`list_toolkits` returns toolkit metadata objects, and each toolkit contains a `tools` list with the corresponding tool metadata. That metadata is useful when you need to inspect available tools or render dynamic tool UIs, but most users only need the three methods below.
+
+## Permissions and grants
+
+If you want a deployed service to call agents or tools through the Room APIs, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: inspect toolkits and invoke tools with `meshagent room agent ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## API Methods
 
 ### Call
 
-- **Description**:  
-  Send a request to an agent to perform an action. (Python uses `make_call`; other SDKs use `call`.)
+- **Description**:
+  Send a request to an agent to perform an action. Python uses `make_call`; other SDKs use `call`.
 - **Parameters**:
   - `name`: The agent name.
   - `url`: The route on the agent to call.
   - `arguments`: Payload to send.
-- **Returns**: `None` (request is fire-and-forget; handle results in your agent).
+- **Returns**: `None`.
 
 <CodeGroup>
 ```python Python
 await room.agents.make_call(
   name="example-agent",
   url="some-endpoint",
-  arguments={ "foo": "bar" }
+  arguments={"foo": "bar"},
 )
 ```
 ```javascript NodeJs
 await room.agents.call({
   name: "example-agent",
   url: "some-endpoint",
-  arguments: { "foo": "bar" }
+  arguments: { foo: "bar" },
 });
 ```
 ```typescript TypeScript
 await room.agents.call({
   name: "example-agent",
   url: "some-endpoint",
-  arguments: { "foo": "bar" }
+  arguments: { foo: "bar" },
 });
 ```
 ```dart Dart
 await room.agents.call(
   name: "example-agent",
   url: "some-endpoint",
-  arguments: { "foo": "bar" }
+  arguments: {"foo": "bar"},
 );
 ```
 ```dotnet C#
@@ -66,16 +80,18 @@ await room.Agents.MakeCall(
 ```
 </CodeGroup>
 
----
-
 ### List toolkits
 
-- **Description**: Get all available toolkits and their tools.
+- **Description**: Get the toolkits currently available in the room.
 - **Parameters**:
   - `participant_id` *(optional, Python)*: Filter toolkits for a given participant.
-- **Returns**: Array of `ToolkitDescription`.
+- **Returns**: `ToolkitDescription[]`, where each toolkit includes its metadata and a `tools` list.
 
 <CodeGroup>
+```bash CLI
+meshagent room agent list-toolkits \
+  --room myroom
+```
 ```python Python
 all_toolkits = await room.agents.list_toolkits()
 
@@ -86,14 +102,14 @@ for toolkit in all_toolkits:
 const allToolkits = await room.agents.listToolkits();
 
 allToolkits.forEach((toolkit) => {
-  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map(t => t.name)}`);
+  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name)}`);
 });
 ```
 ```typescript TypeScript
 const allToolkits = await room.agents.listToolkits();
 
 allToolkits.forEach((toolkit) => {
-  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map(t => t.name)}`);
+  console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name)}`);
 });
 ```
 ```dart Dart
@@ -108,23 +124,19 @@ var toolkits = await room.Agents.ListToolkits();
 
 foreach (var toolkit in toolkits)
 {
-  Console.WriteLine($"\n{toolkit.Name}: {toolkit.Title} - {toolkit.Description}");
+  Console.WriteLine($"{toolkit.Name}: {toolkit.Title}");
   foreach (var tool in toolkit.Tools)
   {
-     Console.WriteLine($"  {tool.Name}: {tool.Title} - {tool.Description}");
+    Console.WriteLine($"  {tool.Name}: {tool.Title}");
   }
 }
-
 ```
 </CodeGroup>
 
----
-
 ### Invoke tool
 
-- **Description**:  
-  Invoke a specific tool inside a toolkit directly (without going through an agent).
-  TaskRunners are exposed as toolkits, so invoke their `run_<agent_name>_task` tool to run them.
+- **Description**:
+  Invoke a tool inside a toolkit directly.
 - **Parameters**:
   - `toolkit`: Toolkit name.
   - `tool`: Tool name.
@@ -132,183 +144,55 @@ foreach (var toolkit in toolkits)
   - `arguments` *(JS/TS/Dart/.NET)*: Payload for the tool.
   - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
   - `caller_context` *(optional, Python)*: Additional context metadata for the call.
-- **Returns**: `Response` (`JsonChunk` in most SDKs) with tool output.
+- **Returns**: Tool output (`Content` / `JsonChunk`, depending on the SDK).
 
 <CodeGroup>
+```bash CLI
+meshagent room agent invoke-tool \
+  --room myroom \
+  --toolkit example-toolkit \
+  --tool toolA \
+  --arguments '{"param1":"value1"}'
+```
 ```python Python
 response = await room.agents.invoke_tool(
   toolkit="example-toolkit",
   tool="toolA",
-  input={"param1": "value1"}
+  input={"param1": "value1"},
 )
-# 'response' may contain JSON data or a message detailing the tool's output.
 ```
 ```javascript NodeJs
 const response = await room.agents.invokeTool({
   toolkit: "example-toolkit",
   tool: "toolA",
-  arguments: { param1: "value1" }
+  arguments: { param1: "value1" },
 });
-// 'response' may contain JSON data or a message detailing the tool's output.
 ```
 ```typescript TypeScript
 const response = await room.agents.invokeTool({
   toolkit: "example-toolkit",
   tool: "toolA",
-  arguments: { param1: "value1" }
+  arguments: { param1: "value1" },
 });
-
-// 'response' may contain JSON data or a message detailing the tool's output.
 ```
 ```dart Dart
 final response = await room.agents.invokeTool(
   toolkit: "example-toolkit",
   tool: "toolA",
-  arguments: {"param1": "value1"}
+  arguments: {"param1": "value1"},
 );
-
-// 'response' may contain JSON data or a message detailing the tool's output.
 ```
 ```dotnet C#
-var toolArgs = new Dictionary<string, object?> { { "param1", "value1" } };
+var toolArgs = new Dictionary<string, object?>
+{
+  ["param1"] = "value1"
+};
 var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
 ```
 </CodeGroup>
 
-## Typical Workflow
+## Related guides
 
-1. **Instantiate `RoomClient`**  
-   ```javascript NodeJs
-   const room = new RoomClient({protocol});
-   ```
-
-2. **List Available Toolkits**  
-   ```javascript NodeJs
-   const toolkits = await room.agents.listToolkits();
-   ```
-
-3. **Invoke a TaskRunner Tool**  
-   ```javascript NodeJs
-   const result = await room.agents.invokeTool({
-     toolkit: "mytaskrunner",
-     tool: "run_mytaskrunner_task",
-     arguments: { prompt: "Explain the concept of entanglement." }
-   });
-   console.log("Tool Result:", result);
-   ```
-
-4. **Call an Agent Directly** (If the agent supports such calls)  
-   ```javascript NodeJs
-   await room.agents.call({
-     name: "myAgent",
-     url: "run-something",
-     arguments: { data: "payload" }
-   });
-   ```
-
----
-
-## ToolDescription
-
-Represents metadata and input requirements for an individual tool. Tools can exist independently or be grouped in a `ToolkitDescription`.
-
-<Tabs>
-  <Tab title="Python">
-
-  - **`name`**  The tool's name.
-  - **`title`**: The tool's title.
-  - **`description`**: The tool's description.
-  - **`input_schema`**: JSON Schema describing the payload expected when invoking the tool.
-  - **`thumbnail_url`** *(optional)*: URL for an icon or thumbnail.
-  - **`defs`** *(optional)*: Additional JSON Schema definitions referenced by `inputSchema`.
-  - **`pricing`** *(optional)*: Pricing metadata, if the tool carries usage costs.
-  - **`supports_context`** *(optional; defaults to `False`)*: Indicates whether the tool can consume conversational context automatically.
-
-  </Tab>
-  <Tab title="Dart">
-
-  - **`name`**  The tool's name.
-  - **`title`**: The tool's title.
-  - **`description`**: The tool's description.
-  - **`inputSchema`**: JSON Schema describing the payload expected when invoking the tool.
-  - **`thumbnailUrl`** *(optional)*: URL for an icon or thumbnail.
-  - **`defs`** *(optional)*: Additional JSON Schema definitions referenced by `inputSchema`.
-  - **`pricing`** *(optional)*: Pricing metadata, if the tool carries usage costs.
-  - **`supportsContext`** *(optional; defaults to `False`)*: Indicates whether the tool can consume conversational context automatically.
-
-  </Tab>
-  <Tab title="TypeScript">
-
-  - **`name`**  The tool's name.
-  - **`title`**: The tool's title.
-  - **`description`**: The tool's description.
-  - **`inputSchema`**: JSON Schema describing the payload expected when invoking the tool.
-  - **`thumbnailUrl`** *(optional)*: URL for an icon or thumbnail.
-  - **`defs`** *(optional)*: Additional JSON Schema definitions referenced by `inputSchema`.
-  - **`pricing`** *(optional)*: Pricing metadata, if the tool carries usage costs.
-  - **`supportsContext`** *(optional; defaults to `False`)*: Indicates whether the tool can consume conversational context automatically.
-
-  </Tab>
-  <Tab title=".NET">
-
-  - **`Name`**  The tool's name.
-  - **`Title`**: The tool's title.
-  - **`Description`**: The tool's description.
-  - **`InputSchema`**: JSON Schema describing the payload expected when invoking the tool.
-  - **`ThumbnailUrl`** *(optional)*: URL for an icon or thumbnail.
-  - **`Defs`** *(optional)*: Additional JSON Schema definitions referenced by `inputSchema`.
-  - **`Pricing`** *(optional)*: Pricing metadata, if the tool carries usage costs.
-  - **`SupportsContext`** *(optional; defaults to `False`)*: Indicates whether the tool can consume conversational context automatically.
-
-  </Tab>
-</Tabs>
----
-
-## ToolkitDescription
-
-Groups multiple tools under a single toolkit. Allows easy retrieval of tools by name and provides a common structure for describing a set of tools.
-
-<Tabs>
-  <Tab title="Python">
-    - **`name`**: The toolkit's name.
-    - **`title`**: Display title for the toolkit.
-    - **`description`**: The toolkit's description.
-    - **`tools`**: A list of `ToolDescription`.
-    - **`thumbnail_url`** (optional): Thumbnail image URL when provided.
-  </Tab>
-  <Tab title="Dart">
-    - **`name`**: The toolkit's name.
-    - **`title`**: Display title for the toolkit.
-    - **`description`**: The toolkit's description.
-    - **`tools`**: A list of `ToolDescription`.
-    - **`thumbnailUrl`**  (optional): Thumbnail image URL when provided.
-  </Tab>
-  <Tab title="TypeScript">
-    - **`name`**: The toolkit's name.
-    - **`title`**: Display title for the toolkit.
-    - **`description`**: The toolkit's description.
-    - **`tools`**: A list of `ToolDescription`.
-    - **`thumbnailUrl`** (optional): Thumbnail image URL when provided.
-  </Tab>
-  <Tab title=".NET">
-    - **`Name`**: The toolkit's name.
-    - **`Title`** Display title for the toolkit..
-    - **`Description`** The toolkit's description.
-    - **`Tools`**: A list of `ToolDescription`.
-    - **`ThumbnailUrl`** (optional): Thumbnail image URL when provided.
-  </Tab>
-</Tabs>
-
----
-
-## ToolkitConfiguration
-
-Specifies how a particular toolkit should be used. It can indicate whether to use all tools or only specific ones within the toolkit.
-
----
-
-## Conclusion
-
-The `AgentsClient` module provides a flexible, high-level API for managing and interacting with agents and toolkits in a distributed or plugin-based environment. Use `AgentsClient` for routine operations—listing toolkits, invoking tools, or calling agents—and rely on the description classes (`ToolDescription` and `ToolkitDescription`) to manage the metadata and validation for those resources.
-
-For more details on the underlying request/response flow, refer to your implementation of `RoomClient`, `Response`, and `JsonChunk`.
+- [Room API Overview](./overview)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
+- [Standard Agents](../agents/standard/intro)

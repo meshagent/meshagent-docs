@@ -5,42 +5,54 @@ import StorageDownloadDart from "/snippets/examples/dart/storage-download.mdx"
 import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
 ## Overview
-The `StorageClient` manages files and folders within a room’s remote storage. All interactions are asynchronous (using `await`) and return promises/futures. The storage system can notify clients when files are created, updated, or deleted via events, enabling real-time synchronization or UI updates.
 
-Use it to check for files, create or overwrite them, append data across writes, download or get a direct URL, list folder contents, and delete files when no longer needed.
+The `StorageClient` is the Room API for room-scoped files and folders. Use it to store shared inputs, outputs, artifacts, and attachments that humans, agents, and services in the same room need to read or write.
 
-Key concepts include:
+## Why use the Storage API?
 
-- **Async Methods**: All I/O methods are asynchronous and return futures/promises.
-- **Handles**: Opening a file returns an object you can use for writing data and eventually closing.
-- **Events**: The storage system can emit events whenever a file is updated or deleted.
+- Share files between people, agents, and deployed services without wiring separate object storage access.
+- Store outputs such as reports, logs, generated media, or intermediate artifacts.
+- Download file contents directly or get a downloadable URL when you need to hand a file to another system.
 
----
+## How it works
+
+Paths are relative to the room storage root. Opening a file returns a handle; writes become visible when you close that handle. The API also emits `file.updated` and `file.deleted` events so other participants can react to changes.
+
+> Current implementation note: the repo includes both local filesystem and GCS-backed storage providers. Deployed services can also mount room storage into the filesystem. The Room Storage API is the stable contract; bucket-mount details belong to service/runtime docs rather than the core API contract.
+
+## Permissions and grants
+
+`open`/`write`/`close` and `download`/`download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
+
+## CLI and SDK availability
+
+- **CLI**: file operations are available under `meshagent room storage ...`.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## Events
 
 The storage system emits two types of events:
 
 - **`file.updated`**  
-  Triggered when a file is created or updated. Handlers receive a `path` argument identifying the file's location in storage.
+  Triggered when a file is created or updated. Python and .NET handlers receive `path` and `participant_id`. JS/TS and Dart handlers receive a `FileUpdatedEvent` with `.path`.
 
 <CodeGroup>
 ```python Python
 def on_file_updated(path: str, participant_id: str):
-   print(f"File updated: {path}")
+   print(f"File updated: {path} by {participant_id}")
 
 room.storage.on("file.updated", on_file_updated)
 ```
 ```javascript NodeJs
-function onFileUpdated(path, participantId) {
-    console.log("File updated:", path);
+function onFileUpdated(event) {
+    console.log("File updated:", event.path);
 }
 
 room.storage.on("file.updated", onFileUpdated);
 ```
 ```typescript TypeScript
-function onFileUpdated(path: string, participantId: string) {
-    console.log("File updated:", path);
+function onFileUpdated(event: FileUpdatedEvent) {
+    console.log("File updated:", event.path);
 }
 
 room.storage.on("file.updated", onFileUpdated);
@@ -59,7 +71,7 @@ room.listen((RoomEvent event) {
 ```dotnet C#
 void OnFileUpdated(Dictionary<string, object?> data)
 {
-    Console.WriteLine($"File updated: {data["path"]}");
+    Console.WriteLine($"File updated: {data["path"]} by {data["participant_id"]}");
 }
 
 room.Storage.On("file.updated", OnFileUpdated);
@@ -68,29 +80,29 @@ room.Storage.On("file.updated", OnFileUpdated);
 
 
 - **`file.deleted`**  
-  Triggered when a file is deleted. Handlers receive a `path` argument identifying the file's location in storage.
+  Triggered when a file is deleted. Python and .NET handlers receive `path` and `participant_id`. JS/TS and Dart handlers receive a `FileDeletedEvent` with `.path`.
 
 
 <CodeGroup>
 ```python Python
-def on_file_deleted(path: str):
-   print(f"File deleted: {path}")
+def on_file_deleted(path: str, participant_id: str):
+   print(f"File deleted: {path} by {participant_id}")
 
 room.storage.on("file.deleted", on_file_deleted)
 ```
 ```javascript NodeJs
-function onFileDeleted(path) {
-    console.log("File deleted:", path);
+function onFileDeleted(event) {
+    console.log("File deleted:", event.path);
 }
 
-room.storage.on("file.deleted", on_file_deleted);
+room.storage.on("file.deleted", onFileDeleted);
 ```
 ```typescript TypeScript
-function onFileDeleted(path: string) {
-    console.log("File deleted:", path);
+function onFileDeleted(event: FileDeletedEvent) {
+    console.log("File deleted:", event.path);
 }
 
-room.storage.on("file.deleted", on_file_deleted);
+room.storage.on("file.deleted", onFileDeleted);
 ```
 ```dart Dart
 void onFileDeleted(String path) {
@@ -106,7 +118,7 @@ room.listen((RoomEvent event) {
 ```dotnet C#
 void OnFileDeleted(Dictionary<string, object?> data)
 {
-    Console.WriteLine($"File deleted: {data["path"]}");
+    Console.WriteLine($"File deleted: {data["path"]} by {data["participant_id"]}");
 }
 
 room.Storage.On("file.deleted", OnFileDeleted);
@@ -168,6 +180,11 @@ Checks if a file or folder exists at the given path.
 **Example**:
 
 <CodeGroup>
+```bash CLI
+meshagent room storage exists \
+  --room myroom \
+  room://folder/data.json
+```
 ```python Python
 if await room.storage.exists(path="folder/data.json"):
     print("Data file exists!")
@@ -221,6 +238,8 @@ Fetch basic metadata (exists, folder flag, created/updated timestamps) for a fil
 **Returns**  
 - `StorageEntry | None`: Entry when present; `None` if not found.
 
+The server returns `name`, `is_folder`, `created_at`, and `updated_at` fields. SDKs that expose `stat` parse timestamps into native datetime types.
+
 **Example**:
 
 <CodeGroup>
@@ -240,7 +259,7 @@ if entry:
 
 **Description**  
 Opens a file for writing. Returns a handle used for subsequent write calls and closing.  
-If `overwrite` is `True`, an existing file at this path will be truncated.
+If `overwrite` is `True`, an existing file at this path will be truncated. Current storage providers truncate on open regardless of `overwrite`, so check `exists` or `stat` before opening if you need to guard against overwrites.
 
 **Parameters**  
 - `path` *(str)*: The file path to open or create.
@@ -274,7 +293,7 @@ var handle = await room.Storage.Open("files/new.txt", overwrite: true);
 ### `write(handle, data)`
 
 **Description**  
-Writes binary data to an open file handle.
+Writes binary data to an open file handle. You can call `write` multiple times to stream chunks before closing.
 
 **Parameters**  
 - `handle` *(file handle)*: The handle returned by `open`.
@@ -320,7 +339,7 @@ await room.Storage.Write(myHandle, dataToWrite);
 ### `close(handle)`
 
 **Description**  
-Closes an open file handle, ensuring all data has been written.
+Closes an open file handle, ensuring all data has been written. A `file.updated` event is emitted on close.
 
 **Parameters**  
 - `handle` *(file handle)*: The handle to close.
@@ -353,7 +372,7 @@ await room.Storage.Close(myHandle);
 ### `download(path)`
 
 **Description**  
-Retrieves the content of a file from the remote storage.  
+Retrieves the content of a file from the remote storage. This loads the entire file into memory; use `download_url` for large files or streaming.
 
 **Parameters**  
 - `path` *(str)*: The file path to download.
@@ -363,6 +382,12 @@ Retrieves the content of a file from the remote storage.
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage cp \
+  room://files/data.bin \
+  ./data.bin \
+  --room myroom
+```
 ```python Python
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
@@ -390,7 +415,7 @@ Console.WriteLine(fileResponse.Data);  // raw bytes
 ### `download_url(path)`
 
 **Description**  
-Requests a downloadable URL for the specified file path, which can be used to fetch the file directly (e.g., via HTTP). The exact protocol or format of the returned URL may vary.
+Requests a downloadable URL for the specified file path, which can be used to fetch the file directly (e.g., via HTTP). The exact protocol or format of the returned URL may vary, and may be a signed URL if the backing storage provider supports it.
 
 **Parameters**  
 - `path` *(str)*: The file path to retrieve a download URL for.
@@ -427,16 +452,21 @@ Console.WriteLine($"Download the file from: {url}");
 ### `list(path)`
 
 **Description**  
-Lists the contents of a folder, returning file and subfolder names along with a flag indicating if each entry is a folder.
+Lists the contents of a folder, returning file and subfolder names along with a flag indicating if each entry is a folder. The server also returns `created_at` and `updated_at` timestamps; the Python SDK exposes them on `StorageEntry`.
 
 **Parameters**  
 - `path` *(str)*: The folder path to list.
 
 **Returns**  
-- *(list)*: A list of entries, each containing a `name` and `is_folder` property.
+- *(list)*: A list of entries, each containing a `name` and `is_folder` property. Timestamps are available in SDKs that surface them.
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage ls \
+  --room myroom \
+  room://some_folder
+```
 ```python Python
 entries = await room.storage.list(path="some_folder")
 for e in entries:
@@ -475,16 +505,22 @@ foreach (var e in entries)
 ### `delete(path)`
 
 **Description**  
-Deletes a file at the given path. A `file.deleted` event is typically emitted afterward.
+Deletes a file or folder at the given path. A `file.deleted` event is typically emitted afterward. To delete a folder, pass `recursive=True` (Python) or call the raw `storage.delete` request with the `recursive` flag.
 
 **Parameters**  
 - `path` *(str)*: The file path to delete.
+- `recursive` *(bool, optional)*: Set `True` to delete folders recursively (Python helper or raw request).
 
 **Returns**  
 - `None`
 
 **Example**:
 <CodeGroup>
+```bash CLI
+meshagent room storage rm \
+  --room myroom \
+  room://folder/old_file.txt
+```
 ```python Python
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")
@@ -531,6 +567,8 @@ This sequence demonstrates basic creation, reading, and deletion flows within a 
 
 ---
 
-## Conclusion
+## Related guides
 
-The storage interface offers asynchronous file operations, suitable for real-time collaboration scenarios. You can track file updates or deletions through event handlers and immediately sync or update your application. This design makes it easy to build experiences around shared data that are robust, flexible, and user-friendly.
+- [Room API Overview](./overview)
+- [Storage in Practice](../documents/storage_in_practice)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)

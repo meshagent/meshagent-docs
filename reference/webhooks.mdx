@@ -1,89 +1,70 @@
+---
+title: Webhooks
+description: Receive MeshAgent events in your own services.
+---
+
 import Webhooks from "/snippets/examples/python/snippets/webhooks.mdx"
 
+## Overview
 
-## What Are Webhooks?
+Webhooks let MeshAgent notify your systems when events occur. Instead of polling, you register a webhook URL (from [MeshAgent Studio](../interfaces/meshagent_studio)) and MeshAgent delivers event payloads in real time.
 
-**Webhooks** are HTTP callbacks that send real-time notifications when a specific event occurs. Instead of your service constantly polling MeshAgent for updates, MeshAgent delivers event data to your configured webhook endpoint. This is especially useful for triggering workflows or data processing in response to events such as:
+Common uses:
+- Trigger a workflow when a room starts or ends.
+- Sync files to an external system.
+- Kick off automation when specific events happen in a room.
 
-- A new room starting
-- A room ending
-- Other significant lifecycle events in MeshAgent
+## Event types
 
-By leveraging webhooks, you can extend or integrate MeshAgent functionality into external systems—like logging, dashboards, or automated tasks (e.g., automatically registering an agent when a room starts).
+MeshAgent emits a small set of core webhook events. You can subscribe to specific events or use `*` to receive all.
 
----
+- `room.started` - Room session started. Payload includes `room_name`.
+- `room.ended` - Room session ended. Payload includes `room_name`.
+- `storage.file.updated` - File written or updated. Payload includes `path` and `participant_id`.
+- `storage.file.deleted` - File deleted. Payload includes `path` and `participant_id`.
+- `*` - Receive all events.
 
-## Setting Up a Webhook
+## Payload format
 
-To add a webhook in MeshAgent:
+Webhook requests are sent as JSON:
 
-1. **Navigate to your project settings.**
-2. **Enter the URL** of the server or service that should receive event notifications.
+```json
+{
+  "event": "room.started",
+  "data": {
+    "room_name": "my-room"
+  }
+}
+```
 
-When events occur, MeshAgent will send an HTTP request with relevant event data (for example, when a room starts or ends). 
+## Delivery and verification
 
----
+If you set a webhook secret, MeshAgent signs each request and sends a `Meshagent-Signature` header.
 
-## Built-in Webhook Server
+- The header value is `Bearer <jwt>`.
+- The JWT contains a SHA-256 hash of the payload.
+- The SDK `WebhookServer` verifies the signature automatically when a secret is set.
 
-While you can receive events on any web server, MeshAgent provides a **built-in webhook server** to simplify things. You can enable and extend this server by subclassing it. 
+Set the secret in your environment:
 
-### Environment Variable
+```bash
+export MESHAGENT_WEBHOOK_SECRET=your-secret
+```
 
-The built-in server expects the secret to be provided through the `MESHAGENT_WEBHOOK_SECRET` environment variable. MeshAgent will use this secret to verify that incoming webhook requests are valid.
+## Built-in WebhookServer
 
-### Default Port
+MeshAgent provides a helper server so you can focus on handling events. It listens on port `8080` by default and exposes:
 
-By default, the webhook server listens on **port 8080** and exposes two routes:
+- `GET /` for health checks.
+- `POST /webhook` for webhook delivery.
 
-1. `"/"` — Returns an HTTP 200 response for any request. (Useful for health checks in hosting environments like Cloud Run.)
-2. `"/webhook"` — The main endpoint that verifies incoming requests using the secret and then processes valid webhook payloads.
-
----
-
-## Example: Creating a Custom Webhook Server
-
-The following code shows how to create and run a basic custom webhook server. This server listens for **room started** and **room ended** events and then prints them.
+Use the SDK to create a server and handle events:
 
 <CodeGroup>
   <Webhooks />
 </CodeGroup>
 
----
+## Next steps
 
-## Verifying Webhook Signatures
-
-By providing the `MESHAGENT_WEBHOOK_SECRET` in your environment, MeshAgent signs each webhook request. This allows the built-in server (and your custom logic) to verify the authenticity of incoming requests—helping protect you from malicious or unintended calls.
-
-
-**Why you might want this**: 
-- Automatically send notifications to external monitoring tools when rooms start or end.
-- Kick off background tasks (e.g., data collection or analytics) at the start or end of a room session.
-- Register agents or tools with a room automatically
-
----
-
-## Environment Variables
-
-In addition to the `MESHAGENT_WEBHOOK_SECRET` variable, the server will look for the standard environment variables for meshagent API keys and project settings. You can find these values in the settings of your project by viewing an existing API key or creating a new one.
-
-**Why you might want this**:
-- Ensure a specific agent is always available in new rooms, providing real-time functionality (such as an auto-moderator, a data aggregator, or a Q&A assistant).
-- Centralize and automate agent deployment rather than manually adding the agent to each new room.
-
-
----
-
-## Next Steps
-
-- **Customize event handling**: Override methods to handle more event types as your application grows.
-- **Deploy your server**: Run your webhook server on platforms like Docker, AWS, or Google Cloud.
-- **Manage secrets securely**: Store `MESHAGENT_WEBHOOK_SECRET` in a secure storage solution (e.g., AWS Secrets Manager, GCP Secret Manager, or environment variables in a locked-down environment).
-
-For more advanced use cases, combine your webhook server with MeshAgent’s API to dynamically respond to events by creating or modifying rooms, registering different agents, or integrating with external services. 
-
----
-
-## Summary
-
-Webhooks are a powerful way to integrate MeshAgent events with external systems. Whether you want to log room activities, trigger custom automations, or automatically register agents, the MeshAgent webhook system—along with its built-in server—makes these integrations straightforward and secure.
+- [CLI Quickstart](../cli/getting_started)
+- [Services Overview](../services_room_containers/overview)

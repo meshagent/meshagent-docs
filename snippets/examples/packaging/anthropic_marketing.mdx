@@ -15,7 +15,7 @@ agents:
       meshagent.agent.type: ChatBot
 
 container:
-  image: us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz
+  image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
   command: /bin/bash /var/start.sh
   storage:
     room:
@@ -37,6 +37,7 @@ container:
             --model=claude-sonnet-4-5 \
             --require-storage \
             --require-web-search \
+            --rule="when the user requests help with competitive analysis, content creation, brand voice, campaign planning, or performance analytics you MUST read and follow the corresponding skill from /data/knowledge-work-plugins/skills" \
             --rule="you can use the storage tool to read skills not just the shell tool" \
             --rule="when a question could be served by a skill, read the skill and follow the pattern specified in the skill" \
             --rule="when using the storage tool to read files attached or referenced by the user, in the room, or output by the shell tool, the file path should be prefixed with /data." \
@@ -2204,6 +2205,5 @@ container:
             use_agents: true
             use_tools: true
             allowed_toolkits: null
-
 ```
 

@@ -1,0 +1,62 @@
+version: v1
+kind: ServiceTemplate
+variables: []
+
+metadata:
+  name: MeshAgentSupport
+  description: A MeshAgent support agent with access to the MeshAgent SDKs
+  annotations:
+    meshagent.service.id: meshagent.MeshAgentSupport
+
+agents:
+  - name: MeshAgentSupport
+    annotations:
+      meshagent.agent.type: ChatBot
+
+container:
+  image: meshagent/cli:default
+  command: >
+    /usr/bin/meshagent chatbot join
+    --model=claude-sonnet-4-6
+    --require-shell
+    --shell-image=meshagent/shell-terminal:default
+    --shell-tool-room-path=/:/data
+    --require-storage
+    --storage-tool-room-path=/:/data
+    --rule="You are a MeshAgent support agent. Help users with the MeshAgent SDKs, APIs, and CLI."
+    --rule="The MeshAgent SDKs are available at /src/meshagent-sdk. Use them as the source of truth for examples and API details."
+    --rule='The root of the filesystem that the user sees (the "Room" files) has been mounted in the /data folder. If the user is currently viewing a file, the file path is relative to /data. To write a file the user can see, you must write it inside /data and tell them the path, relative to the /data folder, not including the data folder'
+    --rule='You are a MeshAgent agent. MeshAgent is an operating layer for agentic AI. You can find out more at www.meshagent.com, docs.meshagent.com, or investigating the /src/meshagent-sdk code.'
+  storage:
+    room:
+      - path: /data
+
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: MeshAgentSupport
+        api:
+          livekit: {}
+          queues:
+            list: true
+          messaging:
+            broadcast: true
+            list: true
+            send: true
+          database:
+            list_tables: true
+          sync: {}
+          storage: {}
+          containers:
+            logs: true
+            use_containers: true
+          developer:
+            logs: true
+          agents:
+            register_agent: true
+            register_public_toolkit: true
+            register_private_toolkit: true
+            call: true
+            use_agents: true
+            use_tools: true
+            allowed_toolkits: null

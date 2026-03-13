@@ -1,0 +1,426 @@
+## Overview
+
+The `MemoryClient` is the Room API for room-scoped structured memory. Use it to build shared context that agents can ingest, query, and recall across workflows.
+
+## Why use the Memory API?
+
+- Preserve structured knowledge across tasks instead of reconstructing it from chat history each time.
+- Ingest text, files, images, tables, and room storage content into a shared memory.
+- Recall the most relevant entities and relationships when building prompts or workflows.
+
+## How it works
+
+A memory is a named dataset inside a room. You can create it, ingest data into it, inspect or query it directly, and use recall to retrieve relevant context. Some operations work at the entity and relationship level so you can maintain graph-like memory over time.
+
+> Current implementation: MeshAgent room memory is currently backed by [Lance Graph](https://github.com/lance-format/lance-graph), which stores entities and relationships in a graph-oriented format. Lance Graph is a Cypher-capable graph query engine.
+
+## Permissions and grants
+
+If a deployed service needs to use room memory, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: full room-memory command set (`list`, `create`, `drop`, `inspect`, `query`, `recall`, `ingest`, `optimize`, and more).
+- **Python**: full `MemoryClient` API.
+- **Dart**: `list`, `create`, and `drop` helpers.
+- **TypeScript/.NET**: use the CLI or the generic invoke API (`room.invoke(...)` / `room.Invoke(...)`) for memory operations.
+
+## Core API Methods
+
+### list
+- **Description**: List memory names in a namespace.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory list \
+  --room myroom \
+  --namespace team \
+  --namespace support
+```
+```python Python
+memories = await room.memory.list(namespace=["team", "support"])
+print(memories)
+```
+```dart Dart
+final memories = await room.memory.list(namespace: ["team", "support"]);
+print(memories);
+```
+</CodeGroup>
+
+### create
+- **Description**: Create a memory.
+- **Parameters**: `name`, optional `namespace`, `overwrite`, `ignore_exists`.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory create \
+  --room myroom \
+  --name customer-memory \
+  --namespace team \
+  --namespace support
+```
+```python Python
+await room.memory.create(
+  name="customer-memory",
+  namespace=["team", "support"],
+  overwrite=False,
+)
+```
+```dart Dart
+await room.memory.create(
+  name: "customer-memory",
+  namespace: ["team", "support"],
+  overwrite: false,
+);
+```
+</CodeGroup>
+
+### drop
+- **Description**: Delete a memory.
+- **Parameters**: `name`, optional `namespace`, `ignore_missing`.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory drop \
+  --room myroom \
+  --name customer-memory \
+  --namespace team \
+  --namespace support \
+  --ignore-missing
+```
+```python Python
+await room.memory.drop(
+  name="customer-memory",
+  namespace=["team", "support"],
+  ignore_missing=True,
+)
+```
+```dart Dart
+await room.memory.drop(
+  name: "customer-memory",
+  namespace: ["team", "support"],
+  ignoreMissing: true,
+);
+```
+</CodeGroup>
+
+## Advanced Methods
+
+These examples use the full Python `MemoryClient` API. The CLI exposes matching room-memory commands for the same operations.
+
+### inspect
+- **Description**: Return `MemoryDetails` including the memory path and dataset summaries.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory inspect \
+  --room myroom \
+  --name customer-memory
+```
+```python Python
+details = await room.memory.inspect(name="customer-memory")
+print(details.path)
+for dataset in details.datasets:
+  print(dataset.name, dataset.rows, dataset.columns)
+```
+</CodeGroup>
+
+### query
+- **Description**: Run a graph query against a memory and return rows.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory query \
+  --room myroom \
+  --name customer-memory \
+  --statement 'MATCH (e) RETURN e.name LIMIT 10'
+```
+```python Python
+rows = await room.memory.query(
+  name="customer-memory",
+  statement="MATCH (e) RETURN e.name LIMIT 10",
+)
+print(rows)
+```
+</CodeGroup>
+
+### upsert_table
+- **Description**: Upsert arbitrary rows into a named memory dataset.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory upsert-table \
+  --room myroom \
+  --name customer-memory \
+  --table facts \
+  --records-json '[{"entity_id":"acme","summary":"Renewal expected in Q3"}]'
+```
+```python Python
+await room.memory.upsert_table(
+  name="customer-memory",
+  table="facts",
+  records=[
+    {
+      "entity_id": "acme",
+      "summary": "Renewal expected in Q3",
+    }
+  ],
+)
+```
+</CodeGroup>
+
+### upsert_nodes
+- **Description**: Upsert entity nodes using `MemoryEntityRecord`.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory upsert-nodes \
+  --room myroom \
+  --name customer-memory \
+  --records-json '[{"entity_id":"acme","name":"ACME","entity_type":"company","context":"Enterprise customer"}]'
+```
+```python Python
+from meshagent.api.room_server_client import MemoryEntityRecord
+
+await room.memory.upsert_nodes(
+  name="customer-memory",
+  records=[
+    MemoryEntityRecord(
+      entity_id="acme",
+      name="ACME",
+      entity_type="company",
+      context="Enterprise customer",
+    )
+  ],
+)
+```
+</CodeGroup>
+
+### upsert_relationships
+- **Description**: Upsert edges using `MemoryRelationshipRecord`.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory upsert-relationships \
+  --room myroom \
+  --name customer-memory \
+  --records-json '[{"source_entity_id":"acme","target_entity_id":"renewal-q3","relationship_type":"HAS_MILESTONE","description":"Renewal target quarter"}]'
+```
+```python Python
+from meshagent.api.room_server_client import MemoryRelationshipRecord
+
+await room.memory.upsert_relationships(
+  name="customer-memory",
+  records=[
+    MemoryRelationshipRecord(
+      source_entity_id="acme",
+      target_entity_id="renewal-q3",
+      relationship_type="HAS_MILESTONE",
+      description="Renewal target quarter",
+    )
+  ],
+)
+```
+</CodeGroup>
+
+### ingest_text
+- **Description**: Extract memory from inline text.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory ingest-text \
+  --room myroom \
+  --name customer-memory \
+  --text 'ACME is planning a renewal review in Q3.'
+```
+```python Python
+result = await room.memory.ingest_text(
+  name="customer-memory",
+  text="ACME is planning a renewal review in Q3.",
+)
+print(result.stats.entities, result.stats.relationships)
+```
+</CodeGroup>
+
+### ingest_image
+- **Description**: Extract memory from an image and optional caption.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory ingest-image \
+  --room myroom \
+  --name customer-memory \
+  --file ./whiteboard.png \
+  --caption 'Customer planning whiteboard'
+```
+```python Python
+with open("./whiteboard.png", "rb") as f:
+  image_bytes = f.read()
+
+result = await room.memory.ingest_image(
+  name="customer-memory",
+  data=image_bytes,
+  mime_type="image/png",
+  caption="Customer planning whiteboard",
+)
+print(result.stats)
+```
+</CodeGroup>
+
+### ingest_file
+- **Description**: Extract memory from a file path visible to the room server, or from inline text.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory ingest-file \
+  --room myroom \
+  --name customer-memory \
+  --path /data/acme-renewal.txt
+```
+```python Python
+result = await room.memory.ingest_file(
+  name="customer-memory",
+  path="/data/acme-renewal.txt",
+)
+print(result.entity_ids)
+```
+</CodeGroup>
+
+### ingest_from_table
+- **Description**: Extract memory from room database rows.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory ingest-from-table \
+  --room myroom \
+  --name customer-memory \
+  --table customer_notes \
+  --text-column summary \
+  --text-column notes \
+  --limit 100
+```
+```python Python
+result = await room.memory.ingest_from_table(
+  name="customer-memory",
+  table="customer_notes",
+  text_columns=["summary", "notes"],
+  limit=100,
+)
+print(result.stats)
+```
+</CodeGroup>
+
+### ingest_from_storage
+- **Description**: Extract memory from one or more room storage paths.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory ingest-from-storage \
+  --room myroom \
+  --name customer-memory \
+  --path room://notes/acme.txt \
+  --path room://notes/renewal.txt
+```
+```python Python
+result = await room.memory.ingest_from_storage(
+  name="customer-memory",
+  paths=["room://notes/acme.txt", "room://notes/renewal.txt"],
+)
+print(result.stats)
+```
+</CodeGroup>
+
+### recall
+- **Description**: Semantic recall using a natural-language query.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory recall \
+  --room myroom \
+  --name customer-memory \
+  --query "What do we know about ACME's renewal timeline?" \
+  --limit 5
+```
+```python Python
+result = await room.memory.recall(
+  name="customer-memory",
+  query="What do we know about ACME's renewal timeline?",
+  limit=5,
+)
+for item in result.items:
+  print(item.entity_id, item.score)
+```
+</CodeGroup>
+
+### delete_entities
+- **Description**: Remove entities and their related edges.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory delete-entities \
+  --room myroom \
+  --name customer-memory \
+  --entity-id acme
+```
+```python Python
+result = await room.memory.delete_entities(
+  name="customer-memory",
+  entity_ids=["acme"],
+)
+print(result.deleted_entities, result.deleted_relationships)
+```
+</CodeGroup>
+
+### delete_relationships
+- **Description**: Remove relationships using `MemoryRelationshipSelector`.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory delete-relationships \
+  --room myroom \
+  --name customer-memory \
+  --records-json '[{"source_entity_id":"acme","target_entity_id":"renewal-q3","relationship_type":"HAS_MILESTONE"}]'
+```
+```python Python
+from meshagent.api.room_server_client import MemoryRelationshipSelector
+
+result = await room.memory.delete_relationships(
+  name="customer-memory",
+  relationships=[
+    MemoryRelationshipSelector(
+      source_entity_id="acme",
+      target_entity_id="renewal-q3",
+      relationship_type="HAS_MILESTONE",
+    )
+  ],
+)
+print(result.deleted_relationships)
+```
+</CodeGroup>
+
+### optimize
+- **Description**: Compact and clean up memory datasets.
+
+<CodeGroup>
+```bash CLI
+meshagent room memory optimize \
+  --room myroom \
+  --name customer-memory \
+  --compact \
+  --cleanup
+```
+```python Python
+result = await room.memory.optimize(
+  name="customer-memory",
+  compact=True,
+  cleanup=True,
+)
+print(result)
+```
+</CodeGroup>
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Database API](./database)
+- [Storage API](./storage)

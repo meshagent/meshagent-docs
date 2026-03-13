@@ -1,0 +1,53 @@
+# Storage in Practice: A Friendly Guide
+
+Room storage is a shared, durable file store scoped to a room. Think of it as a simple, reliable "shared drive" that agents and clients can read from and write to while they collaborate.
+
+## When to use storage
+
+- Persist files that are too big or too binary for Sync (audio, images, PDFs, logs, model outputs).
+- Share artifacts between agents (reports, intermediate results, exports).
+- Provide downloadable files to users (use `download_url` for a direct link).
+
+## When to use something else
+
+- Use **Sync** for live, collaborative documents or structured content that needs real-time merging.
+- Use **Database** for queryable, structured records that you will filter, aggregate, or index.
+
+## How it works (mental model)
+
+1. Open a file and write to a handle in chunks.
+2. Close the handle to finalize the write and emit `file.updated`.
+3. Read with `download` (small files) or `download_url` (large files).
+4. List or delete entries when you are done.
+
+If you need to avoid overwriting existing content, call `exists` or `stat` before `open`.
+
+## A simple workflow
+
+```typescript TypeScript
+// Create or overwrite a file
+const handle = await room.storage.open("artifacts/summary.txt");
+await room.storage.write(handle, new TextEncoder().encode("Hello from storage!"));
+await room.storage.close(handle);
+
+// React to changes
+room.storage.on("file.updated", (event) => {
+  console.log("Updated:", event.path);
+});
+
+// Download small files directly
+const file = await room.storage.download("artifacts/summary.txt");
+console.log(new TextDecoder().decode(file.data));
+
+// Share a direct URL for large files
+const url = await room.storage.downloadUrl("artifacts/summary.txt");
+console.log("Download:", url);
+```
+
+## Permissions and safety
+
+Storage access is controlled by a storage grant on the participant token. Grants are path-based, so you can allow reads under `outputs/` while keeping `inputs/` read-only, for example. Use clear path prefixes (`inputs/`, `outputs/`, `artifacts/`) to keep access rules and cleanup policies simple.
+
+## What this enables
+
+Room storage makes it easy to build workflows where agents generate files, other agents or UIs consume them, and users download results without complicated infrastructure. It is a small API, but it unlocks a lot: durable artifacts, simple sharing, and clean handoffs between steps in an automation pipeline.

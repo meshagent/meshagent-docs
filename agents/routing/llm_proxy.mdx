@@ -19,9 +19,12 @@ Supported endpoints:
 - `/v1/audio/translations`
 - `/v1/images/*`
 - `/v1/models` and `/v1/models/*`
+- `/v1/realtime` and `/v1/realtime/*`
 
 ### Anthropic
-Base URL: `{room_url}/anthropic/v1`.
+Base URL for raw HTTP requests: `{room_url}/anthropic/v1`.
+
+When you use the MeshAgent Anthropic SDK helper or the injected `ANTHROPIC_BASE_URL`, the base URL is `{room_url}/anthropic`; the Anthropic SDK appends the `/v1` paths itself.
 
 Supported endpoints:
 - `/v1/messages`
@@ -43,7 +46,7 @@ openai_client = get_openai_client(room=room)
 anthropic_client = get_anthropic_client(room=room)
 ```
 
-For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to the room proxy and pass the MeshAgent room token as `api_key`. Room containers set `OPENAI_BASE_URL` and `ANTHROPIC_BASE_URL` automatically.
+For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to the room proxy and pass the MeshAgent room token as `api_key`. Room containers set `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, and `MESHAGENT_SESSION_ID` automatically.
 
 ## Automatic usage tracking
 The proxy inspects responses and streams to record usage and cost:
@@ -59,7 +62,7 @@ Usage is emitted as OpenTelemetry metrics/traces and also appears in MeshAgent's
 - Clients authenticate with the MeshAgent room token (not a provider key).
 - OpenAI proxy requires `Authorization: Bearer <room_token>`.
 - Anthropic proxy accepts either `Authorization: Bearer <room_token>` or `x-api-key: <room_token>`.
-- The proxy strips client auth headers and injects provider keys from server-side env vars.
+- The proxy strips provider auth headers and injects provider keys from server-side env vars.
 - Provider keys never need to exist inside room containers or client code.
 - Optional HTTP logging clients redact auth headers by default.
 
@@ -84,7 +87,7 @@ For project-wide defaults, use MeshAgent Studio (Integrations > LLM Router) to s
 - **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model to use or set a default by updating the `OPENAI_MODEL` or `ANTHROPIC_MODEL` environment variable.
 
 ## Related topics
-- [Adapters Overview](./index)
-- [OpenAI Responses Adapter](./openai_responses_adapter)
-- [Anthropic Messages Adapter](./anthropic_messages_adapter)
+- [Adapters Overview](../adapters/index)
+- [OpenAI Responses Adapter](../adapters/openai_responses_adapter)
+- [Anthropic Messages Adapter](../adapters/anthropic_messages_adapter)
 - [Observability](../../observability/intro)

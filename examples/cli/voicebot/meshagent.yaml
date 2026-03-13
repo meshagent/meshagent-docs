@@ -10,14 +10,35 @@ agents:
     description: "A voice agent"
     annotations:
       meshagent.agent.type: "VoiceBot"
-ports:
-- num: "*"                        # automatically assign an available MESHAGENT_PORT for the agent to run on 
-  type: http
-  liveness: "/"                   # ensure the service is alive before connecting to the room
-  endpoints:
-  - path: /agent                  # service path to call and run the agent on
-    meshagent:
-      identity: voiceagent        # name of the agent as it shows up in the Room
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:latest"
-  command: "/usr/bin/meshagent voicebot service --agent-name=voiceagent --room-rules='agents/voiceagent/rules.txt'"
+  command: "/usr/bin/meshagent voicebot join --agent-name=voiceagent --room-rules='agents/voiceagent/rules.txt'"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:  
+        identity: voiceagent
+        api:
+          livekit: {}
+          queues:
+            list: true
+          messaging:
+            broadcast: true
+            list: true
+            send: true
+          database:
+            list_tables: true
+          sync: {}
+          storage: {}
+          containers:
+            logs: true
+            use_containers: true
+          developer:
+            logs: true
+          agents:
+            register_agent: true
+            register_public_toolkit: true
+            register_private_toolkit: true
+            call: true
+            use_agents: true
+            use_tools: true
+            allowed_toolkits: null
