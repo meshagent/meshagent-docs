@@ -1,0 +1,94 @@
+---
+title: "Built-in MeshAgent Toolkits"
+---
+
+MeshAgent includes a set of built-in toolkits and toolkit builders that you can attach to agents.
+
+This page is focused on the agent-facing toolkits you use from the CLI or SDK. It is intentionally an overview page, not a per-method reference.
+
+The MeshAgent CLI makes it easy to extend agents with built-in tools. For example, you can give GPT- or Claude-based agents the ability to search the web, interact with room storage, use MCP tools, create and retrieve memories, and more.
+
+- A **toolkit** is a set of tools that is attached directly to an agent.
+- A **toolkit builder** is something the agent can use to construct tools dynamically, often on a per-turn basis.
+
+## Using built-in toolkits from the CLI
+
+Built-in toolkits are commonly enabled when you start an agent from the CLI:
+
+```bash
+meshagent chatbot join \
+  --room my-room \
+  --agent-name GPTResearcher \
+  --model gpt-5.4 \
+  --web-search \
+  --mcp \
+  --require-storage \
+  --use-memory agents/gptresearcher/memories
+
+meshagent chatbot join \
+  --room my-room \
+  --agent-name ClaudeResearcher \
+  --model claude-sonnet-4-6 \
+  --web-fetch \
+  --mcp \
+  --require-storage \
+  --use-memory agents/clauderesearcher/memories
+```
+
+In those cases, the CLI is attaching built-in toolkits or toolkit builders to the agent you launch.
+
+There are two common patterns:
+
+- **Always-on tools**: the tools are attached directly to the agent and are always available to the model.
+- **Per-turn tools**: the tools are exposed through toolkit builders, so they can be selected or toggled for a given turn in the UI.
+
+Many built-in CLI flags support both forms. When they do, the always-on form is typically prefixed with `--require-`. For example:
+- `--web-search` makes web search available as a per-turn tool.
+- `--require-web-search` makes web search always available to the agent.
+- `--web-fetch` makes web fetch available as a per-turn tool.
+- `--require-web-fetch` makes web fetch always available to the agent.
+- `--mcp` makes MCP tools available through the normal builder flow. There is not currently a `--require-mcp` mode in the chatbot CLI.
+- `--storage` uses `StorageToolkitBuilder` for the builder-based flow.
+- `--require-storage` adds `StorageToolkit` directly as always-on tools.
+- `--use-memory agents/<agent-name>/memories` adds a `MemoriesToolkit` for that memory path.
+
+## Built-in toolkits
+
+These are first-party MeshAgent toolkits that you attach to agents or services in code.
+
+### Document and content tools
+
+- **`DocumentAuthoringToolkit`**: create and modify MeshDocuments.
+- **`DocumentTypeAuthoringToolkit`**: work with type-specific document structures.
+- **`MarkItDownToolkit`**: convert PDFs and Office documents into formats that are easier for LLMs to use.
+
+These are commonly used in document generation, website authoring, document intelligence, and RAG-style workflows.
+
+### Data and storage tools
+
+- **`StorageToolkit` / `StorageToolkitBuilder`**: expose room or mounted storage operations as tools.
+- **`MemoriesToolkit` / `MemoriesToolkitBuilder`**: expose room-backed memory tools such as add, search, inspect, and delete memory operations.
+- **`DatabaseToolkitBuilder`**: construct database tools for agent workflows.
+- **`UUIDToolkit`**: provide UUID generation helpers.
+
+### Provider and adapter-driven toolkits
+
+These toolkits are usually exposed through adapters or builders instead of being always on. Some of them switch implementation based on the model you choose, so the same CLI flag can work across providers even when the underlying tool definition is different.
+
+For adapter-specific details, see [OpenAI Responses Adapter](../adapters/openai_responses_adapter) and [Anthropic Messages Adapter](../adapters/anthropic_messages_adapter).
+
+- **`MCPToolkit` / `MCPToolkitBuilder`**: expose external MCP servers as MeshAgent tools.
+- **`WebFetchToolkitBuilder`**: add web-fetch tools. In the CLI, `--web-fetch` selects Anthropic's built-in Messages API web fetch tool for Claude models and MeshAgent's `WebFetchToolkitBuilder` for other models. That means the same flag works for both Anthropic and OpenAI-backed agents.
+- **`WebSearchToolkitBuilder`**: add web search tools. For Claude models this uses Anthropic's built-in Messages API `web_search_*` tool. For other model paths the CLI selects a different builder, so the same `--web-search` flag still works outside Anthropic.
+- **`ShellToolkitBuilder`**: add function-based shell execution tools. In the current CLI, `--shell` is wired for both Claude and OpenAI model paths.
+- **`LocalShellToolkitBuilder`**: expose OpenAI's native local shell tool. In the current CLI, `--local-shell` is OpenAI-only.
+- **`ImageGenerationToolkitBuilder`**: expose OpenAI-native image generation. In the current CLI, `--image-generation` is OpenAI-only.
+- **`ApplyPatchToolkitBuilder`**: expose OpenAI's patch-editing tool. In the current CLI, `--apply-patch` is OpenAI-only.
+- **`ScriptToolkitBuilder`**: turn a fixed script or command sequence into a tool the agent can call. This is useful when you want to wrap an existing CLI workflow or shell script as an agent tool without building a full custom Python tool first.
+
+## Related guides
+
+- [Introduction to Tools](./intro)
+- [How Tools and Toolkits Work](./tools_and_toolkits)
+- [Room API Overview](../../room_api/overview)
+- [MCP and OpenAI Connectors](./openai_connectors_mcp)

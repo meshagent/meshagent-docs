@@ -4,64 +4,76 @@ title: "Introduction to Tools"
 
 **MeshAgent Tools: Empowering AI Agents to Act in the Real World**
 
-Imagine you have a brilliant assistant who understands your every need but can’t leave the house. They might be a master of conversation, but if they can’t venture out, deliver packages, or gather additional supplies, their usefulness is limited. This is the challenge AI agents face when powered solely by language models. They can converse and reason, but they need practical ways to connect with people, services, and applications that exist outside their self-contained world. That’s where **MeshAgent Tools** come into play.
+Imagine you have a brilliant assistant who understands your every need but cannot leave the house. They might be a master of conversation, but if they cannot gather information, trigger actions, or interact with other systems, their usefulness is limited. That is the challenge AI agents face when they rely only on language models. They can reason and converse, but they still need practical ways to connect with people, services, and applications outside their own prompt context. That is where **MeshAgent Tools** come in.
 
----
+## Why Tools Matter
 
-### Why Tools Matter
+Tools are the agent's doorway to the world. A tool can be almost anything that lets your agent engage with an external system or take a concrete action. For example:
 
-Tools are the AI agent’s doorway to the world. A tool can be almost anything that lets your agent engage with external systems. For example:
+- **Sending a message**: your agent wants to notify a teammate or another participant.
+- **Reading a document**: it needs to fetch and digest file contents.
+- **Generating multimedia**: it needs to create images, audio, or video.
+- **Presenting a form**: it needs to gather structured input from a user.
 
-- **Sending a Message**: Maybe your agent wants to ping a colleague on Slack.  
-- **Reading a Document**: It needs to fetch and digest the contents of a file.  
-- **Generating Multimedia**: Perhaps you want it to create images, audio, or video content.  
-- **Presenting a Form**: Your agent might ask users for more details, structured as a form, so it can gather exactly the information it needs to proceed.
+Without tools, an agent is like a person stranded on an island. It knows how to talk, but it has no way to interact with the outside world. While many language models have a built-in notion of tool calling, those capabilities are usually too basic for real-world systems. They generally do not explain:
 
-Without tools, an agent is like a person stranded on an island—it knows how to speak but has no way to interact with the outside world. While many language models have a built-in notion of “tool calling” (i.e., the ability to use simple commands), these capabilities are generally **too basic** for real-world tasks. They lack awareness of:
+- how tools are discovered and shared,
+- how tools communicate across applications or runtimes,
+- how credentials and permissions stay scoped,
+- or how humans and agents use the same tools safely in a shared room.
 
-- **How to Communicate with Remote Systems**: For instance, how does a Python-based agent display a dialog box in a C# application on a different machine?  
-- **What Tools Are Available**: Agents must be aware of the tools and services they can use, especially as those tools evolve or get added over time.  
-- **Credential Management**: Agents shouldn’t need to access every service’s credentials directly; they should be able to invoke tools that manage their own authentication behind the scenes.
+## What Are MeshAgent Tools?
 
----
+**MeshAgent Tools** solve these problems by creating a room-based infrastructure where tools can be registered, discovered, and called. In practice:
 
-### What Are MeshAgent Tools?
+1. **Tools register with a room** so agents and other participants know they exist.
+2. **Tools return structured results** such as text, JSON, files, or links.
+3. **Tools can be invoked by participants** in the room, including both humans and agents.
+4. **Related tools are packaged into toolkits** so they can be discovered and managed together.
 
-**MeshAgent Tools** solve these challenges by creating a flexible, room-based infrastructure where tools run. Each tool:
+When you give an agent access to a tool or toolkit, you extend what it can do without giving it raw credentials or hard-coding custom integrations into every workflow.
 
-1. **Registers with a Room**: Tools announce themselves to a shared context (the “room”), so agents and other participants know they exist.  
-2. **Returns Text or Files**: Tools can provide structured outputs to the agent, such as a text response, a file, or a link.  
-3. **Enables Participant Invocation**: Anyone in the room—user or AI agent—can invoke the tool to perform a specific action.
+## The Power of Extensions
 
-When you ask an agent to complete a task, you can **extend its abilities** by granting it access to specific MeshAgent Tools. For example, you might integrate a “present form” tool into a user interface. Giving this tool to the agent allows it to prompt the user with a structured questionnaire, capturing the precise data needed without the agent having to wrestle with raw text prompts.
+By leveraging MeshAgent Tools, you can give your AI agent the means to accomplish tasks it could only describe before. For example:
 
----
+- **Media generation**: register a tool that allows the agent to create images, audio, video, or interactive visuals.
+- **Database interaction**: safely query or update records through a secure tool rather than exposing credentials directly.
+- **File retrieval**: fetch or store files in shared systems.
+- **Service integration**: connect to APIs and services without giving the agent raw API keys.
 
-### The Power of Extensions
+These tools become building blocks for tailored AI systems. The agent no longer has to guess how to talk to your environment. It simply calls the tool it needs.
 
-By leveraging MeshAgent Tools, you can give your AI agent the means to accomplish tasks it could only imagine before. For example: 
+## Common Tool Patterns
 
-- **Media Generation**: Register a tool that allows the agent to create audio, video, or interactive visuals.  
-- **Database Interaction**: Safely query or update database records through a secure tool rather than exposing credentials directly.  
-- **File Retrieval**: Seamlessly fetch or store files in distributed systems.  
-- **Service Integration**: Connect to APIs and services without giving the agent raw API keys, ensuring secure and scoped access.
+MeshAgent supports several ways to work with tools:
 
-These tools become building blocks for **tailored AI solutions**, allowing you to mix and match capabilities depending on your project’s unique needs. The agent no longer has to guess how to talk to your environment—it simply asks for the tool it needs and gets the job done.
+- **Custom tools**: write your own tools and package them into a toolkit.
+- **Built-in toolkits**: use first-party MeshAgent toolkits for common tasks.
+- **MCP tools**: expose external MCP servers as MeshAgent tools.
+- **Dynamic toolkits**: let users or applications select tools for a single turn instead of keeping them always on.
+- **Agents as tools**: use one agent's capabilities from another workflow when that pattern makes sense.
 
----
+## How Tools Fit Together
 
-### Common Tool Patterns
+At a high level:
 
-MeshAgent provides a variety of built-in tools you can use directly with your agents and supports custom tools. Some of the common use cases you'll see include: 
+1. A **tool** performs one action.
+2. A **toolkit** groups related tools together.
+3. A toolkit can be attached to an agent directly or exposed in a room for broader use.
+4. The agent decides when to invoke tools based on the task.
+5. Tool results flow back into the agent's reasoning and the workflow continues.
 
-- **Fully Custom Tools**: Write your own tools however you want and use them inside a MeshAgent Room
-- **MCP Tools**: Integrate existing MCP servers as MeshAgent tools
-- **Agents as Tools**: Use a TaskRunner agent and pass this as a tool to your custom chat or voice agent
+## Bringing It All Together
 
----
+MeshAgent tools are more than a workaround for language model limitations. They are the bridge between reasoning and action. By registering tools in a shared room, packaging them into toolkits, and keeping access scoped through MeshAgent permissions, you can build agent systems that are both powerful and governable.
 
-### Bringing It All Together
+That means your agents are not limited to talking about work. They can actually do the work, safely, through the tools you decide to expose.
 
-MeshAgent Tools are more than just a stopgap for language model shortcomings; they are the **key to orchestrating multi-faceted, AI-driven systems with real-world impact**. By registering tools in a shared Room, you streamline communication, maintain security, and most importantly, unlock the full potential of your AI agents. Now, they can truly step outside their island of text, harness the resources around them, and deliver meaningful results in the real world.
+## Where to Go Next
 
-> **In short, MeshAgent Tools transform abstract intelligence into tangible action—giving your AI agents the hands and feet they need to make an impact.**
+- [How Tools and Toolkits Work](./tools_and_toolkits): learn the mental model, lifecycle, permissions, and static vs dynamic toolkit patterns.
+- [Built-in MeshAgent Toolkits](./built_in_toolkits): see which first-party toolkits already exist and how they are grouped.
+- [Tools Quickstart](./quickstart): create and run your first tool.
+- [Dynamic UI Tools](./dynamic_ui_tools): build tools that interact with the UI directly.
+- [MCP and OpenAI Connectors](./openai_connectors_mcp): connect external MCP servers and provider-managed tools.
