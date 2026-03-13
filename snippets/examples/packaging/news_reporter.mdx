@@ -12,11 +12,13 @@ agents:
     description: "Chatbot that can trigger the news mailer"
     annotations:
       meshagent.agent.type: "ChatBot"
+      meshagent.chatbot.threading: "default-new"
   - name: news-reporter
     description: "Mailbot for inbound requests and outbound email tools"
     annotations:
       meshagent.agent.type: "MailBot"
-      meshagent.agent.schedule: '{"schedule":"0 15 * * *","queue":"news_updates","name":"DailyAINews","payload":{"prompt":"Generate and send the daily AI news briefing. Follow your rules."}}'
+      # 17:30 UTC is 10:30 AM Pacific Daylight Time. Use 18:30 UTC during Pacific Standard Time.
+      meshagent.agent.schedule: '{"schedule":"30 17 * * *","queue":"news_updates","name":"DailyAINews","payload":{"prompt":"Generate and send the daily news briefing. Follow your rules."}}'
   - name: news-reporter
     description: "Scheduled worker that composes and sends the daily digest"
     annotations:
@@ -27,13 +29,11 @@ variables:
     description: "Choose an email address for the mailbot (e.g. news@mail.meshagent.com)."
   - name: send_to_email
     description: "Choose an email to send updates to. (Recipient email for daily updates.)"
+  - name: report_topics
+    description: "Enter the topics you want a daily news report on."
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
-  command: >
-    /usr/bin/meshagent multi join
-    -c "chatbot --agent-name=news-reporter --require-web-search --require-toolkit=email --require-storage --rule='You are a newsroom assistant. When asked, you can send a news digest email using the email toolkit. Make sure that the news briefing is detailed and includes links to relevant sources' --room-rules='agents/news-reporter/news-reporter-rules.txt' --room-rules='agents/news-reporter/chatbotrules.txt';
-        mailbot --agent-name=news-reporter --queue={{email}} --email-address={{email}} --toolkit-name=email --require-web-search --enable-attachments --rule='You are a news reporter. When replying to inbound emails, use web search when applicable. Ensure that the news briefings you share are detailed and include links to relevant sources. You MUST reply with plain text or markdown, do not reply in JSON format or HTML format.' --room-rules='agents/news-reporter/news-reporter-rules.txt' --room-rules='agents/news-reporter/mailbotrules.txt';
-        worker --agent-name=news-reporter --queue={{email}} --require-toolkit=email --require-storage --require-web-search --rule='Create a daily AI news digest covering market moves, funding, major product announcements, and policy updates. Use web search and include the links to your sources. Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md. Send the news digest email to {{send_to_email}} using the email toolkit. Do not include the report in your email. The email response should be in text, never in HTML or JSON.' --room-rules='agents/news-reporter/news-reporter-rules.txt' --room-rules='agents/news-reporter/workerrules.txt'"
+  command: /bin/bash /var/start.sh
   environment:
     - name: MESHAGENT_TOKEN
       token:
@@ -63,9 +63,64 @@ container:
             use_agents: true
             use_tools: true
             allowed_toolkits: null
+          memory:
+            list: true
+            memories:
+              - name: memories
+                namespace: ["agents", "news-reporter"]
+                permissions:
+                  ingest: true
+                  recall: true
+                  query: true
   storage:
     room:
       - path: /data
         read_only: false
-```
+    files:
+      - path: /var/start.sh
+        text: |
+          #!/bin/bash
+          set -e
 
+          mkdir -p /data/agents/news-reporter
+
+          if [ ! -f /data/agents/news-reporter/news-reporter-rules.md ]; then
+            cat > /data/agents/news-reporter/news-reporter-rules.md <<'EOF'
+          # Shared news reporter rules
+          # Edit this file to change the topics or curation preferences for future digests.
+          You create curated news reports for users.
+          Cover the user's topics of interest: {{report_topics}}.
+          Focus on the most important developments from the last 24 hours unless the user asks for another timeframe.
+          Include direct source links whenever possible.
+          EOF
+          fi
+
+          if [ ! -f /data/agents/news-reporter/chatbot-rules.md ]; then
+            cat > /data/agents/news-reporter/chatbot-rules.md <<'EOF'
+          # Chatbot-specific rules
+          Help users refine their topics and explain that editing news-reporter-rules.md changes future scheduled digests.
+          When asked to send a digest on demand, follow the shared news reporter rules.
+          EOF
+          fi
+
+          if [ ! -f /data/agents/news-reporter/mailbot-rules.md ]; then
+            cat > /data/agents/news-reporter/mailbot-rules.md <<'EOF'
+          # Mailbot-specific rules
+          Follow the shared news reporter rules when replying to inbound email.
+          Keep replies clear and concise unless the sender asks for more detail.
+          EOF
+          fi
+
+          if [ ! -f /data/agents/news-reporter/worker-rules.md ]; then
+            cat > /data/agents/news-reporter/worker-rules.md <<'EOF'
+          # Worker-specific rules
+          Use the shared news reporter rules as the source of truth for the current topics and curation preferences.
+          Prioritize the most material updates first.
+          EOF
+          fi
+
+          exec /usr/bin/meshagent multi join \
+            -c "chatbot --agent-name=news-reporter --threading-mode=default-new --thread-dir=/agents/news-reporter/threads --use-memory=agents/news-reporter/memories --require-web-search --require-toolkit=email --require-storage --rule='You are a newsroom assistant. When asked, you can send a news digest email using the email toolkit. Make sure that the news briefing is detailed and includes links to relevant sources.' --room-rules='agents/news-reporter/news-reporter-rules.md' --room-rules='agents/news-reporter/chatbot-rules.md'; \
+                mailbot --agent-name=news-reporter --queue={{email}} --email-address={{email}} --toolkit-name=email --use-memory=agents/news-reporter/memories --require-web-search --enable-attachments --rule='You are a news reporter. When replying to inbound emails, use web search when applicable. Ensure that the news briefings you share are detailed and include links to relevant sources. You MUST reply with plain text or markdown, do not reply in JSON format or HTML format.' --room-rules='agents/news-reporter/news-reporter-rules.md' --room-rules='agents/news-reporter/mailbot-rules.md'; \
+                worker --agent-name=news-reporter --queue=news_updates --threading-mode=auto --thread-dir=/agents/news-reporter/threads --use-memory=agents/news-reporter/memories --require-toolkit=email --require-storage --require-web-search --rule='Create today''s curated news digest. Follow the shared news reporter rules and include enough detail for the topics to be well understood. Use web search and include the links to your sources. Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md. Send the news digest email to {{send_to_email}} using the email toolkit. Do not include the saved report in your email. The email response should be in text, never in HTML or JSON.' --room-rules='agents/news-reporter/news-reporter-rules.md' --room-rules='agents/news-reporter/worker-rules.md'"
+```

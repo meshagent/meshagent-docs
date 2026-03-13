@@ -1,0 +1,148 @@
+---
+title: "Authoring Skills"
+---
+
+## Skill anatomy
+
+Each skill lives in its own directory. The only required file is `SKILL.md`.
+
+```text
+my-skill/
+├── SKILL.md
+├── references/
+│   └── examples.md
+├── scripts/
+│   └── helper.sh
+└── assets/
+    └── template.md
+```
+
+- `SKILL.md`: required entrypoint.
+- `references/`: optional long-form background material.
+- `scripts/`: optional helper scripts the agent may run when the environment allows it.
+- `assets/`: optional templates, sample files, or other bundled content.
+
+Keep the root of the skill small. Put bulky supporting material in subdirectories and reference it from `SKILL.md` only when needed. Skills can absolutely include files beyond Markdown, including scripts, templates, structured data, images, and other resources the workflow depends on.
+
+## Required `SKILL.md` structure
+
+At minimum, define:
+
+- `name`: stable skill identifier
+- `description`: what the skill does and when the agent should use it
+- Markdown body: the workflow and output expectations
+
+Example:
+
+```md
+---
+name: creating-meshagent-examples
+description: Create beginner-friendly MeshAgent SDK tutorials and runnable examples. Use this when the user asks for a tutorial, walkthrough, getting-started guide, example project, sample code, or docs page for a MeshAgent feature.
+---
+
+# Creating MeshAgent Examples
+
+Use this skill when the user wants a tutorial or runnable example for a MeshAgent feature.
+
+## Goal
+
+Produce a beginner-friendly guide that explains one concept, shows setup, and includes a small working example.
+
+## Process
+
+1. Read the SDK source or docs that define the behavior.
+2. Design the smallest useful example.
+3. Validate the steps when possible.
+4. Write the guide in a clear, CLI-first format.
+
+## Output
+
+- Start with a short explanation of what the feature is and when to use it.
+- Include setup steps, a minimal example, and how to run it.
+- Save the draft to a markdown file.
+- Include the final file path in the response.
+```
+
+This example is still intentionally small, but it is closer to best practice because the description is more trigger-oriented and the output expectations are more explicit.
+
+## Writing good descriptions
+
+The `description` field is the main trigger surface, so make it specific.
+
+Good descriptions:
+
+- say what the skill does
+- say when the agent should use it
+- mention recognizable user intents or task categories
+
+Weak descriptions are vague:
+
+- "Helps with docs"
+- "A useful writing skill"
+
+Better descriptions are explicit:
+
+- "Review content against brand voice and messaging guidelines. Use when the user asks for brand review, tone alignment, messaging consistency, or editorial feedback."
+
+## Authoring guidelines
+
+When writing a skill:
+
+- Keep workflows explicit and step-by-step.
+- Tell the agent what to inspect before acting.
+- Name the tools or files it is expected to use when that matters.
+- Define the desired output shape.
+- Prefer short sections over dense paragraphs.
+
+Avoid:
+
+- dumping large reference manuals directly into `SKILL.md`
+- hiding critical trigger logic only in the body
+- assuming tools exist without saying which ones are needed
+- mixing unrelated workflows into one skill
+
+## Organizing support material
+
+Use subdirectories intentionally:
+
+- Put background reading in `references/`.
+- Put templates or reusable output skeletons in `assets/`.
+- Put executable helpers in `scripts/` only when running code is genuinely part of the workflow.
+
+Reference those files from `SKILL.md` with clear instructions such as:
+
+- "Read `references/terminology.md` when the user asks for product naming help."
+- "Use `assets/report_template.md` for the final report format."
+
+This keeps the top-level skill understandable while still allowing deep, domain-specific guidance.
+
+## Linking to external resources
+
+It is also fine for a skill to point to external documentation, specifications, or source material when that is the right source of truth.
+
+Use external links carefully:
+
+- Link to stable sources when possible.
+- Say when the agent should consult the link.
+- Do not make the whole workflow depend on a vague "go read this website" instruction.
+
+For example:
+
+- "If the task involves OpenAPI validation, consult the official OpenAPI spec before generating the final schema."
+- "If the user asks about a provider-specific API, check the provider's latest docs before calling the tool."
+
+## Compatibility guidance
+
+If you want the skill to stay portable across agent runtimes:
+
+- keep the core behavior in standard `SKILL.md` frontmatter and Markdown
+- avoid product-specific assumptions unless they are essential
+- treat runtime-specific tools as optional environment details
+
+In other words: write the common skill first, then layer MeshAgent-specific tooling guidance where it helps.
+
+## Where to go next
+
+- [Skills Overview](./overview): understand how skills fit with tools, toolkits, rules, and prompts.
+- [Using Skills with Agents](./using_with_agents): load one or more skills with `--skill-dir`.
+- [Packaging and Deploying Skills](./packaging_and_deploying): ship skills inside a MeshAgent service.
