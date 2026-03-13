@@ -1,0 +1,93 @@
+version: v1
+kind: ServiceTemplate
+variables: []
+
+metadata:
+  name: claudeskills
+  description: An agent that can assist you with questions, powered by Anthropic's Claude model
+  annotations:
+    meshagent.service.id: meshagent.claudeskills
+
+agents:
+  - name: claudeskills
+    annotations:
+      meshagent.agent.type: ChatBot
+
+container:
+  image: meshagent/cli:default
+  command: /bin/bash /var/start.sh
+  storage:
+    room:
+      - path: /data
+        read_only: false
+    images:
+      - image: docker.io/tulamasterman/anthropic-skills:latest
+        path: /skills
+        read_only: true
+    files:
+      - path: /var/start.sh
+        text: |
+          #!/bin/bash
+          set -e
+
+          mkdir -p /data/skills
+          skills_src="/skills"
+          if [ -d /skills/skills ]; then
+            skills_src="/skills/skills"
+          fi
+          if [ -d "$skills_src" ]; then
+            cp -R -n "$skills_src"/* /data/skills/ 2>/dev/null || true
+          fi
+
+          skill_args=()
+          while IFS= read -r -d '' skill_md; do
+            skill_dir="$(dirname "$skill_md")"
+            skill_args+=(--skill-dir "$skill_dir")
+          done < <(find /data/skills -type f -iname 'skill.md' -print0)
+
+          exec /usr/bin/meshagent chatbot join \
+            --model=claude-sonnet-4-6 \
+            --require-shell \
+            --shell-image=meshagent/shell-terminal:default \
+            --shell-tool-room-path=/:/data \
+            --script-tool \
+            --web-search \
+            --use-memory agents/claudeskills/memories \
+            --memory-model claude-sonnet-4-6 \
+            --require-storage \
+            --storage-tool-room-path=/:/data \
+            -rr=agents/claudeskills/rules.txt \
+            "${skill_args[@]}" \
+            --rule='You have customizable rules stored in agents/claudeskills/rules.txt, you can use the read_file tool to read your rules. You can use the write_file tool to update the contents of the rules file or other text files. Use the read_file tool to read PDFs, examine images, or read files with a text/* mime type from attachments or files.' \
+            --rule='You are a MeshAgent agent. MeshAgent is an agent operating system. You can find out more at www.meshagent.com and docs.meshagent.com'
+            --rule='The root of the filesystem that the user sees (the "Room" files) has been mounted in the /data folder. If the user is currently viewing a file, the file path is relative to /data. To write a file the user can see, you must write it inside /data and tell them the path, relative to the /data folder, not including the data folder'
+
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: claudeskills
+        api:
+          livekit: {}
+          queues:
+            list: true
+          messaging:
+            broadcast: true
+            list: true
+            send: true
+          database:
+            list_tables: true
+          sync: {}
+          storage: {}
+          containers:
+            logs: true
+            use_containers: true
+          developer:
+            logs: true
+          agents:
+            register_agent: true
+            register_public_toolkit: true
+            register_private_toolkit: true
+            call: true
+            use_agents: truex
+            use_tools: true
+            allowed_toolkits: null

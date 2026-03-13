@@ -1,12 +1,25 @@
-##  Overview
+## Overview
 
-The `ContainersClient` lets you run containers on demand inside a Room via the `RoomClient`. This is particularly useful for ad-hoc tasks or testing code before deploying it as a Project or Room Service. With the Containers API you can:
+The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
 
-- Pull an image from a public or private registry
-- Run a container from an image
-- Stream logs for containers
-- Open an interactive terminal in a running container
-- Manage containers and images (list/stop/delete)
+## Why use the Containers API?
+
+- Pull and manage images without leaving the room context.
+- Run short-lived workloads or exploratory commands on demand.
+- Inspect logs or open an interactive terminal in a running container.
+
+## How it works
+
+Containers are room-scoped workloads. You can pull images, run a container, stream logs, exec into it, stop it, and delete its metadata when you are done. Deployed Room Services and Project Services rely on the same underlying container infrastructure, but the Containers API gives you direct, on-demand control.
+
+## Permissions and grants
+
+If you want a deployed service to use the Containers API, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+
+## CLI and SDK availability
+
+- **CLI**: image and container lifecycle commands are available under `meshagent room container ...`.
+- **Python**: the page below shows the current helper surface.
 
 ## API Methods
 
@@ -17,14 +30,14 @@ The `ContainersClient` lets you run containers on demand inside a Room via the `
 - **Returns**: `list[Image]` including tags, size, labels, and manifest metadata.
 
 <CodeGroup>
+```bash CLI
+meshagent room container image list \
+  --room myroom
+```
 ```python Python
 images = await room.containers.list_images()
 for image in images:
     print(image.tags, image.size)
-```
-```bash CLI
-meshagent room container image list \
-  --room myroom
 ```
 </CodeGroup>
 
@@ -38,13 +51,13 @@ meshagent room container image list \
 - **Returns**: `None`.
 
 <CodeGroup>
-```python Python
-await room.containers.delete_image(image="chatbot:old")
-```
 ```bash CLI
 meshagent room container image delete \
   --room myroom \
   --image chatbot:old
+```
+```python Python
+await room.containers.delete_image(image="chatbot:old")
 ```
 </CodeGroup>
 
@@ -59,13 +72,13 @@ meshagent room container image delete \
 - **Returns**: `None` once the pull completes.
 
 <CodeGroup>
-```python Python
-await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
-```
 ```bash CLI
 meshagent room container image pull \
   --room myroom \
   --tag registry.example.com/agents/chatbot:0.2
+```
+```python Python
+await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 ```
 </CodeGroup>
 
@@ -81,26 +94,25 @@ meshagent room container image pull \
   - `mount_path`, `mount_subpath`: Mount configuration when using storage.
   - `role`, `participant_name`: Launch on behalf of a specific room identity.
   - `ports`: Port mappings `{container_port: host_port}`.
-  - `variables`: Additional runtime variables (often MeshAgent-specific).
   - `credentials`: Registry secrets for the image.
   - `name`: Friendly name for the container.
 - **Returns**: Container ID string.
 
 <CodeGroup>
-```python Python
-container_id = await room.containers.run(
-    image="registry.example.com/agents/chatbot:0.2",
-    variables={"SYSTEM_PROMPT": "Always respond with a fun fact."},
-    name="chatbot-demo",
-)
-print(f"Container launched: {container_id}")
-```
 ```bash CLI
 meshagent room container run \
   --room myroom \
   --image registry.example.com/agents/chatbot:0.2 \
-  --var SYSTEM_PROMPT="Always respond with a fun fact." \
+  --env SYSTEM_PROMPT="Always respond with a fun fact." \
   --container-name chatbot-demo
+```
+```python Python
+container_id = await room.containers.run(
+    image="registry.example.com/agents/chatbot:0.2",
+    env={"SYSTEM_PROMPT": "Always respond with a fun fact."},
+    name="chatbot-demo",
+)
+print(f"Container launched: {container_id}")
 ```
 </CodeGroup>
 
@@ -117,6 +129,13 @@ meshagent room container run \
 - **Returns**: A `Container` object exposing async helpers to read output, send input, resize the terminal, and await completion.
 
 <CodeGroup>
+```bash CLI
+meshagent room container exec \
+  --room myroom \
+  --container-id "$CONTAINER_ID" \
+  --command "bash" \
+  --tty
+```
 ```python Python
 session = await room.containers.exec(
     container_id=container_id,
@@ -148,6 +167,12 @@ print(f"Exec finished with status: {status}")
 - **Returns**: `LogStream[None]`, which you can iterate for log lines or await for completion.
 
 <CodeGroup>
+```bash CLI
+meshagent room container log \
+  --room myroom \
+  --id "$CONTAINER_ID" \
+  --follow
+```
 ```python Python
 stream = room.containers.logs(container_id=container_id, follow=True)
 
@@ -155,12 +180,6 @@ async for line in stream.logs():
     print(line)
 
 await stream  # optional: wait for the request to finish
-```
-```bash CLI
-meshagent room container log \
-  --room myroom \
-  --id "$CONTAINER_ID" \
-  --follow
 ```
 </CodeGroup>
 
@@ -174,15 +193,16 @@ meshagent room container log \
 - **Returns**: `list[RoomContainer]` with name, image, state, status, applicable manifest, and metadata about who started it.
 
 <CodeGroup>
+```bash CLI
+meshagent room container list \
+  --room myroom \
+  --all \
+  --output table
+```
 ```python Python
 containers = await room.containers.list(all=True)
 for container in containers:
     print(container.id, container.state, container.started_by.name)
-```
-```bash CLI
-meshagent room container ps \
-  --room myroom \
-  --output table # optional (will return JSON otherwise)
 ```
 </CodeGroup>
 
@@ -197,13 +217,13 @@ meshagent room container ps \
 - **Returns**: `None`.
 
 <CodeGroup>
-```python Python
-await room.containers.stop(container_id=container_id, force=False)
-```
 ```bash CLI
 meshagent room container stop \
   --room myroom \
   --id "$CONTAINER_ID"
+```
+```python Python
+await room.containers.stop(container_id=container_id, force=False)
 ```
 </CodeGroup>
 
@@ -222,5 +242,8 @@ await room.containers.delete(container_id=container_id)
 ```
 </CodeGroup>
 
-## Conclusion
-The Containers API makes it easy to run code ad-hoc inside a MeshAgent room. Containerized services rely on the Containers API behind the scenes to manage deployed Room and Project Services.
+## Related guides
+
+- [Room API Overview](./overview)
+- [Services Overview](../services_room_containers/overview)
+- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
