@@ -76,6 +76,7 @@ meshagent mailbot join --room quickstart --agent-name mailbot --enable-attachmen
 If you omit `--queue`, MailBot defaults the queue to the `--email-address` value. Make sure the mailbox is configured to deliver to the same queue.
 
 Use flags like `--reply-all`, `--enable-attachments`, `--whitelist`, or `--room-rules` to customize behavior. Run `meshagent mailbot join --help` for the full list.
+MailBots can be extended with rules, tools, and skills depending on the workflow they need to handle. See [Tools Overview](../tools/intro) and [Skills Overview](../../skills/overview).
 
 ### Step 3: Send an email and verify
 Send an email to the agent at the address you provisioned and it will respond! The agent will not show up in the participant list (mailbots are email-only) in [MeshAgent Studio](https://studio.meshagent.com), but you can verify emails are received by checking:
@@ -165,7 +166,7 @@ Send an email to the mailbox and wait for it's response, you can verify the `.em
 
 ### Step 4: Package and deploy the agent
 To deploy your SDK MailBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
-For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging).
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging). If you want to deploy MailBot skills with the service, see [Packaging and Deploying Skills](../../skills/packaging_and_deploying).
 
 MeshAgent supports two deployment patterns for containers:
 1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
@@ -255,7 +256,7 @@ The Mail agent is now deployed to the `quickstart` room! Now we can email the ag
 | `whitelist`          | `list[str] \| None`           | Optional allowlist of sender emails. Messages from other senders are ignored.                                       |
 | `reply_all`          | `bool`                        | Reply-all when responding to emails. Defaults to `False`.                                                           |
 | `enable_attachments` | `bool`                        | Allow downloading and processing attachments, and allow attaching room files to replies. Defaults to `True`.       |
-| `skill_dirs`         | `list[str] \| None`           | Directories containing agent skills; added to the rules so the model can discover and use them.                    |
+| `skill_dirs`         | `list[str] \| None`           | Directories containing agent skills; added to the rules so the model can discover and use them. See [Skills Overview](../../skills/overview). |
 
 ### Lifecycle Overview
 ``MailBot`` inherits its lifecycle from ``Worker``:
@@ -288,7 +289,7 @@ The Mail agent is now deployed to the `quickstart` room! Now we can email the ag
 - **Attachment handling:** incoming attachments are stored under `.emails/.../attachments`; when enabled, the agent can attach room files to replies.
 - **Reply-all control:** `reply_all` controls whether replies include other thread recipients.
 - **Mail tools exposure:** `toolkit_name` registers a `new_email_thread` tool so other agents can start email threads.
-- **Skills integration:** `skill_dirs` append skill descriptions to rules for tool execution guidance.
+- **Skills integration:** `skill_dirs` append skill descriptions to rules for tool execution guidance. See [Using Skills with Agents](../../skills/using_with_agents).
 
 ## Next Steps
 Explore and understand other agents in MeshAgent:
@@ -299,3 +300,4 @@ Explore and understand other agents in MeshAgent:
 
 Learn how to deploy and run agents across rooms in a project or in specific rooms:
 - [Services and Room Containers](../../services_room_containers/overview): Understand agent deployment patterns
+- [Skills Overview](../../skills/overview): Learn when MailBots should use skills

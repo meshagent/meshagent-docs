@@ -8,7 +8,7 @@ import NewsReporter from "/snippets/examples/packaging/news_reporter.mdx"
 
 This example deploys a daily news reporter service with three agents working together: a [ChatBot](../../agents/standard/chatbot) for interactive conversation, a [MailBot](../../agents/standard/mailbot) for sending and receiving email, and a [Worker](../../agents/standard/worker) that runs on a daily schedule to compose and send a news digest.
 
-Because different users will want their own email address and recipient, this example uses a **ServiceTemplate** so users provide their values at deploy time. This example deploys a container-based service that uses the `meshagent-cli` base image.
+Because different users will want their own email address and recipient, this example uses a **ServiceTemplate** so users provide their values at deploy time. This example deploys a container-based service that uses the `meshagent-cli` base image, seeds editable Markdown rules into room storage on first boot, and places the chatbot and worker on the same thread directory so scheduled digests appear in the same thread list the chatbot uses.
 
 Use this pattern when your service needs multiple agents coordinating in a room and users need to supply their own configuration.
 
@@ -17,7 +17,7 @@ Use this pattern when your service needs multiple agents coordinating in a room 
 - A mailbox address for the mailbot (ask a project admin to create one if you can’t, or create one from the CLI or MeshAgent Studio. See example below).
 
 ## Step 1: Create the configuration file
-This configuration defines a ServiceTemplate with three agents (ChatBot, MailBot, and Worker), two user-provided variables (the agent's email address and a recipient for the daily digest), and a container that runs all three agents together using meshagent multi join.
+This configuration defines a ServiceTemplate with three agents (ChatBot, MailBot, and Worker), three user-provided variables (the agent's email address, a recipient for the daily digest, and the topics to cover), and a container that runs all three agents together using a small bootstrap script plus `meshagent multi join`.
 
 First, create a file called `meshagent.yaml` and copy the code:
 
@@ -38,33 +38,41 @@ meshagent service validate-template --file meshagent.yaml
 
 This service runs three agents under a single identity (`news-reporter`), each with a different role declared via the `meshagent.agent.type` annotation:
 
-- **ChatBot** — An interactive agent in the room with access to web search, email tools, and storage. Users can chat with it to request a news briefing on demand.
-- **MailBot** — Handles inbound and outbound email. The `meshagent.agent.schedule` annotation configures it to trigger the daily digest at 9:00 AM UTC.
-- **Worker** — Processes queued tasks. When the schedule fires, the worker searches the web for news, saves a report to room storage, and sends the digest email.
+- **ChatBot** — An interactive agent in the room with access to web search, email tools, storage, scoped memory, and a shared thread list. Users can chat with it to request a news briefing on demand or review worker-created digest threads.
+- **MailBot** — Handles inbound and outbound email. The `meshagent.agent.schedule` annotation configures it to trigger the daily digest at `17:30 UTC`, which is `10:30 AM Pacific Daylight Time` on March 13, 2026.
+- **Worker** — Processes queued tasks from `news_updates`. When the schedule fires, the worker searches the web for news, can reuse stored memory about user preferences, saves a report to room storage, writes the task into the shared thread directory, and sends the digest email.
 
-All three are started together by `meshagent multi join`, which runs multiple agents in a single container. 
+All three are started together by `meshagent multi join`, which runs multiple agents in a single container.
 
 #### User-provided variables
 
-Because this is a `ServiceTemplate`, two values are left for the user to fill in:
+Because this is a `ServiceTemplate`, three values are left for the user to fill in:
 
 - `email` — The mailbot's email address. The `type: email` hint tells MeshAgent and Powerboards this should be a valid email address.
 - `send_to_email` — Where the daily digest gets sent.
+- `report_topics` — The topics the worker should cover in the daily digest.
 
-These appear as `{{email}}` and `{{send_to_email}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./packaging#variables-servicetemplate-only) in the field reference.
+These appear as `{{email}}`, `{{send_to_email}}`, and `{{report_topics}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./packaging#variables-servicetemplate-only) in the field reference.
 
 #### Container command
 
-The `command` field runs `meshagent multi join`, which starts multiple agents in one container. The `-c` flag takes a semicolon-separated list of agent configurations. Each agent definition specifies its type, name, tools it needs access to (e.g., `--require-web-search`, `--require-toolkit=email`), its system prompt (`--rule`), and optionally room-editable rules files (`--room-rules`).
+The `command` field runs a small `start.sh` bootstrap script. On first boot it seeds editable Markdown rule files into room storage under `agents/news-reporter/`, including a shared `news-reporter-rules.md` file with the initial `{{report_topics}}` value. Later edits are preserved because the script only creates the files if they do not already exist.
+
+After seeding the files, the script runs `meshagent multi join`, which starts multiple agents in one container. The `-c` flag takes a semicolon-separated list of agent configurations. Each agent definition specifies its type, name, tools it needs access to (e.g., `--require-web-search`, `--require-toolkit=email`), its system prompt (`--rule`), and optionally room-editable rules files (`--room-rules`). In this example, all three agents also use the scoped memory path `agents/news-reporter/memories`, the chatbot uses `--threading-mode=default-new --thread-dir=/agents/news-reporter/threads`, and the worker uses `--threading-mode=auto` with the same `--thread-dir`, so they publish into the same thread list.
+
+> **Pacific Time note**
+> - The scheduler currently stores a cron expression only, so this example uses UTC rather than a named timezone.
+> - `30 17 * * *` maps to `10:30 AM PDT`.
+> - After Pacific time returns to standard time on November 1, 2026, `10:30 AM PT` would require `30 18 * * *`.
 
 > **Room-editable rules**
-> - Each agent references `--room-rules` files like `agents/news-reporter/chatbotrules.txt`. 
+> - Each agent references `--room-rules` files like `agents/news-reporter/chatbot-rules.md`.
 > - These are files in the room's storage that anyone in the room can edit to customize the agent's behavior after deployment — no redeployment needed. 
-> - In this example you'll notice all three agents share the `news-reporter-rules.txt` file so you can apply global rules for the agents. The agents also each have their own individual `rules.txt` file for their unique rules. 
+> - In this example all three agents share `news-reporter-rules.md`, so editing that file changes the topics and curation guidance for future runs. The agents also each have their own `*.md` rules file for role-specific behavior. 
 
 #### Participant token
 
-The [`environment`](./packaging#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
+The [`environment`](./packaging#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, memory, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
 
 #### Room storage
 
@@ -91,11 +99,12 @@ meshagent service create-template \
   --file meshagent.yaml \
   --value email=news@mail.meshagent.com \
   --value send_to_email=you@example.com \
+  --value report_topics="AI policy, foundation models, chips, and startup funding" \
   --room myroom
 ```
 
 ## Step 4: Try it out
-Open either [MeshAgent Studio](https://studio.meshagent.com) or [Powerboards](https://app.powerboards.com) and navigate to your room. Select the news-reporter agent and try requesting a briefing on demand — ask it to research a topic and send you an email. The scheduled daily digest will start sending automatically at the next 9:00 AM UTC.
+Open either [MeshAgent Studio](https://studio.meshagent.com) or [Powerboards](https://app.powerboards.com) and navigate to your room. Select the news-reporter agent and try requesting a briefing on demand — ask it to research a topic and send you an email. The scheduled daily digest will start sending automatically at the next `17:30 UTC` (`10:30 AM PDT` on March 13, 2026), and the worker-generated digest threads will show up alongside chatbot threads.
 
 ## Step 5: Make it Shareable via Powerboards
 Now that you've built and tested the service, you can turn it into a one-click install link so anyone can deploy it into their own room — no CLI required.
@@ -110,7 +119,7 @@ Now that you've built and tested the service, you can turn it into a one-click i
     https://app.powerboards.com/install?url=https://gist.githubusercontent.com/yourname/.../raw/.../meshagent.yaml
     ```
 
-When someone clicks this link, Powerboards will walk them through setup: they'll select a Project and Room, provide values for `email` and `send_to_email`, and Powerboards will create the mailbox and deploy the service automatically.
+When someone clicks this link, Powerboards will walk them through setup: they'll select a Project and Room, provide values for `email`, `send_to_email`, and `report_topics`, and Powerboards will create the mailbox and deploy the service automatically.
 
 See [Sharing via Powerboards](../share_agents_in_powerboards) for more details. 
 

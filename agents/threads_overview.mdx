@@ -1,0 +1,217 @@
+---
+title: "Threads Overview"
+---
+
+## What is a thread?
+
+A **thread** is the persisted conversation or work history an agent can use to continue from where it left off.
+
+In MeshAgent, a thread is stored as a Room sync document. It is the durable state behind things like:
+
+- an ongoing chat with a `ChatBot`
+- a resumable `TaskRunner` workflow
+- a `Worker` job history you want to keep and revisit
+
+The main idea is:
+
+- **Session/context** is the in-memory state for the current run
+- **Thread** is the persisted state that future runs can reload
+
+If you want continuity across turns, runs, or agents, you usually need a thread.
+
+## Threads vs rooms, sessions, tools, and skills
+
+These concepts work together, but they are not the same:
+
+- **Room**: the shared collaboration environment where people, agents, files, tools, and documents live
+- **Session/context**: the current in-memory LLM conversation state for one run
+- **Thread**: the persisted transcript or work log that an agent session can resume from
+- **Tool**: a callable capability such as storage, shell, or web search
+- **Skill**: reusable guidance that helps an agent decide how to approach a task
+
+The key distinction is:
+
+- **Sessions are live**
+- **Threads persist**
+
+An agent may create a fresh session every time it runs, but still choose to reload that session from an existing thread.
+
+## What lives in a thread?
+
+A MeshAgent thread can store more than plain chat text. A thread can contain:
+
+- user and assistant messages
+- file attachments
+- tool and command output
+- reasoning summaries
+- UI events
+- generated images and related status
+
+That makes a thread useful as both:
+
+- a memory source for future agent runs
+- a durable audit trail of what happened
+
+## Do all agents use threads?
+
+No. Different agents use threads in different ways.
+
+### ChatBot
+
+For `ChatBot`, threads are the normal model. A chat conversation is typically backed by a thread path, and the agent reopens that thread to reload prior history and continue the conversation.
+
+If a chat UI supports multiple conversations, each conversation is usually a different thread.
+
+### TaskRunner
+
+`TaskRunner` does **not** have to use threads. It can run as a clean, one-off invocation with no persisted conversation state.
+
+If you enable threading, a `TaskRunner` can write its work into a thread and resume from that thread later.
+
+Use this when you want a structured agent invocation to be resumable or inspectable over time.
+
+### Worker
+
+`Worker` also does **not** have to use threads. A worker can simply process queue messages and return results with fresh context each time.
+
+If you enable threading, the worker can persist the work into thread documents so jobs have durable history.
+
+Use this when queued work should leave behind a readable log, or when later work should build on earlier work.
+
+## When should I think about threads?
+
+You should think about threads when you want:
+
+- conversations to continue across turns or sessions
+- a user or agent to reopen earlier work
+- multiple runs to build on the same history
+- an auditable record of tool use, outputs, or reasoning
+- multiple agents to collaborate through shared persisted state
+
+You usually do **not** need to think much about threads when:
+
+- every run should start fresh
+- the output is purely one-shot
+- there is no need to reopen or inspect the history later
+
+## Shared threads
+
+Agents can share threads.
+
+This is not a separate special feature or agent mode. It simply means that multiple agents or clients read from and write to the same thread path.
+
+That is useful when:
+
+- a conversational agent and a background agent should collaborate on the same work
+- one agent creates work and another agent continues it
+- you want a user-facing conversation and background processing to stay in one shared history
+
+The important rule is:
+
+- **same thread path = same persisted history**
+
+If two agents use different thread paths, they have different histories even if they are working in the same Room.
+
+## What is a thread directory?
+
+A **thread directory** is a path prefix used to organize many thread documents together.
+
+For example:
+
+```text
+.threads/support-bot/
+```
+
+A thread directory typically contains:
+
+- one `.thread` file per conversation or work item
+- one `index.threadl` file that lists the known threads
+
+Example:
+
+```text
+.threads/support-bot/
+  2d8b6f0e-0c9a-4f50-8e1c-2d83d6a64d4f.thread
+  660ef9d1-c70c-46e6-b309-4fe2b8c73b90.thread
+  index.threadl
+```
+
+## Example: ChatBot with thread-related CLI flags
+
+Here is a simple `ChatBot` command that enables a thread-aware chat UI and stores its thread documents under a dedicated thread directory:
+
+```bash bash
+meshagent chatbot join \
+  --room quickstart \
+  --agent-name support-bot \
+  --threading-mode default-new \
+  --thread-dir ".threads/support-bot" \
+  --require-storage \
+  --room-rules "agents/support-bot/rules.txt" \
+  --rule "You are a helpful support assistant."
+```
+
+The thread-related flags here are:
+
+- `--threading-mode default-new`: tells chat UIs to treat this agent as thread-oriented and to show a new-thread composer before loading an existing thread
+- `--thread-dir ".threads/support-bot"`: tells the agent where its thread documents and thread list should live in Room sync/storage
+
+In practice, that means MeshAgent will organize this agent's conversations under:
+
+```text
+.threads/support-bot/
+  <thread>.thread
+  index.threadl
+```
+
+This is a good default when:
+
+- one chatbot should support many separate conversations
+- you want a UI to show a thread list
+- you want to keep this agent's threads separate from other agents in the same Room
+
+If you omit `--thread-dir`, the `ChatBot` CLI will choose a default thread directory for you. If you omit thread-related settings entirely, you can still chat with the agent, but you are no longer explicitly configuring thread list behavior or thread organization.
+
+## What is `index.threadl`?
+
+`index.threadl` is the thread list document for a thread directory.
+
+It is not the source of truth for the thread contents. The `.thread` files hold the actual history. The index exists so UIs and agents can:
+
+- list available threads
+- sort them by recent activity
+- show readable names
+- open a thread by path
+
+In other words:
+
+- `.thread` stores the conversation or work itself
+- `index.threadl` stores the list of threads
+
+## How UIs use threads
+
+Many chat-style UIs need two things:
+
+1. a thread list
+2. a selected thread path
+
+The thread list usually comes from `index.threadl`, and the selected conversation comes from a specific `.thread` path.
+
+This is why thread directories matter most for conversational agents like `ChatBot`: they let a UI show many conversations instead of only one.
+
+## Choosing the right model
+
+Use one of these mental models:
+
+- **No thread**: best for isolated, one-off work
+- **One thread per user/agent pair**: best for simple persistent chat
+- **One thread per task or case**: best for work that evolves over time
+- **One shared thread across agents**: best for collaboration on the same persisted history
+- **A thread directory with many threads**: best for multi-conversation chat UIs
+
+## Where to go next
+
+- [ChatBot](./standard/chatbot): the main thread-oriented conversational agent
+- [TaskRunner](./standard/taskrunner): structured invocations that can optionally persist to threads
+- [Worker](./standard/worker): queue-driven processing with optional thread persistence
+- [Key Concepts](../introduction/key_concepts): Rooms, agents, tools, and services
