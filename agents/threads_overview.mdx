@@ -136,6 +136,42 @@ Example:
   index.threadl
 ```
 
+## Example: ChatBot with thread-related CLI flags
+
+Here is a simple `ChatBot` command that enables a thread-aware chat UI and stores its thread documents under a dedicated thread directory:
+
+```bash bash
+meshagent chatbot join \
+  --room quickstart \
+  --agent-name support-bot \
+  --threading-mode default-new \
+  --thread-dir ".threads/support-bot" \
+  --require-storage \
+  --room-rules "agents/support-bot/rules.txt" \
+  --rule "You are a helpful support assistant."
+```
+
+The thread-related flags here are:
+
+- `--threading-mode default-new`: tells chat UIs to treat this agent as thread-oriented and to show a new-thread composer before loading an existing thread
+- `--thread-dir ".threads/support-bot"`: tells the agent where its thread documents and thread list should live in Room sync/storage
+
+In practice, that means MeshAgent will organize this agent's conversations under:
+
+```text
+.threads/support-bot/
+  <thread>.thread
+  index.threadl
+```
+
+This is a good default when:
+
+- one chatbot should support many separate conversations
+- you want a UI to show a thread list
+- you want to keep this agent's threads separate from other agents in the same Room
+
+If you omit `--thread-dir`, the `ChatBot` CLI will choose a default thread directory for you. If you omit thread-related settings entirely, you can still chat with the agent, but you are no longer explicitly configuring thread list behavior or thread organization.
+
 ## What is `index.threadl`?
 
 `index.threadl` is the thread list document for a thread directory.
