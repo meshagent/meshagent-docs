@@ -602,6 +602,7 @@ $ meshagent service [OPTIONS] COMMAND [ARGS]...
 * `create-template`: Create a service from a ServiceTemplate spec.
 * `update-template`: Update a service using a ServiceTemplate...
 * `validate-template`: Validate a service template from a YAML file.
+* `render-template`: Render a service template with variables...
 * `run`: Run a local command and register it as a...
 * `show`: Show a services for the project.
 * `list`: List all services for the project.
@@ -643,7 +644,10 @@ $ meshagent service create [OPTIONS]
 * `--url TEXT`: URL to a service definition
 * `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and creates an external MCP service configured for dynamic client registration.
 * `--room TEXT`: Room name
+* `--global`: Create the service globally instead of in a room
 * `--service-id TEXT`: Optional override for meshagent.service.id in metadata annotations.
+* `--force`: Ignore an existing service with the same meshagent.service.id.
+* `--replace`: Replace an existing service with the same meshagent.service.id.
 * `--help`: Show this message and exit.
 
 ### `meshagent service update`
@@ -665,7 +669,10 @@ $ meshagent service update [OPTIONS]
 * `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and builds an external MCP service configured for dynamic client registration.
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
 * `--room TEXT`: Room name
+* `--global`: Update the global service instead of a room service
 * `--service-id TEXT`: Optional override for meshagent.service.id in metadata annotations.
+* `--force`: Ignore an existing service with the same meshagent.service.id.
+* `--replace`: Replace an existing service with the same meshagent.service.id.
 * `--help`: Show this message and exit.
 
 ### `meshagent service validate`
@@ -701,6 +708,9 @@ $ meshagent service create-template [OPTIONS]
 * `--values-file TEXT`: File path to template values
 * `-v, --value TEXT`: Template value override (key=value)
 * `--room TEXT`: Room name
+* `--global`: Create the service globally instead of in a room
+* `--force`: Ignore an existing service with the same meshagent.service.id.
+* `--replace`: Replace an existing service with the same meshagent.service.id.
 * `--help`: Show this message and exit.
 
 ### `meshagent service update-template`
@@ -723,6 +733,9 @@ $ meshagent service update-template [OPTIONS]
 * `-v, --value TEXT`: Template value override (key=value)
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
 * `--room TEXT`: Room name
+* `--global`: Update the global service instead of a room service
+* `--force`: Ignore an existing service with the same meshagent.service.id.
+* `--replace`: Replace an existing service with the same meshagent.service.id.
 * `--help`: Show this message and exit.
 
 ### `meshagent service validate-template`
@@ -737,7 +750,28 @@ $ meshagent service validate-template [OPTIONS]
 
 **Options**:
 
-* `-f, --file TEXT`: File path to a service template  [required]
+* `-f, --file TEXT`: File path to a service template
+* `--url TEXT`: URL to a service template
+* `--values-file TEXT`: File path to template values
+* `-v, --value TEXT`: Template value override (key=value)
+* `--help`: Show this message and exit.
+
+### `meshagent service render-template`
+
+Render a service template with variables and print the rendered YAML.
+
+**Usage**:
+
+```console
+$ meshagent service render-template [OPTIONS]
+```
+
+**Options**:
+
+* `-f, --file TEXT`: File path to a service template
+* `--url TEXT`: URL to a service template
+* `--values-file TEXT`: File path to template values
+* `-v, --value TEXT`: Template value override (key=value)
 * `--help`: Show this message and exit.
 
 ### `meshagent service run`
