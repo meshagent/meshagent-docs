@@ -1,0 +1,106 @@
+```yaml Yaml
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: news-agent
+  description: "Daily news agent with chat, email, and scheduled digest delivery"
+  annotations:
+    meshagent.service.id: "news-agent"
+    meshagent.service.readme: "Daily AI news agent that users can chat with, email, and schedule for daily digests."
+agents:
+  - name: news-agent
+    description: "A unified news agent"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+      meshagent.chatbot.threading: "default-new"
+      meshagent.chatbot.thread-list: ".threads/news-agent/index.threadl"
+      # 17:30 UTC is 10:30 AM Pacific Daylight Time on March 16, 2026.
+      # Use 18:30 UTC during Pacific Standard Time.
+      meshagent.agent.schedule: '{"schedule":"30 17 * * *","queue":"news-updates","name":"DailyAINews","payload":{"prompt":"Generate and send the daily news briefing. Follow your rules."}}'
+variables:
+  - name: email
+    type: email
+    description: "Choose an email address for the agent (for example, news@mail.meshagent.com)."
+  - name: send_to_email
+    type: email
+    description: "Choose the recipient address for the daily digest."
+  - name: report_topics
+    description: "Enter the topics the agent should cover in the daily digest."
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  command: /bin/bash /var/start.sh
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: news-agent
+        api:
+          livekit: {}
+          queues:
+            list: true
+          messaging:
+            broadcast: true
+            list: true
+            send: true
+          database:
+            list_tables: true
+          sync: {}
+          storage: {}
+          containers:
+            logs: true
+            use_containers: true
+          developer:
+            logs: true
+          agents:
+            register_agent: true
+            register_public_toolkit: true
+            register_private_toolkit: true
+            call: true
+            use_agents: true
+            use_tools: true
+            allowed_toolkits: null
+  storage:
+    room:
+      - path: /data
+        read_only: false
+    files:
+      - path: /var/start.sh
+        text: |
+          #!/bin/bash
+          set -e
+
+          mkdir -p /data/agents/news-agent
+
+          if [ ! -f /data/agents/news-agent/news-agent-rules.md ]; then
+            cat > /data/agents/news-agent/news-agent-rules.md <<'EOF'
+          # Shared news agent rules
+          # Edit this file to change the topics or curation preferences for future digests.
+          You create curated AI news reports for users.
+          Cover the user's topics of interest: {{report_topics}}.
+          Focus on the most important developments from the last 24 hours unless the user asks for another timeframe.
+          Include direct source links whenever possible.
+          EOF
+          fi
+
+          if [ ! -f /data/agents/news-agent/process-rules.md ]; then
+            cat > /data/agents/news-agent/process-rules.md <<'EOF'
+          # Process-specific rules
+          You are a newsroom assistant that works across chat, email, and scheduled jobs.
+          When asked to send the daily briefing, email the digest to {{send_to_email}} using the mail toolkit.
+          Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md.
+          Do not include the full saved report in the email body unless the user asks for it.
+          EOF
+          fi
+
+          exec /usr/bin/meshagent process join \
+            --agent-name=news-agent \
+            --threading-mode=default-new \
+            --thread-dir=".threads/news-agent" \
+            --channel=chat \
+            --channel=mail:{{email}} \
+            --channel=queue:news-updates \
+            --require-web-search \
+            --require-storage \
+            --rule="You are a daily AI news agent. Use web search to find the most important AI news from the last 24 hours, include source links, and produce clear briefings." \
+            --room-rules="agents/news-agent/news-agent-rules.md" \
+            --room-rules="agents/news-agent/process-rules.md"
+```

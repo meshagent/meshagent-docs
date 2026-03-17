@@ -206,8 +206,8 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 | `image` | string | Yes | Container image (e.g. `us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz`). |
 | `command` | string | No | Command to execute when the container starts. |
 | `environment` | list | No | Environment variables to set in the container. |
-| `secrets` | list | No | IDs of room secrets to inject as environment variables. **†** |
-| `pull_secret` | string | No | Secret ID for authenticating with a private container registry. **†** |
+| `secrets` | list | No | IDs of project `keys` secrets to inject as environment variables. `Service` only. **†** |
+| `pull_secret` | string | No | Project secret ID for authenticating with a private container registry. `Service` only. **†** |
 | `storage` | object | No | Storage volumes to mount into the container. |
 | `api_key` | object | No | Auto-provision an admin API key and inject it into the container. **†** |
 | `on_demand` | boolean | No | When true, the container runs only when explicitly invoked. |
@@ -216,13 +216,20 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 
 #### container.environment
 
-Each entry sets an environment variable in the container. A variable can have a literal `value` or a `token` that MeshAgent generates at startup.
+Each entry sets an environment variable in the container. A variable can come from a literal `value`, a MeshAgent `token`, or a room `secret`.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Environment variable name. |
 | `value` | string | No | Literal string value. |
 | `token` | object | No | Request a participant token to be generated and injected as the value. |
+| `secret` | object | No | Load a room secret for a specific identity and inject it as the value. |
+
+Use:
+
+- `value` for plain configuration
+- `token` for MeshAgent API access
+- `secret` for room-scoped credentials
 
 `token` fields:
 
@@ -231,6 +238,29 @@ Each entry sets an environment variable in the container. A variable can have a 
 | `identity` | string | Yes | Participant identity the token is issued for. |
 | `api` | object | No | API scope granted to the token. See [API Scopes](../../rest_api/api_scopes). |
 | `role` | string | No | Participant role (e.g. `user`, `agent`, `tool`). |
+
+`secret` fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `identity` | string | Yes | Participant or service identity that owns the room secret. |
+| `id` | string | Yes | Room secret ID to load. |
+
+Example:
+
+```yaml yaml
+container:
+  environment:
+    - name: GITHUB_TOKEN
+      secret:
+        identity: github-assistant
+        id: personal-access-token
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: github-assistant
+```
+
+This pattern is common for room services: `token` gives the service access to MeshAgent, while `secret` gives it an external credential.
 
 #### container.storage
 
@@ -366,6 +396,8 @@ Templating is supported in: `metadata` fields, `agents`, `container.image`, `con
 | `type` | string | No | Type hint (e.g. `email`). |
 | `annotations` | object | No | Key-value metadata. See [Annotations](#annotations). |
 
+`ServiceTemplate` variables are the secure install-time input mechanism for installer-provided secrets. Powerboards can use variable annotations such as `meshagent.secret.id` and `meshagent.secret.identity` to collect a sensitive value during install and store it as a room secret for later use.
+
 ### Annotations
 
 Annotations are key-value strings attached to services, agents, or variables. MeshAgent and Powerboards use specific annotation keys to control behavior. You can also define custom annotations.
@@ -390,6 +422,17 @@ Set in `agents[].annotations`.
 | `meshagent.agent.schedule` | JSON string defining a scheduled task and its payload. |
 | `meshagent.agent.shell.command` | Shell command for `Shell`-type agents. |
 | `meshagent.agent.database.schema` | Database schema metadata for the agent. |
+
+#### Variable Annotations
+
+Set in `variables[].annotations`.
+
+| Key | Description |
+|-----|-------------|
+| `meshagent.secret.id` | Secret ID to create or update when Powerboards stores the value as a room secret. |
+| `meshagent.secret.identity` | Identity that should own the created room secret. |
+| `meshagent.secret.name` | Display name to use for the created room secret. |
+| `meshagent.secret.type` | Secret type metadata for the stored room secret. |
 
 #### Event Annotations
 

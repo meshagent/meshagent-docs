@@ -110,6 +110,20 @@ meshagent chatbot join --room testroom --web-search --storage
 
 Open [MeshAgent Studio](https://studio.meshagent.com), join `testroom`, and start chatting with your agents.
 
+If one agent should accept work from more than chat, you can also test a [channel-driven agent built with `meshagent process`](../agents/process/overview) locally:
+
+```bash
+meshagent process join \
+  --room testroom \
+  --agent-name support-agent \
+  --channel chat \
+  --channel queue:triage \
+  --threading-mode default-new \
+  --thread-dir ".threads/support-agent"
+```
+
+This starts one logical agent with both a chat channel and a queue channel. For more complete examples, see [Using Process](../agents/process/using_process).
+
 > **Tip:** Use `--help` to see all available tools and options: `meshagent chatbot join --help`. The CLI ChatBot has built in tools you can turn on and off for things like image generation, web search, local shell, and mcp.
 
 > **Note:** `chatbot join` / `voicebot join` are designed for local/dev usage. In containers or deployments, prefer `chatbot service` / `voicebot service`. 
@@ -199,13 +213,13 @@ If your docker image is not public, then you will need to configure a secret so 
 
 <CodeGroup>
 ```bash bash
-meshagent room secret docker create --name my-image-secret --server index.docker.io --username my-username --password my-password
+meshagent secret docker create --name my-image-secret --server index.docker.io --username my-username --password my-password
 ```
 </CodeGroup>
 
 You can also create key-value based secrets (for API keys, etc.):
 ```bash 
-meshagent room secret keys create --name my-secret --data my-key=my-value
+meshagent secret key create --name my-secret --data "my-key=my-value"
 ```
 
 ### Logout 

@@ -10,7 +10,9 @@ MeshAgent supports two complementary ways to build and deploy agents, depending 
 **1. Build and deploy agents with the MeshAgent CLI (recommended starting point)**
 The MeshAgent CLI is the fastest way to get production-ready agents running in real rooms, often without writing any agent code yourself.
 
-You can launch, configure, and deploy both conversational agents and background agents, including:
+For most new text and background workflows, the recommended starting point is [`meshagent process`](../process/overview), which lets one agent handle multiple entry points such as chat, mail, queues, and toolkit calls.
+
+MeshAgent also includes specialized agent commands and SDK classes for focused use cases, including:
 - ChatBots and VoiceBots (interactive, multi-turn)
 - MailBots (email-based workflows)
 - TaskRunners and Workers (background + queue/task-driven)
@@ -54,27 +56,48 @@ Suppose your agent is written in Python and hosted on a server, while your custo
 ## Built-in MeshAgent Agents
 MeshAgent ships **built-in agent classes** that handle Room connectivity, context, and tool orchestration. You can run them as-is, extend them with your own rules and tools, or layer them with agents built with other agent libraries like LangChain, Semantic Kernel, CrewAI, and PydanticAI.
 
+### Recommended Starting Point: `meshagent process`
+For most new text and background workflows, start with [`meshagent process`](../process/overview).
+
+`meshagent process` creates one unified agent that can be reached through one or more channels:
+
+- chat
+- email
+- queues
+- toolkit-style invocations
+
+This is the clearest path when one workflow may need several entry points over time. Instead of splitting the same logic across separate chat, mail, queue, and callable agents, you can keep one agent identity and attach the channels you need.
+
+This is also the direction MeshAgent is moving for many non-voice agent patterns.
+
+Today, `VoiceBot` is still separate because `meshagent process` does not currently expose a voice channel.
+
+See [Process Overview](../process/overview) and [Using MeshAgent Process](../process/using_process) for the recommended workflow.
+
+### Specialized Agent Types
+MeshAgent also includes focused agent types that remain useful when you want a dedicated single-purpose runtime or are working with an existing codebase that already uses them.
+
 ### Participant-Based Agents
-Interactive agents you communicate with via voice or text. Best when you need a conversational interace and interactive, iterative problem-solving with the end-user. These agents:
+Interactive agents you communicate with via voice or text. Best when you need a conversational interface and interactive, iterative problem-solving with the end-user. These agents:
 - Appear in the Room's participants list (just like human team members)
 - Maintain persistent conversation threads and support back-and-forth dialogue
 - Best for ongoing interactions where context matters
 
 **Available Participant Based Agents:** 
-* **[ChatBot](./chatbot):** Conversational text agent. Manages a shared thread document, streams tool calls, and persists exchanges.
-* **[VoiceBot](./voicebot):** Conversational speech/voice agent. Integrates with LiveKit for audio in/out and supports the same tool interface as the ChatBot.
+* **[ChatBot](./chatbot):** Conversational text agent. Best when you want a dedicated chat-focused runtime.
+* **[VoiceBot](./voicebot):** Conversational speech and voice agent. Integrates with LiveKit for audio in and out.
 
 ### Background Agents
-Background (ambient) agents triggered by tasks, queues, or other events to execute specific tasks. Best when you need to process data, wrap existing agents from other frameworks, handle background jobs, or respond to events. These agents:
+Background agents triggered by tasks, queues, or other events to execute specific tasks. Best when you need a dedicated single-surface background runtime or a specific SDK base class. These agents:
 - Run without appearing in conversation threads
 - Respond to invocations or queue messages
 - Execute and complete without user dialogue
 - Best for automated workflows and batch processing
 
 **Available Background Agents:** 
-* **[TaskRunner](./taskrunner):** Schema-driven background agent. Define input/output schemas and an ask() method. Perfect for wrapping existing agents.
-* **[Worker](./worker):** Queue driven background agent. Listens for messages and processes them sequentially. Ideal for background jobs or long-running tasks.  
-* **[MailBot](./mailbot):** Specialized worker for email. Communicates via email, can process attachments, and invoke other custom tools before replying to a user. 
+* **[TaskRunner](./taskrunner):** Schema-driven background agent. Define input and output schemas and an `ask()` method.
+* **[Worker](./worker):** Queue-driven background agent. Listens for messages and processes them sequentially.  
+* **[MailBot](./mailbot):** Specialized worker for email workflows. 
 * **[Indexer](./indexer):** Watches incoming content, embeds it into the room’s vector store, and integrates with RagToolkit for Retrieval Augmented Generation (RAG) workflows.  
 
 ### Under the Hood: Agent Class Model
@@ -83,7 +106,9 @@ MeshAgent agents are built on a layered class hierarchy. This design makes it ea
 All MeshAgent agents share a **layered class hierarchy**:
 - **`Agent`** – Base identity, metadata, and `AgentSessionContext`.  
 - **`SingleRoomAgent`** – Binds an agent to a Room connection and installs required toolkits.  
-- **Specialized Base Agents** – These extend the SingleRoomAgent and are either participant-oriented (ChatBot, VoiceBot) or run in the background (TaskRunner, Worker, Indexer, MailBot). 
+- **Specialized Base Agents** – These extend `SingleRoomAgent` and are either participant-oriented (ChatBot, VoiceBot) or run in the background (TaskRunner, Worker, Indexer, MailBot). 
+
+`meshagent process` is slightly different at the docs level: it is not one separate SDK base class. It is a CLI runtime that assembles channels and per-thread processes on top of the same lower-level agent building blocks.
 
 This design ensures **consistent context handling, toolkit discovery, and Room integration** across all agent types.
 
@@ -120,4 +145,6 @@ For more details check out the [Room Agents documentation](../../room_api/agents
 
 ## Next Steps
 - [SingleRoomAgent](./singleroomagent): Understand the different types of agents in MeshAgent and the core classes for each. 
-- [Build a Chat Agent](./chatbot): Learn how to use and customize a MeshAgent ChatBot.
+- [Process Overview](../process/overview): Learn when to use the recommended multi-channel agent path.
+- [Using MeshAgent Process](../process/using_process): Start with the practical `meshagent process` workflow.
+- [Build a Chat Agent](./chatbot): Learn how to use and customize a dedicated ChatBot runtime.

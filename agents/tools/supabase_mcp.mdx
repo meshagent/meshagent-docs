@@ -56,7 +56,7 @@ meshagent setup # authenticate to MeshAgent if not already signed in
 
 meshagent room secret set \
   --room myroom \
-  --secret-id supabase \
+  --id supabase \
   --name supabase \
   --for-identity supabase \
   --text "$SUPABASE_ACCESS_TOKEN"
@@ -94,7 +94,7 @@ You can find your project ID by running `meshagent project list` or from the out
 **3. View or delete the secrets:**
 ```bash
 meshagent room secret list --room myroom
-meshagent room secret delete --room myroom --secret-id supabase
+meshagent room secret delete --room myroom supabase
 ```
 
 **4. Unset the environment variables when you're done** — otherwise your CLI will continue executing commands using the token you created:
@@ -110,7 +110,7 @@ meshagent setup
 </Accordion>
 
 ### Step 3: Start the MCP Session 
-This command connects to the Supabase MCP server and exposes it as a toolkit in your room. The `{supabase}` placeholder in `--header-secret` resolves to the room secret you created in Step 2 (matching the `--secret-id supabase`).
+This command connects to the Supabase MCP server and exposes it as a toolkit in your room. The `{supabase}` placeholder in `--header-secret` resolves the room secret you created in Step 2 by secret ID or name, so in this example it matches the room secret stored as `supabase`.
 
 The `project_ref` parameter in the URL determines which Supabase project this toolkit can access. Agents or humans using this toolkit will only be able to interact with that specific project.
 
@@ -208,5 +208,4 @@ Once you're happy with your service template, you can make it installable via Po
 Anyone who clicks that link will be able to install the toolkit into their own room — Powerboards handles secret creation and configuration for them.
 
 > Powerboards note: the ServiceTemplate includes a `supabase_access_token` variable with `meshagent.secret.*` annotations. Powerboards uses that to prompt for the token and store the room secret automatically. The CLI ignores those annotations, so you still need to set the room secret yourself before deploying the toolkit that uses the service from the command line.
-
 

@@ -1,0 +1,104 @@
+---
+title: "MeshAgent Process Overview"
+---
+
+## What is `meshagent process`?
+
+`meshagent process` is the CLI entry point for running one **multi-channel agent**.
+
+Use it when one agent should be reachable through more than one entry point, but still keep one shared identity, one shared tool configuration, and one shared rules setup.
+
+For example, the same agent can:
+
+- answer in chat
+- respond to email
+- process queue messages
+- be called by another agent as a tool
+
+One `meshagent process` command creates one agent. If you need separate agents with different rules, tools, or identities, run multiple `meshagent process` commands.
+
+## Why it is useful
+
+`meshagent process` gives you one place to define the agent and then decide how work can reach it.
+
+That brings a few important benefits:
+
+- one agent identity across multiple entry points
+- one shared set of rules and tools
+- one deployment shape for chat, mail, queue, and toolkit-style access
+- thread continuity when different channels reuse the same thread path
+
+## Supported channels today
+
+Today, `meshagent process` supports these channel formats:
+
+| Channel | What it means |
+| --- | --- |
+| `chat` | People can talk to the agent from MeshAgent Studio, Powerboards, or another chat-style client |
+| `mail:EMAIL` | Email sent to that mailbox becomes work for the agent |
+| `queue:NAME` | Messages pushed to that room queue become work for the agent |
+| `toolkit:NAME` | Other agents or participants can call the agent like a tool and get a reply |
+
+Each `--channel` flag adds another way to reach the same agent.
+
+## Threads and continuity
+
+`meshagent process` does **not** merge all work into one giant live context.
+
+The context boundary is still the thread path:
+
+- turns for the same `thread_id` are handled together
+- unrelated threads stay isolated
+- continuity only happens when inputs reuse the same thread path
+
+That is what makes cross-channel continuity possible.
+
+For example:
+
+- an email can create or continue a thread
+- later, a chat client can continue that same thread
+- the agent is still the same agent, and the history is still the same thread history
+
+## What happens at runtime
+
+At a high level:
+
+1. a channel receives input from chat, mail, a queue, or a toolkit call
+2. the channel turns that input into a process turn
+3. the runtime routes that turn by `thread_id`
+4. one thread-scoped execution handles the turn and writes outputs back into the thread model
+
+This is the core behavior behind `process`: one agent can serve many channels without sharing unrelated thread state.
+
+## What `meshagent process` handles for you
+
+In addition to routing work from channels, `meshagent process` handles:
+
+- per-thread routing and queueing
+- streaming text, files, and other outputs into the thread
+- reasoning summary updates when the selected adapter emits them
+- tool-call lifecycle state such as pending, running, logs, completion, and failure
+- tool approvals and resume flows
+- interrupts and steering for active turns
+- thread status and pending-message metadata for clients
+
+Some model behavior still comes from the configured LLM adapter rather than from `meshagent process` itself.
+
+## Under the hood
+
+Under the hood, `meshagent process` assembles a small runtime out of a few core pieces:
+
+- [`SingleRoomAgent`](../standard/singleroomagent): the room-connected agent shell that holds the shared identity, requirements, rules, and tool configuration
+- channel adapters such as `ChatChannel`, `MailChannel`, `QueueChannel`, and `ToolkitChannel`: the pieces that turn chat, email, queues, and toolkit calls into process messages
+- `AgentSupervisor`: the router that receives channel messages and sends each turn to the correct thread
+- `LLMAgentProcess`: the per-thread execution loop that runs one active thread at a time
+- `AgentProcessThreadAdapter`: the bridge that writes outputs, tool state, and turn lifecycle updates back into the thread model
+
+For the full implementation model, see [Process Architecture](./architecture). For the thread model those runtime pieces write into, see [Threads Overview](../threads_overview).
+
+## Where to go next
+
+- [Using MeshAgent Process](./using_process): the practical CLI path, starting with a small runnable example
+- [Process Architecture](./architecture): the implementation model for engineers extending or debugging the runtime
+- [Threads Overview](../threads_overview): how thread paths control continuity and isolation
+- [Deploy a Process Agent Service](../../services_room_containers/packaging_and_deploying/process_agent_service): package and deploy one multi-channel agent service

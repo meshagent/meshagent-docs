@@ -78,6 +78,18 @@ If you enable threading, the worker can persist the work into thread documents s
 
 Use this when queued work should leave behind a readable log, or when later work should build on earlier work.
 
+### Process-backed agents
+
+Process-backed agents also use threads, but the boundary is still the thread path rather than the overall process.
+
+In practice, that means:
+
+- one `meshagent process` runtime can accept turns from chat, mail, queues, or toolkit calls
+- each turn is still routed by `thread_id`
+- context is only shared when those inputs reuse the same thread path
+
+So a process-backed agent can have one runtime and still keep unrelated work separate.
+
 ## When should I think about threads?
 
 You should think about threads when you want:
@@ -214,4 +226,5 @@ Use one of these mental models:
 - [ChatBot](./standard/chatbot): the main thread-oriented conversational agent
 - [TaskRunner](./standard/taskrunner): structured invocations that can optionally persist to threads
 - [Worker](./standard/worker): queue-driven processing with optional thread persistence
+- [Process Overview](./process/overview): one logical agent with multiple channels
 - [Key Concepts](../introduction/key_concepts): Rooms, agents, tools, and services
