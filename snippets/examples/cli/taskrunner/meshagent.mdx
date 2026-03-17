@@ -9,16 +9,14 @@ agents:
 - name: mytaskrunner
   annotations:
     meshagent.agent.type: TaskRunner
-ports:
-- num: '*'
-  type: http
-  endpoints:
-  - path: /agent
-    meshagent:
-      identity: mytaskrunner
 container:
   image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
-  command: meshagent task-runner service --agent-name mytaskrunner --web-search --require-storage
+  command: meshagent task-runner join --agent-name mytaskrunner --web-search --require-storage
     --room-rules agents/mytaskrunner/rules.txt --rule 'You are a helpful assistant'
+  environment:
+  - name: MESHAGENT_TOKEN
+    token:
+      identity: mytaskrunner
+
 ```
 

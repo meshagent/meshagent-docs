@@ -10,20 +10,17 @@ agents:
   - name: resume-chatbot
     annotations:
       meshagent.agent.type: "ChatBot"
-ports:
-  - num: "*"
-    type: http
-    liveness: "/"
-    endpoints:
-      - path: /agent
-        meshagent:
-          identity: resume-chatbot
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:latest"
-  command: "/usr/bin/meshagent chatbot service --agent-name=resume-chatbot --model=gpt-5.2 --storage  --web-search --require-table-write candidates --require-table-write open_roles --require-table-write candidate_role_scores --room-rules=agents/resume_chatbot/rules.txt"
+  command: "/usr/bin/meshagent chatbot join --agent-name=resume-chatbot --model=gpt-5.2 --storage  --web-search --require-table-write candidates --require-table-write open_roles --require-table-write candidate_role_scores --room-rules=agents/resume_chatbot/rules.txt"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: resume-chatbot
   storage:
     room:
       - path: /data
         read_only: false
+
 ```
 

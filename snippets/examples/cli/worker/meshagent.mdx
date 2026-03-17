@@ -11,19 +11,17 @@ agents:
     description: "A queue based worker agent"
     annotations:
       meshagent.agent.type: "Worker"
-ports:
-- num: "*"                    # automatically assign an available MESHAGENT_PORT for the agent to run on 
-  type: http
-  endpoints:
-  - path: /agent              # service path to call and run the agent on
-    meshagent:
-      identity: worker        # name of the agent as it shows up in the Room
 container:
   image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
-  command: "meshagent worker service --agent-name=worker --queue=tasks --require-storage --rule='Process queued tasks and save results to storage.'"
+  command: "meshagent worker join --agent-name=worker --queue=tasks --require-storage --rule='Process queued tasks and save results to storage.'"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: worker
   storage:
     room:
       - path: /data             # mount room storage path for the agent to write files to
         read_only: false        # allow write access 
+
 ```
 
