@@ -10,18 +10,10 @@ agents:
     annotations:
       meshagent.agent.type: "MailBot"
 variables: []
-ports:
-  - num: "*"
-    type: http
-    liveness: "/"
-    endpoints:
-      - path: /agent
-        meshagent:
-          identity: resume-mailbot
 container:
   image: "us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz"
   command: >
-    /usr/bin/meshagent mailbot service
+    /usr/bin/meshagent mailbot join
     --agent-name=resume-mailbot
     --model=gpt-5.2
     --queue=resume_email
@@ -29,7 +21,12 @@ container:
     --toolkit-name=mailbot.mail
     --toolkit=mailbot-toolkit
     --room-rules=agents/resume_mailbot/rules.txt
-    --whitelist=tula.masterman@timu.com --whitelist=jesse.ezell@timu.com --whitelist=parsa.rohani@timu.com --whitelist=john.cooper@carlsquare.com --whitelist=anthony@ikaun.com
+    --whitelist=recruiter@example.com
+    --whitelist=hiring-manager@example.com
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: resume-mailbot
   storage:
     room:
       - path: /data
