@@ -6,9 +6,9 @@ import ServiceTemplateSpecChatbot from "/snippets/examples/cli/concepts/use-serv
 
 MeshAgent allows you to deploy any code as a service. Services can be anything from pre-built agents to custom code to external integrations and can be deployed as either a room service (scoped to a specific MeshAgent room) or a project service (available in every room in your project). 
 
-To deploy a service in MeshAgent, you write a YAML configuration file that describes what to run and how to connect it to a room. Services can be deploy with the MeshAgent CLI, from MeshAgent Studio, or by sharing a Powerboards install link.
+To deploy a service in MeshAgent, you write a YAML configuration file that describes what to run and how to connect it to a room. Services can be deployed with the MeshAgent CLI, from MeshAgent Studio, or by sharing a Powerboards install link.
 
-This page covers the key concepts behind service configuration and provides a complete field reference for the required configuration YAML file. For step-by-step walkthroughs, see the deployment examples at the bottom of this page.
+This page covers the key concepts behind service configuration, explains how a manifest is organized, and provides a complete field reference for the required configuration YAML file. The examples on this page are complete manifests you can copy into `meshagent.yaml` and adapt. If you are writing custom SDK code and want to test it locally before packaging it, see [Run Your Service Locally](../local_development).
 
 ## Key Concepts
 Before deploying your service there are three decisions to make about your service.
@@ -26,79 +26,74 @@ This determines **whether configuration is fixed or user-provided**.
 - **Service** (`kind: Service`) — A concrete spec that MeshAgent can run immediately. Configuration is baked into the YAML. Deploy with `meshagent service create`.
 - **ServiceTemplate** (`kind: ServiceTemplate`) — A parameterized spec that collects user inputs (API keys, names, settings) at deploy time, then renders a Service from them. Uses `{{ variable_name }}` placeholders (Jinja templating) and an additional `variables` section to define what users provide. Deploy with `meshagent service create-template --file meshagent.yaml`.
 
-> `ServiceTemplate`s can only be deployed to a specific room, not your entire project.
-
 ### 3. What kind of service is running: Container vs External
 Each YAML configuration file can run either a containerized service or an external service. 
 - **Container** — MeshAgent pulls a container image and runs it inside the room. The container can run anything: a MeshAgent CLI agent, a Python script, or other custom code. MeshAgent handles the lifecycle — starting, stopping, injecting credentials, and connecting it to the room.
 - **External** - Your service is already running somewhere else. You provide a URL and MeshAgent routes traffic to it.
 
-## How Service Configuration Files are Structured 
+## CLI Only Deployment or Custom Manifest?
 
-Every service configuration starts with`version: v1`, a `kind` (`Service` or `ServiceTemplate`), and a `metadata` section. You must also include either `container` or `external`. 
+If you are deploying a standard process-backed agent, you do not have to start by hand-writing YAML.
 
+- Use `meshagent process deploy ...` when the built-in CLI flags already describe what you want to run.
+- Use `meshagent process spec ... > meshagent.yaml` when you want MeshAgent to generate a complete manifest for you and then adapt it.
+
+For example:
+
+```bash bash
+# Fastest path for a standard process-backed agent
+meshagent process deploy \
+  --service-name my-chatbot \
+  --agent-name my-chatbot \
+  --channel chat \
+  --require-web-search \
+  --require-storage
+  --room my-room
+
+# Generate a complete manifest you can review and customize
+meshagent process spec \
+  --service-name my-chatbot \
+  --agent-name my-chatbot \
+  --channel chat \
+  --require-web-search \
+  --require-storage
 ```
-  version: v1                                
-  kind: Service | ServiceTemplate            
-                                             
-  metadata:         ← identity and display   
-  agents:           ← agent identities       
-                       provided by           
-                       this service          
-                                            
-  container:  ─┐    ← what to run            
-          OR    │      (pick one)             
-  external:   ─┘                             
-                                             
-  ports:            ← HTTP routing           
-    endpoints:        (not always needed)    
-                                             
-  variables:        ← user inputs            
-                      (ServiceTemplate only) 
-```
 
-- `metadata` — The service's name, description, and display information. Required.
-- `agents` — Declares the participant identities this service provides to the room. 
-- `container` or `external` — Defines what runs. container provides an image for MeshAgent to run; external points to a URL you host. One or the other is required.
-- `ports` — Defines HTTP endpoints MeshAgent can route traffic to. Optional. Services that connect directly to the room using a participant token don't require ports.
-- `variables` — Inputs that users provide at deploy time. `ServiceTemplate` only. Values are substituted into the YAML using `{{ variable_name }}` placeholders. 
+In general:
+
+- Start with `deploy` for simpler use cases.
+- Start with `spec` when you want to review the generated manifest or adapt it before deployment.
+- Move to a hand-edited manifest when you need more advanced behavior such as a custom image, custom ports, or additional mounts not covered by the CLI flags.
 
 ## Example 1: Deploying a `Service`
 Let's deploy a simple ChatBot with web search and storage tools. This is a `kind: Service` where configuration is fixed and it runs as-is.
+
+This is a complete manifest. You can copy it into `meshagent.yaml` and deploy it directly.
 
 <CodeGroup>
   <ServiceSpecChatbot />
 </CodeGroup>
 
-Here's what each section does:
-- `kind` - Declares the type of configuration file. In this case a `Service`.
-- `metadata` — Names the service `my-chatbot` and sets `meshagent.service.id` so Powerboards and MeshAgent Studio can identify it.
-- `agents` — Declares a single agent identity (`my-chatbot`) with `meshagent.agent.type: ChatBot` so Powerboards knows to display it as a chatbot in the UI.
-- `container.image` — Uses a MeshAgent base image, which includes the MeshAgent CLI and all prebuilt agent types.
-- `container.command` — Runs `meshagent chatbot join` with flags for web search, storage, an inline rule (`--rule`), and a room-editable rules file (`--room-rules`).
-- `container.environment` — Injects a `MESHAGENT_TOKEN` so the agent can connect to the room as the my-chatbot identity.
-- `container.storage` — Mounts room storage at `/data` so the agent can read and write files.
-
-If your service also needs reusable skills, use the same service spec structure and add skill mounts plus repeated `--skill-dir` flags in the container command. See [Packaging and Deploying Skills](../../skills/packaging_and_deploying).
+You can easily extend the agent with additional channels and toolkits using CLI flags as needed, see `meshagent process join --help` for more options.
 
 Validate and deploy to a room:
 
 ```bash bash
-meshagent service validate --file "meshagent.yaml"
-
 meshagent service create --file "meshagent.yaml" --room myroom
 ``` 
 
 > To deploy as a project service drop the `--room` flag
 
 ## Example 2: Deploying a `ServiceTemplate`
-Now let's convert the chatbot from Example 1 into a `ServiceTemplate`. We'll add a variables section so users can choose a language for the chatbot to respond in.
+Now let's convert the chatbot from Example 1 into a `ServiceTemplate`. We'll add a `variables` section so users can choose a language for the chatbot to respond in at install time.
+
+This is also a complete manifest. Copy it into `meshagent.yaml` when you want installer-provided values.
 
 <CodeGroup>
   <ServiceTemplateSpecChatbot />
 </CodeGroup>
 
-The differences from Example 1:
+The differences from Example 1 are:
 - `kind` changed from `Service` to `ServiceTemplate`.
 - `variables` added with a single variable, `language`. This is what users provide at deploy time.
 - `container.command` now includes `{{ language }}` in the `--rule` flag. MeshAgent substitutes the user's value when rendering the template into a Service.
@@ -110,6 +105,8 @@ meshagent service validate-template --file "meshagent.yaml"
 
 meshagent service create-template --file "meshagent.yaml" --value language=Spanish --room myroom
 ```
+
+`ServiceTemplate` is the right choice when the manifest shape stays the same but one or more values need to be supplied when the service is created. When creating shareable install links for other users to add your agent to Powerboards, use `ServiceTemplate`. 
 
 ## Deploying and Managing Services CLI Reference
 
@@ -124,10 +121,14 @@ meshagent service create --file meshagent.yaml --room myroom
 meshagent service create --file meshagent.yaml
 ```
 
-Deploy a `ServiceTemplate` (room only):
+Deploy a `ServiceTemplate`:
 
 ```bash bash
+# To a specific room
 meshagent service create-template --file meshagent.yaml --value key=value --room myroom
+
+# To the entire project
+meshagent service create-template --file meshagent.yaml --value key=value
 ```
 
 ### List services
@@ -151,11 +152,118 @@ meshagent service update-template --file meshagent.yaml --value key=value --room
 
 ```bash bash
 # Delete a Service or ServiceTemplate
-meshagent service delete --file meshagent.yaml --room myroom --id SERVICE_ID
+meshagent service delete SERVICE_ID --room myroom
 ```
 
 ### Managing Services from MeshAgent Studio
 You can also manage deployed services from [MeshAgent Studio](https://studio.meshagent.com). Navigate to your room or project to view, edit, and remove services from the UI.
+
+## How Service Configuration Files Are Structured
+
+Every service configuration starts with `version: v1`, a `kind` (`Service` or `ServiceTemplate`), and a `metadata` section. You must also include either `container` or `external`.
+
+At a high level, the major sections are:
+
+- `metadata` — The service's name, description, and display information.
+- `agents` — The participant identities this service provides to the room.
+- `container` or `external` — What actually runs. `container` tells MeshAgent what image to run. `external` points to a service you already host elsewhere.
+- `ports` — Optional routing information for HTTP and MCP endpoints.
+- `variables` — User-supplied install-time values. `ServiceTemplate` only.
+
+### metadata
+
+`metadata` identifies the service in the UI and in install flows. For most services, the minimum useful fields are `name`, `description`, and any annotations needed by Studio or Powerboards.
+
+### agents
+
+`agents` declares the identities your service brings into the room. This is how MeshAgent knows which participants the service can connect as, and how clients know what kind of agent to display.
+
+### container or external
+
+This is the core runtime definition.
+
+- Use `container` when MeshAgent should pull an image and run it for you.
+- Use `external` when the service already exists somewhere else and MeshAgent only needs to route traffic to it.
+
+#### container runtime behavior
+
+The most important runtime fields are:
+
+- `image` — The container image to run. You almost always need this.
+- `command` — The command MeshAgent starts in the container. Set this when the image does not already start the right process by default.
+- `working_dir` — The absolute directory MeshAgent starts the command in. Set this only when your process expects to start from a specific path or uses relative file paths.
+- `on_demand` — Starts the container only when explicitly invoked instead of as an always-on room or project service.
+- `private` — Keeps interactive container access scoped to the owning service. Most services should keep the default `true`. You would only change this if you intentionally want a more broadly shared interactive container workflow.
+
+#### container storage and write access
+
+Most services should treat the container root filesystem as read-only and use mounts for any data they need to read or write.
+
+- `storage.room` — Room-scoped persistent storage. Best for files the service should keep with the room.
+- `storage.project` — Project-wide shared storage. Best for shared assets or reference data.
+- `storage.files` — Inline text content mounted as files.
+- `storage.images` — Static assets mounted from another image.
+- `storage.empty_dirs` — Writable scratch directories inside the container.
+- `writable_root_fs` — Makes the container root filesystem writable. Use this when the process expects to write under paths like `/tmp`, `$HOME`, or its own installed working area.
+
+In practice:
+
+- Use `storage.room` for durable room data.
+- Use `storage.empty_dirs` for temporary writable workspaces.
+- Use `writable_root_fs` only when the process expects normal filesystem writes across the image and targeted mounts are not enough.
+- Treat `writable_root_fs` as ephemeral runtime state, not durable storage. Files written there are local to that container instance and are lost if the container is recreated.
+
+#### container environment and secrets
+
+Environment variables are how most services receive configuration and credentials at startup.
+
+- Use `environment[].value` for plain configuration.
+- Use `environment[].token` when the service needs a MeshAgent participant token.
+- Use `environment[].secret` when the service needs a room-scoped secret as a single environment variable.
+- Use `container.secrets` when you want to inject an entire project `keys` secret into the container as environment variables.
+- Use `pull_secret` only for authenticating to a private image registry when MeshAgent pulls the image.
+
+### ports
+
+`ports` is only needed when MeshAgent must route HTTP or MCP traffic to the service. A process service that joins the room directly with `meshagent process join ...` usually does not need any `ports` section at all. `ports` is much more typical for endpoint-based services such as `meshagent process service ...`, custom HTTP services, MCP servers, or `external` services.
+
+#### when to define ports
+
+Use `ports` when:
+
+- the service is exposing endpoints for MeshAgent to call, such as with `meshagent process service ...`
+- the container exposes an HTTP server that MeshAgent needs to call
+- you are registering an MCP endpoint
+- you want liveness checks or internet-facing routing
+
+Skip `ports` when:
+
+- the process connects directly to the room with `meshagent process join ...` and does not expose an HTTP service MeshAgent needs to reach
+
+#### endpoint types and exposure
+
+Within `ports.endpoints`:
+
+- `meshagent` endpoints represent MeshAgent-native agents or tools
+- `mcp` endpoints register MCP servers as toolkits
+
+The main exposure controls are:
+
+- `public` — Whether requests require a participant token
+- `published` — Whether the port can receive traffic from the public internet
+- `liveness` — The HTTP path MeshAgent uses for health checks
+
+### variables
+
+`variables` exists only on `ServiceTemplate`. It defines the values a user, installer, or automation provides when the template is rendered into a concrete `Service`.
+
+Common fields include:
+
+- `name` — The template variable name referenced as `{{ name }}`
+- `title` and `description` — Human-readable labels shown to installers
+- `enum` — Allowed choices
+- `optional` — Whether the value can be left blank
+- `obscure` — Whether the value should be hidden in install UI
 
 ## Service Configuration Field Reference 
 The tables below document every field in the service configuration YAML. 
@@ -205,6 +313,7 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 |-------|------|----------|-------------|
 | `image` | string | Yes | Container image (e.g. `us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz`). |
 | `command` | string | No | Command to execute when the container starts. |
+| `working_dir` | string | No | Working directory used when starting the container command. |
 | `environment` | list | No | Environment variables to set in the container. |
 | `secrets` | list | No | IDs of project `keys` secrets to inject as environment variables. `Service` only. **†** |
 | `pull_secret` | string | No | Project secret ID for authenticating with a private container registry. `Service` only. **†** |
@@ -246,20 +355,6 @@ Use:
 | `identity` | string | Yes | Participant or service identity that owns the room secret. |
 | `id` | string | Yes | Room secret ID to load. |
 
-Example:
-
-```yaml yaml
-container:
-  environment:
-    - name: GITHUB_TOKEN
-      secret:
-        identity: github-assistant
-        id: personal-access-token
-    - name: MESHAGENT_TOKEN
-      token:
-        identity: github-assistant
-```
-
 This pattern is common for room services: `token` gives the service access to MeshAgent, while `secret` gives it an external credential.
 
 #### container.storage
@@ -272,6 +367,7 @@ Mounts storage volumes into the container.
 | `project` | list | Project-wide shared storage. Read-only by default. |
 | `images` | list | Content from another container image. Read-only by default. |
 | `files` | list | Inline text content mounted as a file. Read-only by default. |
+| `empty_dirs` | list | Writable temporary directories mounted into the container. |
 
 Room and project mount fields:
 
@@ -298,6 +394,13 @@ File mount fields:
 | `text` | string | Yes | File contents. |
 | `read_only` | boolean | No | Whether the mount is read-only. |
 
+Empty directory mount fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | Mount path inside the container. |
+| `read_only` | boolean | No | Whether the temporary directory is read-only. |
+
 #### container.api_key
 
 Provisions an admin API key and injects it into the container. `Service` only.
@@ -323,12 +426,12 @@ Defines network ports the service listens on and how MeshAgent routes HTTP traff
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `num` | `"*"` or int | Yes | Port number, or `"*"` for auto-assignment. |
-| `host_port` | int | No | Host port mapping. Defaults to `num`. |
 | `type` | string | No | Protocol: `http` or `tcp`. |
 | `liveness` | string | No | HTTP path for health checks. |
 | `endpoints` | list | No | Endpoints served on this port. |
 | `published` | boolean | No | Expose the port to the internet. |
 | `public` | boolean | No | When false, requests must include a participant token. |
+| `annotations` | object | No | Key-value metadata. |
 
 #### ports.endpoints
 
@@ -384,11 +487,12 @@ Registers an MCP server as a toolkit in the room.
 
 Defines user-provided inputs for a `ServiceTemplate`. Values are substituted into the YAML using `{{ variable_name }}` syntax (Jinja templating).
 
-Templating is supported in: `metadata` fields, `agents`, `container.image`, `container.command`, `container.environment` values, and `external.url`.
+Template values are rendered into the manifest before validation, so they can be used anywhere the resulting YAML remains valid.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Variable identifier. Referenced as `{{ name }}` in templates. |
+| `title` | string | No | Human-readable label shown in install UI. |
 | `description` | string | No | Help text shown in UI and Powerboards. |
 | `enum` | list | No | Restricts input to specific values. Displayed as a dropdown. |
 | `optional` | boolean | No | Whether the variable can be left blank. |
@@ -456,14 +560,6 @@ Set in `agents[].annotations`.
 | `meshagent.webhook.queue` | Queue name for incoming webhook payloads. |
 | `meshagent.webhook.validation.method` | Method used to validate webhook signatures. |
 | `meshagent.webhook.validation.secret` | Secret ID used for webhook signature validation. |
-
-#### Variable Annotations
-
-Set in `variables[].annotations`. `ServiceTemplate` only.
-
-| Key | Description |
-|-----|-------------|
-| `meshagent.secret.*` | Tells Powerboards to store this variable's value as a room secret. Powerboards prompts the user and creates the secret automatically. The CLI ignores these annotations — create the secret manually with `meshagent room secret set`. |
 
 ## Deployment Examples
 
