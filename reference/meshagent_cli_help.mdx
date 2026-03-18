@@ -1777,6 +1777,9 @@ $ meshagent scheduled-task [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `add`: Add a scheduled task.
+* `list`: List scheduled tasks.
+* `update`: Update a scheduled task.
+* `delete`: Delete a scheduled task.
 
 ### `meshagent scheduled-task add`
 
@@ -1800,6 +1803,74 @@ $ meshagent scheduled-task add [OPTIONS]
 * `--once`: Run once and then deactivate
 * `--active / --inactive`: Initial active state  [default: active]
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent scheduled-task list`
+
+List scheduled tasks.
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-r, --room TEXT`: Filter by room name
+* `--id, --task-id TEXT`: Filter by scheduled task id
+* `--active`: Filter to active tasks only
+* `--inactive`: Filter to inactive tasks only
+* `--limit INTEGER`: Maximum number of tasks to return  [default: 200]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent scheduled-task update`
+
+Update a scheduled task.
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task update [OPTIONS] TASK_ID
+```
+
+**Arguments**:
+
+* `TASK_ID`: Scheduled task id to update  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-r, --room TEXT`: Updated room name
+* `-q, --queue TEXT`: Updated queue name
+* `-s, --schedule TEXT`: Updated cron schedule
+* `--payload TEXT`: Updated JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
+* `--payload-file TEXT`: Path to a file containing updated JSON payload
+* `--active`: Mark the task active
+* `--inactive`: Mark the task inactive
+* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent scheduled-task delete`
+
+Delete a scheduled task.
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task delete [OPTIONS] TASK_ID
+```
+
+**Arguments**:
+
+* `TASK_ID`: Scheduled task id to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--help`: Show this message and exit.
 
 ## `meshagent meeting-transcriber`
@@ -5393,6 +5464,7 @@ $ meshagent room queue [OPTIONS] COMMAND [ARGS]...
 * `send`: Send a JSON message to a room queue.
 * `send-mail`: Create an email message and send it to a...
 * `receive`: Receive a message from a room queue.
+* `size`: Show the current size of a room queue.
 
 #### `meshagent room queue send`
 
@@ -5442,6 +5514,23 @@ Receive a message from a room queue.
 
 ```console
 $ meshagent room queue receive [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--queue TEXT`: Queue name  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent room queue size`
+
+Show the current size of a room queue.
+
+**Usage**:
+
+```console
+$ meshagent room queue size [OPTIONS]
 ```
 
 **Options**:
