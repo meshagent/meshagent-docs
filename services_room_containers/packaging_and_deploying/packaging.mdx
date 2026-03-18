@@ -6,7 +6,7 @@ import ServiceTemplateSpecChatbot from "/snippets/examples/cli/concepts/use-serv
 
 MeshAgent allows you to deploy any code as a service. Services can be anything from pre-built agents to custom code to external integrations and can be deployed as either a room service (scoped to a specific MeshAgent room) or a project service (available in every room in your project). 
 
-To deploy a service in MeshAgent, you write a YAML configuration file that describes what to run and how to connect it to a room. Services can be deployed with the MeshAgent CLI, from MeshAgent Studio, or by sharing a Powerboards install link.
+To deploy a service in MeshAgent, you write a YAML configuration file that describes what to run and how to connect it to MeshAgent. Services can be deployed with the MeshAgent CLI, from MeshAgent Studio, or by sharing a Powerboards install link.
 
 This page covers the key concepts behind service configuration, explains how a manifest is organized, and provides a complete field reference for the required configuration YAML file. The examples on this page are complete manifests you can copy into `meshagent.yaml` and adapt. If you are writing custom SDK code and want to test it locally before packaging it, see [Run Your Service Locally](../local_development).
 
@@ -16,22 +16,22 @@ Before deploying your service there are three decisions to make about your servi
 ### 1. Who can use the service: Project vs Room Scope
 This determines **who can use your service**. The YAML is the same in both cases — the scope is set by how you deploy.
 
-- **Project service** — Available in every room in your project. Changes require a room restart to take effect. Deploy with `meshagent service create --file meshagent.yaml` (no `--room` flag).
+- **Project service** — Available in every room in your project. Changes require a room restart to take effect. Deploy with `meshagent service create --file meshagent.yaml --global`.
 
 - **Room service** — Scoped to a single room. Auto-updates if changed during an active session. Deploy with `meshagent service create --file meshagent.yaml --room myroom`.
 
 ### 2. Is the service user-configurable: Service vs ServiceTemplate
 This determines **whether configuration is fixed or user-provided**.
 
-- **Service** (`kind: Service`) — A concrete spec that MeshAgent can run immediately. Configuration is baked into the YAML. Deploy with `meshagent service create`.
-- **ServiceTemplate** (`kind: ServiceTemplate`) — A parameterized spec that collects user inputs (API keys, names, settings) at deploy time, then renders a Service from them. Uses `{{ variable_name }}` placeholders (Jinja templating) and an additional `variables` section to define what users provide. Deploy with `meshagent service create-template --file meshagent.yaml`.
+- **Service** (`kind: Service`) — A concrete spec that MeshAgent can run immediately. Configuration is baked into the YAML. Deploy with `meshagent service create --file meshagent.yaml` plus either `--room myroom` or `--global`.
+- **ServiceTemplate** (`kind: ServiceTemplate`) — A parameterized spec that collects user inputs (API keys, names, settings) at deploy time, then renders a Service from them. Uses `{{ variable_name }}` placeholders (Jinja templating) and an additional `variables` section to define what users provide. Deploy with `meshagent service create-template --file meshagent.yaml` plus either `--room myroom` or `--global`.
 
 ### 3. What kind of service is running: Container vs External
 Each YAML configuration file can run either a containerized service or an external service. 
 - **Container** — MeshAgent pulls a container image and runs it inside the room. The container can run anything: a MeshAgent CLI agent, a Python script, or other custom code. MeshAgent handles the lifecycle — starting, stopping, injecting credentials, and connecting it to the room.
 - **External** - Your service is already running somewhere else. You provide a URL and MeshAgent routes traffic to it.
 
-## CLI Only Deployment or Custom Manifest?
+## Fast CLI Deploy or Custom Manifest?
 
 If you are deploying a standard process-backed agent, you do not have to start by hand-writing YAML.
 
@@ -47,7 +47,7 @@ meshagent process deploy \
   --agent-name my-chatbot \
   --channel chat \
   --require-web-search \
-  --require-storage
+  --require-storage \
   --room my-room
 
 # Generate a complete manifest you can review and customize
@@ -56,7 +56,7 @@ meshagent process spec \
   --agent-name my-chatbot \
   --channel chat \
   --require-web-search \
-  --require-storage
+  --require-storage > meshagent.yaml
 ```
 
 In general:
@@ -79,10 +79,12 @@ You can easily extend the agent with additional channels and toolkits using CLI 
 Validate and deploy to a room:
 
 ```bash bash
+meshagent service validate --file "meshagent.yaml"
+
 meshagent service create --file "meshagent.yaml" --room myroom
 ``` 
 
-> To deploy as a project service drop the `--room` flag
+> To deploy as a project service use `--global` instead of `--room myroom`
 
 ## Example 2: Deploying a `ServiceTemplate`
 Now let's convert the chatbot from Example 1 into a `ServiceTemplate`. We'll add a `variables` section so users can choose a language for the chatbot to respond in at install time.
@@ -118,7 +120,7 @@ Deploy a `Service`:
 meshagent service create --file meshagent.yaml --room myroom
 
 # To the entire project (available in every room)
-meshagent service create --file meshagent.yaml
+meshagent service create --file meshagent.yaml --global
 ```
 
 Deploy a `ServiceTemplate`:
@@ -128,7 +130,7 @@ Deploy a `ServiceTemplate`:
 meshagent service create-template --file meshagent.yaml --value key=value --room myroom
 
 # To the entire project
-meshagent service create-template --file meshagent.yaml --value key=value
+meshagent service create-template --file meshagent.yaml --value key=value --global
 ```
 
 ### List services
@@ -138,21 +140,35 @@ meshagent service list --room myroom
 ```
 This returns each service's ID, name, and the applicable image associated to it. You'll need the service ID for update and delete commands.
 
+View globally deployed services when you do not pass `--room`:
+```bash
+meshagent service list
+```
+
 ### Update a service
 
 ```bash bash
-# Update a Service
+# Update a room Service
 meshagent service update --file meshagent.yaml --room myroom --id SERVICE_ID
 
-# Update a ServiceTemplate
+# Update a project Service
+meshagent service update --file meshagent.yaml --global --id SERVICE_ID
+
+# Update a room ServiceTemplate
 meshagent service update-template --file meshagent.yaml --value key=value --room myroom --id SERVICE_ID
+
+# Update a project ServiceTemplate
+meshagent service update-template --file meshagent.yaml --value key=value --global --id SERVICE_ID
 ```
 
 ### Delete a service
 
 ```bash bash
-# Delete a Service or ServiceTemplate
+# Delete a room Service or ServiceTemplate
 meshagent service delete SERVICE_ID --room myroom
+
+# Delete a project Service or ServiceTemplate
+meshagent service delete SERVICE_ID
 ```
 
 ### Managing Services from MeshAgent Studio
@@ -193,7 +209,9 @@ The most important runtime fields are:
 - `command` — The command MeshAgent starts in the container. Set this when the image does not already start the right process by default.
 - `working_dir` — The absolute directory MeshAgent starts the command in. Set this only when your process expects to start from a specific path or uses relative file paths.
 - `on_demand` — Starts the container only when explicitly invoked instead of as an always-on room or project service.
-- `private` — Keeps interactive container access scoped to the owning service. Most services should keep the default `true`. You would only change this if you intentionally want a more broadly shared interactive container workflow.
+- `private` — Advanced setting for interactive container access. Leave the default `true` for most services. Only change this if you are intentionally building a shared interactive container workflow and understand how container access should be exposed.
+
+Think of `working_dir` as "run this command after `cd /some/path`". `private` does not control whether the service is visible in the room or project; it only affects interactive container access behavior.
 
 #### container storage and write access
 
@@ -313,15 +331,15 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 |-------|------|----------|-------------|
 | `image` | string | Yes | Container image (e.g. `us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz`). |
 | `command` | string | No | Command to execute when the container starts. |
-| `working_dir` | string | No | Working directory used when starting the container command. |
+| `working_dir` | string | No | Absolute working directory used when starting the container command. |
 | `environment` | list | No | Environment variables to set in the container. |
 | `secrets` | list | No | IDs of project `keys` secrets to inject as environment variables. `Service` only. **†** |
 | `pull_secret` | string | No | Project secret ID for authenticating with a private container registry. `Service` only. **†** |
 | `storage` | object | No | Storage volumes to mount into the container. |
 | `api_key` | object | No | Auto-provision an admin API key and inject it into the container. **†** |
 | `on_demand` | boolean | No | When true, the container runs only when explicitly invoked. |
-| `writable_root_fs` | boolean | No | Allow writes to the container's root filesystem. Default: read-only. |
-| `private` | boolean | No | Mark the container as private to its service. Default: true. |
+| `writable_root_fs` | boolean | No | Allow writes to the container's root filesystem for the life of that container instance. Default: read-only. |
+| `private` | boolean | No | Advanced setting that keeps interactive container access private to the owning service. Default: true. |
 
 #### container.environment
 
