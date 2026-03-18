@@ -12,7 +12,7 @@ It records which docs currently import each example's snippet and recommends a t
 | Current example | Current docs refs | Recommendation | Target shape |
 | --- | --- | --- | --- |
 | `examples/cli/analyzer/meshagent.yaml` | none | Keep, but add doc references or retire if unused | `examples/cli/analyzer/` |
-| `examples/cli/chatbot/meshagent.yaml` | `cli/getting_started.mdx`, `agents/standard/chatbot.mdx` | Keep | `examples/cli/chatbot/` |
+| `examples/cli/chatbot/meshagent.yaml` | `cli/cli_quickstart.mdx`, `agents/standard/chatbot.mdx` | Keep | `examples/cli/chatbot/` |
 | `examples/cli/codebot/meshagent.yaml` | none | Keep, but add doc references or retire if unused | `examples/cli/codebot/` |
 | `examples/cli/mailbot/meshagent.yaml` | `agents/standard/mailbot.mdx` | Keep | `examples/cli/mailbot/` |
 | `examples/cli/taskrunner/meshagent.yaml` | `agents/standard/taskrunner.mdx` | Keep, add README for parity | `examples/cli/taskrunner/` |
