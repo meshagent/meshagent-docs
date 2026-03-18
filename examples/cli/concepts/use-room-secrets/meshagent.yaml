@@ -1,0 +1,48 @@
+version: v1
+kind: Service
+metadata:
+  name: support-agent
+  description: "Room-scoped support agent backed by meshagent process"
+  annotations:
+    meshagent.service.id: support-agent
+agents:
+  - name: support-agent
+    description: "A support agent that uses a room-scoped token"
+    annotations:
+      meshagent.agent.type: ChatBot
+      meshagent.chatbot.threading: default-new
+      meshagent.chatbot.thread-list: .threads/support-agent/index.threadl
+container:
+  image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
+  command: /bin/bash /var/start.sh
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: support-agent
+    - name: SERVICE_API_TOKEN
+      secret:
+        identity: support-agent
+        id: service-api-token
+  storage:
+    room:
+      - path: /data
+        read_only: false
+    files:
+      - path: /var/start.sh
+        text: |
+          #!/bin/bash
+          set -e
+
+          if [ -z "${SERVICE_API_TOKEN:-}" ]; then
+            echo "SERVICE_API_TOKEN is required for support-agent" >&2
+            exit 1
+          fi
+
+          exec /usr/bin/meshagent process join \
+            --agent-name=support-agent \
+            --channel=chat \
+            --threading-mode=default-new \
+            --thread-dir=".threads/support-agent" \
+            --model=gpt-5.4 \
+            --require-storage \
+            --rule="You are a support agent. Help users with support workflows and never reveal credentials or secret values."

@@ -1,35 +1,45 @@
-# MeshAgent Quickstarts
+# CLI Examples
 
-Try **chat**, **voice**, **developer**, **analyzer**, and **mail** agents in minutes. These quickstarts use the MeshAgent CLI so you can experiment without writing code. The CLI lets you call agents into a room for testing, easily add tools to agents, deploy services, and more.
+`examples/cli/` contains YAML-first examples that use MeshAgent CLI entrypoints and public CLI images.
 
-## What each quickstart includess
-- **`meshagent.yaml`** — a Service (or ServiceTemplate) for deploying the agent in MeshAgent Studio using a maintained public image.
-- **`README.md`** — step-by-step instructions for:
-  - **Running locally** with the MeshAgent CLI (quickest path)
-  - **Deploying as a service** in MeshAgent Studio (always-on)
+Use this directory for two kinds of examples:
 
-Language-specific examples (e.g., `python/`) provide source-level variants if you want to modify agent code instead of using CLI entrypoints.
+- **Scenario examples** at the top level, such as `chatbot/`, `voicebot/`, or `supabase-mcp/`
+- **Concept examples** under `concepts/`, such as `concepts/use-room-secrets/`
 
-## Available quickstarts
+## What belongs here
 
-- **Chatbot** — text chat with optional web search, image generation, and room storage.
-- **VoiceBot** — voice in/out in Studio with the same optional tools.
-- **Analyzer** — analyzes documents and has local shell tools.
-- **Developer (Codebot)** — coding & shell workflows with room storage and web tools.
-- **Mail** — email-style flows (where supported).
+Put an example under `examples/cli/` when:
 
-## Pre-built container images
+- the main artifact is a YAML manifest
+- the runtime is a MeshAgent CLI image
+- the doc is teaching how to package, deploy, or wire a CLI-based service
 
-Browse the latest public images here: us-central1-docker.pkg.dev/meshagent-public/images
+Use language-specific directories like `examples/python/` when the code itself is the main thing being taught.
 
-(Each quickstart’s meshagent.yaml references a public CLI image you can use as-is.)
+## Folder conventions
 
-## Prerequisites
-- MeshAgent account — sign up at [studio.meshagent.com](https://studio.meshagent.com)
-- MeshAgent CLI installed (e.g., uv add "meshagent[all]")
+Each scenario or concept folder should contain:
 
----
-## For more information see: 
+- `meshagent.yaml` for the primary manifest
+- `README.md` when setup steps or supporting context are needed
+- optional helper assets such as `rules.md`, `start.sh`, or extra YAML files
 
-**Website**: www.meshagent.com(https://www.meshagent.com)
-**Documentation**: docs.meshagent.com(https://docs.meshagent.com/)
+Examples:
+
+- `examples/cli/chatbot/`
+- `examples/cli/taskrunner/`
+- `examples/cli/concepts/use-project-secrets/`
+- `examples/cli/concepts/use-room-secrets/`
+
+## Snippet convention
+
+Docs pages should not paste full YAML manifests inline.
+
+Instead:
+
+1. keep the manifest in `examples/cli/...`
+2. create a matching wrapper snippet in `snippets/examples/cli/...`
+3. import that snippet into the doc page
+
+Small YAML fragments are still fine inline when they explain a field rather than a whole runnable manifest.

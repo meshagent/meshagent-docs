@@ -9,26 +9,35 @@ MeshAgent provides a collection of tools and SDKs for building agents that colla
 - Integrations for popular services (OpenAI, LiveKit, etc.).
 - A command‑line interface (CLI) to manage projects and agents.
 
-The ``meshagent.api`` package forms the foundation. Other packages such as ``meshagent.tools``, ``meshagent.agents``, ``meshagent.openai``, and ``meshagent.livekit`` build on this base.
+The Python SDK is a **family of split distributions** that share the `meshagent.*` import namespace. In code you import modules like `meshagent.api` or `meshagent.agents`, but on PyPI you install distributions such as `meshagent-api` and `meshagent-agents`.
+
+The top-level [`meshagent`](https://pypi.org/project/meshagent/) package is intentionally thin. It mainly provides the shared version plus extras such as `meshagent[all]`, `meshagent[cli]`, and `meshagent[agents]`, which install the underlying split distributions for you. If you want a smaller environment, install only the distributions you need directly.
+
+In the rest of this page, dotted names such as `meshagent.api` refer to **Python import namespaces**, while hyphenated names such as `meshagent-api` refer to the **installable distributions** that provide them.
 
 MeshAgent’s [Key Concepts](../introduction/key_concepts) page explains what Agents, Tools, and Rooms are. This guide shows how those ideas are implemented in the MeshAgent SDK.
 
 ## MeshAgent Packages at a Glance
 
-In this guide you will understand the relationships and core components for each of the MeshAgent packages: 
-- **[meshagent.api](#meshagent-api)**: the base layer providing JWT auth, websocket protocols, rooms, messaging, storage, document sync, and webhooks
-- **[meshagent.agents](#meshagent-agents)**: adds agent classes (e.g., TaskRunner, ChatBot) that orchestrate toolkits and planning logic on top of the core API
-- **[meshagent.livekit](#meshagent-livekit)**: plugs in [LiveKit](https://livekit.io/) for voice communication and streaming, providing specialized agents like VoiceBot
-- **[meshagent.tools](#meshagent-tools)**: builds on meshagent.api to create reusable tools and toolkits (collections of tools) that operate over a ToolContext that integrates with the room
-- **[meshagent.mcp](#meshagent-mcp)**: exposes MCP-hosted tools using the same toolkit interface so agents can call them
-- **[meshagent.computers](#meshagent-computers)**: offers abstractions to control browsers or OS environments (useful for automation tools or remote control)
-- **[meshagent.openai](#meshagent-openai)**: supplies adapters so those agents and tools can leverage [OpenAI models](https://openai.com/api/) and convert tool calls/responses appropriately
-- **[meshagent.cli](#meshagent-cli)**: wraps everything in a user-facing command line interface for managing projects, tokens, agents, messaging, etc
+Use `meshagent[all]` when you want a batteries-included install, or mix and match the individual distributions below:
 
-Together these packages form a layered ecosystem: ``meshagent.api`` → ``tools`` and ``agents`` → integrations like ``openai``, ``livekit``, ``mcp``, ``computers`` → command line utilities via ``meshagent.cli``. This modular design lets developers build agents with custom tools, integrate OpenAI or LiveKit features, and run or deploy them via the CLI.
+| Installable distribution | Import namespace | What it provides |
+| --- | --- | --- |
+| `meshagent` | `meshagent` | Thin umbrella package with shared version metadata and extras such as `[all]`, `[cli]`, and `[agents]` |
+| `meshagent-api` | `meshagent.api` | Core room and REST clients, JWT auth, protocols, storage, sync, services, and webhooks |
+| `meshagent-agents` | `meshagent.agents` | Agent classes such as `TaskRunner`, `Worker`, and `ChatBot` |
+| `meshagent-livekit` | `meshagent.livekit` | LiveKit integration and voice-focused agent support |
+| `meshagent-tools` | `meshagent.tools` | Tool and toolkit abstractions plus built-in toolkits |
+| `meshagent-mcp` | `meshagent.mcp` | MCP-backed toolkits and tool wrappers |
+| `meshagent-computers` | `meshagent.computers` | Browser and computer control abstractions for agents |
+| `meshagent-openai` | `meshagent.openai` | OpenAI adapters for agents and tools |
+| `meshagent-anthropic` | `meshagent.anthropic` | Anthropic adapters for agents and tools |
+| `meshagent-cli` | `meshagent.cli` | The `meshagent` CLI and related command modules |
+
+Together these distributions form a layered ecosystem: `meshagent-api` provides the foundation, `meshagent-tools` and `meshagent-agents` build on top of it, integrations such as `meshagent-openai`, `meshagent-livekit`, `meshagent-mcp`, and `meshagent-computers` extend those workflows, and `meshagent-cli` packages the operational command line experience.
 
 ## MeshAgent API
-The ``meshagent.api`` is the foundation that all other packages build on. It includes foundational protocols, JWT authentication, room management, document sync, and more. 
+The `meshagent-api` distribution provides the `meshagent.api` namespace. It is the foundation that the other Python distributions build on, including the core protocols, JWT authentication, room management, document sync, and REST/admin clients.
 
 ### JWT Authentication
  MeshAgent uses **JSON Web Tokens (JWTs)** to authenticate participants. A token encodes who you are (participant name) and what you’re allowed to access (project ID, room name, role). The token is signed, so the server can verify it without storing any state.
@@ -100,7 +109,7 @@ asyncio.run(service.run())
 </CodeGroup>
 
 ## MeshAgent Agents
-The ``meshagent.agents`` package provides higher-level agent classes that orchestrate tools and tasks. The primary agents you will build will use the ``TaskRunner``, ``Worker``, and ``ChatBot`` agent types. These agents extend the base ``Agent`` and ``SingleRoomAgent`` classes which setup the fundamentals for working with Agents in MeshAgent Rooms.
+The `meshagent-agents` distribution provides the `meshagent.agents` namespace. It adds higher-level agent classes that orchestrate tools and tasks. The primary agents you will build will use the ``TaskRunner``, ``Worker``, and ``ChatBot`` agent types. These agents extend the base ``Agent`` and ``SingleRoomAgent`` classes which setup the fundamentals for working with Agents in MeshAgent Rooms.
 
 Note that agents use LLMAdapters and ToolResponseAdapters to translate between language model calls and tool executions. They also use the ServiceHost to run. 
 
@@ -120,13 +129,13 @@ The ``Worker`` is a queue-based ``SingleRoomAgent`` that processes queued messag
 The ``ChatBot`` is a conversational agent derived from the ``SingleRoomAgent``. It wires an LLMAdapter, optional tools, and manages chat threads for each user. Check out the [ChatBot](../agents/standard/chatbot) documentation to learn how to create and customize a chat based agent in MeshAgent. You can set custom rules for the agent and extend it's abilities with tools. 
 
 ## MeshAgent LiveKit
-The ``meshagent.livekit`` package equips agents with real-time audio and voice capabilities via the LiveKit SDK. 
+The `meshagent-livekit` distribution provides the `meshagent.livekit` namespace and equips agents with real-time audio and voice capabilities via the LiveKit SDK.
 
 ### VoiceBot
 The ``VoiceBot`` agent handles two-way voice conversations allowing users to interact with the agent verbally. Check out the [VoiceBot](../agents/standard/voicebot) documentation to learn how to create a speech-enabled agent.
 
 ## MeshAgent Tools
-The ``meshagent.tools`` package bundles reusable tool and toolkit abstractions plus a set of out of the box MeshAgent toolkits. 
+The `meshagent-tools` distribution provides the `meshagent.tools` namespace and bundles reusable tool and toolkit abstractions plus a set of out of the box MeshAgent toolkits.
 
 ### ToolContext and BaseTool
 The ``ToolContext`` tracks the room, caller, and optional "on-behalf-of" participant. The ``BaseTool`` defines metadata used by all tools such as name and description. 
@@ -178,7 +187,7 @@ Some of the built-in MeshAgent toolkits include:
 
 
 ## MeshAgent MCP
-The ``meshagent.mcp`` package allows you to use any MCP server as a MeshAgent tool. 
+The `meshagent-mcp` distribution provides the `meshagent.mcp` namespace and allows you to use any MCP server as a MeshAgent tool.
 
 ### MCPTool
 Wrap an MCP tool with ``MCPTool`` so it conforms to the MeshAgent tool syntax. For more details on how to do this check out the [MeshAgent MCP docs](https://docs.meshagent.com/mcp-overview/overview).
@@ -201,7 +210,7 @@ toolkit = MCPToolkit(
 </CodeGroup>
 
 ## MeshAgent Computers
-The ``meshagent.computers`` package defines abstractions for controlling browsers and operating systems and providing these abilities to agents. 
+The `meshagent-computers` distribution provides the `meshagent.computers` namespace and defines abstractions for controlling browsers and operating systems and providing these abilities to agents.
 
 ### ComputerChatBot
 The ComputerChatBot in `meshagent-computers` extends the ``ChatBot`` with support for using browsers and computers. The computer agent will periodically send screenshots to participants on the thread using the MeshAgent messaging protocol, by sending a message of the type "computer_screen" and an attachment that contains a binary screenshot. 
@@ -237,7 +246,7 @@ asyncio.run(service.run())
 </CodeGroup>
 
 ## MeshAgent OpenAI
-The ``meshagent.openai`` package provides adapters to integrate OpenAI models with MeshAgent tools and agents. 
+The `meshagent-openai` distribution provides the `meshagent.openai` namespace and adapters to integrate OpenAI models with MeshAgent tools and agents.
 
 ### Completions Adapter and Responses Adapter
 MeshAgent supports both the OpenAI Chat Completions API and Responses API. It is recommended to use the Responses adapter given the newer OpenAI models and functionality use the Responses adapter.
@@ -259,7 +268,7 @@ adapter = OpenAIResponsesAdapter(client=AsyncOpenAI(api_key="sk-..."))
 The ``OpenAICompletionsToolResponseAdapter`` and ``OpenAIResponsesToolResponseAdapter``convert a tool's structured response into plain text or JSOn that can beinserted into an OpenAI chat context. 
 
 ## MeshAgent Anthropic
-The ``meshagent.anthropic`` package provides adapters to integrate Anthropic models with MeshAgent tools and agents.
+The `meshagent-anthropic` distribution provides the `meshagent.anthropic` namespace and adapters to integrate Anthropic models with MeshAgent tools and agents.
 
 ### Messages Adapter
 - ``AnthropicMessagesAdapter``: wraps Anthropic's Messages API. It converts `Toolkit` objects into Anthropic tool definitions, executes tool calls, and returns the final assistant response.
@@ -276,5 +285,5 @@ adapter = AnthropicMessagesAdapter(model="claude-3-5-sonnet-latest")
 The ``AnthropicMessagesToolResponseAdapter`` converts a tool's structured response into Anthropic `tool_result` blocks so the model can consume tool outputs in the same turn.
 
 ## MeshAgent CLI
-The ``meshagent.cli`` package installs everything you need to streamline room and agent management from your terminal. The CLI assembles submodules for authentication, projects, API keys, participant tokens, messaging, storage, agents, webhooks, and more. 
+The `meshagent-cli` distribution provides the `meshagent.cli` namespace and installs everything you need to streamline room and agent management from your terminal. It also installs the `meshagent` command-line entry point. The CLI assembles submodules for authentication, projects, API keys, participant tokens, messaging, storage, agents, webhooks, and more.
 Check out the [CLI Quickstart](../cli/getting_started) for more details.
