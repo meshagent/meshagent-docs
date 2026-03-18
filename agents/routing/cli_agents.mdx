@@ -1,142 +1,183 @@
 ---
-title: "Terminal-Based Coding Agents"
+title: "CLI Agents & the Room Proxy"
 ---
 
-Terminal-based coding agents such as the OpenAI Codex CLI, Claude Code, and similar tools can potentially use the MeshAgent LLM proxy instead of calling OpenAI or Anthropic directly.
+Terminal-based coding agents such as [OpenAI Codex CLI](https://github.com/openai/codex) and [Claude Code](https://claude.ai/code) use LLMs to reason about code, generate changes, and complete development tasks from the terminal. By default, these tools send model requests directly to a provider such as OpenAI or Anthropic.
 
-This is useful when you want the coding agent's model traffic to stay inside a MeshAgent room boundary:
-- Provider API keys stay on the MeshAgent side instead of being distributed to every developer workstation or container.
-- LLM usage can be attributed to a room, session, and participant.
-- Organizations can monitor and meter routed model traffic in one place.
+The MeshAgent Room Proxy allows you to send model requests to a room-scoped MeshAgent endpoint. MeshAgent then forwards those requests to the upstream provider configured for the room and records usage for the room, participant, and session.
 
-## What this actually means
-The coding agent is still the thing generating prompts, deciding when to call the model, and interpreting responses. MeshAgent is not replacing the coding agent. MeshAgent is acting as the **LLM gateway** that the coding agent talks to.
+This is useful for individuals who want unified visibility into coding-agent usage, and for organizations that want to manage provider access centrally instead of requiring each developer machine or CI job to authenticate directly with the model provider.
 
-The request flow looks like this:
-1. The coding agent sends an OpenAI- or Anthropic-compatible request to a room-scoped proxy URL.
-2. The coding agent authenticates with a MeshAgent room token, not a provider API key.
-3. MeshAgent validates the token against the room, injects the upstream provider key, forwards the request, and records usage.
-4. Usage is attributed to the room/session/participant instead of being scattered across unmanaged local API keys.
+## Why this matters
 
-This is different from using MeshAgent as a general-purpose network proxy. The LLM proxy only sits in front of supported OpenAI- and Anthropic-style model endpoints.
+**For individuals:** You can run multiple coding agents across different projects and see all your LLM usage — costs, models, token counts — in one place attributed to the room and session that produced them.
 
-## What organizations get
-- **Key isolation:** Developers and local agent containers do not need direct access to the organization's upstream OpenAI or Anthropic keys.
-- **Usage attribution:** Routed requests are tied back to the room and session that produced them.
-- **Centralized controls:** Providers, base URLs, and pricing-aware routing stay managed in MeshAgent.
+**For organizations:** Provider credentials can be managed centrally in MeshAgent and configured once per project, instead of being distributed to developer workstations or CI containers. Coding-agent traffic routes through a room-scoped gateway where access, usage, and cost can be monitored and controlled. Developers authenticate with a room-scoped token rather than a raw provider key.
 
-By default, this setup gives visibility into the coding agent's **LLM traffic** and the corresponding usage/cost attribution.
+## How it works
 
-## What it does not give you
-Routing a coding agent through the LLM proxy does **not** automatically give you full workstation or shell surveillance.
+The Room Proxy exposes OpenAI- and Anthropic-compatible endpoints at room-scoped URLs:
 
-It does not automatically capture every shell command, file read/write, or arbitrary HTTP request the coding agent might perform outside of its model calls.
+```
+# OpenAI-compatible (Codex CLI, etc.)
+https://api.meshagent.com/rooms/{room_name}/openai/v1
 
-## What a CLI needs to support
-To use the room proxy directly, a coding agent CLI needs to support these three things:
-- Override the model provider base URL.
-- Override the API key so you can send the MeshAgent room token instead of a provider key.
-- Attach a `Meshagent-Session` header, or otherwise run through a wrapper that can add it.
-
-If a CLI cannot do those things, it is not a direct fit for the room proxy.
-
-## What values you need from MeshAgent
-If you want to point an external coding CLI at the room proxy by hand, you need three pieces of information:
-- **Room URL** - the room-scoped MeshAgent URL, for example `https://api.meshagent.com/rooms/<room-name>`
-- **Room token** - a participant JWT scoped to that room
-- **Session ID** - the active MeshAgent room session id
-
-In MeshAgent terms:
-- The room URL and room token come from a room connection flow such as `connect_room(...)`.
-- The session ID comes from an active room session after the room is initialized.
-
-That leads to an important caveat:
-
-> **Important:** The room URL and room token are relatively straightforward to obtain. The session ID is the part that makes direct external CLI integration harder today.
-
-## Why the session ID matters
-The current MeshAgent LLM proxy expects session context so usage can be attributed to a specific room session. In the current server implementation, the proxy requires `Meshagent-Session` unless it is already present in the server environment.
-
-That means a bare external CLI is usually **not enough by itself**. Even if it supports:
-- custom base URLs
-- custom API keys
-
-it still needs a way to send the `Meshagent-Session` header on each request.
-
-For OpenAI-compatible clients the configuration conceptually looks like:
-
-```json
-{
-  "base_url": "https://<meshagent-host>/rooms/<room>/openai/v1",
-  "api_key": "<room_token>",
-  "headers": {
-    "Meshagent-Session": "<session_id>"
-  }
-}
+# Anthropic-compatible (Claude Code, etc.)
+https://api.meshagent.com/rooms/{room_name}/anthropic
 ```
 
-For Anthropic-compatible clients it conceptually looks like:
+Instead of authenticating directly with the provider, the CLI authenticates to MeshAgent using a room-scoped participant token. The proxy validates the token, injects the real provider key server-side, forwards the request, and records usage. The coding agent itself is unchanged — it still drives the task, decides when to call the model, and interprets responses. MeshAgent acts purely as the LLM gateway.
 
-```json
-{
-  "base_url": "https://<meshagent-host>/rooms/<room>/anthropic",
-  "api_key": "<room_token>",
-  "headers": {
-    "Meshagent-Session": "<session_id>"
-  }
-}
+---
+
+## Setup: Shared first steps
+
+These steps apply regardless of which CLI agent you are using.
+
+### 1. Authenticate to MeshAgent and create an API key
+
+If you haven't set up MeshAgent yet, start with `meshagent setup`. Then create an API key. **Copy the printed value — it is shown only once.**
+
+```bash
+meshagent api-key create --activate cli-agent-key
 ```
 
-> **Note:** Some desktop or terminal CLIs let you override the base URL and API key but do not expose custom headers. Those clients cannot use the room proxy directly unless they are wrapped by another process that adds the required session header.
+### 2. Create a token spec and generate a participant token JWT
 
-## What this means for Codex CLI and Claude Code
-For external coding CLIs, the key question is not "does the tool support OpenAI or Anthropic?" The key question is:
+The Room Proxy requires a **participant token** (JWT) as the bearer credential. The API key from Step 1 is used to sign it. The JWT is scoped to a specific room.
 
-**Can the tool be configured as a custom LLM gateway client?**
+Create a token spec file (contains no secrets — safe to commit):
 
-For example, can it:
-- point OpenAI or Anthropic traffic at a custom base URL
-- use a non-provider token for authentication
-- send a custom header such as `Meshagent-Session`
+```yaml token-spec.yaml
+version: v1
+kind: ParticipantToken
+room: my-room
+identity: cli-agent
+role: agent
+api:
+  agents: {}
+  messaging: {}
+  queues: {}
+  storage: {}
+  memory: {}
+  sync: {}
+  database: {}
+```
 
-If yes, then the CLI is a plausible candidate for MeshAgent room proxy integration.
+Replace `my-room` with your room name, then generate the JWT:
 
-If no, then the CLI is not a direct drop-in fit for the current room proxy contract.
+```bash
+meshagent token generate --input token-spec.yaml
+```
 
-So the right mental model is:
-- **Best case:** the CLI supports full LLM gateway customization and can talk to the room proxy directly.
-- **Middle case:** the CLI supports custom base URL and auth but not custom headers, so it needs a small local wrapper or shim.
-- **Worst case:** the CLI assumes direct vendor access and cannot be pointed at the room proxy at all.
+This prints a `eyJ...` JWT. Store it somewhere secure — you will use it as the API key value in your CLI agent's configuration.
 
-## The practical limitation today
-If you are imagining this workflow:
-1. install Codex CLI or Claude Code from the vendor
-2. change one environment variable
-3. all traffic now routes through MeshAgent
+> **Token expiration:** Tokens do not expire by default. Regenerate at any time by re-running this command with the same spec file.
 
-that is usually **too optimistic** for the current MeshAgent room proxy.
+### 3. What is the `Meshagent-Session` header?
 
-Today, direct external CLI integration is mainly blocked by session propagation:
-- the room token alone is not enough
-- the room URL alone is not enough
-- the CLI also needs to send the active MeshAgent session id
+The proxy requires a `Meshagent-Session` header on every request. It is used purely as a **usage tracking label** — it gets stored alongside each LLM usage record so you can identify which agent session produced which calls in the MeshAgent Studio dashboards. There is no validation against an active room connection. Any non-empty string works; a descriptive name like `"codex-agent"` is fine.
 
-So for many external CLIs, the integration story is currently:
-- technically possible in principle
-- dependent on the CLI's transport/configuration features
-- not yet a universally simple copy-paste setup
+---
 
-## Best fit
-This pattern is strongest when:
-- You want developers or agent containers to use organization-managed provider access without sharing raw provider keys.
-- You want LLM usage attribution for coding-agent workloads.
-- You can provide the coding CLI with room URL, room token, and session context.
-- You are willing to use a small wrapper or gateway helper if the CLI cannot attach custom headers itself.
+## Codex CLI
 
-It is a weaker fit when:
-- You need complete endpoint-independent workstation monitoring.
-- The coding agent CLI does not expose base URL and header overrides.
+[Codex CLI](https://developers.openai.com/codex/cli) supports custom model providers in `~/.codex/config.toml`, including custom base URLs, API key env vars, and static HTTP headers — making it a natural fit for the Room Proxy.
 
-## Related Topics
+### Install Codex
+
+<CodeGroup>
+```bash macOS
+brew install openai-codex
+```
+```bash npm
+npm install -g @openai/codex
+```
+</CodeGroup>
+
+### Store the JWT as an environment variable
+
+Add the JWT from the shared setup to your shell environment:
+
+```bash
+export MESHAGENT_ROOM_TOKEN="eyJ..."   # your full JWT here
+```
+
+For a persistent setup, add this to a `.env` file that is sourced in your shell profile.
+
+### Configure `~/.codex/config.toml`
+
+Add a MeshAgent provider and profile:
+
+```toml ~/.codex/config.toml
+[model_providers.meshagent]
+name = "MeshAgent"
+base_url = "https://api.meshagent.com/rooms/my-room/openai/v1"
+env_key = "MESHAGENT_ROOM_TOKEN"
+http_headers = { "Meshagent-Session" = "codex-agent" }
+
+[profiles.meshagent]
+model_provider = "meshagent"
+model = "gpt-5.4"
+```
+
+| Key | Description |
+|-----|-------------|
+| `base_url` | Replace `my-room` with your room name. |
+| `env_key` | The env var name holding the JWT from the shared setup. |
+| `http_headers` | Sets `Meshagent-Session` for usage attribution. Any non-empty string works. |
+| `model` | Any model available through the OpenAI API. |
+
+### Run Codex with the MeshAgent profile
+
+```bash
+codex --profile meshagent "your task here"
+```
+
+LLM usage will appear in **MeshAgent Studio → Usage**, attributed to the room and session you configured.
+
+---
+
+## Claude Code
+
+[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's CLI coding agent. It uses the Anthropic API and can be pointed at a custom base URL via environment variables.
+
+### Install Claude Code
+
+<CodeGroup>
+```bash macOS, Linux, WSL
+curl -fsSL https://claude.ai/install.sh | bash
+```
+```bash Homebrew
+brew install --cask claude-code
+```
+```bash WinGet
+winget install Anthropic.ClaudeCode
+```
+</CodeGroup>
+
+### Configure environment variables
+
+Set the following in your shell environment (or `.env` file):
+
+```bash
+export ANTHROPIC_BASE_URL="https://api.meshagent.com/rooms/my-room/anthropic"
+export ANTHROPIC_AUTH_TOKEN="eyJ..."   # your JWT from the shared setup
+export ANTHROPIC_CUSTOM_HEADERS=$'Meshagent-Session: name-for-your-session'
+```
+
+>**Note**: You may want to export the ANTHROPIC_MODEL you want to use as well for example claude-sonnet-4-6. You can also change the model when claude is running by running `/model claude-sonnet-4-6`.
+
+### Run Claude Code
+If you have previously logged into Claude with another account be sure to run `claude /logout` before connecting through MeshAgent. 
+
+```bash
+claude
+```
+
+---
+
+## Related topics
 - [LLM Proxy](./llm_proxy)
-- [MeshAgent CLI Reference](../../reference/meshagent_cli_help)
+- [MeshAgent CLI Quickstart](../../cli/getting_started)
+- [Observability](../../observability/intro)
