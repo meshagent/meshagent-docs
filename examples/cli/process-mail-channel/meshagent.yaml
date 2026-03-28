@@ -1,0 +1,34 @@
+version: v1
+kind: ServiceTemplate
+metadata:
+  name: support-agent-mail
+  description: "A process-backed support agent with a mail channel"
+  annotations:
+    meshagent.service.id: "support-agent-mail"
+agents:
+  - name: support-agent
+    description: "A mail-first process-backed support agent"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+variables:
+  - name: email_address
+    type: email
+    description: "Mailbox address for the support agent"
+container:
+  image: "meshagent/cli:default"
+  command: >-
+    /usr/bin/meshagent process join
+    --agent-name=support-agent
+    --channel=mail:{{email_address}}
+    --require-storage
+    --require-web-search
+    --room-rules="agents/support-agent-mail/rules.txt"
+    --rule="You are a helpful support agent. Reply clearly by email, save important attachments or artifacts to storage, and use web search when needed."
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: support-agent
+  storage:
+    room:
+      - path: /data
+        read_only: false

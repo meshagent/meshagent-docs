@@ -2,149 +2,86 @@
 title: "Introduction to Agents"
 ---
 
-Building an agent with an LLM is easy. **Deploying it, scaling it, and integrating it into real applications is hard.** MeshAgent bridges that gap with **built-in agents you can run or extend**, the ability to **wrap agents from any major framework**, and a **Room-based runtime** that handles **connectivity, tools, observability, and scale** out of the box.
+MeshAgent agents are room-connected AI participants that can talk to people, call tools, work with shared room state, and stay available as services.
+
+In MeshAgent, an agent is more than a model prompt. A MeshAgent agent can join a room, receive work, use tools, read and write shared data, and surface its work through chat, voice, mail, queues, or tool calls depending on how you configure it.
+
+## What agents can do
+
+MeshAgent agents can be used to:
+
+- answer questions in threaded conversations
+- search the web, read files, and write documents
+- process background jobs from queues
+- handle inbound email
+- expose themselves as tools for other agents or applications
+- work with room storage, database tables, memory, and custom toolkits
+- stay available as room or project services instead of only running as one-off scripts
+
+This is what makes MeshAgent useful for support agents, coding agents, research agents, operations agents, and other workflows that need tools, persistence, and deployment.
 
 ## How to build agents with MeshAgent
-MeshAgent supports two complementary ways to build and deploy agents, depending on how much customization you need.
 
-**1. Build and deploy agents with the MeshAgent CLI (recommended starting point)**
-The MeshAgent CLI is the fastest way to get production-ready agents running in real rooms, often without writing any agent code yourself.
+MeshAgent supports two main ways to build agents:
 
-For most new text and background workflows, the recommended starting point is [`meshagent process`](../process/overview), which lets one agent handle multiple entry points such as chat, mail, queues, and toolkit calls.
+### Use the CLI
 
-MeshAgent also includes specialized agent commands and SDK classes for focused use cases, including:
-- ChatBots and VoiceBots (interactive, multi-turn)
-- MailBots (email-based workflows)
-- TaskRunners and Workers (background + queue/task-driven)
+The CLI is the fastest way to get a production-ready agent running in a room.
 
-The CLI-based agents support customization by allowing you to configure: 
-- Custom system prompts/rules
-- Tool access (use built-ins for web search, storage, image generation, MCP connectors)
-- Editable rule files that room members can modify 
+For most new text and background agents, start with [`meshagent process`](../process/overview).
 
-For many teams, the CLI is the fastest path to production because it bundles the most common agent patterns and allows you to test and deploy quickly. 
+### Use the SDKs
 
-**2. Extend agents using the MeshAgent SDKs (when you need custom behavior)**
-When you need deeper control, you can build agents and tools directly with the MeshAgent SDKs. The SDKs give you the same underlying capabilities as the CLI but allows you to: 
+Use [`SingleRoomAgent`](./singleroomagent) and the MeshAgent SDKs when you need custom room-connected behavior or deeper control over agent logic, tool resolution, or service composition.
 
-- Define your own agent classes with specialized logic
-- Create custom tools that integrate with your systems
-- Wrap existing agents from other frameworks and use them in MeshAgent 
-- Implement advanced workflows with custom lifecycle hooks, routing logic, or other orchestration 
+## What MeshAgent provides around your agent
 
-Both CLI and SDK-based agents can be deployed either as project-wide services (available in all rooms) or room-scoped services, and shared with end users through Powerboards or your own application.
+MeshAgent handles the runtime pieces around the agent logic you write:
 
-## Why Use MeshAgent When You Already Have Another Framework?
-MeshAgent expands on traditional agent frameworks by focusing on **inter-framework interoperability, rich human-in-the-loop workflows, and seamless multi-device reach.** Other frameworks focus on an agent interactions, reasoning loops, memory, and planning. MeshAgent focuses on everything around that core by providing the runtime infrastructure that makes agents usable in the real-world:
+- room connectivity and identity
+- tool and toolkit discovery
+- threaded conversations and persisted thread state
+- UI integration through MeshAgent Studio and SDK clients
+- deployment as room or project services
 
-* **Room-based connectivity:** Agents, tools, and user interfaces join the same room over a lightweight WebSocket mesh. This lets Python, Dart, JavaScript, or .NET components talk to one another as peers instead of forcing every call through a single back-end service.  
-* **Shared tool abstraction across client and server:** Any capability—opening a local file, showing a toast on a mobile device, invoking an internal REST API—becomes a MeshAgent tool. Tools can live in the user’s device, on your cloud server, or both, yet they’re invoked through the same call pattern from the agent’s perspective.  
-* **First-class observability and cost tracking:** Every agent interaction and tool call automatically records who invoked it, latency, result size, and cost metadata, feeding dashboards and billing pipelines without extra code.  
-* **Plug-and-play UI components:** MeshAgent Studio and the React / Flutter UI kits render agent interactions, streaming responses, and tool call progress out of the box, letting you drop high-quality UX into your own app.  
+That means you can focus on the agent's rules, tools, and behavior instead of building the surrounding infrastructure yourself.
 
-Use MeshAgent alone, or pair it with your preferred agent framework, either way, MeshAgent handles everything you need for production scale. 
+## A simple deployment example
 
-## How it Works: A Practical Scenario
+Once a process-backed agent works locally, you can deploy it directly from the CLI:
 
-Suppose your agent is written in Python and hosted on a server, while your customer-facing app is a Flutter mobile client. By connecting both to the same MeshAgent room:
+```bash
+meshagent process deploy \
+  --service-name support-agent \
+  --room quickstart \
+  --agent-name support-agent \
+  --channel chat \
+  --channel queue:support-jobs \
+  --channel toolkit:support-agent \
+  --web-search \
+  --require-storage \
+  --rule "You are a helpful support agent."
+```
 
-* The Flutter app registers UI-centric tools—`ask_user`, `ask_user_file`, `show_toast`.  
-* The Python agent calls those tools exactly like any other function, even though they execute on the user’s phone.  
-* Observability events stream back automatically, so you can audit how often dialogs appeared, how long file picks took, and what it cost.
-* No additional RPC plumbing, versioning, or security tunnel is required; the room’s mesh protocol handles transport, authentication, and fallback across networks.
+This deploys a room service that runs the same kind of process-backed agent you would test locally with `meshagent process join`.
 
-## Built-in MeshAgent Agents
-MeshAgent ships **built-in agent classes** that handle Room connectivity, context, and tool orchestration. You can run them as-is, extend them with your own rules and tools, or layer them with agents built with other agent libraries like LangChain, Semantic Kernel, CrewAI, and PydanticAI.
+## Older patterns
 
-### Recommended Starting Point: `meshagent process`
-For most new text and background workflows, start with [`meshagent process`](../process/overview).
+Older dedicated runtimes and older SDK patterns are being phased out of the main docs. For new text and background agents, prefer `meshagent process`.
 
-`meshagent process` creates one unified agent that can be reached through one or more channels:
+## Running and deploying agents
 
-- chat
-- email
-- queues
-- toolkit-style invocations
+MeshAgent agents can be run locally during development and deployed later as room or project services.
 
-This is the clearest path when one workflow may need several entry points over time. Instead of splitting the same logic across separate chat, mail, queue, and callable agents, you can keep one agent identity and attach the channels you need.
-
-This is also the direction MeshAgent is moving for many non-voice agent patterns.
-
-Today, `VoiceBot` is still separate because `meshagent process` does not currently expose a voice channel.
-
-See [Multi-channel Agents Overview](../process/overview) and [Using Multi-channel Agents](../process/using_process) for the recommended workflow.
-
-### Specialized Agent Types
-MeshAgent also includes focused agent types that remain useful when you want a dedicated single-purpose runtime or are working with an existing codebase that already uses them.
-
-### Participant-Based Agents
-Interactive agents you communicate with via voice or text. Best when you need a conversational interface and interactive, iterative problem-solving with the end-user. These agents:
-- Appear in the Room's participants list (just like human team members)
-- Maintain persistent conversation threads and support back-and-forth dialogue
-- Best for ongoing interactions where context matters
-
-**Available Participant Based Agents:** 
-* **[ChatBot](./chatbot):** Conversational text agent. Best when you want a dedicated chat-focused runtime.
-* **[VoiceBot](./voicebot):** Conversational speech and voice agent. Integrates with LiveKit for audio in and out.
-
-### Background Agents
-Background agents triggered by tasks, queues, or other events to execute specific tasks. Best when you need a dedicated single-surface background runtime or a specific SDK base class. These agents:
-- Run without appearing in conversation threads
-- Respond to invocations or queue messages
-- Execute and complete without user dialogue
-- Best for automated workflows and batch processing
-
-**Available Background Agents:** 
-* **[TaskRunner](./taskrunner):** Schema-driven background agent. Define input and output schemas and an `ask()` method.
-* **[Worker](./worker):** Queue-driven background agent. Listens for messages and processes them sequentially.  
-* **[MailBot](./mailbot):** Specialized worker for email workflows. 
-* **[Indexer](./indexer):** Watches incoming content, embeds it into the room’s vector store, and integrates with RagToolkit for Retrieval Augmented Generation (RAG) workflows.  
-
-### Under the Hood: Agent Class Model
-MeshAgent agents are built on a layered class hierarchy. This design makes it easy to create agents that share consistent behavior, while still allowing you to extend or specialize them for your use case.  
-
-All MeshAgent agents share a **layered class hierarchy**:
-- **`Agent`** – Base identity, metadata, and `AgentSessionContext`.  
-- **`SingleRoomAgent`** – Binds an agent to a Room connection and installs required toolkits.  
-- **Specialized Base Agents** – These extend `SingleRoomAgent` and are either participant-oriented (ChatBot, VoiceBot) or run in the background (TaskRunner, Worker, Indexer, MailBot). 
-
-`meshagent process` is slightly different at the docs level: it is not one separate SDK base class. It is a CLI runtime that assembles channels and per-thread processes on top of the same lower-level agent building blocks.
-
-This design ensures **consistent context handling, toolkit discovery, and Room integration** across all agent types.
-
-### Extending Built-in Agents
-- Add your own **rules** (system prompts) to steer behavior
-- Register **custom tools** or toolkits for new capabilities
-- Override methods like ``ask()`` to implement additional agent-specific logic. 
-
-Built-in MeshAgent Agents support Studio testing, UI integration, observability, and cost tracking out of the box. When ready for deployment you can deploy the agent as a project or room specific service based on your permissions and use case needs.
-
-
-## Running and Deploying Agents
-MeshAgent allows you to run agents locally on your machine during development then deploy agents as either a project-wide or room-scoped service. Once deployed, MeshAgent ensures that your services are always running in the appropriate room(s) when needed. 
-
-| Mode                    | Description                                                   | Best For                           |
-| ----------------------- | ------------------------------------------------------------- | ---------------------------------- |
-| [Local Development](../../services_room_containers/local_development) | Run directly from your machine using `meshagent service run`. | Testing, debugging, iteration      |
-| [Project Service](../../services_room_containers/packaging_and_deploying/packaging)     | Deploy once to run automatically in every room of a project (admin only).  | Always-on shared agents            |
-| [Room Service](../../services_room_containers/packaging_and_deploying/packaging)        | Deploy to a single Room only. Other Rooms in the Project won't see it.  | Agents that should stay room-scoped. |
-
-## Managing Agents via the Room Agents API
-There are three first-class ways to coordinate work between agents: **messages**, **queues**, and **tools**. Messages give you one-way messaging, queues give you async one-way messaging, and tools provide request/response-style RPC.
-
-For messages and queues, use the [Messaging API](../../room_api/messaging) and [Queues API](../../room_api/queue). The Room Agents API lets you list and invoke available tools from code. This includes TaskRunners, which expose a tool that uses an LLM to accomplish a task.
-
-For more details check out the [Room Agents documentation](../../room_api/agents).
-
-| Method | Purpose |
-| --- | --- |
-| [Call](../../room_api/agents#call) | Invites an external service (your agent) to join the room. |
-| [List Toolkits](../../room_api/agents#list-toolkits) | Retrieves all toolkits (and their tools) available in the room. |
-| [Invoke Tool](../../room_api/agents#invoke-tool) | Directly executes a specific tool within a toolkit without routing through an agent. |
-
+| Mode | Description | Best For |
+| --- | --- | --- |
+| [Process Agents Overview](../process/overview) | Run a process-backed agent directly from your machine with the MeshAgent CLI. | Testing and iteration |
+| [Project Service](../../services_room_containers/packaging_and_deploying/packaging) | Deploy once to run automatically in every room of a project. | Shared always-on agents |
+| [Room Service](../../services_room_containers/packaging_and_deploying/packaging) | Deploy to a specific room only. | Room-scoped agents |
 
 ## Next Steps
-- [SingleRoomAgent](./singleroomagent): Understand the different types of agents in MeshAgent and the core classes for each. 
-- [Multi-channel Agents Overview](../process/overview): Learn when to use the recommended multi-channel agent path.
-- [Using Multi-channel Agents](../process/using_process): Start with the practical `meshagent process` workflow.
-- [Build a Chat Agent](./chatbot): Learn how to use and customize a dedicated ChatBot runtime.
+
+- [Process Agents Overview](../process/overview): Learn what `meshagent process` is, what it supports, and how to run it.
+- [Process Agent Architecture](../process/architecture): Understand how process-backed agents work behind the scenes.
+- [VoiceBot](./voicebot): Learn the current dedicated voice runtime.
+- [SingleRoomAgent](./singleroomagent): Build a custom room-connected agent with the SDK.

@@ -1,5 +1,5 @@
 ---
-title: "Deploy a Multi-channel Agent"
+title: "Deploy a Process Agent"
 ---
 
 import ProcessAgentService from "/snippets/examples/cli/process-news-agent/meshagent.mdx"
@@ -34,7 +34,7 @@ In this example, the scheduled digest runs at `17:30 UTC`, which is `10:30 AM Pa
 
 This configuration defines a `ServiceTemplate` with:
 
-- one multi-channel agent
+- one process-backed agent with several channels
 - three user-provided variables: the mailbox address, the digest recipient, and the topics to cover
 - a container that seeds editable rules into room storage and then starts the agent with `meshagent process join`
 
@@ -52,7 +52,7 @@ meshagent service validate-template --file meshagent.yaml
 
 ## How it works
 
-### One multi-channel agent, several entry points
+### One process-backed agent, several entry points
 
 This template runs one `news-agent` with:
 
@@ -60,7 +60,7 @@ This template runs one `news-agent` with:
 - a `mail:{{email}}` channel for inbound and outbound email
 - a `queue:news-updates` channel for scheduled digest work
 
-Instead of coordinating a separate ChatBot, MailBot, and Worker, the same multi-channel agent handles all three flows.
+Instead of coordinating separate legacy runtimes, the same process-backed agent handles all three flows.
 
 ### User-provided variables
 
@@ -78,7 +78,7 @@ The `meshagent.agent.schedule` annotation creates a scheduled task for the agent
 
 - the schedule runs at `30 17 * * *`
 - MeshAgent sends the configured payload into the `news-updates` queue
-- the same multi-channel agent receives that queued message through `--channel=queue:news-updates`
+- the same process-backed agent receives that queued message through `--channel=queue:news-updates`
 
 That is how the daily digest is scheduled without introducing a separate worker runtime.
 
@@ -150,7 +150,7 @@ From there you can:
 - send email to the configured mailbox
 - wait for the scheduled digest to run automatically at `17:30 UTC`
 
-Because this is one multi-channel agent, those flows all share the same identity, tools, and thread model.
+Because this is one process-backed agent, those flows all share the same identity, tools, and thread model.
 
 ## Step 5: Make it shareable via Powerboards
 
@@ -164,7 +164,7 @@ When someone opens that link, Powerboards can prompt for the same `email`, `send
 
 ## Related Topics
 
-- [Multi-channel Agents Overview](../../agents/process/overview)
-- [Using Multi-channel Agents](../../agents/process/using_process)
+- [Process Agents Overview](../../agents/process/overview)
+- [Process Agents Overview](../../agents/process/overview)
 - [Packaging services](./packaging)
 - [Sharing via Powerboards](../share_agents_in_powerboards)

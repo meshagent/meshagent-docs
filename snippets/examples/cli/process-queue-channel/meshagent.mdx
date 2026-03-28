@@ -1,0 +1,29 @@
+kind: Service
+version: v1
+metadata:
+  name: support-agent-queue
+  description: "A process-backed agent with a queue channel"
+  annotations:
+    meshagent.service.id: "support-agent-queue"
+agents:
+  - name: queue-agent
+    description: "A background process-backed queue agent"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+container:
+  image: "meshagent/cli:default"
+  command: >-
+    /usr/bin/meshagent process join
+    --agent-name=queue-agent
+    --channel=queue:support-jobs
+    --require-storage
+    --require-web-search
+    --rule="You are a queue-based support operations agent. Process queued jobs without asking follow-up questions unless the job explicitly asks for interactive behavior."
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: queue-agent
+  storage:
+    room:
+      - path: /data
+        read_only: false

@@ -1,0 +1,305 @@
+---
+title: "MailBot (Archived)"
+---
+
+import CliMailbotYaml from "/snippets/examples/archive/cli/mailbot/meshagent.mdx"
+import SimpleMailbot from "/snippets/examples/archive/python/deployable/mailbot/mailbot.mdx"
+import ProvisionMailbox from "/snippets/examples/archive/python/deployable/mailbot/provision_mailbox.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
+import SDKMailbotYaml from "/snippets/examples/archive/python/deployable/mailbot/meshagent.mdx"
+
+> **Archived:** The dedicated `meshagent mailbot` CLI runtime is no longer the recommended path for new docs. Use [`meshagent process`](../process/overview) with a `mail` channel for new mail-driven agents. This page remains as historical reference for the older MailBot-specific runtime.
+
+## Overview
+`MailBot` is the standard agent for building email-based workflows in MeshAgent. It extends [`Worker`](./worker) to process inbound email delivered to a room queue, store every message and attachment in room storage, rebuild thread context for the LLM, and send replies via SMTP. This turns a mailbox into a room-connected, tool-using email agent.
+
+### Two ways to build a MailBot
+1. **CLI:** Run production-ready mail agents with a single command. Configure the email queue, mailbox, tools, and agent rules using CLI flags. Ideal for most use cases.
+2. **SDK:** Extend the base `MailBot` class with custom code when you need deeper integrations or specialized behaviors.
+
+Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, then moving to the SDK when you need additional custom logic.
+
+### In this guide you will learn
+- When to use `MailBot`
+- How to provision and manage mailboxes (Studio, CLI, or SDK)
+- How to run and deploy a `MailBot` with the MeshAgent CLI
+- How to build and deploy a `MailBot` with the MeshAgent SDK
+- How `MailBot` works, including constructor parameters, lifecycle, processing flow, hooks, and methods
+
+## When to use MailBot
+Use `MailBot` when you need an agent that:
+- Responds to inbound email automatically (support, triage, order confirmations)
+- Maintains threaded context across a mail conversation
+- Runs LLM reasoning and tools over incoming email before replying
+- Stores messages and attachments in room storage for auditing and follow-on workflows
+
+Don't use `MailBot` if:
+- You need live text chat, use [ChatBot](./chatbot)
+- You need speech, use [VoiceBot](./voicebot)
+- You need background queue processing without email, use [Worker](./worker) or [TaskRunner](./taskrunner)
+
+## Mailbox provisioning (required)
+A mailbox maps an email address to a Room and queue. The `MailBot` consumes that queue and sends replies from that address. Mailboxes can be managed from:
+- **[MeshAgent Studio](https://studio.meshagent.com)** (recommended): create and assign mailboxes in the **Mail** tab
+- **MeshAgent CLI:** Manage mailboxes with the `meshagent mailbox...` commands
+- **SDK/REST:** Use the MeshAgent REST API to create, list, update, or delete mailboxes. 
+
+Project admins (and developers with mail permissions) can create mailboxes. If you do not have access, ask an admin to provision one for you.
+
+## Run and deploy a MailBot with the CLI
+### Step 1: Create a mailbox
+Create a mailbox tied to a Room in [MeshAgent Studio](https://studio.meshagent.com), or use the CLI:
+
+```bash bash
+meshagent setup
+
+# Fill in to create a unique email address.
+export EMAIL_ADDRESS="<your_unique_address>@mail.meshagent.com"
+# Optional: if omitted, MailBot defaults the queue to the email address.
+export EMAIL_QUEUE="$EMAIL_ADDRESS"
+
+meshagent mailbox create --address "$EMAIL_ADDRESS" --room quickstart --queue "$EMAIL_QUEUE"
+```
+
+You can list existing mailboxes with:
+
+```bash bash
+meshagent mailbox list
+```
+
+### Step 2: Run the mailbot
+Start the built-in mailbot locally and connect it to your room:
+
+```bash bash
+meshagent mailbot join --room quickstart --agent-name mailbot --enable-attachments\
+  --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
+```
+
+If you omit `--queue`, MailBot defaults the queue to the `--email-address` value. Make sure the mailbox is configured to deliver to the same queue.
+
+Use flags like `--reply-all`, `--enable-attachments`, `--whitelist`, or `--room-rules` to customize behavior. Run `meshagent mailbot join --help` for the full list.
+MailBots can be extended with rules, tools, and skills depending on the workflow they need to handle. See [Tools Overview](../tools/intro) and [Skills Overview](../../skills/overview).
+
+### Step 3: Send an email and verify
+Send an email to the agent at the address you provisioned and it will respond! The agent will not show up in the participant list (mailbots are email-only) in [MeshAgent Studio](https://studio.meshagent.com), but you can verify emails are received by checking:
+- Logs in the terminal when running locally or Developer Console once deployed
+- A `.emails/` folder in Files
+- Metadata rows in the `emails` table
+
+### Step 4: Package and deploy the agent
+Once the mailbot works locally, deploy it as a service.
+
+**Both options below deploy the same MailBot - choose based on your workflow:**
+- **Option 1 (`meshagent mailbot deploy`):** One command that deploys immediately (fastest/easiest approach)
+- **Option 2 (`meshagent mailbot spec` + `meshagent service create`):** Generates a yaml file you can review, or further customize before deploying
+
+**Option 1: Deploy directly**
+```bash bash
+meshagent mailbot deploy --room quickstart --service-name mailbot --agent-name mailbot \
+  --enable-attachments --queue "$EMAIL_QUEUE" --email-address "$EMAIL_ADDRESS"
+```
+
+**Option 2: Deploy a YAML spec**
+Create a `meshagent.yaml` that defines how to run the service. In this case we can create a `ServiceTemplate` that allows us to pass an email as the variable
+
+<CodeGroup>
+    <CliMailbotYaml />
+</CodeGroup>
+
+Then deploy it:
+
+```bash bash
+meshagent service create-template --file meshagent.yaml --room quickstart --value email_address="$EMAIL_ADDRESS"
+```
+
+Be sure to pass the `--room` flag so the agent is deployed properly to your room. The email and queue are only associated to a specific room. 
+
+## Build and deploy a MailBot with the SDK
+You can also use the MeshAgent SDK to manage mailboxes and create an email agent by extending the `MailBot` class. For most use cases the CLI is sufficient and a faster way to get started, while the SDK allows you further customization. 
+
+### Prerequisite: Provision a mailbox
+If you do not already have a mailbox, create one in [MeshAgent Studio](https://studio.meshagent.com) or via the CLI (recommended). 
+
+**Alternatively, you can provision a mailbox via SDK code:**
+
+You will need a MeshAgent API key to provision the mailbox, you can create one by running: 
+``` bash bash 
+meshagent api-key create --activate my-mailbot-key
+```
+
+Next set the required environment variables: 
+```bash bash
+# Fill these in 
+export MESHAGENT_API_KEY="<your-api-key>"
+export MESHAGENT_PROJECT_ID="<your-project-id>" # run meshagent project list to see project ids
+export ROOM_NAME="quickstart"
+export EMAIL_ADDRESS="<your_email>@mail.meshagent.com"
+export EMAIL_QUEUE="$EMAIL_ADDRESS" # optional; defaults to the email address
+```
+
+Then copy the code to create the mailbox:
+<CodeGroup>
+    <ProvisionMailbox />
+</CodeGroup>
+
+Run the file to provision the mailbox: 
+
+```bash bash
+python provision_mailbox.py
+```
+
+### Step 1: Create a `MailBot` agent
+<CodeGroup>
+    <SimpleMailbot />
+</CodeGroup>
+
+### Step 2: Run the agent locally
+Make sure the queue and email address are set, then run the service:
+
+```bash
+# Fill these in!
+export EMAIL_ADDRESS="<your_unique_email>@mail.meshagent.com"
+export EMAIL_QUEUE="$EMAIL_ADDRESS" # optional; defaults to the email address
+meshagent service run "main.py" --room=quickstart
+```
+
+### Step 3: Email the agent
+Send an email to the mailbox and wait for it's response, you can verify the `.emails/` folder and logs in [MeshAgent Studio](https://studio.meshagent.com). At this point, the MailBot is connected to the ``quickstart`` room and listening on the configured queue (defaults to the email address). As mail arrives (forwarded into the queue), the worker will parse, store, generate a reply, and send it via SMTP.
+
+### Step 4: Package and deploy the agent
+To deploy your SDK MailBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging). If you want to deploy MailBot skills with the service, see [Packaging and Deploying Skills](../../skills/packaging_and_deploying).
+
+MeshAgent supports two deployment patterns for containers:
+1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+
+This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image.
+If you want to build and push your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
+
+**Prepare your project structure**
+This example organizes the agent code and configuration in the same folder, making each agent self-contained:
+
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── mailbot/
+│   ├── mailbot.py
+│   └── meshagent.yaml           # Config specific to this sample
+└── another_sample/              # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
+```
+
+> **Note:** If you're building a single agent, you only need the `mailbot/` folder. The structure shown supports multiple samples sharing one Dockerfile.
+
+**Step 4a: Build a Docker container**
+If you want a code-only image, create a scratch Dockerfile and copy the files you want to run. This creates a minimal image that pairs with the runtime image + code mount pattern.
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image with `docker buildx`:
+
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
+
+> **Note:** Building from the project root copies your entire project structure into the image. For a single agent, this is fine - your image will just contain one folder. For multi-agent projects, all agents will be in one image, but each can deploy independently using its own `meshagent.yaml`.
+
+**Step 4b: Package the agent**
+Define the service configuration in a `meshagent.yaml` file. Be sure to update the email address and queue values in the `environment` section.
+
+<CodeGroup>
+    <SDKMailbotYaml />
+</CodeGroup>
+
+How the paths work:
+- Your code image contains `mailbot/mailbot.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/mailbot/mailbot.py`
+
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
+
+**Step 4c: Deploy the agent**
+Next from the CLI in the directory where your `meshagent.yaml` file is run:
+
+```bash bash 
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+>**Note**: If you have already deployed a service named `mailbot` using the CLI above, you will need to create a unique name for this service in order to deploy it. 
+
+The Mail agent is now deployed to the `quickstart` room! Now we can email the agent anytime and get a response!
+
+## How MailBot Works
+### Constructor Parameters
+`MailBot` inherits all `Worker` parameters like ``queue``, ``llm_adapter``, ``tool_adapter``, ``toolkits``, ``rules``, and ``requires``, and adds a few email-specific ones:
+
+| Parameter            | Type                          | Description                                                                                                         |
+| -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `name`               | `str \| None`                 | Deprecated. Agent identity comes from the participant token; if provided, it is only used to default `title`.       |
+| `title`              | `str \| None`                 | Display name shown in UX. If omitted and you set `name`, it defaults to that value.                                 |
+| `description`        | `str \| None`                 | Optional short description.                                                                                         |
+| `queue`              | `str`                         | Queue to listen on. Defaults to the `email_address` when not provided.                                               |
+| `llm_adapter`        | `LLMAdapter`                  | Required LLM adapter (for example `OpenAIResponsesAdapter`).                                                        |
+| `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter for translating tool outputs into LLM context messages.                                            |
+| `toolkits`           | `list[Toolkit] \| None`       | Toolkits always available to this worker beyond what `requires` installs. Defaults to `[]`.                        |
+| `rules`              | `list[str] \| None`           | System rules applied to each email thread; defaults to plain text or Markdown output.                               |
+| `requires`           | `list[Requirement] \| None`   | Schemas/toolkits to install before processing. `MailBot` always adds the `emails` table automatically.           |
+| `email_address`      | `str`                         | The address used as the "From" field for outgoing replies.                                                          |
+| `domain`             | `str`                         | Domain for routing/SMTP defaults. Defaults to `MESHAGENT_MAIL_DOMAIN` or `"mail.meshagent.com"`.                    |
+| `smtp`               | `SmtpConfiguration \| None`   | SMTP settings. Defaults to `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_PORT`, `SMTP_HOSTNAME` if not provided.          |
+| `toolkit_name`       | `str \| None`                 | Exposes a named toolkit that can start new email threads (`new_email_thread`).                                      |
+| `whitelist`          | `list[str] \| None`           | Optional allowlist of sender emails. Messages from other senders are ignored.                                       |
+| `reply_all`          | `bool`                        | Reply-all when responding to emails. Defaults to `False`.                                                           |
+| `enable_attachments` | `bool`                        | Allow downloading and processing attachments, and allow attaching room files to replies. Defaults to `True`.       |
+| `skill_dirs`         | `list[str] \| None`           | Directories containing agent skills; added to the rules so the model can discover and use them. See [Skills Overview](../../skills/overview). |
+
+### Lifecycle Overview
+``MailBot`` inherits its lifecycle from ``Worker``:
+- ``await start(room)``: connects to the room and begins long-polling the email queue for new messages.
+- ``await stop()``: gracefully stops the polling loop and disconnects.
+
+> Note: “Long-polling” means the worker efficiently waits on the queue until a new message arrives—no busy-looping or manual sleep required.
+
+### Processing Flow
+``MailBot`` runs a continuous loop inherited from ``Worker`` that listens for incoming email messages on a queue and processes them end-to-end.
+
+1. Receive an email — The worker long-polls the email queue and receives base64-encoded .eml messages.
+2. Parse and persist — It decodes the message, extracts headers, body, and attachments, and saves them under ``.emails/...`` in room storage. A summary record is inserted into the ``emails`` table for lookup and threading.
+3. Rebuild thread context — The agent walks the ``In-Reply-To`` chain to include earlier messages in the LLM’s context.
+4. Generate a reply — The ``llm_adapter`` uses the chat context and toolkits to produce a text reply.
+5. Send via SMTP — A threaded reply (``RE:, In-Reply-To, Message-ID``) is composed and sent using your SMTP credentials. The reply is also stored alongside the original message.
+
+### Key Methods
+
+| Method                                                   | Description                                                                              |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `process_message(chat_context, room, message, toolkits)` | Core processing logic—decodes, saves, builds thread, calls the LLM, and sends the reply. |
+| `append_message_context(room, message, chat_context)`    | Loads the full email thread into the chat context.                                       |
+| `get_thread_toolkits(thread_context)`                    | Resolves local and required toolkits for the current email thread.                       |
+| `send_reply_message(room, message, reply)`               | Composes and sends the actual reply message via SMTP.                                    |
+
+### Key Behaviors and Hooks
+- **Mailbox filtering:** `should_reply()` rejects bounces/auto-replies and enforces the optional whitelist.
+- **Thread reconstruction:** `load_thread()` and `append_message_context()` rebuild prior messages into the LLM context.
+- **Attachment handling:** incoming attachments are stored under `.emails/.../attachments`; when enabled, the agent can attach room files to replies.
+- **Reply-all control:** `reply_all` controls whether replies include other thread recipients.
+- **Mail tools exposure:** `toolkit_name` registers a `new_email_thread` tool so other agents can start email threads.
+- **Skills integration:** `skill_dirs` append skill descriptions to rules for tool execution guidance. See [Using Skills with Agents](../../skills/using_with_agents).
+
+## Next Steps
+Explore and understand other agents in MeshAgent:
+- [Worker](./worker): Understand how queue based agents work
+- [TaskRunner](./taskrunner): Learn how to run agents in the background or wrap existing agents from other frameworks
+- [ChatBot](./chatbot): Create a conversational text/chat based agent
+- [VoiceBot](./voicebot): Create a conversational speech/voice based agent
+
+Learn how to deploy and run agents across rooms in a project or in specific rooms:
+- [Services and Room Containers](../../services_room_containers/overview): Understand agent deployment patterns
+- [Skills Overview](../../skills/overview): Learn when MailBots should use skills

@@ -1,5 +1,5 @@
 ---
-title: "Multi-channel Agent Architecture"
+title: "Process Agent Architecture"
 ---
 
 ## Overview
@@ -13,7 +13,7 @@ At a high level, the runtime works like this:
 - one `LLMAgentProcess` handles each active thread
 - a thread adapter writes runtime events back into the persisted thread model
 
-This gives you one multi-channel agent runtime without collapsing unrelated work into one shared live context.
+This gives you one process-backed agent that can accept several channels without collapsing unrelated work into one shared live context.
 
 ## What `meshagent process` actually builds
 
@@ -85,7 +85,7 @@ Its main responsibilities are to:
 - create a new process when a thread is seen for the first time
 - start and stop managed processes as the runtime lifecycle changes
 
-If you are looking for the place where work becomes thread-scoped, this is it. The supervisor is the boundary between "multi-channel agent" and "per-thread execution".
+If you are looking for the place where work becomes thread-scoped, this is it. The supervisor is the boundary between "one long-running process-backed agent" and "per-thread execution".
 
 ## Channel roles
 
@@ -108,7 +108,7 @@ Each instance handles one active thread at a time and is responsible for:
 - coordinating tool calls and approvals
 - emitting outputs back to the channels and thread adapter
 
-This is why one multi-channel agent can serve many channels and many threads without mixing unrelated thread state together.
+This is why one process-backed agent can serve many channels and many threads without mixing unrelated thread state together.
 
 ## Per-thread routing and queueing
 
@@ -119,7 +119,7 @@ This matters for two reasons:
 - messages for the same thread go to the same `LLMAgentProcess`
 - unrelated threads do not share one live execution state
 
-In practice, this is what prevents turns on the same thread from stepping on each other while still letting one multi-channel agent serve many threads.
+In practice, this is what prevents turns on the same thread from stepping on each other while still letting one process-backed agent serve many threads.
 
 ## Streaming and live turn state
 
@@ -145,6 +145,8 @@ Process also handles live control flows around an active turn:
 
 These are runtime features, not channel-specific hacks. Channels deliver the messages, and the process runtime handles them in a thread-aware way.
 
+This is part of what makes process-backed agents useful for coding, research, and other longer-running workflows.
+
 ## What `AgentProcessThreadAdapter` does
 
 `AgentProcessThreadAdapter` is the bridge between the process runtime and the persisted thread representation.
@@ -166,7 +168,7 @@ The important rule is:
 
 - **context isolation is by `thread_id`, not by process**
 
-That means one multi-channel agent can accept input from several channels without automatically mixing those histories together. Context only overlaps when two inputs use the same thread path.
+That means one process-backed agent can accept input from several channels without automatically mixing those histories together. Context only overlaps when two inputs use the same thread path.
 
 ## Adapter-provided model behavior
 
@@ -176,6 +178,5 @@ For example, streaming model events and reasoning summaries are surfaced through
 
 ## Where to go next
 
-- [Multi-channel Agents Overview](./overview): when to choose `process` and what problem it solves
-- [Using Multi-channel Agents](./using_process): the practical CLI workflow
+- [Process Agents Overview](./overview): when to choose `process`
 - [Threads Overview](../threads_overview): the persistence model process agents build on

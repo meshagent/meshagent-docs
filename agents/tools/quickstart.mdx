@@ -61,9 +61,11 @@ In either case, the toolkit will be available in the room at the ``/math`` path 
 
 1. Go to [studio.meshagent.com](https://studio.meshagent.com) and login
 1. From the **Sessions** tab enter the ``toolsroom``
-2. From the Menu in the upper left you can either invoke the tool directly through **Toolkits** or add it to a **TaskRunner** through **Run Task**
-    - Using the **Toolkit** directly: Click **Toolkits...**, find the tool you want to run then click **Invoke**. This will collect the parameters needed from you (if any) and display a dialogue for you to enter any required values. Once finished click **Ok**. The tool will execute and display the result in the Studio UI.
-    - Using A **TaskRunner**: Click **Run Task...**, then select the **Generic Task Runner** as the agent, next click the "Add Tools" button. Now you'll see our math-toolkit with both the "add" and "subtract" tools. On both of the tools you will see an info button, an invoke button, and an add button. The info button will display the JSON schema we created to define the tool, the invoke button will invoke the tool directly, and the add button will add the tool(s) to the TaskRunner. Select either the "Invoke" or "Add Tool" option for either the "add" or "subtract" tool and an agent will collect the required values and execute the tool. 
+2. From the menu in the upper left, click **Toolkits**
+3. Find the tool you want to run and click **Invoke**
+4. Enter any required values and click **Ok**
+
+The tool will execute and display the result in the Studio UI.
 
 From the "Developer Console" on the bottom half of the screen you'll be able to see logs, traces, and metrics from tool calls as they happen in the room.
 
@@ -73,7 +75,7 @@ From the "Developer Console" on the bottom half of the screen you'll be able to 
 While the service is running, from a new tab in your terminal invoke the tool. The result will print to the terminal.
 
 ```bash bash 
-meshagent room agent invoke-tool --room=toolsroom --tool=add --require-toolkit=math-toolkit --arguments='{"a": 5, "b":7}'
+meshagent room agent invoke-tool --room=toolsroom --toolkit=math-toolkit --tool=add --arguments='{"a": 5, "b":7}'
 ```
 
 #### Invoking tools from code
@@ -127,5 +129,5 @@ Toolkit: math-toolkit: math-toolkit - a toolkit for adding and subtracting numbe
 If you want your tools to be available in all the Rooms inside your Project you will need to deploy the tool as a MeshAgent service. You can also define a tool while you define an agent and just deploy your agent as a MeshAgent service. This will make the agent available in all of the MeshAgent Rooms in your Project, but your tool won't be directly invokable by anyone other than the agent you defined the tool with. 
 
 - [Dynamic UI Tools](./dynamic_ui_tools): Learn what Dynamic UI tools are and how to build and use them in your applications
-- Learn how to use custom tools inside a [Chat Agent](../standard/chatbot) or [Voice Agent](../standard/voicebot)
+- Learn how to use custom tools inside a [process-backed agent](../process/overview) or [Voice Agent](../standard/voicebot)
 - [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents and tools with MeshAgent

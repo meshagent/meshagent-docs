@@ -15,7 +15,7 @@ agents:
       meshagent.agent.type: ChatBot
 
 container:
-  image: us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz
+  image: meshagent/cli:default
   command: /bin/bash /var/start.sh
   storage:
     room:
@@ -33,8 +33,9 @@ container:
             cp -R -n /knowledge-work-plugins/* /data/knowledge-work-plugins/ 2>/dev/null || true
           fi
 
-          exec /usr/bin/meshagent chatbot join \
+          exec /usr/bin/meshagent process join \
             --model=claude-sonnet-4-5 \
+            --channel=chat \
             --require-storage \
             --require-web-search \
             --rule="when the user requests help with competitive analysis, content creation, brand voice, campaign planning, or performance analytics you MUST read and follow the corresponding skill from /data/knowledge-work-plugins/skills" \
@@ -2206,4 +2207,3 @@ container:
             use_tools: true
             allowed_toolkits: null
 ```
-

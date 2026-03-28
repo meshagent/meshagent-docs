@@ -4,10 +4,9 @@ title: Getting Started
 
 ## Overview
 
-MeshAgent is an **end to end platform** for building, deploying, and hosting AI Agents. MeshAgent 
-integrates AI Agents and human teams in real time by bundling LLM orchestration, tool integration, real-time messaging, observability, and deployment so you can ship and share agents in minutes instead of weeks. 
+MeshAgent is an **end-to-end platform** for building, deploying, and hosting AI agents. MeshAgent integrates AI agents and human teams in real time by bundling LLM orchestration, tool integration, real-time messaging, observability, and deployment so you can ship and share agents in minutes instead of weeks.
 
-To stay up to date with MeshAgent releases, ask questions, and share feedback with our team join our [Discord Server](https://discord.com/invite/RDSDyTmY). We also publish [blogs](https://www.meshagent.com/meshagent-insider-articles-and-product-announcements) highlighting major updates from each new release. 
+To stay up to date with MeshAgent releases, ask questions, and share feedback with our team, join our [Discord Server](https://discord.com/invite/RDSDyTmY). We also publish [blogs](https://www.meshagent.com/meshagent-insider-articles-and-product-announcements) highlighting major updates from each new release.
 
 ### In this guide you will learn how to:
 1. Create a MeshAgent account and project in MeshAgent Studio
@@ -21,7 +20,7 @@ Before you start, make sure your machine matches the appropriate requirements. I
 ### Key Concepts
 - **Projects**: Groups related Rooms and the Agents that serve them. It is best to create a different Project for each use case.
 - **Rooms**: A dedicated space for humans and Agents to collaborate in real time. 
-- **Agents**: MeshAgent includes [ChatBots](../agents/standard/chatbot), [VoiceBots](../agents/standard/voicebot), [TaskRunners](../agents/standard/taskrunner), [Workers](../agents/standard/worker), and [Multi-channel Agents](../agents/process/overview). Multi-channel agents can be reached through chat, email, queues, and toolkit-style calls while keeping one shared identity, rules setup, and tool configuration. Once deployed, agents are automatically available as a project service (available in all rooms in the project) or a room service (available only in the room they're deployed to). 
+- **Agents**: MeshAgent provides [process-backed agents](../agents/process/overview) that support multiple channels including chat, mail, queues, and toolkit-style calls while keeping one shared identity, rules setup, and tool configuration. Once deployed, agents are automatically available as a project service (available in all rooms in the project) or a room service (available only in the room they're deployed to).
 
 ## Setup Guide
 ### Step 1: Create an account and project:
@@ -92,22 +91,38 @@ meshagent setup
 
 You are now authenticated and ready to use the CLI! 
 
-### Step 4: Start an agent
+### Step 4: Create a mailbox for the mail channel
 
-Let's start one process-based agent in a new room and give it a few useful built-in tools. 
+Since this example includes the mail channel, create the mailbox before you start the process:
 
-```sh
-# Start a chat-capable agent in the room "gettingstarted"
+```bash bash
+meshagent mailbox create \
+  --address my-first-agent@mail.meshagent.com \
+  --room gettingstarted \
+  --queue my-first-agent@mail.meshagent.com
+```
+
+### Step 5: Start an agent
+
+Let's start one process-based agent in a new room and give it a few useful built-in tools. This example includes all four primary channels: chat, mail, queue, and toolkit.
+
+```bash bash
 meshagent process join \
   --room gettingstarted \
   --agent-name my-first-agent \
   --channel chat \
+  --channel mail:my-first-agent@mail.meshagent.com \
+  --channel queue:my-first-agent \
+  --channel toolkit:my-first-agent \
+  --threading-mode default-new \
+  --thread-dir ".threads/my-first-agent" \
   --model gpt-5.4 \
   --web-search \
-  --require-storage
+  --require-storage \
+  --rule "You are a helpful first agent. Answer clearly, use web search when needed, and save important artifacts to storage."
 ```
 
-### Step 5: Talk to your agent
+### Step 6: Talk to your agent
 
 1. Open [studio.meshagent.com](https://studio.meshagent.com/)
 2. Join the ``gettingstarted`` session. 
@@ -117,10 +132,31 @@ Congrats, you just ran your first agent!
 
 This agent will be available in the Room while you're running it from your terminal. To stop it, run `Ctrl+C`. If you want it to persist, deploy it as a project or room service. 
 
-> **Tip**: `meshagent process` is the recommended CLI path when one agent may later need more than one channel, such as chat plus queues, mail, or toolkit access.
+### Step 7: Try the other channels
+
+Send the agent an email at `my-first-agent@mail.meshagent.com`.
+
+Send work through the queue:
+
+```bash bash
+meshagent room queue send \
+  --room gettingstarted \
+  --queue my-first-agent \
+  --json '{"prompt":"Summarize the current room activity and save a note."}'
+```
+
+Invoke the agent through its toolkit channel:
+
+```bash bash
+meshagent room agent invoke-tool \
+  --room gettingstarted \
+  --toolkit my-first-agent \
+  --tool run_my_first_agent_task \
+  --arguments '{"prompt":"Draft a short welcome message for a new customer."}'
+```
 
 ## Next Steps
 
 - [CLI Quickstart](../cli/cli_quickstart): Learn common commands for managing rooms and agents from your terminal
-- [Using Multi-channel Agents](../agents/process/using_process): Grow the same agent across chat, queue, mail, and toolkit channels
+- [Process Agents Overview](../agents/process/overview): Learn how `meshagent process` works and how to combine chat, mail, queue, and toolkit channels
 - [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging): Turn your CLI-tested agent into a managed service

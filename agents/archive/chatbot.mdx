@@ -1,0 +1,306 @@
+---
+title: "ChatBot (Archived)"
+---
+
+import CliChatBotYaml from "/snippets/examples/archive/cli/chatbot/meshagent.mdx"
+import Chatbot from "/snippets/examples/archive/python/deployable/mesh_tools_chatbot/mesh_tools_chatbot.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
+import ChatbotYaml from "/snippets/examples/archive/python/deployable/mesh_tools_chatbot/meshagent.mdx"
+
+> **Archived:** The dedicated `meshagent chatbot` CLI runtime is no longer the recommended path for new docs. Use [`meshagent process`](../process/overview) for new process-based agents. This page remains as historical reference for the older ChatBot-specific runtime.
+
+## Overview 
+`ChatBot` is the standard agent for building text-based conversational experiences in MeshAgent. The `ChatBot` class builds on [`SingleRoomAgent`](./singleroomagent). It joins a MeshAgent Room, communicates with participants via text, streams responses from your chosen LLM, and persists conversation history so users can pick up where they left off. The `ChatBot` automatically handles conversation flow, thread storage, auto-greeting, and tool integration, making it the fastest path to building interactive agents like customer support bots, research assistants, and more. 
+
+`ChatBot` supports both **static toolkits** (always available) and **dynamic toolkits** (built per message), so you can add or remove tools on demand as a conversation evolves. 
+
+### Two ways to build a ChatBot
+1. **CLI:** Run production-ready agents with a single command. Configure tools, rules, and behavior using command-line flags. Ideal for most use cases. 
+2. **SDK:** Extend the base `ChatBot` class with custom code when you need deeper integrations or specialized behaviors. Best for full control or more complex logic. 
+
+Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, it's fastest and covers most scenarios, then moving to the SDK when you need further customization. 
+
+### In this guide you will learn
+- When to use `ChatBot`
+- How to run and deploy a `ChatBot` with the MeshAgent CLI
+- How to build and deploy a `ChatBot` with the MeshAgent SDK
+- How the `ChatBot` works including the constructor parameters, lifecycle, conversation flow, important behaviors, hooks, and methods. 
+
+## When to use ChatBot
+Use the `ChatBot` when you need an agent that: 
+- **Responds conversationally** to participants via text messages and is seamlessly connected to the Room
+- **Maintains conversation history** across sessions (threads, documents, or Room state)
+- **Can use tools** to get work done (either built-in tools or custom tools you define)
+- **Supports multiple participants** in the same conversation (1:1 or group chats)
+- **Evolves during a conversation** and supports dynamic toolkits, UI actions, or other agent-to-room interactions. 
+- **Lets you focus on prompts, tools, and business logic** for your agent instead of plumbing for storage, messaging, and scale
+
+Don't use `ChatBot` if: 
+- Your agent needs voice/speech interaction, instead use [VoiceBot](./voicebot)
+- Your agent runs background tasks that don't require conversing with users, instead use [Worker](./worker) or [TaskRunner](./taskrunner)
+- Your agent processes email, instead use [MailBot](./mailbot)
+
+## Run and deploy a ChatBot with the CLI
+### Step 1: Run a `ChatBot` from the CLI
+
+Let's run a `ChatBot` from the CLI with the web search tool, access to room storage so it can read and write files in the Room, a custom rule, and room-rules which can be modified per conversation turn. 
+
+```bash bash
+# Authenticate to MeshAgent if not already signed in
+meshagent setup
+
+# Call a chatbot into your room
+meshagent chatbot join --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+```
+
+When you add the `--room-rules "agents/chatbot/rules.txt"` flag and supply a file path for the rules, the file will be created if it does not already exist, this file is relative to the room storage. 
+
+> **Tip:** Use the `--help` flag to see all available tools and options: `meshagent chatbot join --help`. The CLI ChatBot has built in tools you can turn on and off for things like image generation, web search, local shell, storage, and mcp.
+ChatBots can be extended with rules, tools, and skills depending on the kind of help you want them to provide. See [Tools Overview](../tools/intro) and [Skills Overview](../../skills/overview).
+
+### Step 2: Interact with the agent in MeshAgent Studio
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and log in
+2. Enter your room ``quickstart``
+3. Select the agent ``chatbot`` and begin chatting!
+
+If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
+
+### Step 3: Package and deploy the agent
+Once your agent works locally to make it always available you'll need to [package and deploy](../../services_room_containers/packaging_and_deploying/packaging) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
+
+**Both options below deploy the same ChatBot** - choose based on your workflow:
+- **Option 1 (`meshagent chatbot deploy`)**: One command that deploys immediately (fastest/easiest approach)
+- **Option 2 (`meshagent chatbot spec` + `meshagent service create`)**: Generates a yaml file you can review, or further customize before deploying
+
+**Option 1: Deploy directly** Use the CLI to automatically deploy the `ChatBot` to your room.
+
+```bash bash 
+meshagent chatbot deploy --service-name chatbot --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+```
+
+**Option 2: Generate a YAML spec** Create a meshagent.yaml file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
+
+```bash bash 
+meshagent chatbot spec --service-name chatbot --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+```
+
+Next, copy the output to a `meshagent.yaml` file
+
+<CodeGroup>
+    <CliChatBotYaml />
+</CodeGroup>
+
+Then, deploy it to your Room. 
+
+```bash bash 
+# Deploy as a room service (specific room only)
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others from an AI native application. MeshAgent Studio, Powerboards, and the Flutter SDK include built-in chat UI components (such as ``ChatThreadLoader``) that understand ChatBot threads. This means any conversation started in the Studio or Powerboards can be displayed properly or continued inside your own application without extra integration work.
+
+## Build and deploy a ChatBot with the SDK
+### Step 1: Create a `ChatBot` agent
+This example shows a `ChatBot` with a custom rule to guide the agent's behavior and access to built-in MeshAgent Tools for web search, document authoring, and storage. For an agent this simple the CLI ChatBot would be sufficient. The Python SDK code here demonstrates how to get similar functionality as the CLI.  
+
+To run the ``ChatBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure.  
+
+<CodeGroup>
+    <Chatbot />
+</CodeGroup>
+
+### Step 2: Call the agent into a room
+
+Run the `ChatBot` locally and connect it to a Room: 
+```bash 
+meshagent setup # authenticate to MeshAgent
+meshagent service run "main.py" --room=quickstart
+```
+
+This command will start the chatbot on an available port at the path ``/agent``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities (this is the recommended way to test your agents and tools). 
+
+As an alternative to the ``service run`` command you can also run the service locally by setting a the `port` parameter on `ServiceHost` and running ``python main.py`` in one tab in your terminal, then from another tab you can call individual agents into the room using the ``meshagent call agent`` command. For example: 
+
+```bash bash
+meshagent setup # authenticate to meshagent
+meshagent call agent --url=http://localhost:8081/agent --room=quickstart --participant-name=chatbot
+```
+
+In either case, the agent joins the room as participant ``chatbot``. Once the agent joins the room, you can converse with it in [MeshAgent Studio](https://www.studio.meshagent.com).
+
+### Step 3: Interact with the agent in MeshAgent Studio
+1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
+2. Enter your room ``quickstart``
+3. Select the agent ``chatbot`` and begin chatting!
+
+If you want to modify and restart the agent run `Ctrl+C` from the terminal to stop the agent then re-run the `meshagent service run` command. 
+
+> **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
+
+### Step 4: Package and deploy the agent
+
+To deploy your SDK ChatBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run. 
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging). If you want to ship reusable skills with the chatbot, see [Packaging and Deploying Skills](../../skills/packaging_and_deploying).
+
+MeshAgent supports two deployment patterns for containers: 
+1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly. 
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+
+This example demonstrates approach #1 with a code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
+
+**Prepare your project structure**
+This example organizes the agent code and configuration in the same folder, making each agent self-contained:
+
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── mesh_tools_chatbot/
+│   ├── mesh_tools_chatbot.py
+│   └── meshagent.yaml           # Config specific to this sample
+└── another_sample/              # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
+```
+
+> **Note:** If you're building a single agent, you only need the `mesh_tools_chatbot/` folder. The structure shown supports multiple samples sharing one Dockerfile.
+
+**Step 4a: Build a Docker container**
+Create a scratch Dockerfile and copy the files you want to run. This creates a minimal image containing only your code files.
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image with `docker buildx`:
+
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
+
+> **Note:** Building from the project root copies your entire project structure into the image. For a single agent, this is fine - your image will just contain one folder. For multi-agent projects, all agents will be in one image, but each can deploy independently using its own `meshagent.yaml`.
+
+**Step 4b: Package the agent**
+Define the service configuration in a `meshagent.yaml` file. This service will have a `container` section that references: 
+
+- Runtime image: The MeshAgent Python SDK image with all dependencies
+- Code mount: Your code-only image mounted at /src
+- Command path: Points to your sample's specific location
+
+<CodeGroup>
+    <ChatbotYaml />
+</CodeGroup>
+
+How the paths work:
+- Your code image contains `/mesh_tools_chatbot/mesh_tools_chatbot.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/mesh_tools_chatbot/mesh_tools_chatbot.py`
+
+> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
+
+**Step 4c: Deploy the agent**
+Next from the CLI in the directory where your `meshagent.yaml` file is run: 
+
+```bash
+meshagent service create --file "meshagent.yaml" --room=quickstart
+```
+
+The `ChatBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). 
+
+
+## How ChatBot Works
+### Constructor Parameters
+`ChatBot` accepts everything that `SingleRoomAgent` does (`title`, `description`, `requires`, `labels`). The `name` constructor argument is deprecated; agent identity comes from its participant token.
+
+| Parameter             | Type                          | Description                                                                                                     |
+| -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `name`               | `str \| None`                 | Deprecated. Agent identity comes from the participant token; if provided, it is only used to default `title`.   |
+| `title`              | `str \| None`                 | Human-friendly name shown in UX. If omitted and you set `name`, it defaults to that value.                      |
+| `description`        | `str \| None`                 | Optional short description.                                                                                     |
+| `requires`           | `list[Requirement] \| None`   | Dependencies such as `RequiredSchema` or `RequiredToolkit`. Automatically ensures the `"thread"` schema exists. |
+| `llm_adapter`        | `LLMAdapter`                  |  Required. Adapter that talks to your model provider (for example `OpenAIResponsesAdapter`). It supplies session contexts and translates responses into MeshAgent events.                                      |
+| `tool_adapter`       | `ToolResponseAdapter \| None` | Optional adapter for translating tool call outputs.                                                             |
+| `toolkits`           | `list[Toolkit] \| None`       | Extra toolkits that are always available to the ChatBot beyond what `requires` installs. Defaults to `[]`.                                                     |
+| `rules`              | `list[str] \| None`           | List of system or behavior rules appended to each session context.                                                 |
+| `auto_greet_message` | `str \| None`                 | Optional greeting message sent automatically by the agent when a new thread starts.                                                     |
+| `empty_state_title`  | `str \| None`                 | Title text shown in the Studio chat pane before the first user message. Defaults to `"How can I help you?"`.                                        |
+| `labels`             | `list[str] \| None`           | Optional tags for discovery and filtering.                                                                      |
+
+### Lifecycle Overview
+``ChatBot`` inherits the lifecycle from ``SingleRoomAgent`` but extends it to manage ongoing conversations and message threads.
+
+- ``await start(room: RoomClient)``: Connects to the room, installs requirements, and registers message handlers. Spawns per-thread tasks to handle participant messages, LLM responses, and tool invocations.
+-   ``await stop()``: Cancels active chat threads and clears cached state before disconnecting.
+- ``room`` property: Accesses the active RoomClient just like in SingleRoomAgent.
+
+### Conversation Flow 
+When a participant sends a message:
+1. The ChatBot receives the message via ``room.messaging.on("message")``.
+2. It identifies or spawns a chat thread corresponding to that conversation path.
+3. A session context (``AgentSessionContext``) is initialized using the ``llm_adapter``.
+4. The message history is synchronized with the room’s ``"thread"`` document.
+5. ChatBot resolves this turn’s toolkits: it collects `ToolkitBuilder`s from `get_toolkit_builders(...)`, merges per-turn `ToolkitConfig`s (from MeshAgent Studio/CLI/App UI), calls `make_tools(...)` to create any dynamic toolkits, and combines the result with any static toolkits.
+6. The LLM is invoked with the prepared session context and the resolved toolkits; tool calls are routed back into those toolkits, tokens are streamed, and the results are appended to the thread document.
+
+All of this happens automatically once your bot is started.
+
+### Key Behaviors and Hooks
+- **Thread management:** Every conversation lives inside a MeshDocument thread. The ChatBot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
+- **Context building:** `init_session()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
+- **Static tool resolution:** `get_thread_toolkits()` gathers toolkits declared in `requires`, and any always-on toolkits passed through `toolkits`.
+- **Dynamic tool providers:** `get_toolkit_builders()` lists the `ToolkitBuilder` factories the ChatBot is willing to spin up on demand (MCP, storage uploads, local shell, image generation, etc.). The chat UI calls this hook first to learn which tool toggles to display, and later sends back matching configs so the ChatBot can hydrate those toolkits with `make_tools()`.
+- **Message-specific toolkits:** When the user sends a message with a `tools` payload, `make_tools()` combines the selected configs with the provider list to hydrate just the toolkits needed for that turn before the LLM is invoked. (For example, in MeshAgent Studio, when the user selects which tools to add to an agent, these tools are added to the `tools` payload so the agent can use them.)
+- **Thread helpers:** Use `open_thread()` and `close_thread()` to manage `ThreadAdapter` instances, and call `ThreadAdapter.append_messages(...)` to replay stored messages into an existing session context (for example, when resuming a conversation).
+- **LLM customization:** Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to provide additional background context for the agent outside of the system prompt).
+- **Participant utilities:** `get_online_participants()` returns the participants included in the thread so you can tailor responses or access their attributes.
+
+### Key Methods
+| Method                                                         | Description                                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `async def init_session()`                                     | Creates a new session context using the configured `llm_adapter` and applies rules.            |
+| `async def get_thread_toolkits(thread_context, participant)`   | Resolves all always-on toolkits for a participant, including built-in reasoning tools.      |
+| `def get_toolkit_builders()`                                   | Returns the `ToolkitBuilder` list the UI can offer for message-level tool selection.         |
+| `async def open_thread(path)` / `async def close_thread(path)` | Opens or closes a thread adapter that persists the thread document.                          |
+| `ThreadAdapter.append_messages(thread, session_context)`          | Loads historical messages into the current session context from the thread document.           |
+| `async def prepare_llm_context(thread_context)`                | Hook for modifying the session context before invoking the LLM. Override as needed.            |
+
+### Built-in Toolkits and Behaviors
+``ChatBot`` automatically provides and manages several toolkits and utilities:
+- **Reasoning Toolkit:** Allows structured “chain-of-thought” reasoning within the session context.
+- **Built-in Tool Support (OpenAI-style):** May include web_search, local_shell, or image_gen, depending on the LLM adapter.
+- **UI Toolkit Integration:** Supports sending messages, showing toasts, or interacting with user interfaces via the "ui" toolkit.
+
+These can be extended or replaced with your own toolkit factories.
+
+#### Multi-user threads and reply logic
+
+ChatBot is multi-user aware out of the box. Conversation state is stored in a `thread` document (a room-synced XML-like structure) with two key sections:
+- `<members>`: participant names for this thread. The client UI (e.g., [MeshAgent Studio](https://studio.meshagent.com), [Powerboards](https://www.powerboards.com/), or your app) writes this list, the ChatBot only reads it.
+- `<messages>`: conversation history, attachments, tool output. The ChatBot appends messages here as it responds.
+
+When a message arrives:
+1. The UI opens a thread path (via `room.sync.open(path, create=true)`) and writes the `<members>` list for that conversation.
+2. ChatBot opens the same document and syncs changes.
+3. ChatBot cross-references `<members>` with the current online roster from `room.messaging.get_participants()` to see who is actually present.
+4. If more than one human is in the thread, ChatBot runs the `should_reply` function to determine whether the assistant is the intended next speaker. If not, it stays quiet. With a single human, the ChatBot always replies.
+
+Private vs group chats:
+- If the thread has one human in `<members>`, the chatbot treats it like a 1:1 and replies.
+- If the thread has more than one human in `<members>`, it automatically switches to multiplayer mode and uses `should_reply` to decide whether to speak.
+
+## Next Steps
+
+``ChatBot`` builds directly on ``SingleRoomAgent``, inheriting its lifecycle management, requirement installation, and toolkit resolution. While ``SingleRoomAgent`` focuses on room connection and environment setup, ``ChatBot`` handles conversation orchestration, managing threads, participants, messages, and reasoning.
+
+To continue learning about MeshAgent agents check out:
+- [Adapters](../adapters/index): Understand how LLM adapters and tool response adapters plug into the chat loop.
+- [VoiceBot](./voicebot): Adds streaming audio input/output for speech interactions.
+- [Worker](./worker) and [TaskRunner](./taskrunner): Perform background or task-based actions.
+- [MailBot](./mailbot): Interact with an agent via email.
+- [Skills Overview](../../skills/overview): Add reusable workflow guidance without turning everything into inline rules.
+
+To learn more about deploying agents with MeshAgent
+- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
+- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment

@@ -4,7 +4,7 @@ title: Deploy an Agent with a Single Command
 
 ## Overview
 
-Use `meshagent <agent_type> deploy` to create and deploy a service in one command. This is the fastest path for prebuilt agents like [ChatBot](../../agents/standard/chatbot), [MailBot](../../agents/standard/mailbot), [VoiceBot](../../agents/standard/voicebot), [TaskRunner](../../agents/standard/taskrunner), and [Worker](../../agents/standard/worker). This command deploys a container-based service using the `meshagent-cli` image (not an external service).
+Use `meshagent process deploy` to create and deploy a service in one command. This is the fastest path for new process-backed agents. This command deploys a container-based service using the `meshagent-cli` image (not an external service).
 
 Behind the scenes, the CLI generates a Service spec for you, then calls the service create API. You can always generate the YAML yourself if you want to customize it further.
 
@@ -14,7 +14,7 @@ These services deploy a container-based service that uses the `meshagent-cli` ba
 - [MeshAgent CLI](../../cli/cli_quickstart) installed and signed in (`meshagent setup`).
 
 ## Step 1: Deploy the agent
-This deploys a ChatBot service with web search and storage enabled. Run `meshagent chatbot deploy --help` to see the other available flags for the agent. MeshAgent provides a variety of tools you can add to the agent out of the box. There are two flag styles:
+This deploys a process-backed agent with web search and storage enabled. Run `meshagent process deploy --help` to see the other available flags for the agent. MeshAgent provides a variety of tools you can add to the agent out of the box. There are two flag styles:
 - `--require-<tool>` (e.g. `--require-web-search`, `--require-storage`): tool is always enabled and not toggleable in the UI.
 - `--<tool>` (e.g. `--web-search`, `--storage`): tool is available, but users can toggle it per turn in the UI.
 If you omit both, the tool is not available.
@@ -23,10 +23,11 @@ If you omit both, the tool is not available.
 ```bash
 meshagent setup # Authenticate to MeshAgent
 
-meshagent chatbot deploy \
+meshagent process deploy \
   --service-name my-chatbot \
   --service-description "Chatbot with web search and storage tools" \
   --agent-name my-chatbot \
+  --channel chat \
   --rule "You are a helpful assistant" \
   --require-web-search \
   --require-storage \
@@ -37,10 +38,11 @@ meshagent chatbot deploy \
 If you want to review or edit the config before deploying you can use the CLI to generate the configuration YAML:
 
 ```bash
-meshagent chatbot spec \
+meshagent process spec \
   --service-name my-chatbot \
   --service-description "Chatbot with web search and storage tools" \
   --agent-name my-chatbot \
+  --channel chat \
   --rule "You are a helpful assistant" \
   --require-web-search \
   --require-storage \
@@ -59,6 +61,5 @@ After deploying the agent it will be available to use in [MeshAgent Studio](http
 
 ## Related Topics
 - [Packaging services](./packaging)
-- [Deploy a customizable multi-agent service](./multi_agent_service)
+- [Deploy a Process Agent](./process_agent_service)
 - [Sharing via Powerboards](../share_agents_in_powerboards)
-- [Terminal-based agents](./terminal_based_agents)

@@ -140,12 +140,13 @@ meshagent room agent list-toolkits --room myroom
 You should see the supabase toolkit listed along with all its available tools. You can also verify in [MeshAgent Studio](https://studio.meshagent.com). Navigate to `myroom`, open the menu in the upper left, and select **Toolkits**. You will see the **supabase** toolkit and its associated tools. 
 
 ### Step 4: Test with an agent
-With the MCP session still running in your first terminal tab, from a second tab in your terminal start a chatbot agent that uses the Supabase toolkit:
+With the MCP session still running in your first terminal tab, from a second tab in your terminal start a process-backed agent that uses the Supabase toolkit:
 
 ```bash bash
-meshagent chatbot join \
+meshagent process join \
   --room myroom \
   --agent-name supabase-agent \
+  --channel chat \
   --require-toolkit supabase \
   --web-search \
   --room-rules "agents/supabase-agent/rules.txt" \
@@ -184,13 +185,14 @@ meshagent service create-template \
 
 After deployment, the Supabase toolkit will be available to any participant or agent in the room without a local MCP session.
 
-To deploy the chatbot that uses the toolkit run: 
+To deploy the process-backed agent that uses the toolkit run:
 
 ```bash bash 
-meshagent chatbot deploy \
+meshagent process deploy \
   --service-name supabase-agent \
   --room myroom \
   --agent-name supabase-agent \
+  --channel chat \
   --require-toolkit supabase \
   --web-search \
   --room-rules "agents/supabase-agent/rules.txt" \

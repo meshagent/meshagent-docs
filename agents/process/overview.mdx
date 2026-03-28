@@ -1,104 +1,220 @@
 ---
-title: "Multi-channel Agents Overview"
+title: "Process Agents Overview"
 ---
 
-## What is `meshagent process`?
+## Overview
 
-`meshagent process` is the CLI entry point for running one **multi-channel agent**.
+`meshagent process` is MeshAgent's CLI command group for process-backed agents.
 
-Use it when one agent should be reachable through more than one entry point, but still keep one shared identity, one shared tool configuration, and one shared rules setup.
+It is the main runtime for new conversational and background agents. Use it when you want one agent that stays available over time, can accept work through one or more channels, and keeps thread-based continuity instead of treating every request as an isolated run.
 
-For example, the same agent can:
+## What a process-backed agent can do
 
-- answer in chat
-- respond to email
-- process queue messages
-- be called by another agent as a tool
+A process-backed agent can:
 
-One `meshagent process` command creates one agent. If you need separate agents with different rules, tools, or identities, run multiple `meshagent process` commands.
+- answer people in chat
+- handle inbound mail
+- consume queued jobs
+- expose itself as a callable toolkit
+- use built-in and custom tools
+- keep work separated by thread
+- stay available as a deployed service
 
-## Why it is useful
+That makes `meshagent process` a good fit for support agents, coding agents, research agents, and operations agents.
 
-`meshagent process` gives you one place to define the agent and then decide how work can reach it.
+## When to use `meshagent process`
 
-That brings a few important benefits:
+Use `meshagent process` when you need an agent that:
 
-- one agent identity across multiple entry points
-- one shared set of rules and tools
-- one deployment shape for chat, mail, queue, and toolkit-style access
-- thread continuity when different channels reuse the same thread path
+- should stay available over time
+- may need more than one entry point
+- should keep one rules and tool setup across those entry points
+- should preserve thread continuity across turns
+- should be easy to run locally and deploy with the CLI
 
-## Supported channels today
+## Supported channels
 
-Today, `meshagent process` supports these channel formats:
+Today, `meshagent process` supports:
 
-| Channel | What it means |
+- `chat`
+- `mail:EMAIL`
+- `queue:NAME`
+- `toolkit:NAME`
+
+Each `--channel` flag adds another entry point to the same process-backed agent.
+
+| Channel | Use it for | What it enables |
+| --- | --- | --- |
+| `chat` | Interactive conversation in MeshAgent Studio or another chat client | Threaded conversation, streaming responses, human interaction |
+| `mail:EMAIL` | Turning inbound email into agent work | Mailbox-backed replies, attachments, email-first workflows |
+| `queue:NAME` | Background jobs delivered through a room queue | Non-interactive work, queued job handling |
+| `toolkit:NAME` | Exposing the agent as a callable toolkit | Agent-as-tool workflows and agent composition |
+
+## How to think about it
+
+The simplest mental model is:
+
+- the **process** is the running agent
+- the **channels** are the ways work reaches that agent
+- the **thread** is the continuity boundary
+
+That means one process-backed agent can serve several entry points without mixing unrelated work together. Work only shares history when it uses the same thread path.
+
+## Main commands
+
+Most users will touch these `meshagent process` commands:
+
+| Command | Use |
 | --- | --- |
-| `chat` | People can talk to the agent from MeshAgent Studio, Powerboards, or another chat-style client |
-| `mail:EMAIL` | Email sent to that mailbox becomes work for the agent |
-| `queue:NAME` | Messages pushed to that room queue become work for the agent |
-| `toolkit:NAME` | Other agents or participants can call the agent like a tool and get a reply |
+| `meshagent process join` | Join a room and run a process-backed agent |
+| `meshagent process run` | Run a process-backed agent and wait for interactive messages |
+| `meshagent process use` | Send a one-shot or interactive message to a running process-backed agent |
+| `meshagent process spec` | Generate a service spec for deployment |
+| `meshagent process deploy` | Deploy a process-backed agent service |
 
-Each `--channel` flag adds another way to reach the same agent.
+## Build one agent with all four primary channels
 
-## Threads and continuity
+If you want one agent that can answer in chat, receive email, handle queued work, and be called like a toolkit, set up the mailbox first and then start the process with all four channels.
 
-`meshagent process` does **not** merge all work into one giant live context.
+### Step 1: Create the mailbox
 
-The context boundary is still the thread path:
+Create the mailbox before you add a `mail:EMAIL` channel:
 
-- turns for the same `thread_id` are handled together
-- unrelated threads stay isolated
-- continuity only happens when inputs reuse the same thread path
+```bash
+meshagent mailbox create \
+  --address support-agent@mail.meshagent.com \
+  --room quickstart \
+  --queue support-agent@mail.meshagent.com
+```
 
-That is what makes cross-channel continuity possible.
+### Step 2: Start the process-backed agent
 
-For example:
+Run one agent with chat, mail, queue, and toolkit entry points:
 
-- an email can create or continue a thread
-- later, a chat client can continue that same thread
-- the agent is still the same agent, and the history is still the same thread history
+```bash
+meshagent process join \
+  --room quickstart \
+  --agent-name support-agent \
+  --channel chat \
+  --channel mail:support-agent@mail.meshagent.com \
+  --channel queue:support-jobs \
+  --channel toolkit:support-agent \
+  --threading-mode default-new \
+  --thread-dir ".threads/support-agent" \
+  --web-search \
+  --require-storage \
+  --rule "You are a helpful support agent. Answer clearly, use web search when needed, and save important artifacts to storage."
+```
 
-## What happens at runtime
+This gives you:
+
+- one long-running process-backed agent
+- one shared identity across four entry points
+- thread-aware chat behavior
+- mailbox-backed email handling
+- queue-driven background work
+- a callable toolkit for other participants or apps
+
+### Step 3: Chat with the agent
+
+Open [MeshAgent Studio](https://studio.meshagent.com), join the `quickstart` room, and start chatting with `support-agent`.
+
+### Step 4: Email the agent
+
+Now email `support-agent@mail.meshagent.com`. The mail channel turns that inbound email into work for the same running agent.
+
+Use `mail:EMAIL` when you want:
+
+- mailbox-backed inbound email
+- reply behavior through the mailbox flow
+- attachment and metadata handling inside the same thread-aware runtime
+
+### Step 5: Send work through the queue
+
+Use `queue:NAME` when you want non-interactive background jobs:
+
+```bash
+meshagent room queue send \
+  --room quickstart \
+  --queue support-jobs \
+  --json '{"prompt":"Summarize the latest support backlog and save a report."}'
+```
+
+This keeps the useful worker-style behavior:
+
+- queued job handling
+- background execution without a human back-and-forth
+- optional continuity when queued work reuses a thread path
+
+### Step 6: Invoke the agent through the toolkit channel
+
+List toolkits in the room:
+
+```bash
+meshagent room agent list-toolkits \
+  --room quickstart
+```
+
+Then invoke the process-backed agent as a toolkit:
+
+```bash
+meshagent room agent invoke-tool \
+  --room quickstart \
+  --toolkit support-agent \
+  --tool run_support_agent_task \
+  --arguments '{"prompt":"Draft a short reply explaining the refund policy."}'
+```
+
+Use `toolkit:NAME` when you want:
+
+- a clean invocation boundary
+- an agent that can be called by other agents or applications
+- the same rules and tools available through a toolkit entry point
+
+## Deploy the same agent shape
+
+Once the agent works locally, you can deploy it directly with the CLI:
+
+```bash
+meshagent process deploy \
+  --service-name support-agent \
+  --room quickstart \
+  --agent-name support-agent \
+  --channel chat \
+  --channel mail:support-agent@mail.meshagent.com \
+  --channel queue:support-jobs \
+  --channel toolkit:support-agent \
+  --threading-mode default-new \
+  --web-search \
+  --require-storage \
+  --rule "You are a helpful support agent. Answer clearly, use web search when needed, and save important artifacts to storage."
+```
+
+That deploys the same process shape you just tested locally.
+
+## How process-backed agents behave
+
+Process-backed agents are built around threads.
+
+- one agent can receive work from several channels
+- the running agent is shared
+- thread history is only shared when turns reuse the same thread path
+- different thread paths stay separate
+
+This is what allows one deployed agent to handle many conversations or jobs without collapsing them into one shared context.
+
+## How `meshagent process` works
 
 At a high level:
 
-1. a channel receives input from chat, mail, a queue, or a toolkit call
-2. the channel turns that input into a process turn
-3. the runtime routes that turn by `thread_id`
-4. one thread-scoped execution handles the turn and writes outputs back into the thread model
+- channels turn chat, mail, queue, or toolkit input into process messages
+- a supervisor routes those messages by `thread_id`
+- one thread process handles each active thread
+- a thread adapter persists turn state, outputs, and status
 
-This is the core behavior behind `process`: one agent can serve many channels without sharing unrelated thread state.
-
-## What `meshagent process` handles for you
-
-In addition to routing work from channels, `meshagent process` handles:
-
-- per-thread routing and queueing
-- streaming text, files, and other outputs into the thread
-- reasoning summary updates when the selected adapter emits them
-- tool-call lifecycle state such as pending, running, logs, completion, and failure
-- tool approvals and resume flows
-- interrupts and steering for active turns
-- thread status and pending-message metadata for clients
-
-Some model behavior still comes from the configured LLM adapter rather than from `meshagent process` itself.
-
-## Under the hood
-
-Under the hood, `meshagent process` assembles a small runtime out of a few core pieces:
-
-- [`SingleRoomAgent`](../standard/singleroomagent): the room-connected agent shell that holds the shared identity, requirements, rules, and tool configuration
-- channel adapters such as `ChatChannel`, `MailChannel`, `QueueChannel`, and `ToolkitChannel`: the pieces that turn chat, email, queues, and toolkit calls into process messages
-- `AgentSupervisor`: the router that receives channel messages and sends each turn to the correct thread
-- `LLMAgentProcess`: the per-thread execution loop that runs one active thread at a time
-- `AgentProcessThreadAdapter`: the bridge that writes outputs, tool state, and turn lifecycle updates back into the thread model
-
-For the full implementation model, see [Multi-channel Agent Architecture](./architecture). For the thread model those runtime pieces write into, see [Threads Overview](../threads_overview).
+See [Process Agent Architecture](./architecture) for the implementation details and the runtime pieces involved.
 
 ## Where to go next
 
-- [Using Multi-channel Agents](./using_process): the practical CLI path, starting with a small runnable example
-- [Multi-channel Agent Architecture](./architecture): the implementation model for engineers extending or debugging the runtime
+- [Process Agent Architecture](./architecture): what the CLI builds behind the scenes
 - [Threads Overview](../threads_overview): how thread paths control continuity and isolation
-- [Deploy a Multi-channel Agent](../../services_room_containers/packaging_and_deploying/process_agent_service): package and deploy one multi-channel agent service

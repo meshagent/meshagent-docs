@@ -38,10 +38,12 @@ MeshAgent Rooms are **secure, on-demand workspaces** where humans, agents, and t
 - **[Tools](../agents/tools/intro)** to help them complete tasks (e.g., file handling, web search, email tools, MCP Tools)
 
 ### Types of Agents in MeshAgent
-- **Participant-based agents**: (e.g. [ChatBot](../agents/standard/chatbot), [VoiceBot](../agents/standard/voicebot))
-  Appear as participants in a Room, support back-and-forth conversation, and maintain conversation threads. 
-- **Background/Ambient Agents**: (e.g. [TaskRunner](../agents/standard/taskrunner), [Worker](../agents/standard/worker), [Indexer](../agents/standard/indexer))
-  These agents run in the background and don't appear as participants in a Room. They execute tasks based on queue triggers or direct invocations and return results. For example, a **[Task Runner](../agents/standard/taskrunner)** executes a specific task when given a structured input and it returns a structured output. These background agents can be given to conversational agents as tools. 
+- **Process-backed agents**: (see [Process Agents Overview](../agents/process/overview))
+  These are the main CLI/runtime path for new text agents. They can appear as participants through `chat`, work in the background through `queue`, handle email through `mail`, or expose themselves as tools through `toolkit`, all while sharing one process runtime and one thread model.
+- **Voice agents**: (e.g. [VoiceBot](../agents/standard/voicebot))
+  Voice agents are still the main separate runtime for real-time speech interactions.
+- **Older compatibility patterns**:
+  MeshAgent still contains older SDK and service patterns for compatibility, but the main path for new docs is `meshagent process`.
 
 You can also run agents in your agent framework of choice inside a MeshAgent Room.
 
@@ -91,8 +93,8 @@ Build your own tools to extend agent capabilities:
 
 ### Deployment Workflow
 
-**1. [Build and test locally](../services_room_containers/local_development)**  
-Develop your agent or tool on your machine, iterate and test it through [MeshAgent Studio](https://studio.meshagent.com).
+**1. Build and test locally**
+Develop your agent or tool on your machine, iterate with [`meshagent process`](../agents/process/overview) or your own service entrypoint, and test it through [MeshAgent Studio](https://studio.meshagent.com).
 
 **2. [Package as a service](../services_room_containers/packaging_and_deploying/packaging)**  
 Define your service in a configuration file that specifies how MeshAgent should run the service and what permissions it has.
@@ -106,6 +108,6 @@ Your service appears in rooms and can be invoked by agents or users. Update and 
 ## Next Steps
 - [Getting Started Guide](./get_started): Install MeshAgent, connect to your first Room, and interact with your first agent
 - [CLI Quickstart](../cli/cli_quickstart): Dive into the MeshAgent CLI and learn how to quickly connect, create, and deploy agents
-- [ChatBot](../agents/standard/chatbot): Create a conversational agent with tools
+- [Process Agents Overview](../agents/process/overview): Create and grow a process-backed agent
 - [Rooms API Overview](../room_api/overview): Explore all built-in Room APIs
 - [Python Package Overview](../reference/python_package_overview) for more details on how these concepts come together in code.

@@ -1,0 +1,29 @@
+kind: Service
+version: v1
+metadata:
+  name: research-helper-toolkit
+  description: "A process-backed research agent exposed through a toolkit channel"
+  annotations:
+    meshagent.service.id: "research-helper-toolkit"
+agents:
+  - name: research-helper
+    description: "A callable process-backed research agent"
+    annotations:
+      meshagent.agent.type: "ChatBot"
+container:
+  image: "meshagent/cli:default"
+  command: >-
+    /usr/bin/meshagent process join
+    --agent-name=research-helper
+    --channel=toolkit:research-helper
+    --require-web-search
+    --require-storage
+    --rule="You are a callable research helper. Produce concise results, cite sources when possible, and save larger artifacts to storage."
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: research-helper
+  storage:
+    room:
+      - path: /data
+        read_only: false

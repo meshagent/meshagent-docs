@@ -2,7 +2,7 @@
 title: "Using Skills with Agents"
 ---
 
-MeshAgent agents such as [ChatBot](../agents/standard/chatbot), [Worker](../agents/standard/worker), [TaskRunner](../agents/standard/taskrunner), and [MailBot](../agents/standard/mailbot) support skills. In practice, you usually load them with repeated `--skill-dir` flags and combine them with rules and tools.
+Process-backed MeshAgent agents support skills. In practice, you usually load them with repeated `--skill-dir` flags and combine them with rules and tools.
 
 ## Rules, tools, and skills
 
@@ -20,7 +20,7 @@ That means a strong agent often uses all three:
 
 ## Runnable example
 
-The example below creates a small local skill and then starts a ChatBot that can use it.
+The example below creates a small local skill and then starts a process-backed agent that can use it.
 
 ### Step 1: Create a sample skill
 
@@ -56,14 +56,15 @@ Turn raw release notes or a changelog into a short, clear summary.
 EOF
 ```
 
-### Step 2: Start a ChatBot with the skill
+### Step 2: Start a process-backed agent with the skill
 
 ```bash bash
 meshagent setup
 
-meshagent chatbot join \
+meshagent process join \
   --room quickstart \
   --agent-name chatbot \
+  --channel chat \
   --require-storage \
   --room-rules "agents/chatbot/rules.txt" \
   --skill-dir ./skills/release-summary \
@@ -83,9 +84,10 @@ You can paste the notes into the chat, store them in room files, or combine the 
 To load more than one skill, repeat `--skill-dir`:
 
 ```bash bash
-meshagent chatbot join \
+meshagent process join \
   --room quickstart \
   --agent-name chatbot \
+  --channel chat \
   --require-storage \
   --skill-dir ./skills/release-summary \
   --skill-dir ./skills/brand-review

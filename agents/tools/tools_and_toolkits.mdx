@@ -117,16 +117,14 @@ Static toolkits stay attached to the agent for its full lifetime.
 - The toolkit is instantiated once and participates in every LLM turn.
 - Use this when the agent should always have a capability available.
 
-```python Python
-chatbot = ChatBot(
-    name="support-assistant",
-    llm_adapter=OpenAIResponsesAdapter(),
-    toolkits=[
-        StorageToolkit(),
-        DocumentAuthoringToolkit(),
-    ],
-)
-```
+On the CLI, this is usually the `--require-*` form of a flag.
+
+| Optional per-turn | Always on | What it means |
+| --- | --- | --- |
+| `--web-search` | `--require-web-search` | `--web-search` lets the client enable web search for a turn. `--require-web-search` keeps it available on every turn. |
+| `--web-fetch` | `--require-web-fetch` | `--web-fetch` is user-selectable per turn. `--require-web-fetch` is always attached. |
+| `--storage` | `--require-storage` | `--storage` exposes storage through the builder flow. `--require-storage` attaches storage tools directly. |
+| `--mcp` | `--require-mcp` | `--mcp` enables dynamic MCP selection. `--require-mcp` keeps MCP tools available on every turn. |
 
 ### Dynamic toolkits
 
@@ -137,29 +135,11 @@ Dynamic toolkits are created on demand from `ToolkitBuilder` and `ToolkitConfig`
 - During the turn, `make_toolkits(...)` validates the configs and instantiates only the requested toolkits.
 - Use this for capabilities that should be opt-in, temporary, or user-selected, such as MCP connectors, local shell access, or turn-specific storage tools.
 
-```python Python
-message = {
-    "path": thread_path,
-    "text": "Generate a hero image and pull the latest market stats.",
-    "tools": [
-        {
-            "name": "image_generation",
-            "model": "gpt-image-1.5",
-            "size": "1024x1024",
-        },
-        {
-            "name": "mcp",
-            "servers": [
-                {
-                    "server_label": "research-bot",
-                    "server_url": "https://mcp.example.com",
-                    "authorization": "Bearer ${TOKEN}",
-                },
-            ],
-        },
-    ],
-}
-```
+On the CLI, the non-`require` form is the dynamic version. For example:
+
+- `--web-search` lets the UI or caller enable web search for a turn.
+- `--storage` lets the UI or caller enable storage tools for a turn.
+- `--mcp` lets the UI or caller attach MCP tools for a turn.
 
 > CLI note: CLI agents that expose toolkit builders follow the same dynamic pattern and accept a `tools` array for per-message selection. Flags like `--require-*` attach always-on toolkits in addition to any dynamic ones.
 

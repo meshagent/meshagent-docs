@@ -1,0 +1,23 @@
+kind: Service # switch to service Template if installing from link for Powerboards
+version: v1
+metadata:
+  name: worker
+  description: "A worker that processes queued jobs"
+  annotations:
+    meshagent.service.id: "meshagent.worker"
+agents:
+  - name: worker
+    description: "A queue based worker agent"
+    annotations:
+      meshagent.agent.type: "Worker"
+container:
+  image: meshagent/cli:default
+  command: "meshagent worker join --agent-name=worker --queue=tasks --require-storage --rule='Process queued tasks and save results to storage.'"
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: worker
+  storage:
+    room:
+      - path: /data             # mount room storage path for the agent to write files to
+        read_only: false        # allow write access 

@@ -1,0 +1,32 @@
+kind: ServiceTemplate
+version: v1
+metadata:
+  name: resume-mailbot
+  description: "Process-backed mail agent for the resume room that processes resumes"
+  annotations:
+    meshagent.service.id: "resume-mailbot"
+agents:
+  - name: resume-mailbot
+    annotations:
+      meshagent.agent.type: "MailBot"
+variables: []
+container:
+  image: "us-central1-docker.pkg.dev/meshagent-life/meshagent-public/cli:{SERVER_VERSION}-esgz"
+  command: >
+    /usr/bin/meshagent process join
+    --agent-name=resume-mailbot
+    --channel=mail:jobs@mail.meshagent.life
+    --model=gpt-5.2
+    --toolkit-name=mailbot.mail
+    --toolkit=mailbot-toolkit
+    --room-rules=agents/resume_mailbot/rules.txt
+    --whitelist=recruiter@example.com
+    --whitelist=hiring-manager@example.com
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: resume-mailbot
+  storage:
+    room:
+      - path: /data
+        read_only: false

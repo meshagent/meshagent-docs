@@ -25,7 +25,7 @@ Use `meshagent[all]` when you want a batteries-included install, or mix and matc
 | --- | --- | --- |
 | `meshagent` | `meshagent` | Thin umbrella package with shared version metadata and extras such as `[all]`, `[cli]`, and `[agents]` |
 | `meshagent-api` | `meshagent.api` | Core room and REST clients, JWT auth, protocols, storage, sync, services, and webhooks |
-| `meshagent-agents` | `meshagent.agents` | Agent classes such as `TaskRunner`, `Worker`, and `ChatBot` |
+| `meshagent-agents` | `meshagent.agents` | Agent building blocks, process runtime support types, channels, VoiceBot support, and compatibility classes |
 | `meshagent-livekit` | `meshagent.livekit` | LiveKit integration and voice-focused agent support |
 | `meshagent-tools` | `meshagent.tools` | Tool and toolkit abstractions plus built-in toolkits |
 | `meshagent-mcp` | `meshagent.mcp` | MCP-backed toolkits and tool wrappers |
@@ -88,20 +88,21 @@ Messages are encoded and decoded using a ``Protocol`` layer that is transport-ag
 Separate from rooms, ``Meshagent`` is a REST-based client for managing projects, API keys, and secrets. It is useful for administrative tasks.
 
 ### ServiceHost
-``ServiceHost`` allows you to expose agents or tools as an HTTP service. The MeshAgent Server or CLI can invoke the service via webhook calls. The ``Servicehost`` spins up the agent or tool, connects it to the specified room, and manages its lifecycle until the call completes or is dismissed. This is how examples like the ChatBot or VoiceBot can be run locally and also enables you to deploy an agent as a MeshAgent Service using the same applicable service path once your agent or tool is ready. 
+``ServiceHost`` allows you to expose agents or tools as an HTTP service. The MeshAgent Server or CLI can invoke the service via webhook calls. The ``ServiceHost`` spins up the agent or tool, connects it to the specified room, and manages its lifecycle until the call completes or is dismissed.
 
 When a call to the agent or tool arrives through a webhook, the ``ServiceHost`` spawns that agent or tool and connects it to the requested room via the ``RoomClient`` and ``WebSocketClientProtocol``. The ``ServiceHost`` starts an HTTP servier and registers each path so that multiple agents or toolkits can be hosted.  
 
 <CodeGroup>
 ```Python Python
 from meshagent.api.services import ServiceHost
+from meshagent.tools import FunctionTool
 
 service = ServiceHost(
     port=int(os.getenv("MESHAGENT_PORT","7777"))
 )
 
-@service.path("/chat")
-class SimpleChatbot(ChatBot):
+@service.path("/ping")
+class PingTool(FunctionTool):
     ...
 print(f"running on port {service.port}")
 asyncio.run(service.run())
@@ -109,9 +110,11 @@ asyncio.run(service.run())
 </CodeGroup>
 
 ## MeshAgent Agents
-The `meshagent-agents` distribution provides the `meshagent.agents` namespace. It adds higher-level agent classes that orchestrate tools and tasks. The primary agents you will build will use the ``TaskRunner``, ``Worker``, and ``ChatBot`` agent types. These agents extend the base ``Agent`` and ``SingleRoomAgent`` classes which setup the fundamentals for working with Agents in MeshAgent Rooms.
+The `meshagent-agents` distribution provides the `meshagent.agents` namespace. It adds agent building blocks for room-connected agents and exposes the lower-level pieces used by the process runtime. These types extend the base ``Agent`` and ``SingleRoomAgent`` classes which set up the fundamentals for working with agents in MeshAgent rooms.
 
-Note that agents use LLMAdapters and ToolResponseAdapters to translate between language model calls and tool executions. They also use the ServiceHost to run. 
+For new user-facing docs, the main runtime path is [`meshagent process`](../agents/process/overview). The Python process composition story exists at a lower level, but the main process workflow is intentionally documented CLI-first today.
+
+Note that agents use LLMAdapters and ToolResponseAdapters to translate between language model calls and tool executions.
 
 ### Agent
 The ``Agent`` base class handles static info such as the agent name, description, and requirements. This class is not used directly, but is the foundation for specialized agents. 
@@ -119,14 +122,28 @@ The ``Agent`` base class handles static info such as the agent name, description
 ### SingleRoomAgent
 The ``SingleRoomAgent``extends the ``Agent`` class, connects to a ``RoomClient``, and installs any declared schemas or toolkits when the agent starts up. All other MeshAgent Agent types extend the ``SingleRoomAgent`` class with additional functionality.
 
-### TaskRunner
-The ``TaskRunner`` is a universal adapter that lets you integrate agents from any framework (Pydantic AI, LangChain, CrewAI, custom implementations) into MeshAgent without rewriting your existing logic. Simply wrap your agent with input/output JSON schemas and an ``ask()`` method to instantly gain Studio integration, standardized APIs, and room collaboration features. TaskRunners are commonly exposed as tools for ``ChatBot`` or ``VoiceBot`` agents, enabling powerful multi-agent workflows.
+### Process-related exports
 
-### Worker
-The ``Worker`` is a queue-based ``SingleRoomAgent`` that processes queued messages with an LLM and optional tools. This is particularly helpful for running asynchronous jobs. With the ``Worker`` agent you can create a set of tasks that need to run in a Room and the ``Worker`` will execute all of the tasks in the queue. 
+The package also exports the core channel and thread-adapter types used by the process runtime, including:
 
-### ChatBot
-The ``ChatBot`` is a conversational agent derived from the ``SingleRoomAgent``. It wires an LLMAdapter, optional tools, and manages chat threads for each user. Check out the [ChatBot](../agents/standard/chatbot) documentation to learn how to create and customize a chat based agent in MeshAgent. You can set custom rules for the agent and extend it's abilities with tools. 
+- `ChatChannel`
+- `MailChannel`
+- `QueueChannel`
+- `ToolkitChannel`
+- `AgentProcessThreadAdapter`
+
+Lower-level runtime types such as the supervisor and per-thread process live deeper in the package and are more advanced SDK surfaces.
+
+These are the Python-side pieces that correspond to what the CLI assembles for `meshagent process`.
+
+### Other exported agent types
+
+The package also includes:
+
+- `VoiceBot` for real-time voice workflows
+- older compatibility classes such as `ChatBot`, `Worker`, and `TaskRunner`
+
+The compatibility classes remain part of the SDK surface for existing codebases, but they are not the recommended starting point for new agent docs or examples.
 
 ## MeshAgent LiveKit
 The `meshagent-livekit` distribution provides the `meshagent.livekit` namespace and equips agents with real-time audio and voice capabilities via the LiveKit SDK.
@@ -212,38 +229,9 @@ toolkit = MCPToolkit(
 ## MeshAgent Computers
 The `meshagent-computers` distribution provides the `meshagent.computers` namespace and defines abstractions for controlling browsers and operating systems and providing these abilities to agents.
 
-### ComputerChatBot
-The ComputerChatBot in `meshagent-computers` extends the ``ChatBot`` with support for using browsers and computers. The computer agent will periodically send screenshots to participants on the thread using the MeshAgent messaging protocol, by sending a message of the type "computer_screen" and an attachment that contains a binary screenshot. 
+Key exports include browser and operator abstractions such as `BrowserbaseBrowser` and `Operator`, along with compatibility classes for older computer-use agent patterns.
 
-<CodeGroup>
-```Python Python
-from meshagent.api import RequiredToolkit
-from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.computers import ComputerChatBot, BrowserbaseBrowser, Operator
-from meshagent.api.services import ServiceHost
-
-service = ServiceHost()
-
-@service.path("/ComputerChatBot")
-class BrowserbaseAgent(ComputerChatBot):
-    def __init__(self):
-        super().__init__(
-            name="meshagent.browser",
-            title="browser agent",
-            description="a task runner that can use a browser",
-            requires=[RequiredToolkit(name="ui", tools=[])],
-            llm_adapter=OpenAIResponsesAdapter(
-                model="computer-use-preview",
-                response_options={"reasoning": {"generate_summary": "concise"}, "truncation": "auto"},
-            ),
-            labels=["tasks", "computers"],
-            computer_cls=BrowserbaseBrowser,
-            operator_cls=Operator
-        )
-
-asyncio.run(service.run())
-```
-</CodeGroup>
+For new user-facing docs, computer-use should be thought of as an advanced capability you can attach to a MeshAgent agent workflow, not as a separate primary runtime path. The current public docs focus first on `meshagent process` and other mainstream room-connected agent workflows, then use the computer package for lower-level custom integrations when needed.
 
 ## MeshAgent OpenAI
 The `meshagent-openai` distribution provides the `meshagent.openai` namespace and adapters to integrate OpenAI models with MeshAgent tools and agents.

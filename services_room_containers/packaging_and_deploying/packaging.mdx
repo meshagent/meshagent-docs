@@ -8,7 +8,7 @@ MeshAgent allows you to deploy any code as a service. Services can be anything f
 
 To deploy a service in MeshAgent, you write a YAML configuration file that describes what to run and how to connect it to MeshAgent. Services can be deployed with the MeshAgent CLI, from MeshAgent Studio, or by sharing a Powerboards install link.
 
-This page covers the key concepts behind service configuration, explains how a manifest is organized, and provides a complete field reference for the required configuration YAML file. The examples on this page are complete manifests you can copy into `meshagent.yaml` and adapt. If you are writing custom SDK code and want to test it locally before packaging it, see [Run Your Service Locally](../local_development).
+This page covers the key concepts behind service configuration, explains how a manifest is organized, and provides a complete field reference for the required configuration YAML file. The examples on this page are complete manifests you can copy into `meshagent.yaml` and adapt.
 
 ## Key Concepts
 Before deploying your service there are three decisions to make about your service.
@@ -66,7 +66,7 @@ In general:
 - Move to a hand-edited manifest when you need more advanced behavior such as a custom image, custom ports, or additional mounts not covered by the CLI flags.
 
 ## Example 1: Deploying a `Service`
-Let's deploy a simple ChatBot with web search and storage tools. This is a `kind: Service` where configuration is fixed and it runs as-is.
+Let's deploy a simple process-backed agent with web search and storage tools. This is a `kind: Service` where configuration is fixed and it runs as-is.
 
 This is a complete manifest. You can copy it into `meshagent.yaml` and deploy it directly.
 
@@ -329,7 +329,7 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `image` | string | Yes | Container image (e.g. `us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz`). |
+| `image` | string | Yes | Container image (e.g. `meshagent/cli:default`). |
 | `command` | string | No | Command to execute when the container starts. |
 | `working_dir` | string | No | Absolute working directory used when starting the container command. |
 | `environment` | list | No | Environment variables to set in the container. |
@@ -539,7 +539,7 @@ Set in `agents[].annotations`.
 
 | Key | Description |
 |-----|-------------|
-| `meshagent.agent.type` | MeshAgent Agent type: `ChatBot`, `VoiceBot`, `Transcriber`, `TaskRunner`, `MailBot`, `Worker`, or `Shell`. |
+| `meshagent.agent.type` | Internal agent type metadata used by service manifests and generated specs. |
 | `meshagent.agent.widget` | UI widget to display for this agent. |
 | `meshagent.agent.schedule` | JSON string defining a scheduled task and its payload. |
 | `meshagent.agent.shell.command` | Shell command for `Shell`-type agents. |
@@ -558,7 +558,7 @@ Set in `variables[].annotations`.
 
 #### Event Annotations
 
-Set in `agents[].annotations`. Subscribe an agent to room events. The value is the name of a queue for a Worker agent to process.
+Set in `agents[].annotations`. Subscribe an agent to room events. The value is the name of a queue that a queue-consuming agent can process.
 
 | Key | Description |
 |-----|-------------|
@@ -585,6 +585,5 @@ Step-by-step guides for common deployment patterns:
 
 - [Deploy an agent with a single command](./deploy_from_cli) — Deploy a prebuilt agent with a single command, no YAML required.
 - [Deploy a customizable multi-agent service](./multi_agent_service) — Deploy a chatbot and mailbot where users can create their own email. 
-- [Deploy a terminal based agent](./terminal_based_agents) - Deploy a terminal based agent like Codex into a Room. 
 - [Connect to an external MCP server](./external_mcp_service) — Connect to a third-party MCP server. 
 - [Publish to Powerboards](../share_agents_in_powerboards) — Turn any ServiceTemplate into a one-click install link.

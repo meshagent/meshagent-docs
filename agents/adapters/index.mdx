@@ -2,7 +2,7 @@
 title: "Adapters Overview"
 ---
 
-Adapters connect MeshAgent to external LLMs and standardize how tool results flow back into conversations. These adapters are important for any agent that uses an LLM, for example `ChatBot`s and `MailBot`s.
+Adapters connect MeshAgent to external LLMs and standardize how tool results flow back into conversations. These adapters are important for any MeshAgent agent that uses an LLM.
 
 - **LLM Adapters**: Talk to a model (from a provider like OpenAI, Anthropic, etc.), translate the session context into the provider’s request format, and stream the model’s responses back.
 - **Tool Response Adapters**: Convert tool outputs into messages that match what the provider and UI expect (e.g., text, JSON blobs, links, files).
@@ -31,7 +31,7 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - Optional compaction: When the context is too large for the model, compact it before sending the next request.
 - Output: Return the model’s final response for the turn (text or structured output).
 
-> Adapters append results to the in-memory session context for the turn. Whether that context is persisted across turns is agent-specific (e.g., `ChatBot` saves to the thread document and is used for multi-turn conversations; a `TaskRunner` does not and is used for single-turn tasks).
+> Adapters append results to the in-memory session context for the turn. Whether that context is persisted across turns is agent-specific. Process-backed chat flows persist thread history across turns, while one-shot task-style flows can choose not to.
 
 ### What an `LLMAdapter` base class defines
 - `default_model()`: Return the model name (or identifier) the adapter should use when the caller does not override it.
@@ -40,7 +40,7 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - `needs_compaction(context)`: Decide if the current context should be compacted before the next request.
 - `compact(context, room, model?)`: Mutate the context to a smaller representation (provider-specific).
 - `get_input_tokens(...)`: Optional helper to estimate the token count for the current request.
-- `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves (see the `ChatBot` implementation for an example).
+- `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves.
 - `make_toolkit(room, model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
 - `check_for_termination(context, room)`: Allows you to use the session context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
 - `next(...)`: The core method: given the session context, room, toolkits for this turn, and an optional `ToolResponseAdapter`, call the underlying LLM, stream events (via `event_handler`), execute tool calls, inject tool results into the context, and return the final output. You can pass `output_schema` for structured responses, override `model`, and act `on_behalf_of` a participant. See [OpenAI Responses Adapter](./openai_responses_adapter) for a detailed implementation.

@@ -48,7 +48,7 @@ Follow the [MeshAgent Setup instructions](https://docs.meshagent.com/room_api/ge
 Call our first chat and voice agents into a room!
 
 ```sh
-meshagent chatbot join --room YOUR_ROOM_NAME --agent-name YOUR_CHATBOT_NAME --name YOUR_CHATBOT_NAME
+meshagent process join --room YOUR_ROOM_NAME --agent-name YOUR_CHATBOT_NAME --channel chat
 ```
 
 To call a voice agent into the room run: 

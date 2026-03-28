@@ -12,7 +12,7 @@ This page walks through that full pattern using the existing `anthropic_skills` 
 
 For the full service YAML reference, see [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-## End-to-end example: package a skills repo as a ChatBot
+## End-to-end example: package a skills repo for a process-backed agent
 
 This example assumes you already have a repo or folder of Agent Skills you want to ship. The `anthropic_skills` sample models the pattern where those skills are packaged into an image and then mounted at `/skills` inside the MeshAgent service container.
 
@@ -77,7 +77,7 @@ docker.io/tulamasterman/anthropic-skills:latest
 
 ### Step 2: Create the MeshAgent service spec
 
-Use a `meshagent.yaml` file that mounts the skills image and starts a ChatBot which loads the discovered skills.
+Use a `meshagent.yaml` file that mounts the skills image and starts a process-backed agent which loads the discovered skills.
 
 <CodeGroup>
   <AnthropicSkills />
@@ -95,7 +95,7 @@ The sample follows the same pattern you used for the Anthropic skills packaging 
 - It mounts the skills image at `/skills`.
 - It copies the skills into `/data/skills` on startup.
 - It finds every `SKILL.md` and turns each parent directory into a `--skill-dir` argument.
-- It starts `meshagent chatbot join` with the required tools and rules so the agent can actually use the skills.
+- It starts `meshagent process join --channel chat` with the required tools and rules so the agent can actually use the skills.
 
 The startup script is important because it does three things that make the whole pattern work:
 

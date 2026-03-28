@@ -3,7 +3,7 @@ kind: Service
 version: v1
 metadata:
   name: mcp-assistant
-  description: "A chatbot that can use MCP tools in the room"
+  description: "A process-backed agent that can use MCP tools in the room"
   annotations:
     meshagent.service.id: "mcp-assistant"
 agents:
@@ -12,10 +12,11 @@ agents:
     annotations:
       meshagent.agent.type: "ChatBot"
 container:
-  image: "us-central1-docker.pkg.dev/meshagent-public/images/cli:{SERVER_VERSION}-esgz"
+  image: "meshagent/cli:default"
   command: >-
-    meshagent chatbot join
+    meshagent process join
     --agent-name mcp-assistant
+    --channel chat
     --require-web-search
     --mcp
     --rule "You are a research assistant. Use the available MCP tools when users ask about them."
@@ -25,4 +26,3 @@ container:
       token:
         identity: mcp-assistant
 ```
-

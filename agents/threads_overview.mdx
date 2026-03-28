@@ -8,9 +8,9 @@ A **thread** is the persisted conversation or work history an agent can use to c
 
 In MeshAgent, a thread is stored as a Room sync document. It is the durable state behind things like:
 
-- an ongoing chat with a `ChatBot`
-- a resumable `TaskRunner` workflow
-- a `Worker` job history you want to keep and revisit
+- an ongoing conversation with a process-backed agent
+- a resumable process-backed toolkit workflow
+- queue or mail work history you want to keep and revisit
 
 The main idea is:
 
@@ -54,27 +54,23 @@ That makes a thread useful as both:
 
 ## Do all agents use threads?
 
-No. Different agents use threads in different ways.
+Different agents use threads in different ways.
 
-### ChatBot
+### Process-backed chat agents
 
-For `ChatBot`, threads are the normal model. A chat conversation is typically backed by a thread path, and the agent reopens that thread to reload prior history and continue the conversation.
+For a process-backed agent with a `chat` channel, threads are the normal model. A chat conversation is typically backed by a thread path, and the agent reopens that thread to reload prior history and continue the conversation.
 
 If a chat UI supports multiple conversations, each conversation is usually a different thread.
 
-### TaskRunner
+### Toolkit-style process calls
 
-`TaskRunner` does **not** have to use threads. It can run as a clean, one-off invocation with no persisted conversation state.
+A toolkit-style process invocation does **not** have to use threads, but it can. If the same invocation flow reuses a thread path, the agent can continue from that persisted history later.
 
-If you enable threading, a `TaskRunner` can write its work into a thread and resume from that thread later.
+Use this when you want a callable agent workflow to be resumable or inspectable over time.
 
-Use this when you want a structured agent invocation to be resumable or inspectable over time.
+### Queue-backed process work
 
-### Worker
-
-`Worker` also does **not** have to use threads. A worker can simply process queue messages and return results with fresh context each time.
-
-If you enable threading, the worker can persist the work into thread documents so jobs have durable history.
+Queue-backed process work also does **not** have to use threads. A queue channel can process jobs with fresh context each time, or it can write the work into thread documents so jobs have durable history.
 
 Use this when queued work should leave behind a readable log, or when later work should build on earlier work.
 
@@ -148,14 +144,15 @@ Example:
   index.threadl
 ```
 
-## Example: ChatBot with thread-related CLI flags
+## Example: process chat channel with thread-related CLI flags
 
-Here is a simple `ChatBot` command that enables a thread-aware chat UI and stores its thread documents under a dedicated thread directory:
+Here is a simple `meshagent process` command that enables a thread-aware chat UI and stores its thread documents under a dedicated thread directory:
 
 ```bash bash
-meshagent chatbot join \
+meshagent process join \
   --room quickstart \
   --agent-name support-bot \
+  --channel chat \
   --threading-mode default-new \
   --thread-dir ".threads/support-bot" \
   --require-storage \
@@ -182,7 +179,7 @@ This is a good default when:
 - you want a UI to show a thread list
 - you want to keep this agent's threads separate from other agents in the same Room
 
-If you omit `--thread-dir`, the `ChatBot` CLI will choose a default thread directory for you. If you omit thread-related settings entirely, you can still chat with the agent, but you are no longer explicitly configuring thread list behavior or thread organization.
+If you omit `--thread-dir`, the chat-oriented process runtime will choose a default thread directory for you. If you omit thread-related settings entirely, you can still chat with the agent, but you are no longer explicitly configuring thread list behavior or thread organization.
 
 ## What is `index.threadl`?
 
@@ -209,7 +206,7 @@ Many chat-style UIs need two things:
 
 The thread list usually comes from `index.threadl`, and the selected conversation comes from a specific `.thread` path.
 
-This is why thread directories matter most for conversational agents like `ChatBot`: they let a UI show many conversations instead of only one.
+This is why thread directories matter most for process-backed agents with a chat channel: they let a UI show many conversations instead of only one.
 
 ## Choosing the right model
 
@@ -223,8 +220,6 @@ Use one of these mental models:
 
 ## Where to go next
 
-- [ChatBot](./standard/chatbot): the main thread-oriented conversational agent
-- [TaskRunner](./standard/taskrunner): structured invocations that can optionally persist to threads
-- [Worker](./standard/worker): queue-driven processing with optional thread persistence
-- [Multi-channel Agents Overview](./process/overview): one logical agent with multiple channels
+- [Process Agents Overview](./process/overview): the main thread-aware runtime for new CLI agents
+- [Process Agents Overview](./process/overview): choose chat, mail, queue, or toolkit entry points
 - [Key Concepts](../introduction/key_concepts): Rooms, agents, tools, and services

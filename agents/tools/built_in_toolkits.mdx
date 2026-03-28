@@ -16,18 +16,20 @@ The MeshAgent CLI makes it easy to extend agents with built-in tools. For exampl
 Built-in toolkits are commonly enabled when you start an agent from the CLI:
 
 ```bash
-meshagent chatbot join \
+meshagent process join \
   --room my-room \
   --agent-name GPTResearcher \
+  --channel chat \
   --model gpt-5.4 \
   --web-search \
   --mcp \
   --require-storage \
   --use-memory agents/gptresearcher/memories
 
-meshagent chatbot join \
+meshagent process join \
   --room my-room \
   --agent-name ClaudeResearcher \
+  --channel chat \
   --model claude-sonnet-4-6 \
   --web-fetch \
   --mcp \
@@ -47,7 +49,8 @@ Many built-in CLI flags support both forms. When they do, the always-on form is 
 - `--require-web-search` makes web search always available to the agent.
 - `--web-fetch` makes web fetch available as a per-turn tool.
 - `--require-web-fetch` makes web fetch always available to the agent.
-- `--mcp` makes MCP tools available through the normal builder flow. There is not currently a `--require-mcp` mode in the chatbot CLI.
+- `--mcp` makes MCP tools available through the normal builder flow.
+- `--require-mcp` keeps MCP tools available on every turn.
 - `--storage` uses `StorageToolkitBuilder` for the builder-based flow.
 - `--require-storage` adds `StorageToolkit` directly as always-on tools.
 - `--use-memory agents/<agent-name>/memories` adds a `MemoriesToolkit` for that memory path.
