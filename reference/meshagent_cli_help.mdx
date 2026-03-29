@@ -48,6 +48,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `task-runner`: Join a taskrunner to a room
 * `worker`: Join a worker agent to a room
 * `room`: Operate within a room
+* `image`: Build and pack OCI images
 
 ## `meshagent version`
 
@@ -7014,37 +7015,12 @@ $ meshagent room container image [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `build`: Build a container image inside a room.
 * `list`: List container images available in a room.
 * `delete`: Delete a container image from a room.
 * `pull`: Pull a container image into a room.
 * `push`: Push a container image from a room.
 * `load`: Load an OCI image archive into a room.
 * `save`: Save an OCI image archive from a room.
-
-##### `meshagent room container image build`
-
-Build a container image inside a room.
-
-**Usage**:
-
-```console
-$ meshagent room container image build [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
-* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path)  [required]
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
-* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/src:/workspace&#x27;
-* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
-* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
-* `--private / --public`: Whether the build container is private to the participant  [default: public]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--help`: Show this message and exit.
 
 ##### `meshagent room container image list`
 
@@ -7175,37 +7151,12 @@ $ meshagent room container images [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `build`: Build a container image inside a room.
 * `list`: List container images available in a room.
 * `delete`: Delete a container image from a room.
 * `pull`: Pull a container image into a room.
 * `push`: Push a container image from a room.
 * `load`: Load an OCI image archive into a room.
 * `save`: Save an OCI image archive from a room.
-
-##### `meshagent room container images build`
-
-Build a container image inside a room.
-
-**Usage**:
-
-```console
-$ meshagent room container images build [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
-* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path)  [required]
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
-* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/src:/workspace&#x27;
-* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
-* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
-* `--private / --public`: Whether the build container is private to the participant  [default: public]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--help`: Show this message and exit.
 
 ##### `meshagent room container images list`
 
@@ -7496,5 +7447,72 @@ $ meshagent room sync import threads [OPTIONS]
 * `--user-name, --human-name TEXT`: Author name used for user/human messages  [default: human]
 * `--assistant-name TEXT`: Author name used for assistant messages  [default: assistant]
 * `--include-empty-messages`: Include messages that normalize to empty text
+* `--help`: Show this message and exit.
+
+## `meshagent image`
+
+Build and pack OCI images
+
+**Usage**:
+
+```console
+$ meshagent image [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `build`: Build a container image inside a room.
+* `pack`: Pack a local directory into an OCI image...
+
+### `meshagent image build`
+
+Build a container image inside a room.
+
+**Usage**:
+
+```console
+$ meshagent image build [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
+* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path)  [required]
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
+* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/src:/workspace&#x27;
+* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
+* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
+* `--private / --public`: Whether the build container is private to the participant  [default: public]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+### `meshagent image pack`
+
+Pack a local directory into an OCI image archive.
+
+**Usage**:
+
+```console
+$ meshagent image pack [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Local directory to pack  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `-o, --output TEXT`: Local path to write the OCI archive tar  [required]
+* `--base TEXT`: Optional base image reference. Defaults to scratch semantics.
+* `--architecture TEXT`: Architecture to use when resolving --base  [default: amd64]
+* `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the output file name.
 * `--help`: Show this message and exit.
 
