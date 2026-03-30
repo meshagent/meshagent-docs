@@ -7483,11 +7483,14 @@ $ meshagent image build [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
 * `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
-* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path)  [required]
+* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path). Defaults to the mounted path when there is exactly one context source.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
-* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/src:/workspace&#x27;
-* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
-* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
+* `--pack TEXT`: Pack a local directory, upload it to room storage, and mount it as an image volume. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+* `--pack-architecture TEXT`: Architecture metadata for the packed build context image. Defaults to the local machine architecture.
+* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive. Defaults to &#x27;/.images/&#123;manifest-digest&#125;.tar&#x27;. If a directory is provided, &#x27;&#123;tag&#125;.tar&#x27; is appended.
+* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
+* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
+* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;[=&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
 * `--private / --public`: Whether the build container is private to the participant  [default: public]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--help`: Show this message and exit.
