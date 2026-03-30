@@ -7482,15 +7482,17 @@ $ meshagent image build [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to build, e.g. repo/name:tag  [required]
+* `--tag TEXT`: Image tag to build, e.g. repo/name:tag. When --pack is used, this must start with room.meshagent.com/.  [required]
 * `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path). Defaults to the mounted path when there is exactly one context source.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
 * `--pack TEXT`: Pack a local directory, upload it to room storage, and mount it as an image volume. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
-* `--pack-architecture TEXT`: Architecture metadata for the packed build context image. Defaults to the local machine architecture.
-* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive. Defaults to &#x27;/.images/&#123;manifest-digest&#125;.tar&#x27;. If a directory is provided, &#x27;&#123;tag&#125;.tar&#x27; is appended.
+* `--arch TEXT`: Architecture metadata for the packed build context image. Defaults to amd64 for room runtimes.  [default: amd64]
+* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive. Defaults to a temporary path under /temp/build/packs/ that is deleted after the build completes. If a directory is provided, the repository path from --tag is appended.
 * `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
 * `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
 * `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;[=&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
+* `--deploy`: Create or update a room service that references the built image. When a local packed Dockerfile exposes ports, they are added as published service ports.
+* `--domain TEXT`: Create or update a room route for the deployed service. Requires --deploy and exactly one published service port.
 * `--private / --public`: Whether the build container is private to the participant  [default: public]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--help`: Show this message and exit.
@@ -7513,9 +7515,10 @@ $ meshagent image pack [OPTIONS] PATH
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
+* `--tag TEXT`: Image reference to embed in the packed archive. Required with --room, and must start with room.meshagent.com/ there.
 * `-o, --output TEXT`: Local path to write the OCI archive tar  [required]
 * `--base TEXT`: Optional base image reference. Defaults to scratch semantics.
-* `--architecture TEXT`: Architecture to use when resolving --base  [default: amd64]
-* `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the output file name.
+* `--arch TEXT`: Architecture to use when resolving --base  [default: amd64]
+* `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the repository path from --tag.
 * `--help`: Show this message and exit.
 
