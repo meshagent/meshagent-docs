@@ -5057,6 +5057,7 @@ $ meshagent image [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `build`: Build a container image inside a room.
+* `deploy`: Create or update a room service from an...
 * `pack`: Pack a local directory into an OCI image...
 
 ### `meshagent image build`
@@ -5082,10 +5083,33 @@ $ meshagent image build [OPTIONS]
 * `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
 * `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
 * `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;[=&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
-* `--deploy`: Create or update a room service that references the built image. When a local packed Dockerfile exposes ports, they are added as published service ports.
-* `--domain TEXT`: Create or update a room route for the deployed service. Requires --deploy and exactly one published service port.
 * `--private / --public`: Whether the build container is private to the participant  [default: public]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+### `meshagent image deploy`
+
+Create or update a room service from an image.
+
+**Usage**:
+
+```console
+$ meshagent image deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag.  [required]
+* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
+* `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
+* `-e, --env TEXT`: Set environment variable as KEY=VALUE
+* `--env-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
+* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated.
 * `--help`: Show this message and exit.
 
 ### `meshagent image pack`
