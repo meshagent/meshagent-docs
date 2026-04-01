@@ -1,24 +1,26 @@
 ---
 title: CLI Quickstart
-description: Instructions for using the MeshAgent CLI
+description: Instructions for using the MeshAgent CLI.
 ---
 
 ## Overview
-This guide covers common CLI workflows for day-to-day MeshAgent development. If you need account creation, project setup, and a first-run walkthrough, start with the [Getting Started Guide](../introduction/get_started) first. This page focuses on the CLI itself: installing it, connecting it to MeshAgent, running process-backed agents, and deploying them.
 
-The MeshAgent CLI streamlines Room interactions and agent management right from your terminal. With the MeshAgent CLI you can easily:
+This guide covers common CLI workflows for day-to-day MeshAgent development. If you need account creation, project setup, and a first-run walkthrough, start with the [Getting Started Guide](./get_started) first. This page focuses on the CLI itself: installing it, connecting it to MeshAgent, running process-backed agents, and deploying them.
+
+The MeshAgent CLI streamlines room interactions and agent management right from your terminal. With the MeshAgent CLI you can easily:
 
 - Authenticate and activate projects
 - Spin up live rooms and test your in progress agents and tools
 - Deploy services to your project or room
 - Inspect and manage existing projects, secrets, agents, and services
 
-For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help) documentation.
+For a complete command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
 
 ## Before you begin
+
 1. **Create a MeshAgent account and project**: Sign up and create a project in [MeshAgent Studio](https://studio.meshagent.com).
 
-2. **Install the MeshAgent CLI**: You can install the CLI globally on your system or in a virtual environment. 
+2. **Install the MeshAgent CLI**: You can install the CLI globally on your system or in a virtual environment.
     **Option 1: Install the CLI globally**
     <CodeGroup>
     ```bash macOS
@@ -41,7 +43,7 @@ For a complete command reference, see [MeshAgent CLI Commands](../reference/mesh
     ```bash Other
     # One can install the meshagent cli using pipx
     pipx install "meshagent[cli]" --include-deps
-    # Optional: ensure meshagent is in the path. 
+    # Optional: ensure meshagent is in the path.
     # You may need to open a new terminal.
     pipx ensurepath
     # Display the help
@@ -50,7 +52,7 @@ For a complete command reference, see [MeshAgent CLI Commands](../reference/mesh
     </CodeGroup>
 
     **Option 2: Install the CLI in a virtual environment**
-    Ensure you are in the appropriate project folder and have activated your virtual environment. (The virtual environment is active when the terminal prompt starts with ``venv``.) If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). Then you can install all the MeshAgent packages, or exclusively the MeshAgent CLI.
+    Ensure you are in the appropriate project folder and have activated your virtual environment. If you need help with your machine setup check out our [Machine Setup Guide for Python](../reference/machine_setup). Then you can install all the MeshAgent packages, or exclusively the MeshAgent CLI.
 
     <CodeGroup>
     ```bash pip
@@ -61,7 +63,7 @@ For a complete command reference, see [MeshAgent CLI Commands](../reference/mesh
     ```
     </CodeGroup>
 
-3. **Connect the CLI to MeshAgent**: Once the CLI is installed, authenticate and activate a project. 
+3. **Connect the CLI to MeshAgent**: Once the CLI is installed, authenticate and activate a project.
     <CodeGroup>
     ```bash bash
     # A browser window will open for OAuth.
@@ -70,14 +72,16 @@ For a complete command reference, see [MeshAgent CLI Commands](../reference/mesh
     ```
     </CodeGroup>
 
-    You are now authenticated and ready to use the CLI! 
+    You are now authenticated and ready to use the CLI.
 
-## Common Workflows
-### Run Agents Locally
+## Common workflows
 
-Before deploying, test your agent locally in a room:
+### Run agents locally
+
+Before deploying, test your agent locally in a room.
 
 #### Start with `meshagent process`
+
 `meshagent process` is the recommended CLI path when you want one agent identity that can grow across multiple channels.
 
 The four primary channels are:
@@ -140,14 +144,13 @@ meshagent room agent invoke-tool \
 
 This starts one logical agent that can be reached through chat, mail, queues, and toolkit calls. For more complete examples, see [Process Agents Overview](../agents/process/overview).
 
-> **Tip:** Use `--help` to see all available tools and options: `meshagent process join --help`.
+### Package and deploy services
 
-### Package and Deploy Services 
 Once your agent works locally, you'll need to [package and deploy](../services_room_containers/packaging_and_deploying/packaging) it as a project or room service. You can do this from MeshAgent Studio or using the CLI.
 
 For a standard process-based agent, the fastest path is to deploy it directly:
 
-```bash bash 
+```bash
 meshagent process deploy \
   --room myroom \
   --service-name support-agent \
@@ -163,7 +166,7 @@ meshagent process deploy \
 
 If you want to review or customize the manifest first, generate it and then deploy it yourself:
 
-```bash bash
+```bash
 meshagent process spec \
   --service-name support-agent \
   --agent-name support-agent \
@@ -182,7 +185,7 @@ meshagent service create --file meshagent.yaml --room myroom
 meshagent service create --file meshagent.yaml --global
 ```
 
-Inspect what is deployed: 
+Inspect what is deployed:
 
 ```bash
 # List project services
@@ -197,9 +200,10 @@ meshagent service show <service-id>
 
 Use your deployed services in [MeshAgent Studio](https://studio.meshagent.com) in any of the rooms it was deployed to.
 
-### Manage Projects and Rooms 
+### Manage projects and rooms
 
 **Switch projects:**
+
 ```bash
 # List projects
 meshagent project list
@@ -209,6 +213,7 @@ meshagent project activate -i
 ```
 
 **Manage API keys:**
+
 ```bash
 # Create and activate a new API key
 meshagent api-key create --activate my-new-key
@@ -219,54 +224,3 @@ meshagent api-key list
 # Delete API keys
 meshagent api-key delete <api-key-id>
 ```
-
-### Work with Secrets
-[Secrets](../secrets/secrets_overview) allow you to store credentials securely for agents and services to use: 
-
-When deploying a custom agent, you will need to build and push a docker image. For an example of this, check out [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging#example-1-deploying-a-service) to see how to build and deploy a chat agent as a project or room service.
-
-If your docker image is not public, then you will need to configure a secret so that the image can be pulled.
-
-<CodeGroup>
-```bash bash
-meshagent secret docker create --name my-image-secret --server index.docker.io --username my-username --password my-password
-```
-</CodeGroup>
-
-You can also create key-value based secrets (for API keys, etc.):
-```bash 
-meshagent secret key create --name my-secret --data "my-key=my-value"
-```
-
-### Logout 
-
-Rooms will spin down automatically after you leave and they are inactive. 
-If you wish to logout you can run:
-
-<CodeGroup>
-```bash bash
-meshagent auth logout
-```
-</CodeGroup>
-
-## Frequently used commands
-
-Note you will need to fill in the appropriate parameters for these commands
-
-| Command | What it does |
-|---------|--------------|
-| `meshagent setup` | Authenticate to MeshAgent and activate a project |
-| `meshagent process join --room=myroom --agent-name=agent --channel chat` | Run a process-based agent locally |
-| `meshagent process deploy --room=myroom --service-name=agent --agent-name=agent --channel chat` | Deploy a standard process-based agent directly |
-| `meshagent process spec --agent-name=agent --channel chat > meshagent.yaml` | Generate a manifest you can customize |
-| `meshagent voicebot join --room=myroom --agent-name=voicebot` | Run the built-in voice agent |
-| `meshagent service list` | View deployed project services |
-| `meshagent service show <service-id>` | Show one deployed service |
-
-
-## Next Steps
-
-- [Process Agents Overview](../agents/process/overview): Learn the main `meshagent process` workflow in more depth
-- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging): Learn how `meshagent.yaml` works and when to generate or edit one yourself
-- [CLI Commands Reference](../reference/meshagent_cli_help): Complete CLI command documentation
-- [Secrets Management](../secrets/secrets_overview): Working with credentials and OAuth

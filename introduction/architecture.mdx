@@ -1,0 +1,50 @@
+---
+title: Architecture
+description: How projects, rooms, agents, services, and interfaces fit together in MeshAgent.
+---
+
+MeshAgent is organized around **projects** and **rooms**.
+
+A **project** groups the people, services, credentials, interfaces, and operational settings for one application or workload. Inside a project, a **room** is where work actually happens: humans, agents, tools, shared state, and deployed services come together around the same live context.
+
+## Core structure
+
+- **Projects** group rooms, members, API keys, billing, and project-managed resources such as deployed services, routes, mailboxes, and scheduled tasks.
+- **Rooms** are the runtime and collaboration boundary. Each room has its own participants, shared context, and room-scoped capabilities. Rooms become active on demand and shut down automatically when idle.
+- **Agents** run inside rooms. They can respond in chat, work from queues, handle mail, be invoked by other agents, and use built-in or custom tools.
+- **Services** package code so it can be deployed across a project or scoped to a single room. Services can be MeshAgent-native or external.
+- **Interfaces** such as MeshAgent Studio and Powerboards connect people to the same underlying rooms and services.
+
+Some resources are managed at the project level but attached to specific room workflows. For example, a mailbox belongs to the project but routes email into a room and queue, a route belongs to the project but points traffic to a service running in a room, and a scheduled task belongs to the project but dispatches work into a room queue on a schedule.
+
+## How the pieces fit together
+
+1. A developer or user works inside a **project**.
+2. They create or join a **room**.
+3. When that room becomes active, MeshAgent starts a **session**, provisions the room runtime, and starts the services that should run there.
+4. Humans, agents, and tools work over the room's shared context.
+5. Room APIs provide the built-in runtime capabilities for messaging, storage, database access, queues, documents, containers, and secrets.
+6. Interfaces such as MeshAgent Studio and Powerboards let different kinds of users work with that same runtime.
+
+## Key boundaries
+
+- **Project boundary**: administration, deployment scope, credentials, billing, and automation.
+- **Room boundary**: runtime state, live collaboration, room APIs, and room-scoped services.
+- **Session boundary**: one active run of a room, including the services, logs, traces, and activity for that period.
+
+## How to think about MeshAgent
+
+If you are new to MeshAgent, the simplest mental model is:
+
+- a **project** groups related work
+- a **room** is the place where that work happens
+- **agents** are the participants that do the work
+- **services** are one of the main ways you package and deploy those agents, tools, and integrations into rooms
+- **room APIs** are the built-in capabilities those agents, services, and humans use
+- **interfaces** are the surfaces people use to inspect, test, share, and interact with what is running
+
+## Read this page with the rest of the docs
+
+- Go to [Rooms](../room_api/overview) to understand the room runtime and APIs.
+- Go to [Agents & Tools](../agents/overview) to understand how work is carried out inside rooms.
+- Go to [Deploy & Manage](../deploy_manage/overview) to understand service packaging, deployment, credentials, and observability.

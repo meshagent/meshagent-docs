@@ -1,113 +1,138 @@
 ---
 title: Key Concepts
+description: Short definitions for the core MeshAgent concepts used throughout the docs.
 ---
 
-This guide explains the **core building blocks that make MeshAgent a powerful platform for building, deploying, and operating AI agents** — collaboratively, securely, and at any scale. By the end of this document you will understand how **Agents**, **Tools**, and **Rooms** work together to **create seamless AI powered experiences**. 
+This page defines the main MeshAgent concepts in one place. Use it when you want the short version of a term. For the system-level explanation of how these concepts fit together, see [Architecture](./architecture).
 
-## At a Glance: Agents, Tools, and Rooms
-MeshAgent enables **people, AI agents, and external capabilities (tools) to meet in a secure Room** where they can **collaborate in real-time, share context, and work together toward common goals**.
+## Project
 
-- **Rooms**: Temporary, secure collaboration spaces that automatically spin up when the first participant joins and are retired when the last one leaves. All context, conversations, and shared resources live within the Room. Rooms are provisioned on demand and can scale up or down as your demand changes. 
-- **Agents**: Typically, AI Agents are language model (LLM) powered entities that can understand natural language, make decisions, and execute goals over multiple iterations. Agents are typically given a persona (aka system prompt or rules) and access to tools to help them understand and perform their job. Agents can be chat or voice forward, or run in the background.
-- **Tools**: Tools extend a model's capabilities by allowing the model to take action on your behalf -- something an LLM itself cannot do. Tools can be registered in the Room and called by human and agent participants. Agents can be equipped with specific tools, and human participants can invoke registered tools. 
+A **project** is the top-level container for related work in MeshAgent.
 
-> **Deploying with Services**: Agents, tools, and external code are deployed as **MeshAgent Services** — making them available either across all rooms in a project (project services) or scoped to specific rooms (room services).
+Projects group:
 
-## Rooms: The Secure, Scalable Collaboration Hub
+- rooms
+- members and roles
+- API keys and credentials
+- deployed services
+- routes, mailboxes, and scheduled tasks
+- billing and other project-level settings
 
-### What are Rooms?
-MeshAgent Rooms are **secure, on-demand workspaces** where humans, agents, and tools collaborate with shared context in real time. Each Room comes with **built-in APIs** — database, storage, messaging, queues, secrets, and more — so your agent applications have everything they need in one place. [See all Room APIs →](../room_api/overview)
+Most administrative and deployment actions happen at the project level.
 
-### How Rooms Work
-- **On-demand and ephemeral**  
-  A room is provisioned when the first participant joins and deprovisioned when the last participant leaves. Rooms only exists to facilitate communication and work during a session so you never worry about idle infrastructure.
+## Room
 
-- **Auto-scaling & service availability**  
-  Whether you're running one agent or ten thousand, Rooms scale automatically. MeshAgent handles provisioning and service setup behind the scenes (to make sure all deployed project and room services are available when you need them).
+A **room** is the runtime and collaboration boundary in MeshAgent.
 
-- **Telemetry and persistence when you need it**  
-  While Rooms themselves are temporary, observability logs/metrics and anything you write through the Storage/Database APIs survive the session. The MeshAgent admin console logs session activity for debugging, such as which agents participated, and what tools were invoked. The other Room APIs can be used to keep track of transcripts, uploads, or other state you want to persist. 
+It is the place where humans, agents, tools, services, files, queues, and shared documents come together around the same live context. Rooms belong to projects, and each room can have its own participants, room-scoped services, and persisted state.
 
-- **Granular access controls**  
-  [Participant tokens](../rest_api/participant_tokens) carry scoped grants, letting you control who can enter a room and which APIs humans, agents, or services may call.
+Rooms become active on demand, provision the runtime they need for that session, and shut down automatically when idle. That means they scale with usage rather than staying running all the time.
 
-## Agents: Your AI Teammates
-### What are Agents?
-[Agents](../agents/standard/intro) are **LLM-powered entities that understand natural language, make decisions, and execute tasks** over multiple iterations until complete. They're given:
-- **Rules or system prompts** that define their role (e.g., "You are a document writer who creates technical documentation")
-- **[Tools](../agents/tools/intro)** to help them complete tasks (e.g., file handling, web search, email tools, MCP Tools)
+## Session
 
-### Types of Agents in MeshAgent
-- **Process-backed agents**: (see [Process Agents Overview](../agents/process/overview))
-  These are the main CLI/runtime path for new text agents. They can appear as participants through `chat`, work in the background through `queue`, handle email through `mail`, or expose themselves as tools through `toolkit`, all while sharing one process runtime and one thread model.
-- **Voice agents**: (e.g. [VoiceBot](../agents/standard/voicebot))
-  Voice agents are still the main separate runtime for real-time speech interactions.
-- **Older compatibility patterns**:
-  MeshAgent still contains older SDK and service patterns for compatibility, but the main path for new docs is `meshagent process`.
+A **session** is one active run of a room.
 
-You can also run agents in your agent framework of choice inside a MeshAgent Room.
+When a room becomes active, MeshAgent starts a session for that room. During the session, participants connect, services run, and logs, traces, metrics, and events are recorded. When activity stops, the room shuts down automatically.
 
-## Tools: Extending Agent Capabilities
-### What are Tools?
-[Tools](../agents/tools/intro) are **specialized functions that let agents take action**, something LLMs can't do on their own. Tools can be called by both agents and human participants in a Room. MeshAgent groups related tools together into a toolkit, which is passed to the agent for use. 
+## Participant
 
-#### Built-in toolkits
-MeshAgent ships prebuilt toolkits for common tasks. See [Built-in MeshAgent Toolkits](../agents/tools/built_in_toolkits) for the full overview.
+A **participant** is anything that joins a room and takes part in the runtime.
 
-- **Document Authoring**: Create and edit documents in a Room
-- **UI Interactions**: Interact with the user through the UI (e.g., create and generate forms to gather additional information from users)
-- **Media Generation**: Create images, videos, and presentations
-- **Document Processing**: Convert documents PDF & Office documents into formats LLMs can use
+Participants can be:
 
-#### Custom tools and toolkits
-Build your own tools to extend agent capabilities: 
-- **[Custom tools and toolkits](../agents/tools/tools_and_toolkits)**: Write your own logic, package related tools together, and decide whether they should be always on or selected dynamically per turn.
-- **[Model Context Protocol (MCP) Support](../agents/tools/openai_connectors_mcp)**: Connect any MCP server to an agent by passing it as a toolkit or creating a MeshAgent service.
-- **[OpenAI Connectors](../agents/tools/openai_connectors_mcp)**: Integrate third-party services like Gmail, Microsoft Teams, and Dropbox through OpenAI Connectors. 
+- humans
+- agents
+- services
+- tools exposed into the room
 
-### How Tools Work
+Participants run with identities and permissions that control what they can access.
 
-1. Tools are packaged into **toolkits** (collections of related tools)
-2. Toolkits are passed to an agent when the agent is created or on demand
-3. The agent decides when to invoke tools based on a given task
-4. Tool logic executes and results stream back to the agent
-5. The agent incorporates tool results and continues working until the task is complete and the final result is returned
+## Agent
 
-## Services: How to deploy and reuse Agents, Tools, and External Connections
-[Services](../services_room_containers/overview) are **how you deploy and run agents, tools, or any code** in MeshAgent. Once deployed, services are automatically available where you need them.
+An **agent** is a room-connected participant that receives work, uses tools and room capabilities, and produces results back into the room.
 
-### Types of Services
-**Project Services**
-- Available to **all Rooms** in a project
-- Use for agents/tools that should be broadly accessible
-- Example: A transcription agent that should be available in every meeting room
+Agents can:
 
-**Room Services**  
-- Scoped to **specific Rooms**
-- Use for specialized agents/tools for particular use cases
-- Example: A legal document analyzer only used in specific contract review rooms
+- answer in chat
+- consume queued work
+- handle mail
+- be invoked by other agents
+- run locally during development or be deployed as services
 
-**MeshAgent Native vs External**
-- **Native services**: Agents and tools you build with MeshAgent
-- **External services**: Third-party integrations like MCP Servers or OpenAI Connectors that you connect to rooms
+For agent workflows, MeshAgent uses [`meshagent process`](../agents/process/overview).
 
-### Deployment Workflow
+## Tool and Toolkit
 
-**1. Build and test locally**
-Develop your agent or tool on your machine, iterate with [`meshagent process`](../agents/process/overview) or your own service entrypoint, and test it through [MeshAgent Studio](https://studio.meshagent.com).
+A **tool** is a callable capability an agent can use to take action.
 
-**2. [Package as a service](../services_room_containers/packaging_and_deploying/packaging)**  
-Define your service in a configuration file that specifies how MeshAgent should run the service and what permissions it has.
+A **toolkit** is a group of related tools exposed together.
 
-**3. [Deploy to MeshAgent](../services_room_containers/packaging_and_deploying/packaging)**  
-Deploy your service to a project or a specific room. MeshAgent will ensure the service is available the next time you open a room where the service is deployed.
+MeshAgent supports built-in tools, custom tools, MCP-based tools, and toolkit-style agents that can be invoked by other agents.
 
-**4. Use and iterate**  
-Your service appears in rooms and can be invoked by agents or users. Update and redeploy anytime using the MeshAgent CLI.
+## Skill
 
-## Next Steps
-- [Getting Started Guide](./get_started): Install MeshAgent, connect to your first Room, and interact with your first agent
-- [CLI Quickstart](../cli/cli_quickstart): Dive into the MeshAgent CLI and learn how to quickly connect, create, and deploy agents
-- [Process Agents Overview](../agents/process/overview): Create and grow a process-backed agent
-- [Rooms API Overview](../room_api/overview): Explore all built-in Room APIs
-- [Python Package Overview](../reference/python_package_overview) for more details on how these concepts come together in code.
+A **skill** is reusable guidance that helps an agent handle a class of tasks better.
+
+Skills are not callable tools. They are playbooks the agent can discover and apply when relevant. In practice, skills often tell the agent which tools to use, what files to inspect, and how to structure the output.
+
+## Thread
+
+A **thread** is the continuity boundary for agent work.
+
+Threads let an agent keep related work together without mixing unrelated conversations or jobs into the same history. This is especially important for agents that work across chat, queues, mail, and toolkit calls.
+
+## Service
+
+A **service** is how code is packaged and deployed into MeshAgent.
+
+Services can package:
+
+- agents
+- tools and toolkits
+- connectors and integrations
+- supporting application logic
+
+Services can be **MeshAgent-native** for deeper room integration or **external** when MeshAgent is routing to something you host elsewhere.
+
+Once deployed, a service can be made available across a project or scoped to a specific room.
+
+## Project Service and Room Service
+
+A **project service** is available across the project.
+
+A **room service** is scoped to one room.
+
+Use project services for shared capabilities that should be broadly available. Use room services for room-specific or user-specific behavior.
+
+## Room APIs
+
+The **Room APIs** are the built-in runtime capabilities available inside a room.
+
+These include:
+
+- messaging
+- storage
+- database
+- queues
+- sync/documents
+- containers
+- secrets
+- developer events and logs
+
+They are the main way agents, services, and humans interact with room infrastructure.
+
+## Interface
+
+An **interface** is a product surface people use to work with MeshAgent.
+
+Today the main interfaces are:
+
+- **MeshAgent Studio** for developers building, testing, deploying, and inspecting
+- **Powerboards** for end users interacting with deployed agents
+
+## Where to go next
+
+- [Overview](./introduction): what MeshAgent is and what it enables
+- [Architecture](./architecture): how projects, rooms, agents, services, and interfaces fit together
+- [Rooms](../room_api/overview): the room runtime and APIs
+- [Agents & Tools](../agents/overview): how agents work in MeshAgent

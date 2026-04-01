@@ -1,70 +1,111 @@
 ---
 name: update-docs
-description: Update and create MeshAgent and Powerboards documentation and examples.
+description: |
+  Update and create MeshAgent documentation to keep it accurate and in sync with the SDK and CLI source code.
+  Use this skill whenever: a pull request has merged or code changed and the docs need updating; the user asks to update, create, reorganize, or improve any documentation page; the user says docs are stale or mentions a feature that needs documenting; you're reviewing docs for accuracy against the actual implementation.
+  Always use this skill for any MeshAgent documentation task — the codebase evolves quickly and this skill contains the rules that keep docs trustworthy and useful.
 ---
 
-# Update docs
+# MeshAgent Documentation Skill
 
-Always assume the current documentation may be stale. Use the MeshAgent SDK and CLI implementation as the source of truth when updating docs and examples.
+Always assume the current documentation may be stale. The SDK and CLI source code is the source of truth. Read the actual implementation before writing or updating anything.
+
+## Repo layout
+
+All source code lives under `meshagent-sdk/` and documentation under `meshagent-sdk/meshagent-docs/`. When you need to find something, explore the repo — don't rely on a static map. Key things to know:
+
+- SDK implementations are in `meshagent-sdk/meshagent-agents/` (Python), `meshagent-sdk/meshagent-cli/` (CLI), `meshagent-sdk/meshagent-js/`, `meshagent-sdk/meshagent-dart/`, `meshagent-sdk/meshagent-dotnet/`
+- Doc source examples go in `meshagent-docs/examples/` (not in the `.mdx` files directly — see "Code examples" below)
+- `meshagent-docs/snippets/examples/` is auto-generated — never hand-edit it
+- `meshagent-docs/docs.json` controls navigation — update it when adding or removing pages
+- The `archive/` folders under `examples/` contain old examples; don't reference them in new docs
 
 ## Source of truth
 
-- Check the actual CLI and SDK implementation before describing a capability.
-- Prefer current first-class docs and current example files over older archived material.
-- Treat generated docs such as CLI help separately. Do not hand-edit them unless that is explicitly the task.
+- Read the actual CLI and SDK implementation before describing any capability.
+- Prefer current first-class docs and current example files over anything in `archive/`.
+- Treat generated docs (like CLI help pages in `reference/meshagent_cli_help`) separately — do not hand-edit them, they are produced by `build_cli_help.py`.
 
-## Primary product story
+## Two modes of operation
 
-- Default to `meshagent process` as the main runtime for MeshAgent agents.
-- Explain `meshagent process` in terms of what it does, what channels it supports, what it enables, and when to use it.
-- Present channels as part of one process-backed agent:
-  - `chat`
-  - `mail:EMAIL`
-  - `queue:NAME`
-  - `toolkit:NAME`
-- When a getting-started or overview example includes mail, always show `meshagent mailbox create` before the `meshagent process` command.
-- Prefer examples that show one agent growing across channels instead of switching between older runtime types.
+### Mode 1: PR-triggered (code changed → update docs)
+
+When a PR has merged or the user shares code changes:
+
+1. **Find what changed** — use `git log` and `git diff HEAD~1` (or the PR diff the user shares) to identify changed files in the SDK and CLI.
+2. **Understand the change** — read the changed source files. Look for: new functions, methods, or classes; changed signatures or behavior; new CLI commands or flags; removed or deprecated things.
+3. **Search the docs** — grep for the affected class names, method names, and CLI commands across `meshagent-docs/`. Find every page that references what changed.
+4. **Update affected pages** — correct descriptions, signatures, and behaviors. If examples are affected, update the source in `examples/` first (see "Code examples" below), then run the build.
+5. **Create new pages for genuinely new concepts** — if the PR introduces something new enough to warrant its own page (a new API surface, a new runtime concept, a new major CLI subcommand), create it. See "Page types" below. Update `docs.json` to add it to the navigation.
+
+### Mode 2: User-requested (help with specific docs work)
+
+When the user asks to update, write, reorganize, or review docs:
+
+1. Clarify the scope if needed — which section, concept, or page?
+2. Read the relevant SDK/CLI source for the thing being documented. Never document from memory.
+3. Check what already exists in the docs to avoid duplication and stay consistent in tone.
+4. Make the changes following the page type standards and writing rules below.
 
 ## Writing rules
 
-- Write for end users of MeshAgent, not for internal architecture discussions.
+- Write for developers using MeshAgent, not for internal architecture discussions.
 - Lead with capabilities and workflows, not migration context.
 - Explain what a feature does, why it matters, and how a user actually uses it.
-- Avoid internal framing such as:
-  - “the most important thing is not X but Y”
-  - “the architecture itself changed”
-  - “under the covers”
-  - migration narration that does not help the user complete a task
-- Prefer plain product language over internal runtime language when possible.
-- Do not call something a “process-backed chat agent” when the page is really about a broader process-backed agent. Only narrow to chat when the example specifically depends on the chat channel.
+- No filler pages. Every page must answer a real question a developer would have. If the content doesn't justify a standalone page, make it a section in an existing page.
+- Avoid internal framing: don't write about how the architecture changed, what things used to be called, or "under the covers" implementation details unless they directly help the user.
 
-## Examples
+For agent-related docs specifically, read `references/codebase-context.md` before writing — it covers the current runtime patterns and which older ones to avoid teaching.
 
-- Prefer CLI examples for user-facing docs unless the task is specifically about SDK authoring.
-- Use `meshagent/cli:default` for CLI container image examples.
-- Keep examples concrete and runnable.
-- When documenting mail workflows, tell the reader to email the agent after setting up the mail channel.
-- When documenting toolkit channels, include the actual CLI flow for invoking the agent through `meshagent room agent invoke-tool` if the page is about that capability.
-- When documenting deployment, prefer deploying the same shape the reader just tested locally.
+## Page types
 
-## SDK alignment
+Read `references/page-types.md` for detailed templates. Here's a quick guide:
 
-- For Python docs, treat `meshagent process` as the main documented runtime path.
-- `SingleRoomAgent` is the advanced SDK entry point for custom room-connected agents.
-- Mention older compatibility classes like `ChatBot`, `Worker`, `MailBot`, and `TaskRunner` only when documenting compatibility or reference surfaces, not as the recommended path for new users.
-- Archive material can retain old terminology, but first-class docs should not teach those older runtimes.
+### Concept guide
+For explaining what something is and why it matters:
+- What is it (plain language)?
+- Why does it matter / when would you use it?
+- How does it work at a conceptual level?
+- Links to related API reference and examples
 
-## Information architecture
+### API reference page (e.g., Room Database API, Room Memory API)
+- Brief overview: what is this and what does it do?
+- When to use it
+- How it works (mental model, not just a method list)
+- CLI and SDK availability note
+- Each method: description, parameters, return value, example
+- Related guides links at the bottom
 
-- Keep one clear primary page for `meshagent process` rather than spreading the same explanation across several redundant pages.
-- Archive content should exist only to preserve old material temporarily. Do not keep archive docs in the main user journey unless explicitly requested.
-- Remove dead or redundant pages from nav when their content has been folded into stronger pages.
+### Complex concept with multiple components (e.g., Process Agent)
+When something has many moving parts, consider a conceptual overview page plus separate deep-dive pages:
+- Overview page: what is it, what are its components, when to use it, how to deploy
+- Always include CLI commands for deployment and usage flows
+- Show CLI examples wherever possible; SDK examples for SDK-specific features
+
+## Code examples
+
+**Do not write raw code directly in `.mdx` files.**
+
+All code examples live in `examples/`. A build step (`build-examples.js`) converts them to `.mdx` snippets in `snippets/examples/`. In doc pages, import and render the snippet.
+
+Read `references/examples-workflow.md` for the full pipeline, file conventions, and import syntax.
+
+### Quick reference — importing a snippet
+
+```mdx
+import MyExample from "/snippets/examples/cli/my-feature/meshagent.mdx"
+
+<CodeGroup>
+  <MyExample />
+</CodeGroup>
+```
 
 ## Validation
 
-Before finishing:
+Before finishing any doc update:
 
-- grep for stale command examples such as `meshagent chatbot`, `meshagent worker`, `meshagent mailbot`, and `meshagent task-runner` in first-class docs
-- grep for links to deleted pages
-- run `git diff --check`
-- validate `meshagent-sdk/meshagent-docs/docs.json` with `jq empty`
+- Grep for stale command examples in first-class docs (see `references/codebase-context.md` for the list)
+- Grep for links to deleted pages
+- Run `git diff --check`
+- Validate `docs.json` with `jq empty meshagent-sdk/meshagent-docs/docs.json`
+- If you added new examples, confirm `node build-examples.js` ran and the snippet exists in `snippets/examples/`
