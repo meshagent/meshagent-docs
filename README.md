@@ -32,25 +32,6 @@ npm run build-examples
 
 `build-cli-help.sh` regenerates the recursive CLI reference page from the current CLI.
 
-## Migration Program
-
-The active migration artifacts live at:
-
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/codebase-map.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/docs-inventory.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/coverage-gap-matrix.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/relocation-matrix.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/ia-options.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/migration-backlog.md`
-- `/Users/tulamasterman/code/meshagent-server/docs-migration/style-and-page-template.md`
-
-Use those files to track:
-
-- what the codebase exposes publicly
-- what the current docs already cover
-- what is missing, stale, or archive-only
-- where each current page should land after reorganization
-
 ## Metadata
 
 - `public-surfaces.yaml`
@@ -66,5 +47,3 @@ The repo already checks snippet drift and CLI help drift in CI, but the docs sys
 - stronger example verification
 - hygiene checks for junk and secret-like files in `examples/`
 - scheduled docs audits
-
-Those tasks are tracked in `/Users/tulamasterman/code/meshagent-server/docs-migration/migration-backlog.md`.
