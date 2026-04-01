@@ -3,7 +3,6 @@ import SchemasHtmlJs from "/snippets/examples/javascript/schemas-html.mdx"
 import SchemasHtmlTs from "/snippets/examples/typescript/schemas-html.mdx"
 import SchemasHtmlDart from "/snippets/examples/dart/schemas-html.mdx"
 import SchemasHtmlCs from "/snippets/examples/dotnet/schemas-html.mdx"
-
 import DocumentsWritingPy from "/snippets/examples/python/snippets/documents-writing.mdx"
 import DocumentsWritingJs from "/snippets/examples/javascript/documents-writing.mdx"
 import DocumentsWritingTs from "/snippets/examples/typescript/documents-writing.mdx"
@@ -22,7 +21,7 @@ The `SyncClient` is the Room API for live shared documents (`MeshDocuments`). Us
 
 ## How it works
 
-You create or open a document by path. Opening a document starts a live synchronization session so local changes propagate to other participants in the room. Use `describe` when you want the current JSON state without opening a sync session, and use `sync` only when you already have encoded changes to send.
+You create or open a document by path. Opening a document starts a live synchronization session so local changes propagate to other participants in the room. The Python SDK also exposes `describe` when you want the current JSON state without opening a sync session, and `sync` is available when you already have encoded changes to send.
 
 ## Permissions and grants
 
@@ -31,7 +30,8 @@ If a deployed service needs to synchronize room documents, its participant token
 ## CLI and SDK availability
 
 - **CLI**: create and inspect documents with `meshagent room sync ...`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: sync helpers are shown below.
+- **Python, JavaScript/TypeScript, Dart, and .NET**: `create`, `open`, `close`, and `sync` helpers are shown below.
+- **Python**: also exposes `describe` directly today.
 
 ## Defining Your Document Structure
 
@@ -60,20 +60,25 @@ Suppose you have a basic web page structure and want to define a schema for it.
 Many LLMs (such as OpenAI) and agent frameworks (such as MeshAgent) support JSON Schemas for defining inputs and outputs. Generating an OpenAI-compatible JSON schema from your MeshSchema requires only one line of code:
 
 <CodeGroup>
-``` python Python
+```python Python
 json_schema = schema.to_json()
+
 ```
-``` javascript NodeJs
+```javascript NodeJs
 const jsonSchema = schema.toJson();
+
 ```
-``` typescript TypeScript
+```typescript TypeScript
 const jsonSchema: Record<string, any> = schema.toJson();
+
 ```
-``` dart Dart
+```dart Dart
 final jsonSchema = schema.toJson();
+
 ```
-``` dotnet C#
+```dotnet C#
 var jsonSchema = schema.ToJson();
+
 ```
 </CodeGroup>
 
@@ -102,6 +107,7 @@ meshagent room sync create \
   my/path \
   --schema ./schema.json \
   --json '{"initial":"data"}'
+
 ```
 ```python Python
 
@@ -113,8 +119,9 @@ doc = await room.sync.open(path="my/path", create=True)
 
 # Close the document
 await room.sync.close(path="my/path")
+
 ```
-```js NodeJs
+```javascript NodeJs
 // Create a MeshDocument on the server
 await room.sync.create("my/path", { initial: "data" });
 
@@ -123,8 +130,9 @@ const doc = await room.sync.open("my/path", { create: true });
 
 // Close the document
 await room.sync.close("my/path");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 // Create a MeshDocument on the server
 await room.sync.create("my/path", { initial: "data" });
 
@@ -133,6 +141,7 @@ const doc = await room.sync.open("my/path", { create: true });
 
 // Close the document
 await room.sync.close("my/path");
+
 ```
 ```dart Dart
 // Create a MeshDocument on the server
@@ -143,6 +152,7 @@ final doc = await room.sync.open("my/path", create: true);
 
 // Close the document
 await room.sync.close("my/path");
+
 ```
 ```dotnet C#
 using Meshagent.Api.Room;
@@ -164,6 +174,7 @@ await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
 
 // Close the document
 await room.Sync.Close("my/path");
+
 ```
 </CodeGroup>
 
@@ -188,21 +199,27 @@ meshagent room sync create \
   my/path \
   --schema ./schema.json \
   --json '{"key":"value"}'
+
 ```
 ```python Python
 await room.sync.create(path="my/path", json={"key": "value"})
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.sync.create("my/path", { key: "value" });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.sync.create("my/path", { key: "value" });
+
 ```
 ```dart Dart
 await room.sync.create("my/path", {"key": "value"});
+
 ```
 ```dotnet C#
 await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = "Hello World" });
+
 ```
 </CodeGroup>
 
@@ -216,25 +233,9 @@ await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = 
 #### `describe(path)`
 
 <CodeGroup>
-```bash CLI
-meshagent room sync show \
-  --room myroom \
-  my/path
-```
 ```python Python
 doc_json = await room.sync.describe(path="my/path")
-```
-```js NodeJs
-const docJson = await room.sync.describe("my/path");
-```
-```ts TypeScript
-const docJson = await room.sync.describe("my/path");
-```
-```dart Dart
-final docJson = await room.sync.describe("my/path");
-```
-```dotnet C#
-var docJson = await room.Sync.Describe("my/path");
+
 ```
 </CodeGroup>
 
@@ -244,25 +245,30 @@ var docJson = await room.Sync.Describe("my/path");
   A JSON representation of the document root in a single response.
 - **Description**  
   Fetches the current state of a MeshDocument without opening a sync session. If the document is already open, the in-memory state is returned; otherwise, it is read from storage (schema inferred from the document extension). This is what the storage `read_file` tool uses to read MeshDocument contents as JSON.
-  - Availability: Supported by the room server; the Python SDK exposes `room.sync.describe` today, while other SDKs may add a convenience wrapper in upcoming releases.
+  - Availability: The Python SDK exposes `room.sync.describe` today. Other SDKs can use `open` or a lower-level request until they add a convenience wrapper.
 
 #### `open(path, create = true)`
 
 <CodeGroup>
 ```python Python
 doc = await room.sync.open(path="my/path", create=True)
+
 ```
-```js NodeJs
+```javascript NodeJs
 const doc = await room.sync.open("my/path", { create: true });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const doc = await room.sync.open("my/path", { create: true });
+
 ```
 ```dart Dart
 final doc = await room.sync.open("my/path", create: true);
+
 ```
 ```dotnet C#
 var doc = await room.Sync.Open("my/path", create: true);
+
 ```
 </CodeGroup>
 
@@ -280,18 +286,23 @@ var doc = await room.Sync.Open("my/path", create: true);
 <CodeGroup>
 ```python Python
 await room.sync.close(path="my/path")
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.sync.close("my/path");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.sync.close("my/path");
+
 ```
 ```dart Dart
 await room.sync.close("my/path");
+
 ```
 ```dotnet C#
 await room.Sync.Close("my/path");
+
 ```
 </CodeGroup>
 
@@ -307,18 +318,23 @@ await room.Sync.Close("my/path");
 <CodeGroup>
 ```python Python
 await room.sync.sync(path="my/path", data=b"some bytes")
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.sync.sync("my/path", new Uint8Array([/*...bytes...*/]));
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.sync.sync("my/path", new Uint8Array([/*...bytes...*/]));
+
 ```
 ```dart Dart
 await room.sync.sync("my/path", Uint8List.fromList([/*...bytes...*/]));
+
 ```
 ```dotnet C#
 await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
+
 ```
 </CodeGroup>
 

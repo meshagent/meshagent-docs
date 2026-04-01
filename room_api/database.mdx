@@ -21,7 +21,9 @@ Deployed services need a database API grant to use this API, and those grants ca
 ## CLI and SDK availability
 
 - **CLI**: the full database surface is available under `meshagent room database ...`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
+- **Python**: full room-database helper surface, including `drop_index`, `restore`, `checkout`, and `list_versions`.
+- **Dart**: room-database helpers also expose `dropIndex`, `inspect`, and `listVersions`; for add-columns workflows, use `addColumnWithExpression` or `addColumnsOfType`.
+- **JavaScript/TypeScript and .NET**: cover the primary CRUD, search, optimize, and index creation/list helpers shown below, but do not currently expose `dropIndex`, `inspect`, `restore`, `checkout`, or `listVersions`.
 
 ## API Methods
 
@@ -38,31 +40,37 @@ Retrieves a list of all table names currently present in the database.
 ```bash CLI
 meshagent room database table \
   --room myroom
+
 ```
 ```python Python
 tables = await room.database.list_tables()
 
 print(tables)  # ["users", "orders", "products", ...]
+
 ```
 ```javascript NodeJs
 const tables = await room.database.listTables();
 
 console.log(tables); // ["users", "orders", "products", ...]
+
 ```
 ```typescript TypeScript
 const tables = await room.database.listTables();
 
 console.log(tables); // ["users", "orders", "products", ...]
+
 ```
 ```dart Dart
 final tables = await room.database.listTables();
 
 print(tables); // ["users", "orders", "products", ...]
+
 ```
 ```dotnet C#
 var tables = await room.Database.ListTables();
 
 Console.WriteLine(string.Join(", ", tables)); // ["users", "orders", "products", ...]
+
 ```
 </CodeGroup>
 
@@ -91,6 +99,7 @@ meshagent room database create \
   --table users \
   --columns "id int, username text, email text" \
   --data-json '[{"id":1,"username":"alice","email":"alice@example.com"},{"id":2,"username":"bob","email":"bob@example.com"}]'
+
 ```
 ```python Python
 await room.database.create_table_with_schema(
@@ -106,8 +115,9 @@ await room.database.create_table_with_schema(
   ],
   mode="create"
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.createTableWithSchema({
   name: "users",
   schema: {
@@ -121,8 +131,9 @@ await room.database.createTableWithSchema({
   ],
   mode: "create",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.createTableWithSchema({
   name: "users",
   schema: {
@@ -136,21 +147,23 @@ await room.database.createTableWithSchema({
   ],
   mode: "create",
 });
+
 ```
 ```dart Dart
-await room.database.createTableWithSchema({
-  "name": "users",
-  "schema": {
+await room.database.createTableWithSchema(
+  name: "users",
+  schema: {
     "id": IntDataType(),
     "username": TextDataType(),
     "email": TextDataType(),
   },
-  "data": [
+  data: [
     {"id": 1, "username": "alice", "email": "alice@example.com" },
     {"id": 2, "username": "bob", "email": "bob@example.com" }
   ],
-  mode: "create"
-});
+  mode: "create",
+);
+
 ```
 ```dotnet C#
 await room.Database.CreateTableWithSchema(
@@ -168,6 +181,7 @@ await room.Database.CreateTableWithSchema(
   },
   CreateMode.create
 );
+
 ```
 </CodeGroup>
 
@@ -190,6 +204,7 @@ meshagent room database create \
   --table orders \
   --mode overwrite \
   --data-json '[{"id":1,"product":"Laptop","quantity":2},{"id":2,"product":"Phone","quantity":5}]'
+
 ```
 ```python Python
 await room.database.create_table_from_data(
@@ -200,8 +215,9 @@ await room.database.create_table_from_data(
   ],
   mode="overwrite"
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.createTableFromData({
   name: "orders",
   data: [
@@ -210,8 +226,9 @@ await room.database.createTableFromData({
   ],
   mode: "overwrite",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.createTableFromData({
   name: "orders",
   data: [
@@ -220,16 +237,18 @@ await room.database.createTableFromData({
   ],
   mode: "overwrite",
 });
+
 ```
 ```dart Dart
-await room.database.createTableFromData({
-  "name": "orders",
-  "data": [
+await room.database.createTableFromData(
+  name: "orders",
+  data: [
     {"id": 1, "product": "Laptop", "quantity": 2},
     {"id": 2, "product": "Phone", "quantity": 5},
   ],
-  mode: "overwrite"
-});
+  mode: "overwrite",
+);
+
 ```
 ```dotnet C#
 await room.Database.CreateTableFromData(
@@ -241,6 +260,7 @@ await room.Database.CreateTableFromData(
   },
   CreateMode.overwrite
 );
+
 ```
 </CodeGroup>
 
@@ -261,33 +281,39 @@ meshagent room database drop \
   --room myroom \
   --table temp_table \
   --ignore-missing
+
 ```
 ```python Python
 await room.database.drop_table(
   name="temp_table",
   ignore_missing=True
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.dropTable({
   name: "temp_table",
   ignoreMissing: true,
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.dropTable({
   name: "temp_table",
   ignoreMissing: true,
 });
+
 ```
 ```dart Dart
-await room.database.dropTable({
-  "name": "temp_table",
-  "ignoreMissing": true,
-});
+await room.database.dropTable(
+  name: "temp_table",
+  ignoreMissing: true,
+);
+
 ```
 ```dotnet C#
 await room.Database.DropTable("temp_table", ignoreMissing: true);
+
 ```
 </CodeGroup>
 
@@ -300,6 +326,8 @@ await room.Database.DropTable("temp_table", ignoreMissing: true);
   - **newColumns**: A record mapping column names to default value expressions (SQL or literal).
 - **Returns**: A promise that resolves once the columns are added.
 
+For Dart, the expression-based helper is `addColumnWithExpression(...)`. If you want to add columns by explicit type instead, use `addColumnsOfType(...)`.
+
 **Example**:
 
 <CodeGroup>
@@ -308,6 +336,7 @@ meshagent room database add-columns \
   --room myroom \
   --table users \
   --columns "isActive bool, createdAt timestamp"
+
 ```
 ```python Python
 await room.database.add_columns(
@@ -317,8 +346,9 @@ await room.database.add_columns(
     "createdAt": "CURRENT_TIMESTAMP",
   }
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.addColumns({
   table: "users",
   newColumns: {
@@ -326,8 +356,9 @@ await room.database.addColumns({
     createdAt: "CURRENT_TIMESTAMP",
   },
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.addColumns({
   table: "users",
   newColumns: {
@@ -335,15 +366,17 @@ await room.database.addColumns({
     createdAt: "CURRENT_TIMESTAMP",
   },
 });
+
 ```
 ```dart Dart
-await room.database.addColumns({
-  "table": "users",
-  "newColumns": {
+await room.database.addColumnWithExpression(
+  table: "users",
+  newColumns: {
     "isActive": "true",
     "createdAt": "CURRENT_TIMESTAMP",
   },
-});
+);
+
 ```
 ```dotnet C#
 await room.Database.AddColumns(
@@ -354,6 +387,7 @@ await room.Database.AddColumns(
     ["createdAt"] = "CURRENT_TIMESTAMP",
   }
 );
+
 ```
 </CodeGroup>
 
@@ -375,36 +409,42 @@ meshagent room database drop-columns \
   --table users \
   --column deprecatedColumn1 \
   --column deprecatedColumn2
+
 ```
 ```python Python
 await room.database.drop_columns(
   table="users",
   columns=["deprecatedColumn1", "deprecatedColumn2"]
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.dropColumns({
   table: "users",
   columns: ["deprecatedColumn1", "deprecatedColumn2"],
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.dropColumns({
   table: "users",
   columns: ["deprecatedColumn1", "deprecatedColumn2"],
 });
+
 ```
 ```dart Dart
-await room.database.dropColumns({
-  "table": "users",
-  "columns": ["deprecatedColumn1", "deprecatedColumn2"],
-});
+await room.database.dropColumns(
+  table: "users",
+  columns: ["deprecatedColumn1", "deprecatedColumn2"],
+);
+
 ```
 ```dotnet C#
 await room.Database.DropColumns(
   "users",
   new List<string> { "deprecatedColumn1", "deprecatedColumn2" }
 );
+
 ```
 </CodeGroup>
 
@@ -425,6 +465,7 @@ meshagent room database insert \
   --room myroom \
   --table users \
   --json '[{"id":3,"username":"charlie","email":"charlie@example.com"},{"id":4,"username":"dana","email":"dana@example.com"}]'
+
 ```
 ```python Python
 await room.database.insert(
@@ -434,8 +475,9 @@ await room.database.insert(
     { "id": 4, "username": "dana", "email": "dana@example.com" },
   ],
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.insert({
   table: "users",
   records: [
@@ -443,8 +485,9 @@ await room.database.insert({
     { id: 4, username: "dana", email: "dana@example.com" },
   ],
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.insert({
   table: "users",
   records: [
@@ -452,15 +495,17 @@ await room.database.insert({
     { id: 4, username: "dana", email: "dana@example.com" },
   ],
 });
+
 ```
 ```dart Dart
-await room.database.insert({
-  "table": "users",
-  "records": [
+await room.database.insert(
+  table: "users",
+  records: [
     { "id": 3, "username": "charlie", "email": "charlie@example.com" },
     { "id": 4, "username": "dana", "email": "dana@example.com" },
   ],
-});
+);
+
 ```
 ```dotnet C#
 await room.Database.Insert(
@@ -471,6 +516,7 @@ await room.Database.Insert(
     new() { ["id"] = 4, ["username"] = "dana", ["email"] = "dana@example.com" },
   }
 );
+
 ```
 </CodeGroup>
 
@@ -495,6 +541,7 @@ meshagent room database update \
   --where "id = 3" \
   --values-json '{"email":"newcharlie@example.com"}' \
   --values-sql-json '{"loginCount":"loginCount + 1"}'
+
 ```
 ```python Python
 await room.database.update(
@@ -503,30 +550,34 @@ await room.database.update(
   values={ "email": "newcharlie@example.com" },
   values_sql={ "loginCount": "loginCount + 1" },
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.update({
   table: "users",
   where: "id = 3",
   values: { email: "newcharlie@example.com" },
   valuesSql: { loginCount: "loginCount + 1" },
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.update({
   table: "users",
   where: "id = 3",
   values: { email: "newcharlie@example.com" },
   valuesSql: { loginCount: "loginCount + 1" },
 });
+
 ```
 ```dart Dart
-await room.database.update({
-  "table": "users",
-  "where": "id = 3",
-  "values": { "email": "newcharlie@example.com" },
-  "valuesSql": { "loginCount": "loginCount + 1" },
-})
+await room.database.update(
+  table: "users",
+  where: "id = 3",
+  values: {"email": "newcharlie@example.com"},
+  valuesSql: {"loginCount": "loginCount + 1"},
+);
+
 ```
 ```dotnet C#
 await room.Database.Update(
@@ -535,6 +586,7 @@ await room.Database.Update(
   values: new Dictionary<string, object?> { ["email"] = "newcharlie@example.com" },
   valuesSql: new Dictionary<string, string> { ["loginCount"] = "loginCount + 1" }
 );
+
 ```
 </CodeGroup>
 
@@ -554,36 +606,42 @@ meshagent room database delete \
   --room myroom \
   --table users \
   --where "id = 4"
+
 ```
 ```python Python
 await room.database.delete(
   table="users",
   where="id = 4"
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.delete({
   table: "users",
   where: "id = 4",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.delete({
   table: "users",
   where: "id = 4",
 });
+
 ```
 ```dart Dart
-await room.database.delete({
-  "table": "users",
-  "where": "id = 4"
-})
+await room.database.delete(
+  table: "users",
+  where: "id = 4",
+);
+
 ```
 ```dotnet C#
 await room.Database.Delete(
   "users",
   "id = 4"
 );
+
 ```
 </CodeGroup>
 
@@ -605,6 +663,7 @@ meshagent room database merge \
   --table users \
   --on id \
   --json '[{"id":1,"username":"alice","email":"alice_new@example.com"},{"id":5,"username":"eric","email":"eric@example.com"}]'
+
 ```
 ```python Python
 await room.database.merge(
@@ -615,8 +674,9 @@ await room.database.merge(
     { "id": 5, "username": "eric", "email": "eric@example.com" },
   ],
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.merge({
   table: "users",
   on: "id",
@@ -625,8 +685,9 @@ await room.database.merge({
     { id: 5, username: "eric", email: "eric@example.com" },
   ],
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.merge({
   table: "users",
   on: "id",
@@ -635,16 +696,18 @@ await room.database.merge({
     { id: 5, username: "eric", email: "eric@example.com" },
   ],
 });
+
 ```
 ```dart Dart
-await room.database.merge({
-  "table": "users",
-  "on": "id",
-  "records": [
+await room.database.merge(
+  table: "users",
+  on: "id",
+  records: [
     { "id": 1, "username": "alice", "email": "alice_new@example.com" },
     { "id": 5, "username": "eric", "email": "eric@example.com" },
   ],
-})
+);
+
 ```
 ```dotnet C#
 await room.Database.Merge(
@@ -656,6 +719,7 @@ await room.Database.Merge(
     new() { ["id"] = 5, ["username"] = "eric", ["email"] = "eric@example.com" },
   }
 );
+
 ```
 </CodeGroup>
 
@@ -668,7 +732,7 @@ await room.Database.Merge(
   - **text**: An optional search string (if using full-text indexes).
   - **vector**: An optional numeric array for vector-based similarity queries.
   - **where**: SQL `WHERE` clause string or an object representing key-value equals conditions.
-  - **offset**: Optional offset for pagination.
+  - **offset**: Optional offset for pagination in Python and Dart.
   - **limit**: Maximum number of matching records to return.
   - **select**: An array of column names to be returned.
 - **Returns**: An array of matching records.
@@ -681,6 +745,7 @@ meshagent room database search \
   --table users \
   --where-json '{"username":"alice"}' \
   --limit 1
+
 ```
 ```python Python
 results = await room.database.search(
@@ -690,8 +755,9 @@ results = await room.database.search(
 )
 
 print(results)  # [{"id": 1, "username": "alice", "email": "alice@example.com"}]
+
 ```
-```js NodeJs
+```javascript NodeJs
 const results = await room.database.search({
   table: "users",
   where: { username: "alice" },
@@ -699,8 +765,9 @@ const results = await room.database.search({
 });
 
 console.log(results); // [{ id: 1, username: "alice", email: "alice@example.com" }]
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const results = await room.database.search({
   table: "users",
   where: { username: "alice" },
@@ -708,15 +775,17 @@ const results = await room.database.search({
 });
 
 console.log(results); // [{ id: 1, username: "alice", email: "alice@example.com" }]
+
 ```
 ```dart Dart
-final results = await room.database.search({
-  "table": "users",
-  "where": { "username": "alice" },
-  "limit": 1,
-});
+final results = await room.database.search(
+  table: "users",
+  where: {"username": "alice"},
+  limit: 1,
+);
 
 print(results); // [{"id": 1, "username": "alice", "email": "alice@example.com"}]
+
 ```
 ```dotnet C#
 var results = await room.Database.Search(
@@ -726,6 +795,7 @@ var results = await room.Database.Search(
 );
 
 Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@example.com" }]
+
 ```
 </CodeGroup>
 
@@ -743,21 +813,27 @@ Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@
 meshagent room database optimize \
   --room myroom \
   --table users
+
 ```
 ```python Python
 await room.database.optimize(table="users")
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.optimize("users");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.optimize("users");
+
 ```
 ```dart Dart
-await room.database.optimize("users");
+await room.database.optimize(table: "users");
+
 ```
 ```dotnet C#
 await room.Database.Optimize("users");
+
 ```
 </CodeGroup>
 
@@ -778,36 +854,42 @@ meshagent room database index-create \
   --table documents \
   --column embedding \
   --kind vector
+
 ```
 ```python Python
 await room.database.create_vector_index(
   table="documents",
   column="embedding",
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.createVectorIndex({
   table: "documents",
   column: "embedding",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.createVectorIndex({
   table: "documents",
   column: "embedding",
 });
+
 ```
 ```dart Dart
-await room.database.createVectorIndex({
-  "table": "documents",
-  "column": "embedding",
-});
+await room.database.createVectorIndex(
+  table: "documents",
+  column: "embedding",
+);
+
 ```
 ```dotnet C#
 await room.Database.CreateVectorIndex(
   "documents",
   "embedding"
 );
+
 ```
 </CodeGroup>
 
@@ -828,36 +910,42 @@ meshagent room database index-create \
   --table users \
   --column email \
   --kind scalar
+
 ```
 ```python Python
 await room.database.create_scalar_index(
   table="users",
   column="email",
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.createScalarIndex({
   table: "users",
   column: "email",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.createScalarIndex({
   table: "users",
   column: "email",
 });
+
 ```
 ```dart Dart
-await room.database.createScalarIndex({
-  "table": "users",
-  "column": "email",
-});
+await room.database.createScalarIndex(
+  table: "users",
+  column: "email",
+);
+
 ```
 ```dotnet C#
 await room.Database.CreateScalarIndex(
   "users",
   "email"
 );
+
 ```
 </CodeGroup>
 
@@ -878,36 +966,42 @@ meshagent room database index-create \
   --table articles \
   --column content \
   --kind fts
+
 ```
 ```python Python
 await room.database.create_full_text_search_index(
   table="articles",
   column="content",
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.database.createFullTextSearchIndex({
   table: "articles",
   column: "content",
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.database.createFullTextSearchIndex({
   table: "articles",
   column: "content",
 });
+
 ```
 ```dart Dart
-await room.database.createFullTextSearchIndex({
-  "table": "articles",
-  "column": "content",
-});
+await room.database.createFullTextSearchIndex(
+  table: "articles",
+  column: "content",
+);
+
 ```
 ```dotnet C#
 await room.Database.CreateFullTextSearchIndex(
   "articles",
   "content"
 );
+
 ```
 </CodeGroup>
 
@@ -920,7 +1014,7 @@ await room.Database.CreateFullTextSearchIndex(
   - **table**: Table name.
   - **name**: Index name to drop.
 - **Returns**: `None`.
-- **Availability**: Python SDK/server today; JS/TS/.NET may add a helper in a future release.
+- **Availability**: Python and Dart expose helpers today. JS/TS/.NET may add a helper in a future release.
 
 <CodeGroup>
 ```bash CLI
@@ -928,9 +1022,18 @@ meshagent room database index-drop \
   --room myroom \
   --table users \
   --name email_idx
+
 ```
 ```python Python
 await room.database.drop_index(table="users", name="email_idx")
+
+```
+```dart Dart
+await room.database.dropIndex(
+  table: "users",
+  name: "email_idx",
+);
+
 ```
 </CodeGroup>
 
@@ -940,9 +1043,7 @@ await room.database.drop_index(table="users", name="email_idx")
 - **Description**: Lists the indexes currently defined on a table.
 - **Parameters**:
   - **table**: The name of the table for which to list indexes.
-- **Returns**:
-  - Python: `list[TableIndex]` (`name`, `columns`, `type`).
-  - JS/TS: `JsonChunk.json` object with index metadata.
+- **Returns**: A list of index entries. Python and Dart return typed `TableIndex` objects; JS/TS and .NET return plain objects with the same `name`, `columns`, and `type` fields.
 
 **Example**:
 <CodeGroup>
@@ -950,84 +1051,79 @@ await room.database.drop_index(table="users", name="email_idx")
 meshagent room database index \
   --room myroom \
   --table users
+
 ```
 ```python Python
 indexes = await room.database.list_indexes(table="users")
 
 print(indexes)
 # Example output:
-# {
-#   "scalarIndexes": ["email"],
-#   "fullTextIndexes": ["username"],
-#   "vectorIndexes": ["profile_embedding"]
-# }
+# [TableIndex(name="email_idx", columns=["email"], type="scalar")]
+
 ```
-```js NodeJs
+```javascript NodeJs
 const indexes = await room.database.listIndexes({ table: "users" });
 
 console.log(indexes);
 // Example output:
-// {
-//   scalarIndexes: ["email"],
-//   fullTextIndexes: ["username"],
-//   vectorIndexes: ["profile_embedding"]
-// }
+// [{ name: "email_idx", columns: ["email"], type: "scalar" }]
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const indexes = await room.database.listIndexes({ table: "users" });
 
 console.log(indexes); 
 // Example output:
-// {
-//   scalarIndexes: ["email"],
-//   fullTextIndexes: ["username"],
-//   vectorIndexes: ["profile_embedding"]
-// }
+// [{ name: "email_idx", columns: ["email"], type: "scalar" }]
+
 ```
 ```dart Dart
-final indexes = await room.database.listIndexes({"table": "users"});
+final indexes = await room.database.listIndexes("users");
 
 print(indexes);
 // Example output:
-// {
-//   "scalarIndexes": ["email"],
-//   "fullTextIndexes": ["username"],
-//   "vectorIndexes": ["profile_embedding"]
-// }
+// [TableIndex(name: "email_idx", columns: ["email"], type: "scalar")]
+
 ```
 ```dotnet C#
 var indexes = await room.Database.ListIndexes("users");
 
 Console.WriteLine(indexes);
 // Example output:
-// {
-//   "scalarIndexes": ["email"],
-//   "fullTextIndexes": ["username"],
-//   "vectorIndexes": ["profile_embedding"]
-// }
+// [{ "name": "email_idx", "columns": ["email"], "type": "scalar" }]
+
 ```
 </CodeGroup>
 
 ---
 
-### Table versions (Python)
+### Table versions
 
-- **Description**: List historical versions of a table and restore/checkout a specific version.
+- **Description**: List historical versions of a table and, in Python, restore or checkout a specific version.
 - **Methods**:
   - `list_versions(table)` → list of versions (`version`, `timestamp`, `metadata`).
   - `restore(table, version)` → restore table to a prior version.
   - `checkout(table, version)` → load a version as the current working copy.
-- **Availability**: Python SDK/server today.
+- **Availability**: Python exposes `list_versions`, `restore`, and `checkout`. Dart currently exposes `listVersions`.
 
 <CodeGroup>
 ```bash CLI
 meshagent room database version \
   --room myroom \
   --table users
+
 ```
 ```python Python
 versions = await room.database.list_versions(table="users")
 await room.database.restore(table="users", version=versions[-1].version)
+
+```
+```dart Dart
+final versions = await room.database.listVersions("users");
+for (final version in versions) {
+  print("${version.version} ${version.timestamp}");
+}
+
 ```
 </CodeGroup>
 

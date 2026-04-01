@@ -19,7 +19,10 @@ If you want a deployed service to use the Containers API, its participant token 
 ## CLI and SDK availability
 
 - **CLI**: image and container lifecycle commands are available under `meshagent room container ...`.
-- **Python**: the page below shows the current helper surface.
+- **Python, JavaScript/TypeScript, and Dart**: the current helper surface covers image, run/exec/log, and lifecycle operations.
+- **.NET**: does not currently expose a `ContainersClient` helper.
+
+JavaScript/TypeScript and Dart expose the same operations with camelCase method names such as `listImages`, `deleteImage`, `pullImage`, `run`, `exec`, `logs`, `list`, `stop`, and `deleteContainer`.
 
 ## API Methods
 
@@ -33,11 +36,13 @@ If you want a deployed service to use the Containers API, its participant token 
 ```bash CLI
 meshagent room container image list \
   --room myroom
+
 ```
 ```python Python
 images = await room.containers.list_images()
 for image in images:
     print(image.tags, image.size)
+
 ```
 </CodeGroup>
 
@@ -55,9 +60,11 @@ for image in images:
 meshagent room container image delete \
   --room myroom \
   --image chatbot:old
+
 ```
 ```python Python
 await room.containers.delete_image(image="chatbot:old")
+
 ```
 </CodeGroup>
 
@@ -76,9 +83,11 @@ await room.containers.delete_image(image="chatbot:old")
 meshagent room container image pull \
   --room myroom \
   --tag registry.example.com/agents/chatbot:0.2
+
 ```
 ```python Python
 await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
+
 ```
 </CodeGroup>
 
@@ -105,6 +114,7 @@ meshagent room container run \
   --image registry.example.com/agents/chatbot:0.2 \
   --env SYSTEM_PROMPT="Always respond with a fun fact." \
   --container-name chatbot-demo
+
 ```
 ```python Python
 container_id = await room.containers.run(
@@ -113,6 +123,7 @@ container_id = await room.containers.run(
     name="chatbot-demo",
 )
 print(f"Container launched: {container_id}")
+
 ```
 </CodeGroup>
 
@@ -126,7 +137,7 @@ print(f"Container launched: {container_id}")
   - `command`: Optional command list; defaults to the container's shell.
   - `tty`: Request a TTY session (`True` for interactive).
   - `detach`: Leave the session running in the background (`True` by default).
-- **Returns**: A `Container` object exposing async helpers to read output, send input, resize the terminal, and await completion.
+- **Returns**: An exec-session object (`ExecSession` in Python) exposing helpers to read output, send input, resize the terminal, and await completion.
 
 <CodeGroup>
 ```bash CLI
@@ -135,6 +146,7 @@ meshagent room container exec \
   --container-id "$CONTAINER_ID" \
   --command "bash" \
   --tty
+
 ```
 ```python Python
 session = await room.containers.exec(
@@ -153,6 +165,7 @@ await session.write(b'exit\n')  # end the interactive session
 
 status = await session.result
 print(f"Exec finished with status: {status}")
+
 ```
 </CodeGroup>
 
@@ -172,6 +185,7 @@ meshagent room container log \
   --room myroom \
   --id "$CONTAINER_ID" \
   --follow
+
 ```
 ```python Python
 stream = room.containers.logs(container_id=container_id, follow=True)
@@ -180,6 +194,7 @@ async for line in stream.logs():
     print(line)
 
 await stream  # optional: wait for the request to finish
+
 ```
 </CodeGroup>
 
@@ -198,11 +213,13 @@ meshagent room container list \
   --room myroom \
   --all \
   --output table
+
 ```
 ```python Python
 containers = await room.containers.list(all=True)
 for container in containers:
     print(container.id, container.state, container.started_by.name)
+
 ```
 </CodeGroup>
 
@@ -221,9 +238,11 @@ for container in containers:
 meshagent room container stop \
   --room myroom \
   --id "$CONTAINER_ID"
+
 ```
 ```python Python
 await room.containers.stop(container_id=container_id, force=False)
+
 ```
 </CodeGroup>
 
@@ -239,6 +258,7 @@ await room.containers.stop(container_id=container_id, force=False)
 <CodeGroup>
 ```python Python
 await room.containers.delete(container_id=container_id)
+
 ```
 </CodeGroup>
 

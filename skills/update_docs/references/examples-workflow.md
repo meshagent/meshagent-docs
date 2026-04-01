@@ -1,8 +1,8 @@
 # Code Examples Workflow
 
-All code examples in MeshAgent docs follow a strict pipeline: source files live in `examples/`, a build step generates importable `.mdx` snippets in `snippets/examples/`, and doc pages import those snippets.
+Substantial or reusable code examples in MeshAgent docs follow a pipeline: source files live in `examples/`, a build step generates importable `.mdx` snippets in `snippets/examples/`, and doc pages import those snippets.
 
-**Never write raw code directly in `.mdx` doc files.** The only exception is very short inline code like a single CLI command that doesn't warrant a full example file.
+**Do not put substantial or reusable code directly in `.mdx` files.** The exception is short inline commands or tiny illustrative snippets that are clearer in place than as imported examples.
 
 ---
 
@@ -27,6 +27,23 @@ snippets/examples/           ← auto-generated, don't hand-edit
 
 introduction/my-page.mdx     ← import and render
 ```
+
+---
+
+## When to use the examples pipeline
+
+Use `examples/` plus generated snippets for:
+
+- YAML configs
+- multi-command CLI sequences
+- SDK examples you may want to reuse on multiple pages
+- any example that would be annoying to maintain inline
+
+Use direct inline code in the doc page for:
+
+- a single command
+- a very short illustrative command block
+- a tiny example that is tightly coupled to the surrounding explanation and unlikely to be reused
 
 ---
 
@@ -116,6 +133,6 @@ import MyFeaturePyExample from "/snippets/examples/python/snippets/my-feature.md
 ## Common mistakes to avoid
 
 - **Editing files in `snippets/`** — they get wiped and regenerated on the next build. Always edit the source in `examples/`.
-- **Inline code blocks for anything more than a single command** — put it in `examples/` and import the snippet.
+- **Putting long examples inline by default** — if the example is substantial or reusable, put it in `examples/` and import the snippet.
 - **Pseudo-code in examples** — all example files should be complete and runnable.
 - **Forgetting to run `build-examples.js`** — if you add a new example file, the snippet won't exist until you run the build. The doc import will silently fail or throw a build error.

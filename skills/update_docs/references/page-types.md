@@ -4,20 +4,23 @@ Reference templates and guidance for each type of MeshAgent documentation page. 
 
 ---
 
-## 1. Concept / Overview
+## 1. Overview
 
-Use when the goal is orientation: what is this feature, why does it matter, and where do you go next? These pages are the entry point to a feature area, not the exhaustive reference.
+Use when the goal is orientation: what is this feature or product surface, why does it matter, and where do you go next? These pages are the entry point to a feature area, not the exhaustive reference.
 
 **Structure:**
 ```
-## Overview / What is X?
+## What X is
 <Plain-language explanation. 2–4 sentences. No jargon without definition.>
 
-## How X fits into MeshAgent
-<How this connects to the rest of the system — rooms, agents, services, etc.>
+## Why it matters
+<What value this gives the user. Be concrete.>
 
-## When to use it
-<Decision guidance: when is this the right tool vs. alternatives?>
+## The core idea
+<How this fits into MeshAgent — rooms, agents, services, Studio, Powerboards, etc.>
+
+## What it enables / what you get
+<Brief bullets or short section.>
 
 ## Where to start
 <Short bulleted list of links to the relevant how-to, quickstart, and reference pages.>
@@ -25,12 +28,66 @@ Use when the goal is orientation: what is this feature, why does it matter, and 
 
 **Checklist:**
 - Doesn't try to explain everything — leaves depth to dedicated pages
+- Sells through specificity, not hype
+- Uses the room as the center of the explanation when appropriate
 - Has clear "where to start" links so the reader knows where to go next
 - No raw code inline unless a single short command illustrates the concept
 
 ---
 
-## 2. API Reference
+## 2. Key Concepts
+
+Use when the page should act as a glossary or canonical term index.
+
+**Structure:**
+```
+## <Term 1>
+<Short definition in plain language.>
+See also: <links>
+
+## <Term 2>
+...
+```
+
+**Checklist:**
+- Short definitions, not essays
+- Strong cross-links to the pages that go deeper
+- Keeps terminology consistent across the docs
+- Useful for onboarding and re-orientation
+
+---
+
+## 3. Architecture / System Model
+
+Use when the goal is to explain how the major MeshAgent surfaces fit together.
+
+**Structure:**
+```
+## Overview
+<What this page explains and why it matters.>
+
+## Core structure / system shape
+<Projects, rooms, sessions, services, interfaces, etc.>
+
+## How the pieces fit together
+<Step-by-step or relationship model.>
+
+## Key boundaries
+<What is project-scoped vs room-scoped, etc.>
+
+## Related
+<Links to the overview, key concepts, and deeper feature docs.>
+```
+
+**Checklist:**
+- Starts from the product model, not internal class structure
+- Explains relationships and boundaries clearly
+- Avoids vague or migration-focused language
+- May stay mostly prose; code is optional
+
+---
+
+## 4. API Reference
 
 Use for documenting a specific API surface (e.g., `DatabaseClient`, `MemoryClient`, `StorageClient`). These are the canonical source for what the API can do and how to call it.
 
@@ -66,16 +123,13 @@ Use for documenting a specific API surface (e.g., `DatabaseClient`, `MemoryClien
 
 ---
 
-## 3. Quickstart
+## 5. Quickstart
 
 Use to get the reader from zero to something working as fast as possible. These are hands-on and step-by-step. Not a reference — a guided first run.
 
 **Structure:**
 ```
 <Brief intro: what the reader will build or accomplish, and what they'll learn.>
-
-## Prerequisites
-<What they need before starting: CLI installed, account set up, etc.>
 
 ## Step 1: ...
 ## Step 2: ...
@@ -88,12 +142,14 @@ Use to get the reader from zero to something working as fast as possible. These 
 **Checklist:**
 - Steps are numbered and sequential — the reader should be able to follow along exactly
 - Concrete and runnable — no placeholders like `<your value here>` without explanation
-- Code examples via snippet imports
+- Includes enough setup that the reader does not have to leave the page to succeed
+- May include both UI-first and CLI-first paths when the product supports both
+- Multi-line reusable examples should use snippet imports; short inline commands are fine
 - Doesn't over-explain — gets the reader to a working result and then points them elsewhere
 
 ---
 
-## 4. How-to / Deployment Guide
+## 6. How-to / Deployment Guide
 
 Use for specific tasks: deploying a service, setting up a channel, connecting an integration. More focused than a quickstart (assumes the reader has context) and more prescriptive than a concept guide.
 
@@ -115,11 +171,12 @@ Use for specific tasks: deploying a service, setting up a channel, connecting an
 **Checklist:**
 - Clear scope: the reader should know exactly what they'll have at the end
 - Deployment examples always use CLI; show `meshagent mailbox create` before mail examples
-- Code examples via snippet imports (especially YAML configs and shell sequences)
+- Prefer snippet imports for reusable YAML configs and shell sequences
+- Use short inline commands directly when that is the clearest choice
 
 ---
 
-## 5. Named Agent / Service Page
+## 7. Named Agent / Service Page
 
 Use for documenting a specific packaged agent or service (e.g., Voice Agent, Document Author, Browser). These combine a brief concept explanation with setup and usage.
 
@@ -151,7 +208,7 @@ Use for documenting a specific packaged agent or service (e.g., Voice Agent, Doc
 
 ---
 
-## 6. Architecture / Deep Dive
+## 8. Deep Dive / Runtime Internals
 
 Use when the reader needs to understand *how* something works internally — not just how to use it. Common for complex runtimes (e.g., Process Agent Architecture, Threads Overview).
 
@@ -180,7 +237,7 @@ Use when the reader needs to understand *how* something works internally — not
 
 ---
 
-## 7. Integration Guide
+## 9. Integration Guide
 
 Use for connecting MeshAgent to a specific third-party service (e.g., Supabase MCP, OpenAI Connectors, Firebase). Focused on the integration-specific setup.
 
@@ -204,7 +261,7 @@ Use for connecting MeshAgent to a specific third-party service (e.g., Supabase M
 
 ---
 
-## 8. Archived / Compatibility Reference
+## 10. Archived / Compatibility Reference
 
 Use for documenting patterns that existed in older versions but are no longer the recommended path. These help users who encounter old code or docs understand what they're looking at.
 
@@ -233,5 +290,6 @@ Before creating a new page, ask: does this answer a real question a developer wo
 - Its content duplicates what another page already says
 - It describes something with migration context instead of user-facing value
 - It exists as an "overview" but there's only one sub-page under it
+- It exists only to satisfy taxonomy, not because a reader would naturally look for it
 
 When in doubt, fold the content into a neighboring page rather than creating a new one.

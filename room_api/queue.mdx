@@ -39,6 +39,7 @@ meshagent room queue receive \
 meshagent room queue size \
   --room myroom \
   --queue my-queue
+
 ```
 ```python Python
 # List existing Queues
@@ -57,8 +58,9 @@ await room.queues.drain(name="my-queue")
 
 # Close the queue
 await room.queues.close(name="my-queue")
+
 ```
-```js NodeJs
+```javascript NodeJs
 // List existing queues
 const queues = await room.queues.list();
 console.log("Queues:", queues);
@@ -67,10 +69,10 @@ console.log("Queues:", queues);
 await room.queues.open("my-queue");
 
 // Send a message
-await room.queues.send("my-queue", { payload: "Hello World!" });
+await room.queues.send("my-queue", { payload: "Hello World!" }, { create: true });
 
 // Receive a message
-const message = await room.queues.receive("my-queue");
+const message = await room.queues.receive("my-queue", { create: true, wait: true });
 console.log("Received message:", message);
 
 // Drain a queue
@@ -78,8 +80,9 @@ await room.queues.drain("my-queue");
 
 // Close the queue
 await room.queues.close("my-queue");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 // List existing queues
 const queues = await room.queues.list();
 console.log("Queues:", queues);
@@ -88,10 +91,10 @@ console.log("Queues:", queues);
 await room.queues.open("my-queue");
 
 // Send a message
-await room.queues.send("my-queue", { payload: "Hello World!" });
+await room.queues.send("my-queue", { payload: "Hello World!" }, { create: true });
 
 // Receive a message
-const message = await room.queues.receive("my-queue");
+const message = await room.queues.receive("my-queue", { create: true, wait: true });
 console.log("Received message:", message);
 
 // Drain a queue
@@ -99,6 +102,7 @@ await room.queues.drain("my-queue");
 
 // Close the queue
 await room.queues.close("my-queue");
+
 ```
 ```dart Dart
 // List existing Queues
@@ -120,6 +124,7 @@ await room.queues.drain("my-queue");
 
 // Close the queue
 await room.queues.close("my-queue");
+
 ```
 ```dotnet C#
 using System.Text.Json;
@@ -148,6 +153,7 @@ await room.Queues.Drain("my-queue");
 
 // Close the queue
 await room.Queues.Close("my-queue");
+
 ```
 </CodeGroup>
 
@@ -160,18 +166,23 @@ A basic representation of a queue, holding a name and its current size.
 <CodeGroup>
 ```python Python
 queue = Queue(name="my-queue", size=0)
+
 ```
-```js NodeJs
+```javascript NodeJs
 const queue = new Queue({ name: "my-queue", size: 0 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const queue = new Queue({ name: "my-queue", size: 0 });
+
 ```
 ```dart Dart
 final queue = Queue(name: "my-queue", size: 0);
+
 ```
 ```dotnet C#
 var queue = new Queue(name: "my-queue", size: 0);
+
 ```
 </CodeGroup>
 
@@ -196,18 +207,23 @@ The `QueuesClient` is responsible for sending requests through a `RoomClient` to
 <CodeGroup>
 ```python Python
 queues = await room.queues.list()
+
 ```
-```js NodeJs
+```javascript NodeJs
 const queues = await room.queues.list();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const queues = await room.queues.list();
+
 ```
 ```dart Dart
 final queues = await room.queues.list();
+
 ```
 ```dotnet C#
 var queues = await room.Queues.List();
+
 ```
 </CodeGroup>
 
@@ -225,18 +241,23 @@ Python SDK does not expose `open`; queues are created implicitly via `send`/`rec
 <CodeGroup>
 ```python Python
 # Not available in Python (queues are auto-created via send/receive)
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.queues.open("my-queue");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.open("my-queue");
+
 ```
 ```dart Dart
 await room.queues.open("my-queue");
+
 ```
 ```dotnet C#
 await room.Queues.Open("my-queue");
+
 ```
 </CodeGroup>
 
@@ -252,18 +273,23 @@ await room.Queues.Open("my-queue");
 <CodeGroup>
 ```python Python
 await room.queues.drain(name="my-queue")
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.queues.drain("my-queue");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.drain("my-queue");
+
 ```
 ```dart Dart
 await room.queues.drain("my-queue");
+
 ```
 ```dotnet C#
 await room.Queues.Drain("my-queue");
+
 ```
 </CodeGroup>
 
@@ -279,18 +305,23 @@ await room.Queues.Drain("my-queue");
 <CodeGroup>
 ```python Python
 await room.queues.close(name="my-queue")
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.queues.close("my-queue");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.close("my-queue");
+
 ```
 ```dart Dart
 await room.queues.close("my-queue");
+
 ```
 ```dotnet C#
 await room.Queues.Close("my-queue");
+
 ```
 </CodeGroup>
 
@@ -309,22 +340,28 @@ meshagent room queue send \
   --room myroom \
   --queue my-queue \
   --json '{"foo":"bar"}'
+
 ```
 ```python Python
 await room.queues.send(name="my-queue", message={"foo": "bar"}, create=True)
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
+
 ```
 ```dart Dart
 await room.queues.send("my-queue", {"foo": "bar"}, create: true);
+
 ```
 ```dotnet C#
 var message = new Dictionary<string, object?> { ["payload"] = "Hello World!" };
 await room.Queues.Send("my-queue", message, create: true);
+
 ```
 </CodeGroup>
 
@@ -344,21 +381,27 @@ await room.Queues.Send("my-queue", message, create: true);
 meshagent room queue receive \
   --room myroom \
   --queue my-queue
+
 ```
 ```python Python
 message = await room.queues.receive(name="my-queue", create=True, wait=True)
+
 ```
-```js NodeJs
+```javascript NodeJs
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
+
 ```
 ```dart Dart
 final message = await room.queues.receive("my-queue", create: true, wait: true);
+
 ```
 ```dotnet C#
 var received = await room.Queues.Receive("my-queue", create: true, wait: true);
+
 ```
 </CodeGroup>
 

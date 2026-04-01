@@ -37,14 +37,17 @@ meshagent room memory list \
   --room myroom \
   --namespace team \
   --namespace support
+
 ```
 ```python Python
 memories = await room.memory.list(namespace=["team", "support"])
 print(memories)
+
 ```
 ```dart Dart
 final memories = await room.memory.list(namespace: ["team", "support"]);
 print(memories);
+
 ```
 </CodeGroup>
 
@@ -59,6 +62,7 @@ meshagent room memory create \
   --name customer-memory \
   --namespace team \
   --namespace support
+
 ```
 ```python Python
 await room.memory.create(
@@ -66,6 +70,7 @@ await room.memory.create(
   namespace=["team", "support"],
   overwrite=False,
 )
+
 ```
 ```dart Dart
 await room.memory.create(
@@ -73,6 +78,7 @@ await room.memory.create(
   namespace: ["team", "support"],
   overwrite: false,
 );
+
 ```
 </CodeGroup>
 
@@ -88,6 +94,7 @@ meshagent room memory drop \
   --namespace team \
   --namespace support \
   --ignore-missing
+
 ```
 ```python Python
 await room.memory.drop(
@@ -95,6 +102,7 @@ await room.memory.drop(
   namespace=["team", "support"],
   ignore_missing=True,
 )
+
 ```
 ```dart Dart
 await room.memory.drop(
@@ -102,6 +110,7 @@ await room.memory.drop(
   namespace: ["team", "support"],
   ignoreMissing: true,
 );
+
 ```
 </CodeGroup>
 
@@ -117,12 +126,14 @@ These examples use the Python `MemoryClient` API. The CLI, Dart SDK, TypeScript 
 meshagent room memory inspect \
   --room myroom \
   --name customer-memory
+
 ```
 ```python Python
 details = await room.memory.inspect(name="customer-memory")
 print(details.path)
 for dataset in details.datasets:
   print(dataset.name, dataset.rows, dataset.columns)
+
 ```
 </CodeGroup>
 
@@ -135,6 +146,7 @@ meshagent room memory query \
   --room myroom \
   --name customer-memory \
   --statement 'MATCH (e) RETURN e.name LIMIT 10'
+
 ```
 ```python Python
 rows = await room.memory.query(
@@ -142,6 +154,7 @@ rows = await room.memory.query(
   statement="MATCH (e) RETURN e.name LIMIT 10",
 )
 print(rows)
+
 ```
 </CodeGroup>
 
@@ -155,6 +168,7 @@ meshagent room memory upsert-table \
   --name customer-memory \
   --table facts \
   --records-json '[{"entity_id":"acme","summary":"Renewal expected in Q3"}]'
+
 ```
 ```python Python
 await room.memory.upsert_table(
@@ -167,6 +181,7 @@ await room.memory.upsert_table(
     }
   ],
 )
+
 ```
 </CodeGroup>
 
@@ -179,6 +194,7 @@ meshagent room memory upsert-nodes \
   --room myroom \
   --name customer-memory \
   --records-json '[{"entity_id":"acme","name":"ACME","entity_type":"company","context":"Enterprise customer"}]'
+
 ```
 ```python Python
 from meshagent.api.room_server_client import MemoryEntityRecord
@@ -194,6 +210,7 @@ await room.memory.upsert_nodes(
     )
   ],
 )
+
 ```
 </CodeGroup>
 
@@ -206,6 +223,7 @@ meshagent room memory upsert-relationships \
   --room myroom \
   --name customer-memory \
   --records-json '[{"source_entity_id":"acme","target_entity_id":"renewal-q3","relationship_type":"HAS_MILESTONE","description":"Renewal target quarter"}]'
+
 ```
 ```python Python
 from meshagent.api.room_server_client import MemoryRelationshipRecord
@@ -221,6 +239,7 @@ await room.memory.upsert_relationships(
     )
   ],
 )
+
 ```
 </CodeGroup>
 
@@ -233,6 +252,7 @@ meshagent room memory ingest-text \
   --room myroom \
   --name customer-memory \
   --text 'ACME is planning a renewal review in Q3.'
+
 ```
 ```python Python
 result = await room.memory.ingest_text(
@@ -240,6 +260,7 @@ result = await room.memory.ingest_text(
   text="ACME is planning a renewal review in Q3.",
 )
 print(result.stats.entities, result.stats.relationships)
+
 ```
 </CodeGroup>
 
@@ -253,6 +274,7 @@ meshagent room memory ingest-image \
   --name customer-memory \
   --file ./whiteboard.png \
   --caption 'Customer planning whiteboard'
+
 ```
 ```python Python
 with open("./whiteboard.png", "rb") as f:
@@ -265,6 +287,7 @@ result = await room.memory.ingest_image(
   caption="Customer planning whiteboard",
 )
 print(result.stats)
+
 ```
 </CodeGroup>
 
@@ -277,6 +300,7 @@ meshagent room memory ingest-file \
   --room myroom \
   --name customer-memory \
   --path /data/acme-renewal.txt
+
 ```
 ```python Python
 result = await room.memory.ingest_file(
@@ -284,6 +308,7 @@ result = await room.memory.ingest_file(
   path="/data/acme-renewal.txt",
 )
 print(result.entity_ids)
+
 ```
 </CodeGroup>
 
@@ -299,6 +324,7 @@ meshagent room memory ingest-from-table \
   --text-column summary \
   --text-column notes \
   --limit 100
+
 ```
 ```python Python
 result = await room.memory.ingest_from_table(
@@ -308,6 +334,7 @@ result = await room.memory.ingest_from_table(
   limit=100,
 )
 print(result.stats)
+
 ```
 </CodeGroup>
 
@@ -321,6 +348,7 @@ meshagent room memory ingest-from-storage \
   --name customer-memory \
   --path room://notes/acme.txt \
   --path room://notes/renewal.txt
+
 ```
 ```python Python
 result = await room.memory.ingest_from_storage(
@@ -328,6 +356,7 @@ result = await room.memory.ingest_from_storage(
   paths=["room://notes/acme.txt", "room://notes/renewal.txt"],
 )
 print(result.stats)
+
 ```
 </CodeGroup>
 
@@ -341,6 +370,7 @@ meshagent room memory recall \
   --name customer-memory \
   --query "What do we know about ACME's renewal timeline?" \
   --limit 5
+
 ```
 ```python Python
 result = await room.memory.recall(
@@ -350,6 +380,7 @@ result = await room.memory.recall(
 )
 for item in result.items:
   print(item.entity_id, item.score)
+
 ```
 </CodeGroup>
 
@@ -362,6 +393,7 @@ meshagent room memory delete-entities \
   --room myroom \
   --name customer-memory \
   --entity-id acme
+
 ```
 ```python Python
 result = await room.memory.delete_entities(
@@ -369,6 +401,7 @@ result = await room.memory.delete_entities(
   entity_ids=["acme"],
 )
 print(result.deleted_entities, result.deleted_relationships)
+
 ```
 </CodeGroup>
 
@@ -381,6 +414,7 @@ meshagent room memory delete-relationships \
   --room myroom \
   --name customer-memory \
   --records-json '[{"source_entity_id":"acme","target_entity_id":"renewal-q3","relationship_type":"HAS_MILESTONE"}]'
+
 ```
 ```python Python
 from meshagent.api.room_server_client import MemoryRelationshipSelector
@@ -396,6 +430,7 @@ result = await room.memory.delete_relationships(
   ],
 )
 print(result.deleted_relationships)
+
 ```
 </CodeGroup>
 
@@ -409,6 +444,7 @@ meshagent room memory optimize \
   --name customer-memory \
   --compact \
   --cleanup
+
 ```
 ```python Python
 result = await room.memory.optimize(
@@ -417,6 +453,7 @@ result = await room.memory.optimize(
   cleanup=True,
 )
 print(result)
+
 ```
 </CodeGroup>
 

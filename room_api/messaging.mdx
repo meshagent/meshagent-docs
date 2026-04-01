@@ -64,6 +64,7 @@ meshagent room messaging send \
 meshagent room messaging broadcast \
   --room myroom \
   --data '{"content":"Hello everyone!"}'
+
 ```
 ```python Python
 # Suppose you already have a RoomClient instance named `room`
@@ -89,8 +90,9 @@ await room.messaging.broadcast_message(
 
 # Disable messaging
 await room.messaging.disable()
+
 ```
-```js NodeJs
+```javascript NodeJs
 // Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
@@ -114,8 +116,9 @@ await room.messaging.broadcastMessage({
 
 // Disable messaging
 await room.messaging.disable();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 // Suppose you already have a RoomClient instance named `room`
 
 // Enable messaging
@@ -139,6 +142,7 @@ await room.messaging.broadcastMessage({
 
 // Disable messaging
 await room.messaging.disable();
+
 ```
 ```dart Dart
 // Suppose you already have a RoomClient instance named `room`
@@ -164,6 +168,7 @@ await room.messaging.broadcastMessage(
 
 // Disable messaging
 await room.messaging.disable();
+
 ```
 ```dotnet C#
 using System;
@@ -203,6 +208,7 @@ room.Messaging.On("message", data =>
 
 // Disable messaging
 await room.Messaging.Disable();
+
 ```
 </CodeGroup>
 
@@ -225,8 +231,9 @@ await stream_writer.write(MessageStreamChunk(
 
 # Close the stream
 await stream_writer.close()
+
 ```
-```js NodeJs
+```javascript NodeJs
 // Create a new stream
 const streamWriter = await room.messaging.createStream({
   to: myParticipant,
@@ -243,8 +250,9 @@ await streamWriter.write(
 
 // Close the stream
 await streamWriter.close();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 // Create a new stream
 const streamWriter = await room.messaging.createStream({
   to: myParticipant,
@@ -261,6 +269,7 @@ await streamWriter.write(
 
 // Close the stream
 await streamWriter.close();
+
 ```
 ```dart Dart
 // Create a new stream
@@ -270,13 +279,14 @@ final streamWriter = await room.messaging.createStream(
 );
 
 // Write chunks
-await streamWriter.write(MessageStreamChunk(
+streamWriter.write(MessageStreamChunk(
   header: {"chunkNumber": 1},
   data: Uint8List.fromList([/* some binary data */]),
 ));
 
 // Close the stream
-await streamWriter.close();
+streamWriter.close();
+
 ```
 ```dotnet C#
 using System;
@@ -301,6 +311,7 @@ await streamWriter.Write(new MessageStreamChunk(
 
 // Close the stream
 await streamWriter.Close();
+
 ```
 </CodeGroup>
 
@@ -316,28 +327,33 @@ Enables the messaging subsystem on the server. Optionally provides a callback th
 <CodeGroup>
 ```python Python
 await room.messaging.enable(
-    lambda reader: print(f"New stream opened: {reader._streamId}"))
+    lambda reader: print(f"New stream opened: {reader.header}"))
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.messaging.enable((reader) => {
   console.log("New stream opened:", reader._streamId);
 });
+
 ```
 ```dart Dart
 await room.messaging.enable((reader) {
-  print("New stream opened: ${reader._streamId}");
+  print("New stream opened: ${reader.header}");
 });
+
 ```
 ```dotnet C#
 await room.Messaging.Enable(onStreamAccept: reader =>
 {
   Console.WriteLine($"Stream accepted: {reader.Header["name"]}");
 });
+
 ```
 </CodeGroup>
 
@@ -351,18 +367,23 @@ Disables the messaging subsystem on the server.
 <CodeGroup>
 ```python Python
 await room.messaging.disable()
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.messaging.disable();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.messaging.disable();
+
 ```
 ```dart Dart
 await room.messaging.disable();
+
 ```
 ```dotnet C#
 await room.Messaging.Disable();
+
 ```
 </CodeGroup>
 
@@ -387,6 +408,7 @@ meshagent room messaging send \
   --to-participant-id PARTICIPANT_ID \
   --type chat \
   --data '{"text":"Hey!"}'
+
 ```
 ```python Python
 await room.messaging.send_message(
@@ -395,30 +417,34 @@ await room.messaging.send_message(
   message={"text": "Hey!"},
   attachment=b"\x01\x02\x03",
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.messaging.sendMessage({
   "to": myParticipant,
   "type": "chat",
   "message": { text: "Hey!" },
   "attachment": new Uint8Array([1, 2, 3]),
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.messaging.sendMessage({
   "to": myParticipant,
   "type": "chat",
   "message": { text: "Hey!" },
   "attachment": new Uint8Array([1, 2, 3]),
 });
+
 ```
 ```dart Dart
-await room.messaging.sendMessage({
-  "to": myParticipant,
-  "type": "chat",
-  "message": {"text": "Hey!"},
-  "attachment": Uint8List.fromList([1, 2, 3]),
-});
+await room.messaging.sendMessage(
+  to: myParticipant,
+  type: "chat",
+  message: {"text": "Hey!"},
+  attachment: Uint8List.fromList([1, 2, 3]),
+);
+
 ```
 ```dotnet C#
 await room.Messaging.SendMessage(
@@ -427,6 +453,7 @@ await room.Messaging.SendMessage(
   message: new Dictionary<string, object?> { ["text"] = "Hey!" },
   attachment: new byte[] { 1, 2, 3 }
 );
+
 ```
 </CodeGroup>
 
@@ -447,6 +474,7 @@ Broadcasts a message to **all** participants in the room.
 meshagent room messaging broadcast \
   --room myroom \
   --data '{"title":"Server Maintenance","content":"We will be down tonight."}'
+
 ```
 ```python Python
 await room.messaging.broadcast_message(
@@ -456,8 +484,9 @@ await room.messaging.broadcast_message(
     "content": "We will be down tonight.",
   },
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.messaging.broadcastMessage({
   "type": "announcement",
   "message": {
@@ -465,8 +494,9 @@ await room.messaging.broadcastMessage({
     "content": "We will be down tonight.",
   }
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.messaging.broadcastMessage({
   "type": "announcement",
   "message": {
@@ -474,15 +504,17 @@ await room.messaging.broadcastMessage({
     "content": "We will be down tonight.",
   }
 });
+
 ```
 ```dart Dart
-await room.messaging.broadcastMessage({
-  "type": "announcement",
-  "message": {
+await room.messaging.broadcastMessage(
+  type: "announcement",
+  message: {
     "title": "Server Maintenance",
     "content": "We will be down tonight.",
-  }
-});
+  },
+);
+
 ```
 ```dotnet C#
 await room.Messaging.BroadcastMessage(
@@ -491,6 +523,7 @@ await room.Messaging.BroadcastMessage(
    ["title"] = "Server Maintenance", 
    ["content"] = "We will be down tonight." 
 });
+
 ```
 </CodeGroup>
 
@@ -515,30 +548,35 @@ writer = await room.messaging.create_stream(
   to=my_participant,
   header={"purpose": "video-stream"}
 )
+
 ```
-```js NodeJs
+```javascript NodeJs
 const writer = await room.messaging.createStream({
   to: myParticipant,
   header: {"purpose": "video-stream" },
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const writer = await room.messaging.createStream({
   to: myParticipant,
   header: {"purpose": "video-stream" },
 });
+
 ```
 ```dart Dart
 final writer = await room.messaging.createStream(
   to: myParticipant,
   header: {"purpose": "video-stream"},
 );
+
 ```
 ```dotnet C#
 var writer = await room.Messaging.CreateStream(
   to: myParticipant,
   header: new Dictionary<string, object?> { ["name"] = "video-stream" }
 );
+
 ```
 </CodeGroup>
 
@@ -553,27 +591,32 @@ Provides an iterable collection of all known remote participants.
 ```python Python
 for participant in room.messaging.remote_participants:
     print(f"Participant: {participant.id}, role: {participant.role}")
+
 ```
-```js NodeJs
+```javascript NodeJs
 for (const participant of room.messaging.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
 }
+
 ```
-```ts TypeScript
+```typescript TypeScript
 for (const participant of room.messaging.remoteParticipants) {
   console.log(`Participant: ${participant.id}, role: ${participant.role}`);
 }
+
 ```
 ```dart Dart
 for (final participant in room.messaging.remoteParticipants) {
   print("Participant: ${participant.id}, role: ${participant.role}");
 }
+
 ```
 ```dotnet C#
 foreach (var participant in room.Messaging.RemoteParticipants)
 {
   Console.WriteLine($"Participant: {participant.Id}, role: {participant.Role}");
 }
+
 ```
 </CodeGroup>
 
@@ -605,30 +648,34 @@ await stream_writer.write(MessageStreamChunk(
   data=b"some binary data"
 ))
 await stream_writer.close()
+
 ```
-```js NodeJs
+```javascript NodeJs
 // Example usage after acquiring a MessageStreamWriter
 await streamWriter.write(new MessageStreamChunk({
   header: { part: 1 },
   data: new Uint8Array([1, 2, 3])
 }));
 await streamWriter.close();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 // Example usage after acquiring a MessageStreamWriter
 await streamWriter.write(new MessageStreamChunk({
   header: { part: 1 },
   data: new Uint8Array([1, 2, 3])
 }));
 await streamWriter.close();
+
 ```
 ```dart Dart
 // Example usage after acquiring a MessageStreamWriter
-await streamWriter.write(MessageStreamChunk(
+streamWriter.write(MessageStreamChunk(
   header: {"part": 1},
   data: Uint8List.fromList([1, 2, 3])
 ));
-await streamWriter.close();
+streamWriter.close();
+
 ```
 ```dotnet C#
 // Send a chunk and close the stream
@@ -637,6 +684,7 @@ await streamWriter.Write(new MessageStreamChunk(
   data: new byte[] { 1, 2, 3 }
 ));
 await streamWriter.Close();
+
 ```
 </CodeGroup>
 
@@ -648,19 +696,20 @@ await streamWriter.Close();
 ## Additional Notes
 
 1. **Event emission**
-   `MessagingClient` extends `EventEmitter<RoomMessageEvent>`. It emits events whenever messages are received or streams are opened/closed. You can listen for the `"message"` event or for custom events like `"participant_added"`, `"participant_removed"`, etc.:
+   Messaging events are exposed a little differently by language. Python uses `room.messaging.on(...)`, JavaScript/TypeScript inherit `EventEmitter`, Dart surfaces room events through `room.events`, and .NET uses `room.Messaging.On(...)`. In each case you can observe incoming messages and participant changes:
 
 <CodeGroup>
 ```python Python
 room.messaging.on(
     "message",
-    lambda evt: print("Received a message of type:", evt.message.type))
+    lambda message: print("Received a message of type:", message.type))
 
 room.messaging.on(
     "participant_added",
-    lambda evt: print("A new participant joined:", evt.message.message))
+    lambda participant: print("A new participant joined:", participant.id))
+
 ```
-```js NodeJs
+```javascript NodeJs
 room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
@@ -668,8 +717,9 @@ room.messaging.on("message", ({ message }) => {
 room.messaging.on("participant_added", (evt) => {
    console.log("A new participant joined:", evt.message.message);
 });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 room.messaging.on("message", ({ message }) => {
    console.log("Received a message of type:", message.type);
 });
@@ -677,21 +727,22 @@ room.messaging.on("message", ({ message }) => {
 room.messaging.on("participant_added", (evt) => {
    console.log("A new participant joined:", evt.message.message);
 });
+
 ```
 ```dart Dart
-room.messaging.on("message", (evt) {
-   print("Received a message of type: ${evt.message.type}");
+room.events.listen((event) {
+   if (event is RoomMessageEvent) {
+      print("Received a message of type: ${event.message.type}");
+   }
 });
 
-room.messaging.on("participant_added", (evt) {
-   print("A new participant joined: ${evt.message.message}");
-});
 ```
 ```dotnet C#
 room.Messaging.On("participant_added", data =>
 {
   Console.WriteLine($"A new participant joined: {data["message"]}");
 });
+
 ```
 </CodeGroup>
 

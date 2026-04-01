@@ -21,6 +21,18 @@ For advanced SDK use cases, `SingleRoomAgent` is the entry point for building cu
 
 ---
 
+## Interfaces: MeshAgent Studio and Powerboards
+
+When writing high-level docs, keep the interface split clear:
+
+- **MeshAgent Studio** is the main developer/operator interface for building, testing, deploying, inspecting, and administering
+- **Powerboards** is the main end-user interface for using built-in and deployed agents in rooms
+- both interfaces connect to the same underlying projects and rooms
+
+If a page is about onboarding, interfaces, or product overview, explain where the user would do the task and whether the task is more developer-oriented or end-user-oriented.
+
+---
+
 ## Legacy runtimes (do not teach in first-class docs)
 
 The following older runtime types exist in the codebase for compatibility but should not be taught to new users or presented as recommended patterns in first-class documentation:

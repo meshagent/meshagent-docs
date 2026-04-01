@@ -16,17 +16,17 @@ The `StorageClient` is the Room API for room-scoped files and folders. Use it to
 
 ## How it works
 
-Paths are relative to the room storage root. Opening a file returns a handle; writes become visible when you close that handle. The API also emits `file.updated` and `file.deleted` events so other participants can react to changes.
+Paths are relative to the room storage root. Use `upload` or `uploadStream` to write files, `download` or `downloadStream` to read them back, and `download_url` / `downloadUrl` when you need a fetchable URL for another system. The API also emits `file.updated` and `file.deleted` events so other participants can react to changes.
 
 > Current implementation note: the repo includes both local filesystem and GCS-backed storage providers. Deployed services can also mount room storage into the filesystem. The Room Storage API is the stable contract; bucket-mount details belong to service/runtime docs rather than the core API contract.
 
 ## Permissions and grants
 
-`open`/`write`/`close` and `download`/`download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
+`upload` / `uploadStream` and `download` / `downloadStream` / `download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
 
 ## CLI and SDK availability
 
-- **CLI**: file operations are available under `meshagent room storage ...`.
+- **CLI**: use `meshagent room storage exists`, `cp`, `show`, `ls`, and `rm` for common room-storage workflows.
 - **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
 
 ## Events
@@ -42,6 +42,7 @@ def on_file_updated(path: str, participant_id: str):
    print(f"File updated: {path} by {participant_id}")
 
 room.storage.on("file.updated", on_file_updated)
+
 ```
 ```javascript NodeJs
 function onFileUpdated(event) {
@@ -49,6 +50,7 @@ function onFileUpdated(event) {
 }
 
 room.storage.on("file.updated", onFileUpdated);
+
 ```
 ```typescript TypeScript
 function onFileUpdated(event: FileUpdatedEvent) {
@@ -56,6 +58,7 @@ function onFileUpdated(event: FileUpdatedEvent) {
 }
 
 room.storage.on("file.updated", onFileUpdated);
+
 ```
 ```dart Dart
 void onFileUpdated(String path) {
@@ -67,6 +70,7 @@ room.listen((RoomEvent event) {
         onFileUpdated(event.path);
     }
 });
+
 ```
 ```dotnet C#
 void OnFileUpdated(Dictionary<string, object?> data)
@@ -75,6 +79,7 @@ void OnFileUpdated(Dictionary<string, object?> data)
 }
 
 room.Storage.On("file.updated", OnFileUpdated);
+
 ```
 </CodeGroup>
 
@@ -89,6 +94,7 @@ def on_file_deleted(path: str, participant_id: str):
    print(f"File deleted: {path} by {participant_id}")
 
 room.storage.on("file.deleted", on_file_deleted)
+
 ```
 ```javascript NodeJs
 function onFileDeleted(event) {
@@ -96,6 +102,7 @@ function onFileDeleted(event) {
 }
 
 room.storage.on("file.deleted", onFileDeleted);
+
 ```
 ```typescript TypeScript
 function onFileDeleted(event: FileDeletedEvent) {
@@ -103,6 +110,7 @@ function onFileDeleted(event: FileDeletedEvent) {
 }
 
 room.storage.on("file.deleted", onFileDeleted);
+
 ```
 ```dart Dart
 void onFileDeleted(String path) {
@@ -114,6 +122,7 @@ room.listen((RoomEvent event) {
         onFileDeleted(event.path);
     }
 });
+
 ```
 ```dotnet C#
 void OnFileDeleted(Dictionary<string, object?> data)
@@ -122,6 +131,7 @@ void OnFileDeleted(Dictionary<string, object?> data)
 }
 
 room.Storage.On("file.deleted", OnFileDeleted);
+
 ```
 </CodeGroup>
 
@@ -133,14 +143,17 @@ You can remove an event handler with:
 ```python Python
 room.storage.off("file.updated", on_file_updated)
 room.storage.off("file.deleted", on_file_deleted)
+
 ```
 ```javascript NodeJs
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
+
 ```
 ```typescript TypeScript
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
+
 ```
 ```dart Dart
 room.listen((RoomEvent event) {
@@ -152,10 +165,12 @@ room.listen((RoomEvent event) {
         // Remove handler logic
     }
 });
+
 ```
 ```dotnet C#
 room.Storage.Off("file.updated", OnFileUpdated);
 room.Storage.Off("file.deleted", OnFileDeleted);
+
 ```
 </CodeGroup>
 
@@ -184,12 +199,14 @@ Checks if a file or folder exists at the given path.
 meshagent room storage exists \
   --room myroom \
   room://folder/data.json
+
 ```
 ```python Python
 if await room.storage.exists(path="folder/data.json"):
     print("Data file exists!")
 else:
     print("Data file does not exist.")
+
 ```
 ```javascript NodeJs
 if (await room.storage.exists("folder/data.json")) {
@@ -197,6 +214,7 @@ if (await room.storage.exists("folder/data.json")) {
 } else {
     console.log("Data file does not exist.");
 }
+
 ```
 ```typescript TypeScript
 if (await room.storage.exists("folder/data.json")) {
@@ -204,6 +222,7 @@ if (await room.storage.exists("folder/data.json")) {
 } else {
     console.log("Data file does not exist.");
 }
+
 ```
 ```dart Dart
 if (await room.storage.exists("folder/data.json")) {
@@ -211,6 +230,7 @@ if (await room.storage.exists("folder/data.json")) {
 } else {
     print("Data file does not exist.");
 }
+
 ```
 ```dotnet C#
 if (await room.Storage.Exists("folder/data.json"))
@@ -221,6 +241,7 @@ else
 {
     Console.WriteLine("Data file does not exist.");
 }
+
 ```
 </CodeGroup>
 
@@ -247,6 +268,7 @@ The server returns `name`, `is_folder`, `created_at`, and `updated_at` fields. S
 entry = await room.storage.stat(path="folder/data.json")
 if entry:
     print(entry.name, entry.is_folder, entry.created_at, entry.updated_at)
+
 ```
 </CodeGroup>
 
@@ -255,49 +277,15 @@ if entry:
 
 ---
 
-### `open(path, overwrite=False)`
+### `upload(path, data, overwrite=False)`
 
 **Description**  
-Opens a file for writing. Returns a handle used for subsequent write calls and closing.  
-If `overwrite` is `True`, an existing file at this path will be truncated. Current storage providers truncate on open regardless of `overwrite`, so check `exists` or `stat` before opening if you need to guard against overwrites.
+Uploads a complete file payload in one call. Use this when you already have the bytes in memory.
 
 **Parameters**  
-- `path` *(str)*: The file path to open or create.
-- `overwrite` *(bool, optional)*: Whether to overwrite if the file already exists. Defaults to `False`.
-
-**Returns**  
-- *Handle Object*: An object representing an open file, usable with `write` and `close`.
-
-**Example**:
-<CodeGroup>
-```python Python
-handle = await room.storage.open(path="files/new.txt", overwrite=True)
-```
-```javascript NodeJs
-let handle = await room.storage.open("files/new.txt", { overwrite: true });
-```
-```typescript TypeScript
-let handle = await room.storage.open("files/new.txt", { overwrite: true });
-```
-```dart Dart
-var handle = await room.storage.open("files/new.txt", overwrite: true);
-```
-```dotnet C#
-var handle = await room.Storage.Open("files/new.txt", overwrite: true);
-```
-</CodeGroup>
-
-
----
-
-### `write(handle, data)`
-
-**Description**  
-Writes binary data to an open file handle. You can call `write` multiple times to stream chunks before closing.
-
-**Parameters**  
-- `handle` *(file handle)*: The handle returned by `open`.
-- `data` *(bytes)*: The data to write.
+- `path` *(str)*: The destination file path.
+- `data` *(bytes / Uint8Array / byte[])*: The file contents to write.
+- `overwrite` *(bool, optional)*: Whether to replace an existing file at that path.
 
 **Returns**  
 - `None`
@@ -305,44 +293,67 @@ Writes binary data to an open file handle. You can call `write` multiple times t
 **Example**:
 <CodeGroup>
 ```python Python
-data_to_write = b"Sample data"
+data_to_write = b"Hello, Storage!"
 
-await room.storage.write(handle=my_handle, data=data_to_write)
+await room.storage.upload(
+    path="files/new.txt",
+    data=data_to_write,
+    overwrite=True,
+)
+
 ```
 ```javascript NodeJs
-const encoder = new TextEncoder();
-const dataToWrite = encoder.encode("Sample data");
+const dataToWrite = new TextEncoder().encode("Hello, Storage!");
 
-await room.storage.write(myHandle, dataToWrite);
+await room.storage.upload("files/new.txt", dataToWrite, {
+  overwrite: true,
+});
+
 ```
 ```typescript TypeScript
-const encoder = new TextEncoder();
-const dataToWrite = encoder.encode("Sample data");
+const dataToWrite = new TextEncoder().encode("Hello, Storage!");
 
-await room.storage.write(myHandle, dataToWrite);
+await room.storage.upload("files/new.txt", dataToWrite, {
+  overwrite: true,
+});
+
 ```
 ```dart Dart
-final dataToWrite = utf8.encode("Sample data");
+final dataToWrite = Uint8List.fromList(utf8.encode("Hello, Storage!"));
 
-await room.storage.write(myHandle, dataToWrite);
+await room.storage.upload(
+  "files/new.txt",
+  dataToWrite,
+  overwrite: true,
+);
+
 ```
 ```dotnet C#
-var dataToWrite = Encoding.UTF8.GetBytes("Sample data");
+var dataToWrite = Encoding.UTF8.GetBytes("Hello, Storage!");
 
-await room.Storage.Write(myHandle, dataToWrite);
+await room.Storage.Upload(
+    "files/new.txt",
+    dataToWrite,
+    overwrite: true
+);
+
 ```
 </CodeGroup>
 
 
 ---
 
-### `close(handle)`
+### `upload_stream(path, chunks, ...)`
 
 **Description**  
-Closes an open file handle, ensuring all data has been written. A `file.updated` event is emitted on close.
+Streams file contents chunk-by-chunk. Use this when you do not want to materialize the whole file in memory at once.
 
 **Parameters**  
-- `handle` *(file handle)*: The handle to close.
+- `path` *(str)*: The destination file path.
+- `chunks`: An async iterable / stream / `IAsyncEnumerable<byte[]>` of file chunks.
+- `overwrite` *(optional)*: Replace an existing file at that path.
+- `size` *(optional)*: Total byte size when you already know it.
+- `chunk_size` / `chunkSize` *(optional)*: Pull size for streamed uploads.
 
 **Returns**  
 - `None`
@@ -350,19 +361,150 @@ Closes an open file handle, ensuring all data has been written. A `file.updated`
 **Example**:
 <CodeGroup>
 ```python Python
-await room.storage.close(handle=my_handle)
+async def chunks():
+    yield b"Hello, "
+    yield b"world!"
+
+
+await room.storage.upload_stream(
+    path="logs/output.txt",
+    chunks=chunks(),
+    overwrite=True,
+    size=13,
+)
+
 ```
 ```javascript NodeJs
-await room.storage.close(myHandle);
+async function* chunks() {
+  yield new TextEncoder().encode("Hello, ");
+  yield new TextEncoder().encode("world!");
+}
+
+await room.storage.uploadStream("logs/output.txt", chunks(), {
+  overwrite: true,
+  size: 13,
+});
+
 ```
 ```typescript TypeScript
-await room.storage.close(myHandle);
+async function* chunks(): AsyncGenerator<Uint8Array> {
+  yield new TextEncoder().encode("Hello, ");
+  yield new TextEncoder().encode("world!");
+}
+
+await room.storage.uploadStream("logs/output.txt", chunks(), {
+  overwrite: true,
+  size: 13,
+});
+
 ```
 ```dart Dart
-await room.storage.close(myHandle);
+Stream<Uint8List> chunks() async* {
+  yield Uint8List.fromList(utf8.encode("Hello, "));
+  yield Uint8List.fromList(utf8.encode("world!"));
+}
+
+await room.storage.uploadStream(
+  "logs/output.txt",
+  chunks(),
+  overwrite: true,
+  size: 13,
+);
+
 ```
 ```dotnet C#
-await room.Storage.Close(myHandle);
+async IAsyncEnumerable<byte[]> Chunks()
+{
+    yield return Encoding.UTF8.GetBytes("Hello, ");
+    yield return Encoding.UTF8.GetBytes("world!");
+    await Task.CompletedTask;
+}
+
+await room.Storage.UploadStream(
+    "logs/output.txt",
+    Chunks(),
+    overwrite: true,
+    size: 13
+);
+
+```
+</CodeGroup>
+
+
+---
+
+### `download_stream(path, chunk_size=...)`
+
+**Description**  
+Streams a file back as metadata plus data chunks. Use this for larger files or when you want to process the response incrementally.
+
+**Parameters**  
+- `path` *(str)*: The file path to download.
+- `chunk_size` / `chunkSize` *(optional)*: Requested chunk size for streamed downloads.
+
+**Returns**  
+- A stream / async iterator of binary chunks. The first chunk carries metadata such as file name, MIME type, and size.
+
+**Example**:
+<CodeGroup>
+```python Python
+stream = await room.storage.download_stream(path="files/report.pdf")
+
+async for chunk in stream:
+    if chunk.headers["kind"] == "start":
+        print(chunk.headers["name"], chunk.headers["size"])
+        continue
+    print(f"Received {len(chunk.data)} bytes")
+
+```
+```javascript NodeJs
+const stream = await room.storage.downloadStream("files/report.pdf");
+
+for await (const chunk of stream) {
+  if (chunk.headers.kind === "start") {
+    console.log(chunk.headers.name, chunk.headers.size);
+    continue;
+  }
+  console.log(`Received ${chunk.data.length} bytes`);
+}
+
+```
+```typescript TypeScript
+const stream = await room.storage.downloadStream("files/report.pdf");
+
+for await (const chunk of stream) {
+  if (chunk.headers.kind === "start") {
+    console.log(chunk.headers.name, chunk.headers.size);
+    continue;
+  }
+  console.log(`Received ${chunk.data.length} bytes`);
+}
+
+```
+```dart Dart
+final stream = await room.storage.downloadStream("files/report.pdf");
+
+await for (final chunk in stream) {
+  if (chunk.headers["kind"] == "start") {
+    print("${chunk.headers["name"]} ${chunk.headers["size"]}");
+    continue;
+  }
+  print("Received ${chunk.data.length} bytes");
+}
+
+```
+```dotnet C#
+await foreach (var chunk in room.Storage.DownloadStream("files/report.pdf"))
+{
+    if ((chunk.Headers["kind"] as string) == "start")
+    {
+        Console.WriteLine($"{chunk.Headers["name"]} {chunk.Headers["size"]}");
+        continue;
+    }
+
+    Console.WriteLine($"Received {chunk.Data.Length} bytes");
+}
+
 ```
 </CodeGroup>
 
@@ -387,26 +529,32 @@ meshagent room storage cp \
   room://files/data.bin \
   ./data.bin \
   --room myroom
+
 ```
 ```python Python
 file_response = await room.storage.download(path="files/data.bin")
 print(file_response.data)  # raw bytes
+
 ```
 ```javascript NodeJs
 const fileResponse = await room.storage.download("files/data.bin");
 console.log(fileResponse.data);  // raw bytes
+
 ```
 ```typescript TypeScript
 const fileResponse = await room.storage.download("files/data.bin");
 console.log(fileResponse.data);  // raw bytes
+
 ```
 ```dart Dart
 final fileResponse = await room.storage.download("files/data.bin");
 print(fileResponse.data);  // raw bytes
+
 ```
 ```dotnet C#
 var fileResponse = await room.Storage.Download("files/data.bin");
 Console.WriteLine(fileResponse.Data);  // raw bytes
+
 ```
 </CodeGroup>
 
@@ -428,22 +576,27 @@ Requests a downloadable URL for the specified file path, which can be used to fe
 ```python Python
 url = await room.storage.download_url(path="files/report.pdf")
 print("Download the file from:", url)
+
 ```
 ```javascript NodeJs
 const url = await room.storage.downloadUrl("files/report.pdf");
 console.log("Download the file from:", url);
+
 ```
 ```typescript TypeScript
 const url = await room.storage.downloadUrl("files/report.pdf");
 console.log("Download the file from:", url);
+
 ```
 ```dart Dart
 final url = await room.storage.downloadUrl("files/report.pdf");
 print("Download the file from: $url");
+
 ```
 ```dotnet C#
 var url = await room.Storage.DownloadUrl("files/report.pdf");
 Console.WriteLine($"Download the file from: {url}");
+
 ```
 </CodeGroup>
 
@@ -466,29 +619,34 @@ Lists the contents of a folder, returning file and subfolder names along with a 
 meshagent room storage ls \
   --room myroom \
   room://some_folder
+
 ```
 ```python Python
 entries = await room.storage.list(path="some_folder")
 for e in entries:
     print(e.name, "is folder?" if e.is_folder else "is file?")
+
 ```
 ```javascript NodeJs
 const entries = await room.storage.list("some_folder");
 entries.forEach(e => {
     console.log(e.name, e.isFolder ? "is folder" : "is file");
 });
+
 ```
 ```typescript TypeScript
 const entries = await room.storage.list("some_folder");
 entries.forEach(e => {
     console.log(e.name, e.isFolder ? "is folder" : "is file");
 });
+
 ```
 ```dart Dart
 final entries = await room.storage.list("some_folder");
 for (var e in entries) {
     print("${e.name} ${e.isFolder ? "is folder" : "is file"}");
 }
+
 ```
 ```dotnet C#
 var entries = await room.Storage.List("some_folder");
@@ -496,6 +654,7 @@ foreach (var e in entries)
 {
     Console.WriteLine($"{e.Name} {(e.IsFolder ? \"is folder\" : \"is file\")}");
 }
+
 ```
 </CodeGroup>
 
@@ -520,26 +679,32 @@ Deletes a file or folder at the given path. A `file.deleted` event is typically 
 meshagent room storage rm \
   --room myroom \
   room://folder/old_file.txt
+
 ```
 ```python Python
 await room.storage.delete("folder/old_file.txt")
 print("File deleted.")
+
 ```
 ```javascript NodeJs
 await room.storage.delete("folder/old_file.txt");
 console.log("File deleted.");
+
 ```
 ```typescript TypeScript
 await room.storage.delete("folder/old_file.txt");
 console.log("File deleted.");
+
 ```
 ```dart Dart
 await room.storage.delete("folder/old_file.txt");
 print("File deleted.");
+
 ```
 ```dotnet C#
 await room.Storage.Delete("folder/old_file.txt");
 Console.WriteLine("File deleted.");
+
 ```
 </CodeGroup>
 
@@ -551,7 +716,7 @@ Console.WriteLine("File deleted.");
 A common use case:
 
 1. Check if a file exists.  
-2. Create and write data if it doesn’t exist.  
+2. Upload data if it doesn’t exist.
 3. Later, download the file to verify or use the data.  
 4. Delete the file when it’s no longer needed, reacting to the `file.deleted` event.
 
@@ -563,7 +728,7 @@ A common use case:
     <StorageDownloadCs/>
 </CodeGroup>
 
-This sequence demonstrates basic creation, reading, and deletion flows within a single session.  
+This sequence demonstrates basic upload, read, and deletion flows within a single session.
 
 ---
 
