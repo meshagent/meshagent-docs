@@ -4,167 +4,110 @@ title: "OpenAI Connectors and MCP Servers"
 import MCPDeepWikiTool from "/snippets/examples/python/tools/mcp_deepwiki/meshagent.mdx"
 import OpenAIConnectorTool from "/snippets/examples/python/tools/openai_connector/meshagent.mdx"
 
-Use this guide when you want to connect external MCP servers or OpenAI Connectors to a MeshAgent room.
+OpenAI Connectors and MCP servers let a MeshAgent room expose external tools.
 
-In addition to built-in MeshAgent tools, agents can also use external tools through [OpenAI Connectors and Model Context Protocol (MCP) servers](https://platform.openai.com/docs/guides/tools-connectors-mcp).
+In MeshAgent, these tools are typically exposed through the same MCP tool flow:
 
-- **OpenAI Connectors**: OpenAI-maintained MCP wrappers for third party services that don't have official MCP servers (Gmail, Google Drive, Outlook, Microsoft Teams, Dropbox etc.). Using these connectors requires OAuth client registration and authorization with the provider. 
-- **Remote MCP servers**: Any MCP server operated by you or a third party. You provide the server URL and any required authentication details, and the agent can call the server's MCP tools. 
+- **[OpenAI Connectors](https://platform.openai.com/docs/guides/tools-connectors-mcp)** wrap third-party services such as Gmail, Google Drive, Outlook, Microsoft Teams, and Dropbox.
+- **[MCP servers](https://modelcontextprotocol.io/introduction)** expose tools over the Model Context Protocol, whether the server is public, self-hosted, or provided by a third party.
 
 For a concrete vendor-specific walkthrough, see [Supabase MCP Guide](./supabase_mcp).
 
-## Two ways to use MCP Tools & OpenAI Connectors in MeshAgent
-### 1. User-Toggleable Tools (Per-Message)
-Use this when you want users to **choose tools on demand**, per message or per conversation — similar to ChatGPT/Claude tool toggles.
+## Fastest path: install from Powerboards
 
-**Examples**
-- “Enable Google Drive only for this question”
-- “Use Teams for this message, but not the next”
-- Avoid tool bloat by not attaching dozens of tools permanently
+If you are adding a supported MCP integration to a room, the easiest path is often Powerboards.
 
-**How it works**
-- You deploy MCP servers / connectors as services so they’re available in a room/project
-- Your agent is configured to accept MCP tools dynamically
-- Your UI lets users toggle tools on/off, and passes the selection to the agent
+1. Open the Powerboards installer.
+2. Paste the MCP server URL.
+3. Let Powerboards inspect the server and guide the install flow.
+4. Choose the room where the tool should be installed.
 
-**Best for**
-- ChatGPT-style experiences  
-- Reducing agent bloat by deploying multiple tools and toggling them on/off as needed during interactive agent sessions
-- Best when tools require explicit approval
+For some servers, this means you can install the tool without writing YAML or deploying a custom service yourself.
 
-### 2. Always-On Tools (Agent-Owned)
-Use this when your agent should **always** have access to specific tools.
+Powerboards can also install from a hosted `ServiceTemplate` link when you want to distribute a more opinionated setup flow. For more on those install paths, see [Powerboards](../../interfaces/powerboards).
 
-**Examples**
-- A support agent that always needs ticketing tools
-- A repo assistant that always needs GitHub MCP tools
-- A bot that always reads from a single internal system
+## CLI path: create the service from an MCP URL
 
-**How it works**
-- You attach MCP tools to the agent via the SDK (`toolkits`), or deploy an agent/service that includes them.
-- The agent will always have these tools available on every turn.
+If you want to stay in the CLI, you can create the external MCP service directly from the server URL.
 
-**Best for**
-- Agents that routinely need access to certain tools 
-- Background agents who should have access to the tool by default
-- Cases when users should not choose tools manually
+If you want to inspect the generated spec first:
 
-In both cases, MeshAgent talks to OpenAI via the [`OpenAIResponsesAdapter`](../adapters/openai_responses_adapter). This adapter gathers the toolkits available to the agent on that turn, manages tool execution, streaming responses, and returning the final result.
-Tool lists are rebuilt on every user message by merging always-on toolkits with any user-selected toolkits for that turn. For the full flow see [How Tools and Toolkits Work](./tools_and_toolkits).
+```bash
+meshagent service spec \
+  --mcp https://mcp.deepwiki.com/mcp
+```
 
-## User-Toggleable Tools (Per-Message)
-This section shows you how to let users dynamically enable/disable OpenAI Connectors and MCP servers per conversation or message — similar to how ChatGPT and Claude let you toggle tools on and off.
+If you want to create the service immediately:
 
-### When to use user-toggleable tools
+```bash
+meshagent service create \
+  --mcp https://mcp.deepwiki.com/mcp \
+  --room quickstart
+```
 
-Use this mode when you want users to control which capabilities are available on demand. This helps reduce agent bloat by avoiding deployments where each agent has a different permutation of tools. If an agent should always have specific capabilities, you can use the always-on approach instead (attach tools via `toolkits`).
+The CLI auto-discovers the MCP server metadata. For servers that expose OAuth registration metadata, the generated service is configured for the dynamic client-registration flow.
 
-> **Note:** Even with user-toggleable tools, users can enable multiple (or even all) tools at once. The difference is that tools are opt-in per message, rather than permanently attached to the agent.
+## Start an agent that can use MCP tools
 
-User-toggleable tools are supported automatically when you run a process-backed agent with a chat channel and flags like `--mcp`. This enables per-message tool selection and is supported in MeshAgent Studio and Powerboards automatically. You can implement the same pattern when building agents with the MeshAgent SDK by adding toolkit builders (e.g. `MCPToolkitBuilder()`) and passing the user's tool selection to the agent each turn.
+Once the MCP service is installed in the room, start an agent that can use it:
 
-### How user-toggleable tools work 
-User-toggleable MCP tool selection has three pieces:
-1. Deployed services that expose MCP servers or OpenAI Connectors
-2. An agent configured to accept MCP tools dynamically
-3. A UI that displays available services and lets users toggle them on/off
+```bash
+meshagent process join \
+  --room quickstart \
+  --agent-name agent \
+  --channel chat \
+  --mcp
+```
 
-MeshAgent Studio and Powerboards handle the UI integration automatically.
+Open [MeshAgent Studio](https://studio.meshagent.com), join the room, and enable the MCP tool when you want the agent to use it.
 
-## Example 1: Dynamic MCP Tools in MeshAgent
-### Step 1: Create the Service YAML
-First you need to [package and deploy](../../services_room_containers/packaging_and_deploying/packaging) a project or room service for the MCP Servers or OpenAI Connectors you want the agent to have access to. You can do this by defining a service yaml file and deploying the service using the MeshAgent CLI. 
+If the agent should always have access to the room's MCP tools, use `--require-mcp` instead.
 
-For example, let's deploy the [DeepWiki MCP Server](https://docs.devin.ai/work-with-devin/deepwiki-mcp) which provides tools for reading public GitHub repositories (no authentication required). To do so we'll create a YAML file that defines the service and deploy it with the CLI.
+For the deeper difference between dynamic and always-on tool access, see [How Tools and Toolkits Work](./tools_and_toolkits).
 
-Create a `meshagent.yaml` file for the MCP DeepWiki service.
+## When to write the YAML yourself
+
+Use a hand-written service spec when you need to control the service shape directly, pin specific metadata, or define an OpenAI Connector explicitly.
+
+### Example: public MCP server
+
+This example exposes the public DeepWiki MCP server as a room service:
 
 <CodeGroup>
   <MCPDeepWikiTool />
 </CodeGroup>
 
-### Step 2: Deploy the service 
 ```bash
-meshagent service create --file="meshagent.yaml"  --room=quickstart
+meshagent service create --file meshagent.yaml --room quickstart
 ```
 
-### Step 3: Configure your agent to accept MCP tools
-Your agent needs to be configured with `MCPToolkitBuilder()` so it can accept tools selected by the user. A process-backed agent with a chat channel does this automatically with the `--mcp` flag.
+### Example: OpenAI Connector
 
-```bash
-meshagent process join --room=quickstart --agent-name=agent --channel chat --mcp
-```
-
-> **Note:** The process CLI also supports other dynamic toolkits like `--web-search` and `--storage` that work similarly. They add toolkit builders so users can enable/disable these capabilities per message.
-
-### Step 4: Test in MeshAgent Studio
-Go to [MeshAgent Studio](https://studio.meshagent.com) and try out the agent. You'll be able to turn on the MCP DeepWiki tool from the UI. The UI automatically discovers and displays available services and shows them as selectable tools that users can toggle on/off. If you're building a custom UI, you'll need to implement similar discovery and selection functionality.
-
-## Example 2: Create a MeshAgent Service for an OpenAI Connector
-
-OpenAI Connectors require OAuth authentication. You'll need to register an OAuth client with the service provider first. See [OpenAI's documentation](https://platform.openai.com/docs/guides/tools-connectors-mcp) for additional instructions.
-
-Once you register your OAuth API client you can create and deploy the service just like we did for the MCP Server. 
-
-### Step 1: Create the Service YAML
+This example defines a Microsoft Teams connector service explicitly:
 
 <CodeGroup>
   <OpenAIConnectorTool />
 </CodeGroup>
 
-### Step 2: Deploy the service
 ```bash
-meshagent service create --file="meshagent.yaml"  --room=quickstart
+meshagent service create --file meshagent.yaml --room quickstart
 ```
 
-### Step 3: Start a process-backed agent with MCP enabled
-```bash
-meshagent process join --room=quickstart --agent-name=agent --channel chat --mcp
-# make sure room matches room you deployed to if deployed as a room service
-```
+Use this path when you want to manage the connector configuration yourself instead of relying on auto-discovery.
 
-### Step 4: Use It in MeshAgent Studio
-Open [MeshAgent Studio](https://studio.meshagent.com), go to your room, and you'll see "Microsoft Teams" as a toggleable tool. Enable it to let the agent read Teams messages!
+## Security and setup notes
 
-## Example 3: Always-on MCP Tools with `meshagent process`
+When adding external tools like MCP servers or OpenAI Connectors, think about:
 
-If the agent should always have MCP tools available on every turn, enable required MCP instead of making the tools user-toggleable.
+- what data the external service will receive
+- who operates the MCP server or connector-backed system
+- whether users should opt in per turn with `--mcp` or whether the tool should always be attached with `--require-mcp`
+- whether the server needs additional secrets or OAuth setup
 
-Once the MCP or connector service is deployed, start the agent with `--require-mcp`:
+## Related topics
 
-```bash
-meshagent process join \
-  --room=quickstart \
-  --agent-name=agent \
-  --channel chat \
-  --require-mcp
-```
-
-You can use the same pattern when deploying:
-
-```bash
-meshagent process deploy \
-  --room=quickstart \
-  --service-name=agent \
-  --agent-name=agent \
-  --channel chat \
-  --require-mcp
-```
-
-Use this approach when:
-
-- the agent should always have MCP tools available
-- users should not toggle the tool on and off per message
-- you want a stable tool configuration for every turn
-
-## Security and best practices
-When adding external tools like MCP Servers or OpenAI Connectors consider: 
-- What data you're sharing with external services
-- Who operates the MCP servers you connect to  
-- Whether agents should require approval before using certain tools
-
-## Related Topics
-- [How Tools and Toolkits Work](./tools_and_toolkits): How toolkits are collected per turn and routed to the adapter.
-- [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging): Choose a deployment path and deploy a project or room service.
-- [Service Manifest Reference](../../services_room_containers/packaging_and_deploying/service_manifest_reference): Look up YAML fields for `container`, `external`, ports, variables, and annotations.
-- [Secrets](../../secrets/secrets_overview): Understand how to use secrets and OAuth with MeshAgent
+- [Built-in MeshAgent Toolkits](./built_in_toolkits): understand the built-in tool flags available from `meshagent process`
+- [Tools and Toolkits](./tools_and_toolkits): understand dynamic versus always-on tool access
+- [Powerboards](../../interfaces/powerboards): install tools from built-ins, templates, or MCP server URLs
+- [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging): choose a deployment path for external services
+- [Deploy Services with MeshAgent](../../services_room_containers/packaging_and_deploying/packaging#ports-endpoints): look up MCP endpoint and service fields

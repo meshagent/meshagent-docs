@@ -41,10 +41,10 @@ class Program
         await room.ConnectAsync();
 
         var arguments = new Dictionary<string, object> { ["a"] = 1, ["b"] = 2 };
-        var add_result = await room.Agents.InvokeTool("math.toolkit", "add", arguments);
+        var add_result = await room.Agents.InvokeTool("math-toolkit", "add", arguments);
         LogProvider.GetLogger().LogInformation($"The result from adding the numbers is: {JsonSerializer.Serialize(add_result.ToJson())}");
 
-        var subtract_result = await room.Agents.InvokeTool("math.toolkit", "subtract", arguments);
+        var subtract_result = await room.Agents.InvokeTool("math-toolkit", "subtract", arguments);
         LogProvider.GetLogger().LogInformation($"The result from subtracting the numbers is: {JsonSerializer.Serialize(subtract_result.ToJson())}");
     }
 }
