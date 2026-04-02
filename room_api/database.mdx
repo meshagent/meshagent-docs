@@ -2,6 +2,17 @@
 
 The `DatabaseClient` is the Room API for room-scoped structured data. Use it to create tables, insert and update rows, build indexes, and run text or vector search without provisioning a separate database.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room database --help
+meshagent room database table --room myroom
+meshagent room database inspect --room myroom --table users
+meshagent room database search --room myroom --table users
+```
+
 ## Why use the Database API?
 
 - Keep structured room data close to the agents and services that use it.
@@ -16,20 +27,21 @@ Each room database contains named tables. You can create tables from a schema or
 
 ## Permissions and grants
 
-Deployed services need a database API grant to use this API, and those grants can be narrowed to specific tables. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Database API is controlled by the `database` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: the full database surface is available under `meshagent room database ...`.
-- **Python**: full room-database helper surface, including `drop_index`, `restore`, `checkout`, and `list_versions`.
-- **Dart**: room-database helpers also expose `dropIndex`, `inspect`, and `listVersions`; for add-columns workflows, use `addColumnWithExpression` or `addColumnsOfType`.
-- **JavaScript/TypeScript and .NET**: cover the primary CRUD, search, optimize, and index creation/list helpers shown below, but do not currently expose `dropIndex`, `inspect`, `restore`, `checkout`, or `listVersions`.
+- `list_tables` controls whether the participant can list tables
+- table grants control `read`, `write`, and `alter` access per table
+- if no table list is supplied, access is broad across the room database
 
-## API Methods
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-Below is a summary of the primary methods. Each method is asynchronous, so you should `await` the call.
+## API reference
 
-### List tables
+Use the methods below to manage room tables, rows, indexes, and search workflows. Each method is asynchronous, so you should `await` the call.
+
+### `list_tables()`
 **Description**
 Retrieves a list of all table names currently present in the database.
 
@@ -75,9 +87,7 @@ Console.WriteLine(string.Join(", ", tables)); // ["users", "orders", "products",
 </CodeGroup>
 
 
----
-
-### Create table with schema
+### `create_table_with_schema(...)`
 - **Description**: Creates a new table with an optional schema and initial data. You can specify how the table should be created through the `mode` parameter.
   - **modes**:
     - `"create"`: Creates the table; fails if it already exists.
@@ -185,9 +195,7 @@ await room.Database.CreateTableWithSchema(
 ```
 </CodeGroup>
 
----
-
-### Create table from data
+### `create_table_from_data(...)`
 - **Description**: Creates a table using only data and an optional mode.
 - **Parameters**:
   - **name**: The table name to create.
@@ -264,9 +272,7 @@ await room.Database.CreateTableFromData(
 ```
 </CodeGroup>
 
----
-
-### Drop table
+### `drop_table(name, ...)`
 - **Description**: Drops (deletes) a table by name, optionally ignoring if it does not exist.
 - **Parameters**:
   - **name**: The name of the table to drop.
@@ -317,9 +323,7 @@ await room.Database.DropTable("temp_table", ignoreMissing: true);
 ```
 </CodeGroup>
 
----
-
-### Add columns
+### `add_columns(...)`
 - **Description**: Adds one or more columns to an existing table, specifying default value expressions.
 - **Parameters**:
   - **table**: Name of the target table.
@@ -391,9 +395,7 @@ await room.Database.AddColumns(
 ```
 </CodeGroup>
 
----
-
-### Drop columns
+### `drop_columns(...)`
 - **Description**: Drops (removes) one or more columns from an existing table.
 - **Parameters**:
   - **table**: Name of the target table.
@@ -449,9 +451,7 @@ await room.Database.DropColumns(
 </CodeGroup>
 
 
----
-
-### Insert
+### `insert(table, records)`
 - **Description**: Inserts one or more new records into a table.
 - **Parameters**:
   - **table**: The name of the table to insert into.
@@ -520,9 +520,7 @@ await room.Database.Insert(
 ```
 </CodeGroup>
 
----
-
-### Update
+### `update(table, where, ...)`
 - **Description**: Updates existing records in a table.
 - **Parameters**:
   - **table**: Name of the table to update.
@@ -590,9 +588,7 @@ await room.Database.Update(
 ```
 </CodeGroup>
 
----
-
-### Delete
+### `delete(table, where)`
 - **Description**: Deletes records from a table that match a specified condition.
 - **Parameters**:
   - **table**: The target table.
@@ -645,9 +641,7 @@ await room.Database.Delete(
 ```
 </CodeGroup>
 
----
-
-### Merge (upsert)
+### `merge(table, records, ...)`
 - **Description**: Performs an **upsert** (update/insert) by merging incoming records into an existing table. Records matching the `on` column are updated; otherwise, new rows are inserted.
 - **Parameters**:
   - **table**: The target table.
@@ -723,9 +717,7 @@ await room.Database.Merge(
 ```
 </CodeGroup>
 
----
-
-### Search
+### `search(table, ...)`
 - **Description**: Searches for records in a table. This can be used for plain text search, vector similarity search, or simple SQL filtering.
 - **Parameters**:
   - **table**: The target table name.
@@ -799,9 +791,7 @@ Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@
 ```
 </CodeGroup>
 
----
-
-### Optimize
+### `optimize(table, ...)`
 - **Description**: Optimizes a table (e.g., compacts its storage or rebuilds indexes if required).
 - **Parameters**:
   - **table**: Name of the table to optimize.
@@ -837,9 +827,7 @@ await room.Database.Optimize("users");
 ```
 </CodeGroup>
 
----
-
-### Create vector index
+### `create_vector_index(...)`
 - **Description**: Creates a vector index on a specified column for vector similarity searches.
 - **Parameters**:
   - **table**: The target table name.
@@ -893,9 +881,7 @@ await room.Database.CreateVectorIndex(
 ```
 </CodeGroup>
 
----
-
-### Create scalar index
+### `create_scalar_index(...)`
 - **Description**: Creates a scalar index (typical database index) on a specified column.
 - **Parameters**:
   - **table**: The target table name.
@@ -949,9 +935,7 @@ await room.Database.CreateScalarIndex(
 ```
 </CodeGroup>
 
----
-
-### Create full text search index
+### `create_full_text_index(...)`
 - **Description**: Creates a full-text search index on a text column, useful for text-based queries.
 - **Parameters**:
   - **table**: The table name.
@@ -1005,9 +989,7 @@ await room.Database.CreateFullTextSearchIndex(
 ```
 </CodeGroup>
 
----
-
-### Drop index
+### `drop_index(...)`
 
 - **Description**: Drop an index by name.
 - **Parameters**:
@@ -1037,9 +1019,7 @@ await room.database.dropIndex(
 ```
 </CodeGroup>
 
----
-
-### List indexes
+### `list_indexes(table)`
 - **Description**: Lists the indexes currently defined on a table.
 - **Parameters**:
   - **table**: The name of the table for which to list indexes.
@@ -1095,9 +1075,7 @@ Console.WriteLine(indexes);
 ```
 </CodeGroup>
 
----
-
-### Table versions
+### `list_versions(table)`
 
 - **Description**: List historical versions of a table and, in Python, restore or checkout a specific version.
 - **Methods**:
@@ -1127,7 +1105,6 @@ for (final version in versions) {
 ```
 </CodeGroup>
 
----
 
 ## Related guides
 

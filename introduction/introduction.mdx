@@ -1,5 +1,6 @@
 ---
-title: "Overview"
+title: "Key Concepts"
+description: What MeshAgent is, the core concepts to know, and how the main product surfaces fit together.
 ---
 
 # MeshAgent
@@ -7,6 +8,8 @@ title: "Overview"
 [MeshAgent](https://www.meshagent.com) is the platform for building, deploying, and operating **room-based agent systems**.
 
 A **room** is the runtime and collaboration boundary where humans, agents, tools, services, and shared state work together. Instead of treating every agent interaction as an isolated run, MeshAgent gives you a live workspace with built-in infrastructure, deployment surfaces, and product interfaces around that room.
+
+If you want commands you can copy and run, start with [Quickstart](./cli_quickstart). This page is the short mental model for everything else in the docs.
 
 Most agent products give you one part of the stack: model access, a sandbox, an orchestration loop, or a chat surface. MeshAgent gives you the full operating surface for collaborative agent applications: rooms, agents, built-in runtime APIs, deployable services, developer tooling, end-user interfaces, permissions, and observability.
 
@@ -24,68 +27,166 @@ Every MeshAgent account includes both [MeshAgent Studio](../interfaces/meshagent
 - **Fast start or full customization**: Start with built-in agents in Powerboards or MeshAgent Studio, or bring and build your own agents, tools, and services.
 - **Governance and observability built in**: Control access, scope permissions, inspect logs and traces, and understand usage and cost without bolting on a separate control plane.
 
-## The core idea
+## What MeshAgent includes
 
-A **project** groups related rooms, members, services, credentials, interfaces, billing, and project-managed resources.
+- **[Rooms](../room_api/overview)** with built-in runtime APIs for messaging, storage, database, queues, documents, containers, secrets, and developer events
+- **[Agents](../agents/overview)** that can work across chat, mail, queues, toolkit calls, and other room-connected workflows
+- **[Services](../services_room_containers/packaging_and_deploying/packaging)** you can deploy at the project or room level
+- **[MeshAgent Studio](../interfaces/meshagent_studio)** for developers and operators
+- **[Powerboards](../interfaces/powerboards)** for end users working with agents in rooms
+- **[CLI and SDKs](../reference/sdk_reference)** for local development, automation, and custom applications
 
-A **room** is where runtime work actually happens.
+## Core concepts
 
-When a room becomes active, MeshAgent starts a session for that room, brings up the room runtime, and starts the services that should run there. When activity stops, the room shuts down automatically. Data written through room APIs such as storage, database, queues, and sync remains available according to that API's behavior.
+### [Project](../project_admin/overview)
 
-Inside a room, people and agents can:
+A **project** is the top-level container for related work in MeshAgent.
 
-- chat and collaborate in real time
-- work over shared files, data, and documents
-- send work through queues and scheduled tasks
-- use built-in and custom tools
-- access containers, secrets, and other room infrastructure
-- connect custom services and application logic
+Projects group:
 
-That gives you one place to coordinate runtime behavior, shared context, and collaboration instead of rebuilding those pieces around each individual agent.
+- rooms
+- members and roles
+- API keys and credentials
+- deployed services
+- routes, mailboxes, and scheduled tasks
+- billing and other project-level settings
+
+Most administrative and deployment actions happen at the project level.
+
+### [Room](../room_api/overview)
+
+A **room** is the runtime and collaboration boundary in MeshAgent.
+
+It is the place where humans, agents, tools, services, files, queues, and shared documents come together around the same live context. Rooms belong to projects, and each room can have its own participants, room-scoped services, and persisted state.
+
+Rooms become active on demand, provision the runtime they need for that session, and shut down automatically when idle. That means they scale with usage rather than staying running all the time.
+
+### [Session](../room_api/sessions)
+
+A **session** is one active run of a room.
+
+When a room becomes active, MeshAgent starts a session for that room. During the session, participants connect, services run, and logs, traces, metrics, and events are recorded. When activity stops, the room shuts down automatically.
+
+### Participant
+
+A **participant** is anything that joins a room and takes part in the runtime.
+
+Participants can be:
+
+- humans
+- agents
+- services
+- tools exposed into the room
+
+Participants run with identities and permissions that control what they can access.
+
+See [Participant Tokens](../rest_api/participant_tokens) and [API Scopes](../rest_api/api_scopes).
+
+### [Agent](../agents/overview)
+
+An **agent** is a room-connected participant that receives work, uses tools and room capabilities, and produces results back into the room.
+
+Agents can:
+
+- answer in chat
+- consume queued work
+- handle mail
+- be invoked by other agents
+- run locally during development or be deployed as services
+
+For agent workflows, MeshAgent uses [`meshagent process`](../agents/process/overview).
+
+### [Tool / Toolkit](../agents/tools/tools_and_toolkits)
+
+A **tool** is a callable capability an agent can use to take action.
+
+A **toolkit** is a group of related tools exposed together.
+
+MeshAgent supports built-in tools, custom tools, MCP-based tools, and toolkit-style agents that can be invoked by other agents.
+
+### [Skills](../agent_skills/overview)
+
+A **skill** is reusable guidance that helps an agent handle a class of tasks better.
+
+Skills are not callable tools. They are playbooks the agent can discover and apply when relevant. In practice, skills often tell the agent which tools to use, what files to inspect, and how to structure the output.
+
+### [Threads](../agents/threads_overview)
+
+A **thread** is the continuity boundary for agent work.
+
+Threads let an agent keep related work together without mixing unrelated conversations or jobs into the same history. This is especially important for agents that work across chat, queues, mail, and toolkit calls.
+
+### [Service](../services_room_containers/packaging_and_deploying/packaging)
+
+A **service** is how code is packaged and deployed into MeshAgent.
+
+Services can package:
+
+- agents
+- tools and toolkits
+- connectors and integrations
+- supporting application logic
+
+Services can be **MeshAgent-native** for deeper room integration or **external** when MeshAgent is routing to something you host elsewhere.
+
+Once deployed, a service can be made available across a project or scoped to a specific room.
+
+### [Project Services and Room Services](../services_room_containers/packaging_and_deploying/packaging)
+
+A **project service** is available across the project.
+
+A **room service** is scoped to one room.
+
+Use project services for shared capabilities that should be broadly available. Use room services for room-specific or user-specific behavior. Choose that scope when you deploy the service.
+
+### [Room APIs](../room_api/overview)
+
+The **Room APIs** are the built-in runtime capabilities available inside a room.
+
+These include:
+
+- messaging
+- storage
+- database
+- queues
+- sync/documents
+- containers
+- secrets
+- developer events and logs
+
+They are the main way agents, services, and humans interact with room infrastructure.
+
+### [Interfaces](../interfaces/overview)
+
+An **interface** is a product surface people use to work with MeshAgent.
+
+Today the main interfaces are:
+
+- **[MeshAgent Studio](../interfaces/meshagent_studio)** for developers building, testing, deploying, and inspecting
+- **[Powerboards](../interfaces/powerboards)** for end users interacting with deployed agents
+
+## How the system fits together
+
+1. Work starts inside a **project**.
+2. People and services create or join a **room**.
+3. When the room becomes active, MeshAgent starts a **session**, provisions the room runtime, and starts the services that should run there.
+4. Humans and agents use the room's built-in APIs and shared state to do work together.
+5. [MeshAgent Studio](../interfaces/meshagent_studio) and [Powerboards](../interfaces/powerboards) connect different kinds of users to that same underlying room.
+
+The important boundary is the room. That is where runtime state, live collaboration, room APIs, room-scoped services, and participant permissions come together.
 
 ## What MeshAgent lets you build
 
-- internal copilots, operators, and research agents that work with teams over shared context
+- custom agents and tools that work with teams over shared context
 - customer-facing agents you can ship in Powerboards or your own UI
 - document-heavy workflows where agents and people need to read, write, and coordinate over the same data
 - multi-agent systems that combine chat, background queues, mail, toolkit calls, and scheduled work
 - custom applications where agents need real runtime capabilities, not just prompt wrappers
 
-## What you get out of the box
+## Where to go next
 
-- **[MeshAgent CLI](../reference/meshagent_cli_help)** for local development, room operations, deployment, and automation from the terminal
-- **[SDKs](../reference/sdk_reference)** for Python, TypeScript/JavaScript, Dart/Flutter, and .NET when you want to build custom services or application interfaces
-- **[Room APIs](../room_api/overview)** for messaging, storage, database, queues, sync/documents, containers, secrets, and developer events
-- **[Agents and tools](../agents/overview)** that can use built-in capabilities, custom toolkits, skills, and multiple model providers
-- **[Services and deployment](../services_room_containers/overview)** so you can package agents, tools, connectors, and supporting code as project or room services
-- **MeshAgent Server** as the managed backend that provisions rooms, runs services, scales runtime infrastructure, and tracks project usage
-- **[MeshAgent Studio](../interfaces/meshagent_studio)** for development, testing, debugging, deployment, and project visibility
-- **[Powerboards](../interfaces/powerboards)**, included with every MeshAgent account, for end-user interaction with built-in agents, deployed agents, and installable experiences
-- **[Observability](../observability/intro)**, scoped access, and cost controls for production usage
-
-## A quick taste
-
-You can get from zero to a room-connected agent with just a few CLI commands:
-
-```bash
-meshagent setup
-meshagent process join \
-  --room myroom \
-  --agent-name assistant \
-  --channel chat \
-  --model gpt-5.4 \
-  --web-search \
-  --require-storage \
-  --require-document-authoring \
-  --rule "You are a helpful research assistant. Answer clearly, use web search when needed, and save useful notes to room storage."
-```
-
-From there you can work with that agent in MeshAgent Studio, open the same room in Powerboards, add more tools and rules, expose more channels such as mail or queues, and deploy it as a managed service.
-
-## Next steps
-
-- [**Quickstart**](./cli_quickstart): Install MeshAgent, connect the CLI, run your first agent, and deploy it.
-- [**Key Concepts**](./key_concepts): Learn how Rooms, Agents, Tools, and Services fit together.
-- [**Architecture**](./architecture): Understand how projects, rooms, services, and interfaces fit together.
-- [**Rooms**](../room_api/overview): Explore the room runtime and built-in APIs.
-- [**Agents & Tools**](../agents/overview): Learn how agents work in MeshAgent.
+- [**Quickstart**](./cli_quickstart): install MeshAgent, connect the CLI, run your first agent, and deploy it
+- [**Rooms**](../room_api/overview): explore the room runtime and built-in APIs
+- [**Agents & Tools**](../agents/overview): learn how agents work in MeshAgent
+- [**Deploy & Manage**](../services_room_containers/packaging_and_deploying/packaging): package, deploy, observe, and manage services
+- [**Interfaces**](../interfaces/overview): see how Studio and Powerboards fit together

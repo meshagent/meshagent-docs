@@ -2,6 +2,17 @@
 
 The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room container --help
+meshagent room container image list --room myroom
+meshagent room container run --room myroom --image meshagent/cli:default
+meshagent room container list --room myroom
+```
+
 ## Why use the Containers API?
 
 - Pull and manage images without leaving the room context.
@@ -14,19 +25,21 @@ Containers are room-scoped workloads. You can pull images, run a container, stre
 
 ## Permissions and grants
 
-If you want a deployed service to use the Containers API, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Containers API is controlled by the `containers` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: image and container lifecycle commands are available under `meshagent room container ...`.
-- **Python, JavaScript/TypeScript, and Dart**: the current helper surface covers image, run/exec/log, and lifecycle operations.
-- **.NET**: does not currently expose a `ContainersClient` helper.
+- `use_containers` is the main switch for container operations
+- `pull` and `run` can be narrowed to specific image names or prefixes
+- `logs` controls access to container log streaming
 
-JavaScript/TypeScript and Dart expose the same operations with camelCase method names such as `listImages`, `deleteImage`, `pullImage`, `run`, `exec`, `logs`, `list`, `stop`, and `deleteContainer`.
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-## API Methods
+## API reference
 
-### list_images
+Use the methods below to manage room images, start and inspect containers, and clean up container state.
+
+### `list_images()`
 
 - **Description**: List images currently available to the room (built or pulled previously).
 - **Parameters**: None.
@@ -46,9 +59,7 @@ for image in images:
 ```
 </CodeGroup>
 
----
-
-### delete_image
+### `delete_image(image)`
 
 - **Description**: Delete an unused image from the room.
 - **Parameters**:
@@ -68,9 +79,7 @@ await room.containers.delete_image(image="chatbot:old")
 ```
 </CodeGroup>
 
----
-
-### pull_image
+### `pull_image(tag, credentials=None)`
 
 - **Description**: Pull an image into the room. Supports passing registry credentials when needed.
 - **Parameters**:
@@ -91,9 +100,7 @@ await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 ```
 </CodeGroup>
 
----
-
-### run
+### `run(image, ...)`
 
 - **Description**: Start a container in the room.
 - **Parameters** (all optional except `image`):
@@ -127,9 +134,7 @@ print(f"Container launched: {container_id}")
 ```
 </CodeGroup>
 
----
-
-### exec
+### `exec(container_id, ...)`
 
 - **Description**: Attach an interactive command to an existing container and stream its output.
 - **Parameters**:
@@ -169,9 +174,7 @@ print(f"Exec finished with status: {status}")
 ```
 </CodeGroup>
 
----
-
-### logs
+### `logs(container_id, follow=False)`
 
 - **Description**: Stream container logs and optionally follow until exit.
 - **Parameters**:
@@ -198,9 +201,7 @@ await stream  # optional: wait for the request to finish
 ```
 </CodeGroup>
 
----
-
-### list
+### `list(all=False)`
 
 - **Description**: List containers in the room, optionally including exited ones.
 - **Parameters**:
@@ -223,9 +224,7 @@ for container in containers:
 ```
 </CodeGroup>
 
----
-
-### stop
+### `stop(container_id, force=False)`
 
 - **Description**: Request a graceful stop (or force stop) of a running container.
 - **Parameters**:
@@ -246,9 +245,7 @@ await room.containers.stop(container_id=container_id, force=False)
 ```
 </CodeGroup>
 
----
-
-### delete
+### `delete(container_id)`
 
 - **Description**: Remove container metadata after it has stopped. Useful for cleaning up history.
 - **Parameters**:
@@ -265,5 +262,4 @@ await room.containers.delete(container_id=container_id)
 ## Related guides
 
 - [Room API Overview](./overview)
-- [Services Overview](../services_room_containers/overview)
 - [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)

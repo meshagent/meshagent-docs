@@ -74,6 +74,28 @@ These are commonly used in document generation, website authoring, document inte
 - **`DatabaseToolkitBuilder`**: construct database tools for agent workflows.
 - **`UUIDToolkit`**: provide UUID generation helpers.
 
+### Execution and container tools
+
+- **`ShellToolkitBuilder`**: add function-based shell execution tools. In the current CLI, `--shell` is wired for both Claude and OpenAI model paths.
+- **`LocalShellToolkitBuilder`**: expose OpenAI's native local shell tool. In the current CLI, `--local-shell` is OpenAI-only.
+- **`ContainerToolkit`**: add a managed container toolkit with start, list, stop, and run tools for multi-step shell workflows inside containers.
+
+`ContainerToolkit` is the built-in toolkit behind `--require-advanced-shell`.
+
+Use `--require-advanced-shell` when you want the agent to manage one or more working containers across a session instead of treating every shell command as an isolated execution. This is useful for workflows such as:
+
+- iterative coding or debugging inside the same container
+- running several commands against the same checked-out repo or mounted files
+- long-lived shell workflows where the agent needs to inspect state, start a container, run commands, and then stop it later
+
+This is different from the simpler shell tool flags:
+
+- `--shell` or `--require-shell` focus on direct shell execution
+- `--local-shell` uses OpenAI's native local shell tool
+- `--require-advanced-shell` gives the agent a container manager with explicit lifecycle tools
+
+When the CLI agent stops, MeshAgent cleans up the managed containers created through this toolkit.
+
 ### Provider and adapter-driven toolkits
 
 These toolkits are usually exposed through adapters or builders instead of being always on. Some of them switch implementation based on the model you choose, so the same CLI flag can work across providers even when the underlying tool definition is different.
@@ -83,15 +105,14 @@ For adapter-specific details, see [OpenAI Responses Adapter](../adapters/openai_
 - **`MCPToolkit` / `MCPToolkitBuilder`**: expose external MCP servers as MeshAgent tools.
 - **`WebFetchToolkitBuilder`**: add web-fetch tools. In the CLI, `--web-fetch` selects Anthropic's built-in Messages API web fetch tool for Claude models and MeshAgent's `WebFetchToolkitBuilder` for other models. That means the same flag works for both Anthropic and OpenAI-backed agents.
 - **`WebSearchToolkitBuilder`**: add web search tools. For Claude models this uses Anthropic's built-in Messages API `web_search_*` tool. For other model paths the CLI selects a different builder, so the same `--web-search` flag still works outside Anthropic.
-- **`ShellToolkitBuilder`**: add function-based shell execution tools. In the current CLI, `--shell` is wired for both Claude and OpenAI model paths.
-- **`LocalShellToolkitBuilder`**: expose OpenAI's native local shell tool. In the current CLI, `--local-shell` is OpenAI-only.
 - **`ImageGenerationToolkitBuilder`**: expose OpenAI-native image generation. In the current CLI, `--image-generation` is OpenAI-only.
 - **`ApplyPatchToolkitBuilder`**: expose OpenAI's patch-editing tool. In the current CLI, `--apply-patch` is OpenAI-only.
 - **`ScriptToolkitBuilder`**: turn a fixed script or command sequence into a tool the agent can call. This is useful when you want to wrap an existing CLI workflow or shell script as an agent tool without building a full custom Python tool first.
 
 ## Related guides
 
-- [Introduction to Tools](./intro)
-- [How Tools and Toolkits Work](./tools_and_toolkits)
+- [Tools and Toolkits](./tools_and_toolkits)
+- [Tools Quickstart](./quickstart)
+- [Build and Deploy Images](../../services_room_containers/containers/meshagent_image)
 - [Room API Overview](../../room_api/overview)
-- [MCP and OpenAI Connectors](./openai_connectors_mcp)
+- [OpenAI Connectors and MCP Servers](./openai_connectors_mcp)

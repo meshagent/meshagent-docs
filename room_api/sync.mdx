@@ -13,6 +13,17 @@ import DocumentsWritingCs from "/snippets/examples/dotnet/documents-writing.mdx"
 
 The `SyncClient` is the Room API for live shared documents (`MeshDocuments`). Use it when multiple humans or agents need to read and edit the same structured document in real time.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room sync --help
+meshagent room sync create --room myroom docs/briefing.mesh --schema ./briefing.schema.json
+meshagent room sync show --room myroom docs/briefing.mesh
+meshagent room sync inspect --room myroom docs/briefing.mesh
+```
+
 ## Why use the Sync API?
 
 - Keep shared state in a live document instead of relying only on chat history.
@@ -25,13 +36,11 @@ You create or open a document by path. Opening a document starts a live synchron
 
 ## Permissions and grants
 
-If a deployed service needs to synchronize room documents, its participant token needs the appropriate Room API grants for sync and the relevant room resources. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Sync API is controlled by the `sync` grant on the participant token.
 
-## CLI and SDK availability
+In practice, sync grants are path-based and can be marked read-only. That lets you give a participant access to specific document paths without opening the entire sync surface.
 
-- **CLI**: create and inspect documents with `meshagent room sync ...`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: `create`, `open`, `close`, and `sync` helpers are shown below.
-- **Python**: also exposes `describe` directly today.
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
 ## Defining Your Document Structure
 
@@ -96,101 +105,11 @@ To create a MeshDocument based on your schema and enable synchronization across 
 </CodeGroup>
 
 
-## API Methods
+## API reference
 
-Below is an example of how you might use the `SyncClient` in your code:
+Use the methods below to create documents, open live sync sessions, inspect the current document state, and send low-level sync operations when needed.
 
-<CodeGroup>
-```bash CLI
-meshagent room sync create \
-  --room myroom \
-  my/path \
-  --schema ./schema.json \
-  --json '{"initial":"data"}'
-
-```
-```python Python
-
-# Create a MeshDocument on the server
-await room.sync.create(path="my/path", json={"initial": "data"})
-
-# Open a document (creates if not found)
-doc = await room.sync.open(path="my/path", create=True)
-
-# Close the document
-await room.sync.close(path="my/path")
-
-```
-```javascript NodeJs
-// Create a MeshDocument on the server
-await room.sync.create("my/path", { initial: "data" });
-
-// Open a document (creates if not found)
-const doc = await room.sync.open("my/path", { create: true });
-
-// Close the document
-await room.sync.close("my/path");
-
-```
-```typescript TypeScript
-// Create a MeshDocument on the server
-await room.sync.create("my/path", { initial: "data" });
-
-// Open a document (creates if not found)
-const doc = await room.sync.open("my/path", { create: true });
-
-// Close the document
-await room.sync.close("my/path");
-
-```
-```dart Dart
-// Create a MeshDocument on the server
-await room.sync.create("my/path", {"initial": "data"});
-
-// Open a document (creates if not found)
-final doc = await room.sync.open("my/path", create: true);
-
-// Close the document
-await room.sync.close("my/path");
-
-```
-```dotnet C#
-using Meshagent.Api.Room;
-using Meshagent.Api;
-using System.Text;
-
-// Initialize room client
-var room = new RoomClient(Helpers.CreateWebSocketProtocol("participant", "my-room"));
-await room.ConnectAsync();
-
-// Create a MeshDocument on the server
-await room.Sync.Create("my/path", new Dictionary<string, object?> { ["initial"] = "data" });
-
-// Open a document (creates if not found)
-var doc = await room.Sync.Open("my/path");
-
-// Send raw sync data
-await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
-
-// Close the document
-await room.Sync.Close("my/path");
-
-```
-</CodeGroup>
-
-
----
-
-
-### `SyncClient`
-
-The `SyncClient` class is responsible for coordinating document synchronization through a `RoomClient`. It automatically listens for local changes on `MeshDocument` instances and forwards them to the remote server, while also applying remote changes as they are received.
-
-- **`room: RoomClient`**  
-  An instance of `RoomClient`, which handles the underlying communication with the server.
-
-
-#### `create(path, json=None)`
+### `create(path, json=None)`
 
 <CodeGroup>
 ```bash CLI
@@ -225,12 +144,11 @@ await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = 
 
 
 - **Parameters**:
-  - `path` – The path where the document will be created on the server.
-  - `json` – (Optional) Initial data or metadata to send along with the creation request.
-- **Description**  
-  Sends a request to create a new `MeshDocument` at the given path. The server infers the schema from the document’s extension (for example, `.html` uses `.schemas/html.json`).
+  - `path`: Document path.
+  - `json`: Optional initial JSON payload.
+- **Description**: Create a new `MeshDocument` at the given path. The server infers the schema from the document extension.
 
-#### `describe(path)`
+### `describe(path)`
 
 <CodeGroup>
 ```python Python
@@ -240,14 +158,12 @@ doc_json = await room.sync.describe(path="my/path")
 </CodeGroup>
 
 - **Parameters**:
-  - `path` – The document path to describe.
-- **Returns**  
-  A JSON representation of the document root in a single response.
-- **Description**  
-  Fetches the current state of a MeshDocument without opening a sync session. If the document is already open, the in-memory state is returned; otherwise, it is read from storage (schema inferred from the document extension). This is what the storage `read_file` tool uses to read MeshDocument contents as JSON.
-  - Availability: The Python SDK exposes `room.sync.describe` today. Other SDKs can use `open` or a lower-level request until they add a convenience wrapper.
+  - `path`: Document path.
+- **Returns**: The current document root as JSON.
+- **Description**: Read the current state of a `MeshDocument` without opening a live sync session.
+- **Availability**: Python exposes `room.sync.describe` today. Other SDKs can use `open()` or a lower-level request until they add a helper.
 
-#### `open(path, create = true)`
+### `open(path, create=True)`
 
 <CodeGroup>
 ```python Python
@@ -274,14 +190,12 @@ var doc = await room.Sync.Open("my/path", create: true);
 
 
 - **Parameters**:
-  - `path` – The path identifying the document to open.
-  - `create` – (Optional) Whether to create the document if it doesn’t exist. Defaults to `true`.
-- **Returns**  
-  A `MeshDocument` instance tied to the specified path.
-- **Description**  
-  Sends a request to connect to (and possibly create) the document at the given path. If successful, returns a reference-counted `MeshDocument` that automatically sends local changes to the backend.
+  - `path`: Document path.
+  - `create`: When `true`, create the document if it does not already exist.
+- **Returns**: A `MeshDocument` tied to that path.
+- **Description**: Open a live synchronization session for the document. Local changes are sent automatically while the document remains open.
 
-#### `close(path)`
+### `close(path)`
 
 <CodeGroup>
 ```python Python
@@ -308,12 +222,10 @@ await room.Sync.Close("my/path");
 
 
 - **Parameters**:
-  - `path` – The path of the document to close.
-- **Description**  
-  Decrements the internal reference count for the document. If it reaches zero, the document is unregistered locally, and a request is sent to the server to disconnect. No further changes will be synced once closed.
+  - `path`: Document path.
+- **Description**: Close the local sync session for that document path. Once closed, local changes are no longer synchronized.
 
-
-#### `sync(path, data)`
+### `sync(path, data)`
 
 <CodeGroup>
 ```python Python
@@ -340,14 +252,11 @@ await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
 
 
 - **Parameters**:
-  - `path` – The path of the document to synchronize.
-  - `data` – A `Uint8Array` (or equivalent) containing serialized changes.
-- **Description**  
-  Immediately sends sync data to the server. This method is useful if you have already encoded your changes and want to bypass the typical queued flow.
+  - `path`: Document path.
+  - `data`: Serialized sync bytes.
+- **Description**: Send encoded sync data directly to the server. Use this when you already have the wire-format change payload.
 
----
-
-## Additional Notes
+## Notes
 
 - **Synchronized Changes**  
   Once a document is opened, any local changes you make in the associated `MeshDocument` are automatically queued for sending, thanks to `sendChangesToBackend`. You rarely need to call `sync()` manually unless you want to send raw data yourself.
@@ -362,11 +271,7 @@ await room.Sync.Sync("my/path", Encoding.UTF8.GetBytes("some bytes"));
   - For high throughput, ensure that your `RoomClient` and server are configured for concurrent operations.
   - The `SyncClient` uses a `StreamController` internally to manage queued updates, sending them asynchronously to the server.
 
-- **Extensibility**  
-  You can extend the `SyncClient` for specialized document operations—such as partial updates, conflict resolution logic, or customized schema handling—by adding new methods or composing it with other classes that also use `RoomClient`.
-
 ## Related guides
 
 - [Room API Overview](./overview)
-- [Documents Quickstart](../documents/quickstart)
 - [Storage API](./storage)

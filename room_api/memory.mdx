@@ -2,6 +2,17 @@
 
 The `MemoryClient` is the Room API for room-scoped structured memory. Use it to build shared context that agents can ingest, query, and recall across workflows.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room memory --help
+meshagent room memory list --room myroom
+meshagent room memory create --room myroom --name customer-memory
+meshagent room memory recall --room myroom --name customer-memory --query "latest priorities"
+```
+
 ## Why use the Memory API?
 
 - Preserve structured knowledge across tasks instead of reconstructing it from chat history each time.
@@ -16,19 +27,21 @@ A memory is a named dataset inside a room. You can create it, ingest data into i
 
 ## Permissions and grants
 
-If a deployed service needs to use room memory, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Memory API is controlled by the `memory` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: full room-memory command set (`list`, `create`, `drop`, `inspect`, `query`, `recall`, `ingest`, `optimize`, and more).
-- **Python**: full `MemoryClient` API.
-- **Dart**: full `MemoryClient` API.
-- **TypeScript**: full `MemoryClient` API.
-- **.NET**: full `MemoryClient` API.
+- `list` controls whether the participant can list memories
+- memory entry grants can be scoped by `name` and `namespace`
+- each entry can narrow permissions such as `create`, `drop`, `inspect`, `query`, `upsert`, `ingest`, `recall`, and `optimize`
 
-## Core API Methods
+See [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/participant_tokens), and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-### list
+## API reference
+
+Use the methods below to create memories, ingest content, query or recall context, and maintain memory datasets over time.
+
+### `list(namespace=None)`
 - **Description**: List memory names in a namespace.
 
 <CodeGroup>
@@ -51,7 +64,7 @@ print(memories);
 ```
 </CodeGroup>
 
-### create
+### `create(name, ...)`
 - **Description**: Create a memory.
 - **Parameters**: `name`, optional `namespace`, `overwrite`, `ignore_exists`.
 
@@ -82,7 +95,7 @@ await room.memory.create(
 ```
 </CodeGroup>
 
-### drop
+### `drop(name, ...)`
 - **Description**: Delete a memory.
 - **Parameters**: `name`, optional `namespace`, `ignore_missing`.
 
@@ -114,11 +127,11 @@ await room.memory.drop(
 ```
 </CodeGroup>
 
-## Advanced Methods
+## More methods
 
 These examples use the Python `MemoryClient` API. The CLI, Dart SDK, TypeScript SDK, and .NET SDK expose matching room-memory operations for the same methods.
 
-### inspect
+### `inspect(name, ...)`
 - **Description**: Return `MemoryDetails` including the memory path and dataset summaries.
 
 <CodeGroup>
@@ -137,7 +150,7 @@ for dataset in details.datasets:
 ```
 </CodeGroup>
 
-### query
+### `query(name, statement, ...)`
 - **Description**: Run a graph query against a memory and return rows.
 
 <CodeGroup>
@@ -158,7 +171,7 @@ print(rows)
 ```
 </CodeGroup>
 
-### upsert_table
+### `upsert_table(name, table, records, ...)`
 - **Description**: Upsert arbitrary rows into a named memory dataset.
 
 <CodeGroup>
@@ -185,7 +198,7 @@ await room.memory.upsert_table(
 ```
 </CodeGroup>
 
-### upsert_nodes
+### `upsert_nodes(name, records, ...)`
 - **Description**: Upsert entity nodes using `MemoryEntityRecord`.
 
 <CodeGroup>
@@ -214,7 +227,7 @@ await room.memory.upsert_nodes(
 ```
 </CodeGroup>
 
-### upsert_relationships
+### `upsert_relationships(name, records, ...)`
 - **Description**: Upsert edges using `MemoryRelationshipRecord`.
 
 <CodeGroup>
@@ -243,7 +256,7 @@ await room.memory.upsert_relationships(
 ```
 </CodeGroup>
 
-### ingest_text
+### `ingest_text(name, text, ...)`
 - **Description**: Extract memory from inline text.
 
 <CodeGroup>
@@ -264,7 +277,7 @@ print(result.stats.entities, result.stats.relationships)
 ```
 </CodeGroup>
 
-### ingest_image
+### `ingest_image(name, data, ...)`
 - **Description**: Extract memory from an image and optional caption.
 
 <CodeGroup>
@@ -291,7 +304,7 @@ print(result.stats)
 ```
 </CodeGroup>
 
-### ingest_file
+### `ingest_file(name, path, ...)`
 - **Description**: Extract memory from a file path visible to the room server, or from inline text.
 
 <CodeGroup>
@@ -312,7 +325,7 @@ print(result.entity_ids)
 ```
 </CodeGroup>
 
-### ingest_from_table
+### `ingest_from_table(name, table, ...)`
 - **Description**: Extract memory from room database rows.
 
 <CodeGroup>
@@ -338,7 +351,7 @@ print(result.stats)
 ```
 </CodeGroup>
 
-### ingest_from_storage
+### `ingest_from_storage(name, paths, ...)`
 - **Description**: Extract memory from one or more room storage paths.
 
 <CodeGroup>
@@ -360,7 +373,7 @@ print(result.stats)
 ```
 </CodeGroup>
 
-### recall
+### `recall(name, query, ...)`
 - **Description**: Semantic recall using a natural-language query.
 
 <CodeGroup>
@@ -384,7 +397,7 @@ for item in result.items:
 ```
 </CodeGroup>
 
-### delete_entities
+### `delete_entities(name, entity_ids, ...)`
 - **Description**: Remove entities and their related edges.
 
 <CodeGroup>
@@ -405,7 +418,7 @@ print(result.deleted_entities, result.deleted_relationships)
 ```
 </CodeGroup>
 
-### delete_relationships
+### `delete_relationships(name, relationships, ...)`
 - **Description**: Remove relationships using `MemoryRelationshipSelector`.
 
 <CodeGroup>
@@ -434,7 +447,7 @@ print(result.deleted_relationships)
 ```
 </CodeGroup>
 
-### optimize
+### `optimize(name, ...)`
 - **Description**: Compact and clean up memory datasets.
 
 <CodeGroup>

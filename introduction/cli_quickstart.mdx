@@ -3,37 +3,11 @@ title: Quickstart
 description: Install MeshAgent, connect the CLI, run your first agent, and deploy it.
 ---
 
-## Overview
+MeshAgent is a platform for building, deploying, and operating room-based agent systems.
 
-This guide gets you from zero to a running room-connected agent in MeshAgent. By the end, you will have:
+If you want to start with built-in agents, you can start in [Powerboards](../interfaces/powerboards) instead. Powerboards is included with your MeshAgent account. Sign in, create a project and room, install one of the built-in agents, and start using it. This guide walks you through installing the MeshAgent CLI and deploying your first agent.
 
-1. created a project
-2. installed the MeshAgent CLI
-3. authenticated the CLI with `meshagent setup`
-4. started a process agent in a room
-5. tested chat, queue, mail, and toolkit entry points
-6. deployed that agent as a managed service
-
-If you install MeshAgent in a Python virtual environment, you can prefix the commands below with `uv run` instead of activating the environment first. For the full command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
-
-If you do not want to build anything yet, you can start in [Powerboards](../interfaces/powerboards) instead. Powerboards is included with your MeshAgent account. Sign in, create a project and room, install one of the built-in agents, and start using it. You can inspect and manage that same room later in [MeshAgent Studio](../interfaces/meshagent_studio).
-
-## Step 1: Create an account and project
-
-1. Sign up or sign in at [MeshAgent Studio](https://studio.meshagent.com) or [Powerboards](https://powerboards.com). Your MeshAgent account includes both interfaces. MeshAgent Studio is designed for developers and operators, with project administration, deployment, debugging, and observability. Powerboards is designed for end users working with agents in rooms.
-2. Create a new project. You can do this from:
-   - MeshAgent Studio
-   - Powerboards
-   - the CLI with `meshagent project create my-new-project`
-3. Create a room. You can do this from:
-   - MeshAgent Studio
-   - Powerboards
-   - the CLI with `meshagent rooms create --name gettingstarted --if-not-exists`
-4. If you are starting in Powerboards, add one of the built-in agents to the room and start using it there.
-5. If you are building or customizing agents, continue with the CLI setup below.
-6. Confirm the project has credits available so it can start rooms.
-
-## Step 2: Install the MeshAgent CLI
+## Step 1: Install the MeshAgent CLI
 
 Choose the installation path that matches how you plan to work.
 
@@ -73,19 +47,21 @@ uv add "meshagent[cli]" # or "meshagent[all]"
 ```
 </CodeGroup>
 
-## Step 3: Connect the CLI to MeshAgent
+If you install MeshAgent in a Python virtual environment, you can prefix the commands below with `uv run` instead of activating the environment first. For the full command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
 
-Authenticate in the browser and activate a project:
+## Step 2: Connect the CLI to MeshAgent and activate a project
+
+Authenticate in the browser and run the setup flow:
 
 ```bash bash
 meshagent setup
 ```
 
-After this completes, the CLI is ready to create rooms, run agents, and deploy services in the active project.
+`meshagent setup` signs you in, lets you choose or create a project, and activates the project for the CLI. After this completes, the CLI is ready to create rooms, run agents, and deploy services in the active project.
 
-## Step 4: Create a room and mailbox
+## Step 3: Create a room and mailbox
 
-If you already created `gettingstarted` in MeshAgent Studio or Powerboards, you can reuse it here. Otherwise create the room you will use for this guide:
+`meshagent setup` does not create a room, so create the room you will use for this guide now. If you already created a room in the MeshAgent Studio or Powerboards UI, you can reuse it here:
 
 ```bash bash
 meshagent rooms create --name gettingstarted --if-not-exists
@@ -94,13 +70,14 @@ meshagent rooms create --name gettingstarted --if-not-exists
 This example uses chat, mail, queue, and toolkit channels. Before starting the agent, create the mailbox for the mail channel:
 
 ```bash bash
+# You will need to create a unique email address
 meshagent mailbox create \
   --address my-first-agent@mail.meshagent.com \
   --room gettingstarted \
   --queue my-first-agent@mail.meshagent.com
 ```
 
-## Step 5: Start your first agent
+## Step 4: Start your first agent
 
 `meshagent process` is the main CLI path for running a room-connected agent. This example starts one agent identity with all four primary channels:
 
@@ -127,7 +104,7 @@ meshagent process join \
 
 This keeps the agent running from your terminal. Press `Ctrl+C` when you want to stop it.
 
-## Step 6: Talk to the agent in MeshAgent Studio
+## Step 5: Talk to the agent in MeshAgent Studio
 
 1. Open [MeshAgent Studio](https://studio.meshagent.com/).
 2. Join the `gettingstarted` room.
@@ -138,7 +115,7 @@ At this point you have a live room-connected agent running through the CLI.
 
 You can also open the same room in [Powerboards](https://powerboards.com) if you want to use an end-user-facing UI instead of Studio. Studio and Powerboards both connect to the same underlying room.
 
-## Step 7: Try the other channels
+## Step 6: Try the other channels
 
 You can now reach the same agent through queue, mail, and toolkit entry points.
 
@@ -163,7 +140,7 @@ meshagent room agent invoke-tool \
 
 You can also email the agent at `my-first-agent@mail.meshagent.com`.
 
-## Step 8: Deploy the agent as a managed service
+## Step 7: Deploy the agent as a managed service
 
 Running the agent locally is the fastest way to test it. When you want it to stay available without keeping your terminal open, deploy it as a service.
 
@@ -204,7 +181,7 @@ meshagent service create --file meshagent.yaml --room gettingstarted
 meshagent service create --file meshagent.yaml --global
 ```
 
-## Step 9: Inspect and manage what you deployed
+## Step 8: Inspect and manage what you deployed
 
 Use these commands to inspect the project and the services you now have running:
 

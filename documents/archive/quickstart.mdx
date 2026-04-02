@@ -10,7 +10,21 @@ import DocumentsWritingTs from "/snippets/examples/typescript/documents-writing.
 import DocumentsWritingDart from "/snippets/examples/dart/documents-writing.mdx"
 import DocumentsWritingCs from "/snippets/examples/dotnet/documents-writing.mdx"
 
-MeshDocuments enable your agents to share and synchronize information in real time across platforms. They resemble a web page’s structure but offer much greater flexibility. For example, if you want to generate website content with your agents, you can start with a simple HTML-compatible document format:
+MeshDocuments are the structured-document layer of the Sync API. Use them when multiple humans or agents need to read and edit the same document in real time.
+
+## CLI commands
+
+Use `meshagent room sync ...` to create, inspect, and update documents from the CLI:
+
+```bash bash
+meshagent room sync create --room myroom --path docs/page.mesh
+meshagent room sync show --room myroom --path docs/page.mesh
+meshagent room sync inspect --room myroom --path docs/page.mesh
+```
+
+## Overview
+
+MeshDocuments resemble a web page's structure, but they are built for synchronized structured data. For example, if you want to generate website content with your agents, you can start with a simple HTML-compatible document format:
 
 ```html
 <html>
@@ -22,7 +36,7 @@ MeshDocuments enable your agents to share and synchronize information in real ti
 
 A MeshDocument, like an HTML document, is composed of elements that can have child elements and attributes. However, MeshDocuments introduce additional features and capabilities that go beyond standard HTML or XML.
 
-## Defining Your Document Structure
+## Defining your document structure
 
 To define the structure of a MeshDocument, you start by creating a schema using the MeshSchema class. A schema:
 
@@ -47,7 +61,7 @@ Suppose you have a basic web page structure and want to define a schema for it. 
 </CodeGroup>
 
 
-# Creating a MeshDocument
+## Creating a MeshDocument
 
 Many LLMs (such as OpenAI) and agent frameworks (such as MeshAgent) support JSON Schemas for defining inputs and outputs. Generating an OpenAI-compatible JSON schema from your MeshSchema requires only one line of code:
 
@@ -81,5 +95,8 @@ To create a MeshDocument based on your schema and enable synchronization across 
     <DocumentsWritingCs />
 </CodeGroup>
 
+## Related topics
 
-
+- [Sync API](../room_api/sync)
+- [Deploying Schemas](./deploying_schemas)
+- [Listening for document changes](./listener)

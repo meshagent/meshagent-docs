@@ -2,6 +2,15 @@
 
 The `DeveloperClient` is the Room API for structured developer logs. Use it to send logs into the Developer Console and subscribe to live logs from other participants in the room.
 
+## CLI commands
+
+Start with the CLI help, then use the main live-log command:
+
+```bash bash
+meshagent room developer --help
+meshagent room developer watch --room myroom
+```
+
 ## Why use the Developer API?
 
 - Debug agents, tools, and services while a room is live.
@@ -14,12 +23,11 @@ The Developer API is event-oriented. Producers call `log` (or convenience helper
 
 ## Permissions and grants
 
-Developer log forwarding is controlled by the `developer` scope. If a deployed service needs to emit or consume developer logs, grant it the appropriate Room API permissions. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+Developer logs are controlled by the `developer` grant on the participant token.
 
-## CLI and SDK availability
+In practice, `developer.logs` enables emitting and consuming developer-log events for the room.
 
-- **CLI**: watch room developer logs with `meshagent room developer watch`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: emit and consume developer logs with the helpers shown below.
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
 ## Streaming Logs
 
@@ -64,11 +72,11 @@ await foreach (var log in room.Developer.Logs())
 ```
 </CodeGroup>
 
----
+## API reference
 
-## API Methods
+Use the methods below to emit structured developer logs or subscribe to the live room log stream.
 
-### log
+### `log(type, data)`
 - **Description**: Emit a developer log event.
 - **Parameters**:
   - `type`: A log category string (for example, `"info"` or `"error"`).
@@ -101,9 +109,7 @@ await room.Developer.Log("info", new Dictionary<string, object?>
 ```
 </CodeGroup>
 
----
-
-### log_nowait
+### `log_nowait(type, data)`
 - **Description**: Fire-and-forget log emission without awaiting a response.
 - **Availability**: Python and .NET SDKs.
 - **Parameters**:
@@ -125,9 +131,7 @@ room.Developer.LogNowait("info", new Dictionary<string, object?>
 ```
 </CodeGroup>
 
----
-
-### info / warning / error
+### `info(...)`, `warning(...)`, `error(...)`
 - **Description**: Convenience helpers for emitting structured logs with common severity labels.
 - **Availability**: Python and Dart SDKs.
 - **Parameters**:
@@ -150,9 +154,7 @@ await room.developer.error("Sync failed", extra: {"reason": "timeout"});
 ```
 </CodeGroup>
 
----
-
-### logs
+### `logs()`
 - **Description**: Open a streamed subscription to developer logs for the room.
 - **Parameters**: None.
 - **Returns**: A stream / async iterator of log events.

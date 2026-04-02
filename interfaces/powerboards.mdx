@@ -3,33 +3,84 @@ title: Powerboards
 description: Share agents and services with end users through a polished UI.
 ---
 
-Powerboards is the end-user facing interface for MeshAgent. It is included with your MeshAgent account and connects to the same underlying projects and rooms as [MeshAgent Studio](./meshagent_studio). It turns your deployed services into shareable, installable experiences so teammates and customers can use agents immediately. You can deploy agents to Powerboards using install links, [MeshAgent Studio](./meshagent_studio), or the CLI.
+Powerboards is the end-user-facing interface for MeshAgent. It is included with your MeshAgent account, it is open source, and it connects to the same underlying projects and rooms as [MeshAgent Studio](./meshagent_studio). To sign in and open your rooms, go to [app.powerboards.com](https://app.powerboards.com).
+
+Powerboards is room-first. It is designed around talking to agents, working with room files, and using installed experiences without exposing the full project administration surface by default. The same room can be opened in Powerboards for end-user workflows and in Studio for development and operations.
 
 ## What Powerboards is for
 
-- Provide a clean UI for chat, voice, and documents.
+- Provide a clean UI for chat, threads, meetings, documents, and files.
 - Let non-technical users run agents with one click.
 - Share repeatable installs for the same service across rooms.
+- Keep the same room reachable from an end-user focused interface, even if that room is also being inspected in Studio.
 
 ## How it works
-Powerboards comes with pre-built agents you can install including the: assistant (GPT based), claude (Claude-based), voice, transcriber, and developer (code-focused agent). The agents come with steerable rules and tools that can be toggled on and off per turn. 
+Powerboards includes a built-in directory of prebuilt agents you can install into a room, including:
 
-Powerboards installs **ServiceTemplates** into a room. A ServiceTemplate collects any applicable user inputs at install time (for example, a custom email address for an agent) and then renders a Service that runs inside the room. See [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging) for the full ServiceTemplate specification.
+- **assistant**, a general-purpose room assistant for chat, files, and thread-based workflows that can be configured with either GPT or Claude
+- **voice**, a voice-first agent experience for live spoken interaction, meetings, and room-level voice controls
+- **transcriber**, a meeting transcription experience that joins a room session, captures speech, and writes the transcript back into the room context
 
-Typical flow:
-1. Build your service and define a `meshagent.yaml` ServiceTemplate.
-2. Publish or share it from MeshAgent Studio or the CLI.
-3. Users open the install link in Powerboards and configure any required variables.
-4. Powerboards deploys the service into a room and launches the UI experience.
+Depending on which built-in experience you install, Powerboards can expose editable rules, voice controls, thread-based chat, meetings, or other room-specific configuration.
+
+Powerboards also works with custom services and MCP-based installs. The main patterns are:
+
+1. **Install a built-in agent**
+   Open a room, choose one of the built-in options, and install it directly from Powerboards.
+2. **Deploy a custom service to a room or project**
+   Build the service, define the YAML, then deploy it with [MeshAgent Studio](./meshagent_studio) or the CLI. Once that service is available to the room, it shows up in Powerboards automatically.
+3. **Share a `ServiceTemplate` install link**
+   Host a `ServiceTemplate` YAML at a public URL, then share a link in the form `https://app.powerboards.com/install?url=...`. Powerboards downloads the template, prompts for any required variables, and installs it into the selected room.
+4. **Install from an MCP server URL**
+   The installer can also take an MCP server URL directly. Powerboards will try to discover an installable MCP service template from that URL and then walk the user through setup.
+
+In every case, the result is still a service installed into a room. Powerboards is the interface for using that room experience after it is installed.
+
+## Install links and shared distribution
+
+If you want other people to install an experience into their own rooms, the main path is a Powerboards install link.
+
+The flow is:
+
+1. Define a `ServiceTemplate`.
+2. Host it at a public URL, such as a raw GitHub Gist URL.
+3. Share a link in the form `https://app.powerboards.com/install?url=...`.
+4. Powerboards signs the user in, lets them choose a project and room, collects any required variables, and deploys the service.
+
+Users do not need the CLI for this flow. They can open the link, choose where to install it, and start using the service from Powerboards.
+
+If you are distributing an MCP integration instead of a hosted template, users can also start from the Powerboards installer and paste the MCP server URL directly.
 
 ## What users can do
 
 - Chat or talk to agents in a room.
+- Work in thread-based conversations and collaborate with other participants.
+- Browse, upload, and work with room files when storage access is available.
 - Use tools exposed by the service.
 - View and edit documents generated by agents.
-- Collaborate with other participants in the same room.
+- Join meetings or voice experiences when the room supports them.
+
+Depending on the room grants and room ownership:
+
+- users may be able to open the developer console and inspect logs, traces, and metrics
+- room owners may be able to install or remove agents
+- users may be able to view or update room permissions
+
+That is the main difference from [MeshAgent Studio](./meshagent_studio): Powerboards stays centered on the room experience itself, while Studio exposes the broader developer and project-management surface. If a room grant includes developer-log access, Powerboards can also expose a developer console inside the same room.
+
+## Room rules and shared customization
+
+Powerboards can also expose editable room-scoped rules for agents. Some built-in installs, such as `assistant` and `voice`, use an editable `rules.txt` file in room storage so room members can steer behavior together.
+
+When you build your own agents, you can choose whether rules are:
+
+- fixed inline in the service definition
+- baked into the image
+- editable in room storage with `--room-rules`
+
+That matters because Powerboards is not just a place to chat with an agent. It can also be the place where room members adjust the behavior of that agent together.
 
 ## Next steps
 
-- [Share agents in Powerboards](../services_room_containers/share_agents_in_powerboards)
 - [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
+- [Interfaces Overview](./overview)

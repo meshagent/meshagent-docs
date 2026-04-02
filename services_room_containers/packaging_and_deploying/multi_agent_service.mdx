@@ -56,7 +56,7 @@ Because this is a `ServiceTemplate`, three values are left for the user to fill 
 - `send_to_email` — Where the daily digest gets sent.
 - `report_topics` — The topics the worker should cover in the daily digest.
 
-These appear as `{{email}}`, `{{send_to_email}}`, and `{{report_topics}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./packaging#variables-servicetemplate-only) in the field reference.
+These appear as `{{email}}`, `{{send_to_email}}`, and `{{report_topics}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./service_manifest_reference#variables-servicetemplate-only) in the field reference.
 
 #### Container command
 
@@ -76,11 +76,11 @@ After seeding the files, the script runs `meshagent multi join`, which starts mu
 
 #### Participant token
 
-The [`environment`](./packaging#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, memory, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
+The [`environment`](./service_manifest_reference#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, memory, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
 
 #### Room storage
 
-The [`storage.room`](./packaging#container-storage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
+The [`storage.room`](./service_manifest_reference#container-storage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
 
 ## Step 2: Create the mailbox
 The MailBot agent needs a mailbox to send and receive email. Create one before deploying — update the address with your desired mailbox name: 
@@ -125,9 +125,9 @@ Now that you've built and tested the service, you can turn it into a one-click i
 
 When someone clicks this link, Powerboards will walk them through setup: they'll select a Project and Room, provide values for `email`, `send_to_email`, and `report_topics`, and Powerboards will create the mailbox and deploy the service automatically.
 
-See [Sharing via Powerboards](../share_agents_in_powerboards) for more details. 
+See [Powerboards](../../interfaces/powerboards) for more details.
 
 ## Related Topics
 - [Packaging services](./packaging)
 - [Deploy from the CLI](./deploy_from_cli)
-- [Sharing via Powerboards](../share_agents_in_powerboards)
+- [Powerboards](../../interfaces/powerboards)

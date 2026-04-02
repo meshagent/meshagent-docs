@@ -2,6 +2,17 @@
 
 The `MessagingClient` is the Room API for real-time participant-to-participant communication. Use it to send direct messages, broadcast updates, receive live events, and open streams for larger or incremental payloads.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room messaging --help
+meshagent room messaging list --room myroom
+meshagent room messaging send --room myroom --to-participant-id PARTICIPANT_ID --type chat --data '{"text":"Hello"}'
+meshagent room messaging broadcast --room myroom --data '{"content":"Hello everyone"}'
+```
+
 ## Why use the Messaging API?
 
 - Build chat, agent-human collaboration, and live status updates inside a room.
@@ -37,287 +48,19 @@ Once messaging is enabled, the client can emit events for incoming messages, par
 
 ## Permissions and grants
 
-If a deployed service needs to send or receive room messages, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Messaging API is controlled by the `messaging` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: inspect participants and send or broadcast simple messages with `meshagent room messaging ...`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: the live messaging client supports events and streams in addition to direct messages.
-- **Streams and event subscriptions**: use the SDKs for these; the CLI is mainly for inspection and simple message delivery.
+- `list` controls participant discovery
+- `send` controls direct messages
+- `broadcast` controls room-wide messages
 
-## Getting Started Example
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-### Basic Example: Sending and Receiving Messages
+## API reference
 
-
-<CodeGroup>
-```bash CLI
-meshagent room messaging list \
-  --room myroom
-
-meshagent room messaging send \
-  --room myroom \
-  --to-participant-id PARTICIPANT_ID \
-  --type chat \
-  --data '{"text":"Hello from the CLI!"}'
-
-meshagent room messaging broadcast \
-  --room myroom \
-  --data '{"content":"Hello everyone!"}'
-
-```
-```python Python
-# Suppose you already have a RoomClient instance named `room`
-
-# Enable messaging (allows receiving participant and stream events)
-await room.messaging.enable()
-
-# Acquire a participant instance from somewhere; you might discover it via events
-my_participant = ... # type: RemoteParticipant
-
-# Send a simple message
-await room.messaging.send_message(
-  to=my_participant,
-  type="chat",
-  message={"text": "Hello from Python!"},
-)
-
-# Broadcast a message to all participants
-await room.messaging.broadcast_message(
-  type="announcement",
-  message={"content": "Hello everyone!"},
-)
-
-# Disable messaging
-await room.messaging.disable()
-
-```
-```javascript NodeJs
-// Suppose you already have a RoomClient instance named `room`
-
-// Enable messaging
-await room.messaging.enable();
-
-// Acquire a participant instance from somewhere
-const myParticipant = /* ...some RemoteParticipant... */;
-
-// Send a simple message
-await room.messaging.sendMessage({
-  to: myParticipant,
-  type: "chat",
-  message: { text: "Hello from JavaScript!" },
-});
-
-// Broadcast a message
-await room.messaging.broadcastMessage({
-  type: "announcement",
-  message: { content: "Hello everyone!" },
-});
-
-// Disable messaging
-await room.messaging.disable();
-
-```
-```typescript TypeScript
-// Suppose you already have a RoomClient instance named `room`
-
-// Enable messaging
-await room.messaging.enable();
-
-// Acquire a participant instance from somewhere
-const myParticipant: RemoteParticipant = /* ...some RemoteParticipant... */;
-
-// Send a simple message
-await room.messaging.sendMessage({
-  to: myParticipant,
-  type: "chat",
-  message: { text: "Hello from TypeScript!" },
-});
-
-// Broadcast a message
-await room.messaging.broadcastMessage({
-  type: "announcement",
-  message: { content: "Hello everyone!" },
-});
-
-// Disable messaging
-await room.messaging.disable();
-
-```
-```dart Dart
-// Suppose you already have a RoomClient instance named `room`
-
-// Enable messaging
-await room.messaging.enable();
-
-// Acquire a participant instance from somewhere
-final myParticipant = /* ...some RemoteParticipant... */;
-
-// Send a simple message
-await room.messaging.sendMessage(
-  to: myParticipant,
-  type: "chat",
-  message: {"text": "Hello from Dart!"},
-);
-
-// Broadcast a message
-await room.messaging.broadcastMessage(
-  type: "announcement",
-  message: {"content": "Hello everyone!"},
-);
-
-// Disable messaging
-await room.messaging.disable();
-
-```
-```dotnet C#
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
-using Meshagent.Api.Messaging;
-
-// Suppose you already have a RoomClient instance named `room`
-
-// Enable messaging (allows receiving participant and stream events)
-await room.Messaging.Enable();
-
-// Acquire a participant instance from somewhere; you might discover it via events
-var myParticipant = /* ...some RemoteParticipant... */;
-
-// Send a simple message
-await room.Messaging.SendMessage(
-  to: myParticipant,
-  type: "chat",
-  message: new Dictionary<string, object?> { ["text"] = "Hello from C#!" }
-);
-
-// Broadcast a message to all participants
-await room.Messaging.BroadcastMessage(
-  type: "announcement",
-  message: new Dictionary<string, object?> { ["content"] = "Hello everyone!" }
-);
-
-// Listen for incoming messages
-room.Messaging.On("message", data =>
-{
-  if (data.TryGetValue("message", out var obj) && obj is RoomMessage msg)
-  {
-    Console.WriteLine($"Received {msg.Type}: {JsonSerializer.Serialize(msg.Message)}");
-  }
-});
-
-// Disable messaging
-await room.Messaging.Disable();
-
-```
-</CodeGroup>
-
-
-### Example: Creating and Handling Streams
-
-<CodeGroup>
-```python Python
-# Create a new stream
-stream_writer = await room.messaging.create_stream(
-    to=my_participant,
-    header={"streamPurpose": "file-transfer"}
-)
-
-# Write chunks
-await stream_writer.write(MessageStreamChunk(
-    header={"chunkNumber": 1},
-    data=b"some binary data"
-))
-
-# Close the stream
-await stream_writer.close()
-
-```
-```javascript NodeJs
-// Create a new stream
-const streamWriter = await room.messaging.createStream({
-  to: myParticipant,
-  header: { streamPurpose: "file-transfer" },
-});
-
-// Write chunks
-await streamWriter.write(
-  new MessageStreamChunk({
-    header: { chunkNumber: 1 },
-    data: new Uint8Array([/* binary data */]),
-  })
-);
-
-// Close the stream
-await streamWriter.close();
-
-```
-```typescript TypeScript
-// Create a new stream
-const streamWriter = await room.messaging.createStream({
-  to: myParticipant,
-  header: { streamPurpose: "file-transfer" },
-});
-
-// Write chunks
-await streamWriter.write(
-  new MessageStreamChunk({
-    header: { chunkNumber: 1 },
-    data: new Uint8Array([/* binary data */]),
-  })
-);
-
-// Close the stream
-await streamWriter.close();
-
-```
-```dart Dart
-// Create a new stream
-final streamWriter = await room.messaging.createStream(
-  to: myParticipant,
-  header: {"streamPurpose": "file-transfer"},
-);
-
-// Write chunks
-streamWriter.write(MessageStreamChunk(
-  header: {"chunkNumber": 1},
-  data: Uint8List.fromList([/* some binary data */]),
-));
-
-// Close the stream
-streamWriter.close();
-
-```
-```dotnet C#
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Meshagent.Api.Messaging;
-
-// Suppose you already have a RoomClient instance named `room`
-var myParticipant = /* ...some RemoteParticipant... */;
-
-// Create a new stream
-var streamWriter = await room.Messaging.CreateStream(
-  to: myParticipant,
-  header: new Dictionary<string, object?> { ["streamPurpose"] = "file-transfer" }
-);
-
-// Write chunks
-await streamWriter.Write(new MessageStreamChunk(
-  header: new Dictionary<string, object?> { ["chunkNumber"] = 1 },
-  data: Encoding.UTF8.GetBytes("some binary data")
-));
-
-// Close the stream
-await streamWriter.Close();
-
-```
-</CodeGroup>
-
----
-
-## API Methods
+Use the methods below to enable room messaging, exchange direct or broadcast messages, and work with message streams.
 
 ### enable(onStreamAccept?)
 
@@ -358,7 +101,6 @@ await room.Messaging.Enable(onStreamAccept: reader =>
 </CodeGroup>
 
 
----
 
 ### disable()
 
@@ -387,7 +129,6 @@ await room.Messaging.Disable();
 ```
 </CodeGroup>
 
----
 
 
 ### sendMessage(to, type, message, attachment?)
@@ -457,7 +198,6 @@ await room.Messaging.SendMessage(
 ```
 </CodeGroup>
 
----
 
 
 ### broadcastMessage(type, message, attachment?)
@@ -527,7 +267,6 @@ await room.Messaging.BroadcastMessage(
 ```
 </CodeGroup>
 
----
 
 
 ### createStream(to, header)
@@ -581,7 +320,6 @@ var writer = await room.Messaging.CreateStream(
 </CodeGroup>
 
 
----
 
 ### remoteParticipants
 
@@ -620,14 +358,12 @@ foreach (var participant in room.Messaging.RemoteParticipants)
 ```
 </CodeGroup>
 
----
 
 
 ### MessageStreamChunk
 
 Represents a chunk of data in a stream, consisting of a header and optional binary data.
 
----
 
 
 ### MessageStreamWriter
@@ -689,7 +425,6 @@ await streamWriter.Close();
 </CodeGroup>
 
 
----
 
 
 

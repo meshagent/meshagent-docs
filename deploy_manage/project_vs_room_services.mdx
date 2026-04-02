@@ -1,31 +1,23 @@
 ---
 title: Project vs Room Services
-description: Choose whether a service should be shared across a project or scoped to one room.
+description: The service scope decision now lives in Packaging and Deploying Services.
 ---
 
-One of the first deployment decisions in MeshAgent is whether a service should be available everywhere in a project or only inside one room.
+This decision is now covered in [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
 
-## Project services
+Use that page when you need to decide:
 
-Use a **project service** when the capability should be available in every room in the project.
+- whether a service should be saved at project scope or room scope
+- whether to deploy directly from `meshagent process deploy`
+- whether to use `Service` or `ServiceTemplate`
+- whether the runtime should be `container` or `external`
 
-Good fits:
+## Most common commands
 
-- shared utility agents
-- common integrations
-- always-on capabilities used across many rooms
+```bash
+# Deploy into one room
+meshagent service create --file meshagent.yaml --room myroom
 
-## Room services
-
-Use a **room service** when the capability should be scoped to one room or customized differently per room.
-
-Good fits:
-
-- room-specific research agents
-- services with room-local configuration
-- user-selectable functionality that should not appear everywhere
-
-## Related pages
-
-- Start with [Intro to Services and Containers](../services_room_containers/overview).
-- Go to [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging) for manifest structure and deployment commands.
+# Deploy across the whole project
+meshagent service create --file meshagent.yaml --global
+```

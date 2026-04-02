@@ -1,0 +1,152 @@
+---
+title: Build and Deploy Images
+description: Use `meshagent image` to pack local directories, build images inside a room, and deploy them as room services.
+---
+
+## Overview
+
+`meshagent image` is the CLI surface for working with OCI images in MeshAgent.
+
+Use it when you want to:
+
+- pack a local directory into an OCI archive
+- build an image inside a room from room, project, image, or packed context
+- deploy an image directly as a room service
+
+This command is useful both for developers working from the CLI and for agent workflows running inside a room. It gives MeshAgent a room-native way to build, package, and ship images without requiring Docker on the local machine that triggers the workflow.
+
+## How `meshagent image` fits into MeshAgent
+
+`meshagent image` sits between source files and a deployable MeshAgent service:
+
+1. `meshagent image pack` turns a local directory into an OCI archive.
+2. `meshagent image build` builds an image inside a room using mounted context.
+3. `meshagent image deploy` creates or updates a room service from that image.
+
+This complements the normal service packaging flow. In practice, a room-connected agent can:
+
+- prepare files in the room
+- build an image from those files inside the room
+- deploy a service that uses that image
+
+That makes `meshagent image` especially useful for workflows where an agent is expected to build, test, and ship a containerized service for you from inside MeshAgent.
+
+## Commands
+
+### `meshagent image pack`
+
+Use `pack` when you want to turn a local directory into an OCI archive.
+
+This is useful when:
+
+- you want a portable OCI archive locally
+- you want to upload a packed context into a room
+- you want to prepare a build context without pushing to an external registry first
+
+Local output example:
+
+```bash
+meshagent image pack ./my-app \
+  --output ./my-app.oci.tar \
+  --base python:3.13
+```
+
+Room-upload example:
+
+```bash
+meshagent image pack ./my-app \
+  --room myroom \
+  --tag room.meshagent.com/my-app:dev
+```
+
+When `--room` is used, the tag must start with `room.meshagent.com/`.
+
+### `meshagent image build`
+
+Use `build` when you want MeshAgent to build an image inside a room.
+
+The build context can come from:
+
+- room storage mounts
+- project storage mounts
+- mounted images
+- a packed local directory uploaded with `--pack`
+
+If the packed directory contains a `Dockerfile`, MeshAgent can use that Dockerfile during the room-side build. This means the build runs in MeshAgent rather than requiring a local Docker daemon on the machine that started the command.
+
+Example using a packed local directory:
+
+```bash
+meshagent image build \
+  --room myroom \
+  --tag room.meshagent.com/my-app:dev \
+  --pack ./my-app
+```
+
+Example using a room storage mount as build context:
+
+```bash
+meshagent image build \
+  --room myroom \
+  --tag room.meshagent.com/my-app:dev \
+  --mount-room-path /apps/my-app:/context:ro \
+  --context-path /context
+```
+
+Key things to know:
+
+- `--tag` is required
+- `--room` is required unless `MESHAGENT_ROOM` is already set
+- `--pack` uploads a local directory to room storage and mounts it for the build
+- build logs stream back through the CLI while the build runs
+- this is a good fit for agent-driven build workflows inside a room because the build happens in MeshAgent, not on the local machine
+
+### `meshagent image deploy`
+
+Use `deploy` when you already have an image and want to create or update a room service from it.
+
+Example:
+
+```bash
+meshagent image deploy \
+  --room myroom \
+  --tag room.meshagent.com/my-app:dev \
+  --env APP_ENV=dev
+```
+
+You can also:
+
+- mount room storage with `--room-mount`
+- mount project storage with `--project-mount`
+- mount another image with `--image-mount`
+- inject a `MESHAGENT_TOKEN` with `--env-token`
+- publish a route with `--domain` when the service exposes exactly one published port
+
+This command derives the service name from the image tag and updates the existing room service when one already exists.
+
+## How `meshagent image` works with service packaging
+
+`meshagent image` and service packaging are complementary.
+
+Use `meshagent image` when:
+
+- your workflow is image-first
+- you want to build inside a room
+- you want to pack local content into a buildable OCI archive
+- you want a fast path from image tag to room service
+- you want an agent in the room to participate in building and shipping the service
+
+Use the service packaging docs when:
+
+- you are writing or reviewing a `meshagent.yaml`
+- you need a fuller service spec with more explicit deployment structure
+- you are working with ServiceTemplates or broader service configuration
+
+In other words, `meshagent image` is the room-native image workflow, while service manifests are the broader service-definition workflow.
+
+## Related guides
+
+- [Packaging and Deploying Services](../packaging_and_deploying/packaging)
+- [MeshAgent Base Images](./meshagent_base_images)
+- [Optimizing Containers](./optimizing_containers)
+- [MeshAgent CLI Reference](../../reference/meshagent_cli_help)

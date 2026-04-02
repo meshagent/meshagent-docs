@@ -8,6 +8,17 @@ import StorageDownloadCs from "/snippets/examples/dotnet/storage-download.mdx"
 
 The `StorageClient` is the Room API for room-scoped files and folders. Use it to store shared inputs, outputs, artifacts, and attachments that humans, agents, and services in the same room need to read or write.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room storage --help
+meshagent room storage ls --room myroom room://
+meshagent room storage cp ./report.pdf room://artifacts/report.pdf --room myroom
+meshagent room storage show --room myroom room://artifacts/report.pdf
+```
+
 ## Why use the Storage API?
 
 - Share files between people, agents, and deployed services without wiring separate object storage access.
@@ -24,10 +35,7 @@ Paths are relative to the room storage root. Use `upload` or `uploadStream` to w
 
 `upload` / `uploadStream` and `download` / `downloadStream` / `download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
 
-## CLI and SDK availability
-
-- **CLI**: use `meshagent room storage exists`, `cp`, `show`, `ls`, and `rm` for common room-storage workflows.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
+Use [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging) for the full scope model.
 
 ## Events
 
@@ -175,11 +183,9 @@ room.Storage.Off("file.deleted", OnFileDeleted);
 </CodeGroup>
 
 
----
+## API reference
 
-## API Methods
-
-Below is a summary of the primary methods. Each method is asynchronous, so you should `await` the call.
+Use the methods below to inspect room storage, upload and download files, and clean up stored artifacts. Each method is asynchronous, so you should `await` the call.
 
 ### `exists(path)`
 
@@ -246,8 +252,6 @@ else
 </CodeGroup>
 
 
----
-
 ### `stat(path)`
 
 **Description**  
@@ -274,8 +278,6 @@ if entry:
 
 - **Availability**: Python SDK exposes `stat`; other SDKs can call the same endpoint via a custom request until a helper is added.
 
-
----
 
 ### `upload(path, data, overwrite=False)`
 
@@ -340,8 +342,6 @@ await room.Storage.Upload(
 ```
 </CodeGroup>
 
-
----
 
 ### `upload_stream(path, chunks, ...)`
 
@@ -431,8 +431,6 @@ await room.Storage.UploadStream(
 </CodeGroup>
 
 
----
-
 ### `download_stream(path, chunk_size=...)`
 
 **Description**  
@@ -509,8 +507,6 @@ await foreach (var chunk in room.Storage.DownloadStream("files/report.pdf"))
 </CodeGroup>
 
 
----
-
 ### `download(path)`
 
 **Description**  
@@ -558,8 +554,6 @@ Console.WriteLine(fileResponse.Data);  // raw bytes
 ```
 </CodeGroup>
 
----
-
 ### `download_url(path)`
 
 **Description**  
@@ -599,8 +593,6 @@ Console.WriteLine($"Download the file from: {url}");
 
 ```
 </CodeGroup>
-
----
 
 ### `list(path)`
 
@@ -659,8 +651,6 @@ foreach (var e in entries)
 </CodeGroup>
 
 
----
-
 ### `delete(path)`
 
 **Description**  
@@ -709,7 +699,6 @@ Console.WriteLine("File deleted.");
 </CodeGroup>
 
 
----
 
 ## Example Workflow
 
@@ -730,7 +719,6 @@ A common use case:
 
 This sequence demonstrates basic upload, read, and deletion flows within a single session.
 
----
 
 ## Related guides
 
