@@ -7,10 +7,10 @@ from typing import Final
 import click
 from typer.cli import get_docs_for_click
 from typer.core import MARKUP_MODE_KEY
-from typer.main import get_command
 
 os.environ.setdefault("MESHAGENT_CLI_BUILD", "1")
 
+from meshagent.cli.async_typer import LazyTyper, get_command
 from meshagent.cli.cli import app as meshagent_app
 
 
@@ -20,6 +20,10 @@ FRONT_MATTER: Final[str] = "---\ntitle: MeshAgent CLI Commands\n---\n\n"
 
 def _top_level_hidden_group_names() -> set[str]:
     hidden_names: set[str] = set()
+    if isinstance(meshagent_app, LazyTyper):
+        for registration in meshagent_app.registered_lazy_commands:
+            if registration.hidden:
+                hidden_names.add(registration.name)
     for group in meshagent_app.registered_groups:
         if group.hidden is not True or group.name is None:
             continue
@@ -76,7 +80,7 @@ def _strip_hidden_top_level_groups(docs: str) -> str:
 
 
 def main() -> None:
-    click_command = get_command(meshagent_app)
+    click_command = get_command(meshagent_app, materialize_lazy=True)
     ctx = click.Context(click_command)
     if meshagent_app.rich_markup_mode is not None:
         ctx.obj = {MARKUP_MODE_KEY: meshagent_app.rich_markup_mode}
