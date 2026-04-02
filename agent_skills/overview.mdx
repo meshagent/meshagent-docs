@@ -2,103 +2,155 @@
 title: "Skills Overview"
 ---
 
-## What is a skill?
+Skills are reusable task instructions that agents can consult when they are relevant. A skill tells the agent how to approach a class of work. Tools give the agent the capabilities to actually do that work.
 
-A **skill** is a reusable workflow or playbook that helps an agent handle a class of tasks better. MeshAgent supports the open [Agent Skills](https://agentskills.io/home) format, so you can point an agent at one or more skill directories and let it discover and follow those instructions when they are relevant.
+MeshAgent supports the open [Agent Skills](https://agentskills.io/home) format. You can load one skill, a folder of skills, or a repo of skills into an agent with `--skill-dir` in the CLI or `skill_dirs` in the SDKs that expose it.
 
-Skills are useful when you want to package domain knowledge, task steps, output expectations, or review criteria in a reusable format. Skills are packaged as folders that can include instructions, scripts, and other resources that agents can leverage to perform tasks more effectively. 
+## What a skill is
 
-Skills allow you to use the model's context window more effectively by only having agents discover and read skills when they need them instead of always loading the details into the agent's system prompt.
-
-## Skills vs tools, rules, and user prompts
-
-These concepts work together, but they are not the same:
-- **System prompt / Rules**: the set of instructions or rules the agent sees every turn, this typically contains information about it's persona or other information to drive consistent behavior across turns. 
-- **User prompt**: the task-specific request for the current turn.
-- **Skill**: a reusable task playbook the agent can read and apply when needed.
-- **Tool**: a callable capability such as web search, shell access, storage access, or another app action.
-
-The key distinction is:
-
-- **Tools do work**
-- **Skills explain how to do work**
-
-In practice, a skill often tells the agent which tools to use, which files or references to inspect, what sequence to follow, and what output shape to produce.
-
-## The common Agent Skills format
-
-MeshAgent skills follow the common **Agent Skills** pattern used by several agent runtimes:
-
-1. A skill lives in its own directory.
-2. The directory contains a `SKILL.md` file.
-3. `SKILL.md` starts with a small YAML metadata block such as `name` and `description`, followed by the skill instructions written in normal Markdown.
-4. The directory may also include helper resources such as `references/`, `scripts/`, `assets/`, templates, example files, or other supporting content.
-
-A minimal skill looks like this:
+A skill is a directory that contains instructions and optional supporting files:
 
 ```text
 my-skill/
 ├── SKILL.md
-└── references/
-    └── examples.md
+├── references/
+│   └── examples.md
+└── scripts/
+    └── helper.sh
 ```
 
-## How MeshAgent supports skills
+The main entrypoint is `SKILL.md`. MeshAgent also accepts lowercase `skill.md`.
 
-MeshAgent agents accept skills through repeated `--skill-dir` flags in the CLI, or through `skill_dirs` in the corresponding Python implementations.
+The file starts with YAML frontmatter such as:
 
-When you provide skill directories:
+- `name`
+- `description`
 
-1. MeshAgent reads the skill metadata and instructions.
-2. The skills are surfaced into the agent's rules/context.
-3. The model decides when a skill is relevant.
-4. The agent carries out the workflow using the tools and room access you have enabled.
+Then the Markdown body explains the workflow, what to inspect, which tools to use, and what output to produce.
 
-This is different from tool or function calling. A skill is not itself a callable tool. Instead, it helps the model decide how to handle a task, and the agent then uses whatever tools are available to do the work.
+## Skills vs rules and tools
 
-## Which MeshAgent agents support skills?
+These pieces work together, but they do different jobs:
 
-Process-backed MeshAgent agents support this pattern, and the same mental model also applies to other runtimes or SDK classes that expose `--skill-dir` or `skill_dirs`: skills provide reusable guidance, while tools provide the executable capabilities.
+- **Rules** shape the agent's ongoing behavior.
+- **User prompts** describe the current request.
+- **Skills** give the agent reusable workflows for specific kinds of work.
+- **Tools** give the agent callable capabilities such as storage, shell access, web search, or room APIs.
+
+The practical distinction is simple:
+
+- Tools do work.
+- Skills explain how to do work.
+
+## Load skills into an agent
+
+You can point `--skill-dir` at either:
+
+- one skill directory
+- a parent directory that contains multiple skill directories
+
+This example creates one skill under `./skills` and then loads the parent folder:
+
+```bash bash
+mkdir -p ./skills/release-summary
+
+cat > ./skills/release-summary/SKILL.md <<'EOF'
+---
+name: release-summary
+description: Summarize release notes, changelogs, or shipped features into a concise update for humans. Use this when the user asks for a release summary, changelog rewrite, product update, or announcement draft.
+---
+
+# Release Summary
+
+## Goal
+
+Turn raw release notes or a changelog into a short, clear summary.
+
+## Process
+
+1. Read the source material carefully.
+2. Group related changes together.
+3. Highlight user-facing impact, not just implementation details.
+4. Keep the output concise and easy to skim.
+EOF
+
+meshagent setup
+
+meshagent process join \
+  --room quickstart \
+  --agent-name assistant \
+  --channel chat \
+  --require-storage \
+  --skill-dir ./skills \
+  --rule "You are a helpful assistant."
+```
+
+After the agent starts, ask it for a release summary. The model can inspect the available skill and decide to use it for that task.
+
+## Auto-detecting skills from a folder
+
+When `--skill-dir` points at a parent folder, MeshAgent auto-detects the immediate child directories that contain `SKILL.md` or `skill.md`.
+
+That means this works:
+
+```text
+./skills/
+├── release-summary/
+│   └── SKILL.md
+└── brand-review/
+    └── SKILL.md
+```
+
+And this CLI command loads both:
+
+```bash bash
+meshagent process join \
+  --room quickstart \
+  --agent-name assistant \
+  --channel chat \
+  --skill-dir ./skills
+```
+
+Use repeated `--skill-dir` flags when you want to combine multiple roots.
+
+## Pull skills from GitHub
+
+MeshAgent does not need a special GitHub-specific skill loader. It reads skills from local directories.
+
+That means there are two practical patterns:
+
+- tell an agent with shell access to clone or pull a public skills repo into room storage
+- configure a custom service with `--skill-dir` pointing at the room-backed skills folder
+
+This is especially relevant for the built-in room assistant. The shipped assistant template already includes shell access, storage access, and mounts room files at `/data`, so you can tell it to create skills in the room or pull a public skills repo into the room for you.
+
+If the repo is private, the agent needs a token or other credentials that let it authenticate with GitHub.
+
+One important distinction: the built-in assistant template does not currently start with `--skill-dir`. That means cloned skill files are not automatically loaded through MeshAgent's formal skills runtime just because they exist in the room. The assistant can still fetch them, inspect them, and use them as files. To have a service auto-load them as skills, the agent or service needs to be configured with `--skill-dir` pointed at that folder.
+
+Because MeshAgent reads configured skill directories from disk when it builds the agent's rules, skills added to a configured room-backed path can be picked up on later turns.
 
 ## When to use skills
 
 Use skills when you want to:
 
-- Package a repeatable workflow once and reuse it across many runs.
-- Keep complex task instructions out of long inline `--rule` strings.
-- Teach an agent how to choose tools, inspect files, and structure its final output.
-- Ship domain-specific know-how with a deployed service.
-
-Good examples include:
-
-- brand or editorial review workflows
-- code generation or refactoring playbooks
-- document transformation and reporting procedures
-- research, analysis, or QA workflows
+- package a repeatable workflow once and reuse it across many turns or rooms
+- keep long task playbooks out of inline `--rule` strings
+- teach an agent how to choose tools, inspect files, and structure its output
+- ship domain-specific guidance with a deployed service
 
 ## When not to use skills
 
 Do not use skills as a replacement for:
 
-- **tools**, when you need the agent to actually gain a new capability
-- **rules**, when the instruction should always apply to every turn
-- **schemas**, when the system needs strict structured inputs or outputs
+- **tools**, when the agent needs a new capability
+- **rules**, when the instruction should apply on every turn
+- **schemas**, when the system needs strict structured input or output
 
-If the task requires new abilities, add tools first. If the task requires better judgment about how to use existing abilities, add a skill.
-
-## How skills fit with rules
-
-Use both when it helps:
-
-- Put ongoing system behavior in `--rule` or `--room-rules`.
-- Put reusable task playbooks in skills.
-- Let the user prompt describe the current task.
-
-For example, a chatbot might have always-on rules about tone and safety, while a skill teaches it how to run a brand review using storage and web search tools.
+If the task needs new abilities, add tools first. If the task needs better reusable judgment about how to use those abilities, add a skill.
 
 ## Where to go next
 
-- [Authoring Skills](./authoring): write a portable `SKILL.md` and organize skill resources.
-- [Using Skills with Agents](./using_with_agents): load skills into process-backed agents and other supported runtimes.
-- [Packaging and Deploying Skills](./packaging_and_deploying): ship skills with a service container.
-- [Tools and Toolkits](../agents/tools/tools_and_toolkits): understand the callable capabilities that skills often rely on.
+- [Authoring Skills](./authoring): write `SKILL.md` files and organize supporting resources.
+- [Bundle Private Skills with a Custom Service](./packaging_and_deploying): ship a fixed or private set of skills with a service.
+- [How Tools and Toolkits Work](../agents/tools/tools_and_toolkits): understand the capabilities that skills often rely on.

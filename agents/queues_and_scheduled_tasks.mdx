@@ -5,20 +5,95 @@ description: Run background and recurring work with queues and scheduled tasks.
 
 Queues and scheduled tasks are the main building blocks for background and recurring work in MeshAgent.
 
-## The mental model
+## Run a queue-backed agent
 
-- **Queues** are how work is delivered asynchronously.
-- **Scheduled tasks** are how work is enqueued on a schedule.
-- **Agents or services** consume that queued work and perform the job.
+Start an agent that listens on a room queue:
 
-This is useful for recurring workflows such as daily digests, periodic reports, imports, monitoring jobs, or automated follow-up work.
+```bash
+meshagent setup
+meshagent rooms create --name myroom --if-not-exists
 
-## How this fits with agents
+meshagent process join \
+  --room myroom \
+  --agent-name queue-agent \
+  --channel queue:support-jobs \
+  --require-storage \
+  --require-web-search \
+  --rule "You are a queue-based support operations agent. Process queued jobs without asking follow-up questions unless the job explicitly asks for interactive behavior."
+```
 
-Process-backed agents can listen on queue channels and handle queued work without needing a separate runtime model. That means the same agent can answer in chat, respond to mail, and process scheduled queue work.
+This gives you one agent that consumes background work from the `support-jobs` queue.
 
-## Where the mechanics live
+## Send work into the queue
 
-- Use the [Queues API](../room_api/queue) for room-level queue operations.
-- Use [Process Agent Service](../services_room_containers/packaging_and_deploying/process_agent_service) for a deployment pattern that includes scheduled work.
-- Use the [REST API](../rest_api/overview) or [CLI reference](../reference/meshagent_cli_help) when you need to create or manage scheduled tasks programmatically.
+Once the agent is running, enqueue a job:
+
+```bash
+meshagent room queue send \
+  --room myroom \
+  --queue support-jobs \
+  --json '{"prompt":"Summarize the latest support backlog and save a report."}'
+```
+
+This is the main queue pattern:
+
+- the queue holds the work item
+- the agent consumes it
+- the agent runs without needing a live chat message
+
+## Schedule recurring work
+
+Scheduled tasks enqueue work on a cron schedule.
+
+Add a task that sends one job into the same queue every day:
+
+```bash
+meshagent scheduled-task add \
+  --room myroom \
+  --queue support-jobs \
+  --schedule "30 17 * * *" \
+  --payload '{"prompt":"Generate the daily support summary and save it to storage."}'
+```
+
+This creates a project-level scheduled task that targets the `support-jobs` queue in `myroom`.
+
+List scheduled tasks:
+
+```bash
+meshagent scheduled-task list --room myroom
+```
+
+Update a scheduled task:
+
+```bash
+meshagent scheduled-task update TASK_ID \
+  --schedule "0 18 * * *" \
+  --active
+```
+
+Delete a scheduled task:
+
+```bash
+meshagent scheduled-task delete TASK_ID
+```
+
+## How queues and scheduled tasks fit together
+
+- **Queues** are the delivery mechanism for asynchronous work
+- **Scheduled tasks** are the trigger that enqueues work on a schedule
+- **Agents or services** consume the queued work
+
+That makes queues useful for one-off background jobs and scheduled tasks useful for recurring work such as daily digests, periodic reports, monitoring jobs, or imports.
+
+## Room scope and project scope
+
+Queue operations are room-level operations.
+
+Scheduled tasks are managed at the project level, but they usually target a queue for a specific room. That is why the scheduled-task commands take both a queue and an optional `--room`.
+
+## Related guides
+
+- [Queues API](../room_api/queue): room-level queue operations
+- [Process Agents](./process/overview): run one agent across chat, queue, mail, and toolkit channels
+- [Deploy a Process Agent](../services_room_containers/packaging_and_deploying/process_agent_service): deployment pattern that includes scheduled work
+- [CLI Reference](../reference/meshagent_cli_help): full queue and scheduled-task command reference

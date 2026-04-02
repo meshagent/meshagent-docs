@@ -1,20 +1,31 @@
 ---
-title: "Packaging and Deploying Skills"
+title: "Bundle Private Skills with a Custom Service"
 ---
 
 import AnthropicSkills from "/snippets/examples/cli/anthropic-skills-agent/meshagent.mdx"
 
-## Overview
+For most skills workflows, you do not need this page.
 
-The most common way to ship skills with MeshAgent is to package the skills in a separate image, mount that image into the service container, copy the skills into a writable working directory, and then launch the agent with one `--skill-dir` flag per discovered skill.
+The default path is to keep skills in the room and let agents create, edit, or pull them there. If you are using the built-in assistant, it already has shell and storage access, so it can fetch public skill repos or create skills in room storage for you.
 
-This page walks through that full pattern using the existing `anthropic_skills` example in this docs repo.
+This page covers the more controlled path: bundle a fixed or private set of skills into a custom service and start that service with `--skill-dir`.
 
 For the full service YAML reference, see [Deploy Services with MeshAgent](../services_room_containers/packaging_and_deploying/packaging#how-service-configuration-files-are-structured).
 
-## End-to-end example: package a skills repo for a process-backed agent
+## When this pattern makes sense
 
-This example assumes you already have a repo or folder of Agent Skills you want to ship. The `anthropic_skills` sample models the pattern where those skills are packaged into an image and then mounted at `/skills` inside the MeshAgent service container.
+Use this pattern when:
+
+- the skills are private and you do not want to pull them from a public repo at runtime
+- you want a versioned, reproducible skill set baked into a service
+- you want a custom agent or service to auto-load skills through `--skill-dir`
+- you want a room to start with a seeded set of skills before anyone edits them
+
+If you just want an agent to fetch or write skills into the room and use them as files, keep them in room storage instead.
+
+## End-to-end example: bundle a skills repo for a process agent
+
+This example assumes you already have a repo or folder of Agent Skills you want to ship. The `anthropic_skills` sample packages those skills into an image, mounts them at `/skills`, copies them into `/data/skills`, and starts a `meshagent process` agent with `--skill-dir /data/skills`.
 
 ### Step 1: Package your skills into an image
 
@@ -77,7 +88,7 @@ docker.io/tulamasterman/anthropic-skills:latest
 
 ### Step 2: Create the MeshAgent service spec
 
-Use a `meshagent.yaml` file that mounts the skills image and starts a process-backed agent which loads the discovered skills.
+Use a `meshagent.yaml` file that mounts the skills image and starts a process agent that loads the copied skills.
 
 <CodeGroup>
   <AnthropicSkills />
@@ -89,21 +100,14 @@ If you built your own image in Step 1, update the image mount in the service spe
 
 ### Step 3: Understand what this service is doing
 
-The sample follows the same pattern you used for the Anthropic skills packaging flow:
+The sample does four important things:
 
 - It mounts the room filesystem at `/data`.
 - It mounts the skills image at `/skills`.
 - It copies the skills into `/data/skills` on startup.
-- It finds every `SKILL.md` and turns each parent directory into a `--skill-dir` argument.
-- It starts `meshagent process join --channel chat` with the required tools and rules so the agent can actually use the skills.
+- It starts `meshagent process join --skill-dir /data/skills` with the tools and rules the skills need in order to be useful.
 
-The startup script is important because it does three things that make the whole pattern work:
-
-1. It copies the skill files into `/data/skills`, giving the running service a predictable local path to work from.
-2. It discovers every `SKILL.md` and expands those directories into repeated `--skill-dir` flags before launching the agent.
-3. It launches the agent with the tools and rules the packaged skills need in order to be useful.
-
-The result is that your deployed agent can mount a repo of skills, discover them automatically, and load them without hardcoding every individual skill path into the service command.
+The auto-detection behavior matters here. `--skill-dir /data/skills` can point at the parent folder, and MeshAgent will load the immediate child skill folders inside it. You do not need to expand every skill into its own CLI flag.
 
 ### Step 4: Validate the service spec
 
@@ -136,21 +140,21 @@ If the skills depend on shell access, storage, web search, or other tools, make 
 
 ## Why this pattern works well
 
-This approach is a good default when:
+This approach works well when:
 
-- you already have a skill repo you want to reuse
+- you already have a private or curated skill repo you want to reuse
 - you want multiple skills to ship together
-- you want the service to discover whatever skills are present in the mounted image
+- you want the service to discover whatever skills are present in the mounted or copied skills folder
 - you want stable, versioned skill content in deployment
 
-It is especially useful when the skills repo is maintained separately from the MeshAgent service spec.
+It is especially useful when the skills repo is maintained separately from the MeshAgent service spec and should not be edited casually in each room.
 
-## Editable skills vs image-baked skills
+## Room-managed skills vs image-baked skills
 
 There are two common operating modes:
 
-- **Image-baked skills**: versioned, reproducible, and best for stable deployments.
-- **Copied skills under `/data/skills`**: easier to inspect, reference, or customize from the room because `/data` is mounted from room storage in this sample.
+- **Room-managed skills**: easier to create, inspect, pull from GitHub, and edit inside the room.
+- **Image-baked skills**: versioned, reproducible, and better when you want a fixed private baseline.
 
 The Anthropic skills example uses both:
 
@@ -158,7 +162,7 @@ The Anthropic skills example uses both:
 - On startup, the skills are copied into `/data/skills`, which lives in room storage.
 - Because the sample uses `cp -R -n`, files that already exist in room storage are not overwritten by later startups.
 
-In practice, that means you can seed a room with the skills from the image, then edit or customize the copied skill files in the room, and the agent will load the room-backed copies from `/data/skills`.
+In practice, that means you can seed a room with the skills from the image, then edit, pull, or customize the copied skill files in the room, and the agent will load the room-backed copies from `/data/skills`.
 
 This gives you a useful hybrid model:
 
@@ -172,14 +176,13 @@ If your skills repo differs from the sample:
 
 - change the mounted image in `storage.images`
 - adjust the source path if your repo uses a different root layout
-- keep the `find ... SKILL.md` loop so every skill becomes its own `--skill-dir`
+- keep the copied files under a parent folder such as `/data/skills`
 - enable whatever tools the skills actually depend on
 
-If you only have one skill and a fixed layout, you can simplify the command and pass a single explicit `--skill-dir`. The discovery loop becomes most useful when you are shipping a repo of skills.
+If you only have one skill and a fixed layout, you can point `--skill-dir` directly at that one skill directory instead.
 
 ## See also
 
 - [Skills Overview](./overview): understand how skills differ from tools and rules.
-- [Using Skills with Agents](./using_with_agents): load skills into an agent locally before packaging them.
 - [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging): deployment paths and CLI workflows.
 - [Deploy Services with MeshAgent](../services_room_containers/packaging_and_deploying/packaging#service-configuration-field-reference): full service YAML field reference.
