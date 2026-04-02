@@ -9,7 +9,7 @@ import VoiceBotYaml from "/snippets/examples/python/deployable/simple_voicebot/m
 
 
 ## Overview
-`VoiceBot` is the standard agent for building real-time, speech-based conversational experiences in MeshAgent. It builds on [`SingleRoomAgent`](./singleroomagent) and adds streaming audio input/output, LiveKit session management, speech recognition, and natural voice responses.
+`VoiceBot` is the standard agent for building real-time, speech-based conversational experiences in MeshAgent. It builds on the Python `SingleRoomAgent` base class from [`meshagent-agents`](../../reference/python_package_overview) and adds streaming audio input/output, LiveKit session management, speech recognition, and natural voice responses.
 
 A `VoiceBot` joins a MeshAgent room, listens for `voice_call` messages, connects to a LiveKit breakout room where it can speak and listen to participants in real-time. It combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), LLM reasoning, and tool calling automatically. 
 
@@ -73,7 +73,7 @@ meshagent voicebot deploy --service-name voiceagent --room quickstart --agent-na
 **Option 2: Generate a YAML spec** Create a `meshagent.yaml` file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
 
 ```bash bash 
-meshagent voicebot spec --service-name voiceagent ---agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
+meshagent voicebot spec --service-name voiceagent --agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
 ```
 
 Next, copy the output to a `meshagent.yaml` file
@@ -194,7 +194,7 @@ The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will alwa
 
 ## How VoiceBot Works
 ### Constructor Parameters
-``VoiceBot`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
+``VoiceBot`` accepts everything from the Python ``SingleRoomAgent`` base class (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
 
 | Parameter             | Type                          | Description                                                                                                           |
 | -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -211,11 +211,11 @@ The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will alwa
 | `client_rules`       | `dict[str, list[str]] \| None` | Optional map keyed by the participant's `client` attribute that appends extra rules when matched.                      |
 
 ### Lifecycle Overview
-``VoiceBot`` inherits all lifecycle hooks from SingleRoomAgent and adds voice session handling on top.
+``VoiceBot`` inherits all lifecycle hooks from ``SingleRoomAgent`` and adds voice session handling on top.
 
 - ``await start(room: RoomClient)``: Registers the bot as a voice-capable participant by setting ``"supports_voice": True`` and listening for ``voice_call`` messages. When a voice call is received, the bot joins a LiveKit breakout room and starts a real-time session.
 - ``await stop()``: Clears the room reference. Active voice sessions end when the LiveKit room disconnects (for example, when the caller hangs up).
-- **room** property: Returns the active ``RoomClient`` (inherited from SingleRoomAgent).
+- **room** property: Returns the active ``RoomClient`` (inherited from ``SingleRoomAgent``).
 
 ### Conversational Flow
 When a user starts a voice call:
@@ -276,7 +276,7 @@ These components can be swapped or extended through adapters if you need differe
 
 Discover other agents in MeshAgent:
 - [Process Agents Overview](../process/overview): Text-based and multi-channel process-backed agents.
-- [Process Agents Overview](../process/overview): Chat, mail, queue, and toolkit entry points.
+- [Agents Overview](../overview): How agents, channels, threads, and tools fit together.
 
 To learn more about deploying agents with MeshAgent
 - [Packaging and Deploying Services](../../services/deployment/deploy_services): Package and deploy voice agents as room or project services.

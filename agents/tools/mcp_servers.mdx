@@ -1,0 +1,171 @@
+---
+title: MCP Servers & OpenAI Connectors
+description: Connect external MCP tools to MeshAgent with Powerboards, meshagent service, or meshagent mcp.
+---
+import MCPDeepWikiTool from "/snippets/examples/python/tools/mcp_deepwiki/meshagent.mdx"
+import OpenAIConnectorTool from "/snippets/examples/python/tools/openai_connector/meshagent.mdx"
+
+Use this page when you want tools that live outside MeshAgent to show up in a room.
+
+This includes:
+
+- a standard MCP server exposed at a URL
+- a local stdio MCP server you want to bridge from the CLI
+- an OpenAI-provided connector configured through a MeshAgent service manifest
+
+For a concrete vendor-specific walkthrough, see [Supabase MCP Guide](./supabase_mcp).
+
+## Installation paths
+
+| Path | Use it when | What you get |
+| --- | --- | --- |
+| **Powerboards** | The server already exposes a hosted MCP endpoint and the install flow works in the UI. | A room install without writing YAML yourself. |
+| **`meshagent service`** | You want a saved deployment in MeshAgent, need room or project scope, or need to control the manifest. | A deployed service that stays available after your terminal closes. |
+| **`meshagent mcp`** | You want a live CLI bridge, are testing a server, or need to connect a local stdio server quickly. | A toolkit registration that stays available while the command is running. |
+
+OpenAI connectors belong to the **`meshagent service`** path. You configure them in the service manifest with `openai_connector_id` and the provider's OAuth settings.
+
+## Install from Powerboards
+
+Powerboards is the fastest path when the MCP server already exposes a hosted endpoint that can be inspected and installed directly.
+
+- Public no-auth servers such as DeepWiki (`https://mcp.deepwiki.com/mcp`) are the simplest case.
+- Hosted OAuth-aware servers such as [Linear MCP](https://linear.app/docs/mcp) can guide you through sign-in when the server exposes the right remote MCP metadata.
+- Servers that need custom headers, secrets, a saved deployment, or a local stdio process are usually a better fit for `meshagent service` or `meshagent mcp`.
+
+1. Open [Powerboards](../../interfaces/powerboards) and go to the board or room where you want the tool to be available.
+2. Open the install flow for adding a service or integration.
+3. Paste the MCP server URL.
+4. Let Powerboards inspect the server and guide the install flow.
+5. Confirm the room where the tool should be installed.
+
+Powerboards can also install from a hosted `ServiceTemplate` link when you want to distribute a more opinionated setup flow. For more on those install paths, see [Powerboards](../../interfaces/powerboards).
+
+## Use `meshagent service` for a saved deployment
+
+Use `meshagent service` when you want the tool to stay deployed in MeshAgent and be available to the project or room that needs it.
+
+### Generate a service from an MCP URL
+
+If the MCP server is already hosted, the CLI can generate the service manifest for you.
+
+Inspect the generated manifest first:
+
+```bash
+meshagent service spec \
+  --mcp https://mcp.deepwiki.com/mcp
+```
+
+Create the service immediately:
+
+```bash
+meshagent service create \
+  --mcp https://mcp.deepwiki.com/mcp \
+  --room quickstart
+```
+
+The CLI auto-discovers the MCP server metadata. If the server exposes OAuth registration metadata, the generated service is configured for that flow automatically.
+
+### Example: deploy a standard MCP server
+
+This example exposes the public DeepWiki MCP server as a room service:
+
+<CodeGroup>
+  <MCPDeepWikiTool />
+</CodeGroup>
+
+You can deploy it from a YAML file:
+
+```bash
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+Or generate the YAML from the MCP URL first and then deploy it:
+
+```bash
+meshagent service spec \
+  --mcp https://mcp.deepwiki.com/mcp \
+  > meshagent.yaml
+
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+### Example: deploy an OpenAI connector
+
+Use this path when OpenAI already provides the integration you want and you want that connector available inside MeshAgent as a deployed service.
+
+For connector-specific setup details and the latest OpenAI-side behavior, see the [OpenAI remote MCP and connectors guide](https://platform.openai.com/docs/guides/tools-remote-mcp) and [OpenAI connector docs](https://platform.openai.com/docs/guides/tools-connectors).
+
+This example exposes the Microsoft Teams connector through a MeshAgent service:
+
+<CodeGroup>
+  <OpenAIConnectorTool />
+</CodeGroup>
+
+```bash
+meshagent service create --file meshagent.yaml --room quickstart
+```
+
+The key difference from a standard MCP URL is that you define the connector explicitly in the manifest:
+
+- `openai_connector_id` selects the OpenAI connector
+- `oauth` provides the third-party provider OAuth settings for that connector
+- the service is still deployed with `meshagent service`, just like any other saved external tool
+
+## Use `meshagent mcp` for a live CLI bridge
+
+Use `meshagent mcp` when you want to register a toolkit in a room directly from the CLI instead of creating a saved service first.
+
+For a hosted streamable HTTP server:
+
+```bash
+meshagent mcp http \
+  --room quickstart \
+  --url https://mcp.deepwiki.com/mcp \
+  --toolkit-name deepwiki
+```
+
+Use `meshagent mcp sse` for SSE servers, and `meshagent mcp stdio` when the MCP server runs as a local process and should be bridged into the room.
+
+### Other `meshagent mcp` commands
+
+- `meshagent mcp stdio`: run a local stdio MCP server and register it in the room
+- `meshagent mcp http-proxy`: expose a stdio MCP server as streamable HTTP
+- `meshagent mcp sse-proxy`: expose a stdio MCP server as SSE
+- `meshagent mcp stdio-service`: run a stdio MCP server behind local `ServiceHost`
+
+`meshagent mcp` is session-based. The toolkit stays available while the command is running. It does not create a saved MeshAgent service.
+
+## Start an agent that can use MCP tools
+
+Once the MCP service or toolkit is available in the room, start an agent that can use it:
+
+```bash
+meshagent process join \
+  --room quickstart \
+  --agent-name agent \
+  --channel chat \
+  --mcp
+```
+
+Open [MeshAgent Studio](https://studio.meshagent.com), join the room, and enable the MCP tool when you want the agent to use it.
+
+For the broader tool model, see [How Tools and Toolkits Work](./tools_and_toolkits).
+
+## Security and setup notes
+
+When adding an MCP server, think about:
+
+- what data the external service will receive
+- who operates the MCP server
+- whether the agent should opt into MCP tool use with `--mcp`
+- whether the server needs additional secrets, headers, or OAuth setup
+
+## Related topics
+
+- [Built-in MeshAgent Toolkits](./built_in_toolkits)
+- [Tools and Toolkits](./tools_and_toolkits)
+- [Powerboards](../../interfaces/powerboards)
+- [Deploy Services with MeshAgent](../../services/deployment/deploy_services)
+- [Room Secrets](../../secrets/room_secrets)
+- [MeshAgent CLI Commands](../../reference/meshagent_cli_help)

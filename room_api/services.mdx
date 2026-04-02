@@ -1,0 +1,163 @@
+---
+title: Services
+description: Inspect runtime state for services in a room and restart a running room service.
+---
+
+## Overview
+
+The `ServicesClient` is the Room API for inspecting the services that are currently running in a room session.
+
+Use it when you want to:
+
+- see which saved services are actually running in the active room
+- inspect runtime state such as container id, restart count, and last exit code
+- request a restart for a running room service without changing its saved deployment spec
+
+This page is about runtime control inside an active room. If you want to deploy, update, validate, or delete saved services, use [Deploy Services with MeshAgent](../services/deployment/deploy_services) and the project-level `meshagent service` command instead.
+
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room service --help
+meshagent room service list --room myroom
+meshagent room service restart --room myroom --name my-service
+```
+
+## Why use the Services API?
+
+- check whether a deployed room or project service is actually running in the current session
+- inspect runtime state without leaving the room context
+- restart one managed room service while leaving the saved service definition alone
+
+## How it works
+
+Saved services are deployed with the `meshagent service` command or generated through higher-level flows such as `meshagent process deploy`.
+
+Once a room session is active, those saved services become running workloads in the room runtime. The `ServicesClient` gives you visibility into that runtime layer:
+
+- `list()` returns the service specs visible in the room
+- `list_with_state()` / `listWithState()` adds runtime state details from the room service controller
+- `restart()` asks MeshAgent to stop the current container for one service so it can come back up cleanly
+
+This is intentionally separate from service packaging and deployment. Deployment changes the saved configuration through `meshagent service`. The Room Services API tells you what is running right now.
+
+## Permissions and grants
+
+Room service inspection and restart use the room `services` toolkit surfaced by the runtime. In practice, use the normal room connection path for operator tooling and deploy the service with the room/API access it needs.
+
+For the broader deployment permission model, see [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/participant_tokens), and [Deploy Services with MeshAgent](../services/deployment/deploy_services).
+
+## API reference
+
+### `list()`
+
+- **Description**: List the services currently visible in the room runtime.
+- **Returns**: A list of `ServiceSpec` values.
+
+<CodeGroup>
+```bash CLI
+meshagent room service list \
+  --room myroom
+
+```
+```python Python
+services = await room.services.list()
+
+for service in services:
+  print(service.metadata.name)
+
+```
+```typescript TypeScript
+const services = await room.services.list();
+
+for (const service of services) {
+  console.log(service.metadata.name);
+}
+
+```
+```dart Dart
+final services = await room.services.list();
+
+for (final service in services) {
+  print(service.metadata.name);
+}
+
+```
+</CodeGroup>
+
+### `list_with_state()` / `listWithState()`
+
+- **Description**: List services plus runtime state details from the service controller.
+- **Returns**: `ListServicesResult` with:
+  - `services`: the service specs
+  - `service_states`: runtime state keyed by service id
+
+Typical runtime fields include service state, container id, started time, restart count, last exit code, and any scheduled restart time.
+
+<CodeGroup>
+```python Python
+result = await room.services.list_with_state()
+
+for service in result.services:
+  state = result.service_states.get(service.id or "")
+  print(service.metadata.name, state.state if state is not None else "unknown")
+
+```
+```typescript TypeScript
+const result = await room.services.listWithState();
+
+for (const service of result.services) {
+  const state = service.id ? result.serviceStates[service.id] : undefined;
+  console.log(service.metadata.name, state?.state ?? "unknown");
+}
+
+```
+```dart Dart
+final result = await room.services.listWithState();
+
+for (final service in result.services) {
+  final state = service.id == null ? null : result.serviceStates[service.id!];
+  print('${service.metadata.name}: ${state?.state ?? "unknown"}');
+}
+
+```
+</CodeGroup>
+
+### `restart(service_id)` / `restart({ serviceId })`
+
+- **Description**: Request a restart for one running room service.
+- **Parameters**:
+  - `service_id` / `serviceId`: the room service id to restart
+- **Returns**: `None`
+
+Use this when the saved service spec is already correct and you only want MeshAgent to restart the running workload.
+
+<CodeGroup>
+```bash CLI
+meshagent room service restart \
+  --room myroom \
+  --name my-service
+
+```
+```python Python
+await room.services.restart(service_id="svc-1")
+
+```
+```typescript TypeScript
+await room.services.restart({ serviceId: "svc-1" });
+
+```
+```dart Dart
+await room.services.restart(serviceId: "svc-1");
+
+```
+</CodeGroup>
+
+## Related guides
+
+- [Room API Overview](./overview)
+- [Sessions](./sessions)
+- [Deploy Services with MeshAgent](../services/deployment/deploy_services)
+- [Intro to Services](../services/intro)
