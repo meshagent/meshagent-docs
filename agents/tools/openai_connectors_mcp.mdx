@@ -11,11 +11,23 @@ In MeshAgent, these tools are typically exposed through the same MCP tool flow:
 - **[OpenAI Connectors](https://platform.openai.com/docs/guides/tools-connectors-mcp)** wrap third-party services such as Gmail, Google Drive, Outlook, Microsoft Teams, and Dropbox.
 - **[MCP servers](https://modelcontextprotocol.io/introduction)** expose tools over the Model Context Protocol, whether the server is public, self-hosted, or provided by a third party.
 
+Use an OpenAI Connector when OpenAI already provides the integration for that third-party product. Use an MCP server when the tool is exposed over MCP by you or by another vendor.
+
 For a concrete vendor-specific walkthrough, see [Supabase MCP Guide](./supabase_mcp).
 
-## Fastest path: install from Powerboards
+## Choose the install path
 
-If you are adding a supported MCP integration to a room, the easiest path is often Powerboards.
+- Use **Powerboards** when the MCP server already exposes a hosted endpoint and the server's auth flow can be installed directly.
+- Use **`meshagent service`** when you want a deployed service in MeshAgent and may need to inspect or edit the generated service config.
+- Use **`meshagent mcp`** when you want to connect a toolkit directly to a room from the CLI or bridge a local stdio server.
+
+## Install from Powerboards
+
+Whether Powerboards can install an MCP server directly depends on the MCP server itself. It is the fastest path when the server exposes a public MCP endpoint and its auth and metadata shape can be inspected directly.
+
+- Public no-auth servers such as DeepWiki (`https://mcp.deepwiki.com/mcp`) are the simplest case.
+- Hosted OAuth-aware servers such as [Linear MCP](https://linear.app/docs/mcp) can guide you through sign-in when the server exposes the right remote MCP metadata.
+- Servers that need custom headers, room secrets, or a local stdio process are usually better handled through `meshagent service` or `meshagent mcp`.
 
 1. Open the Powerboards installer.
 2. Paste the MCP server URL.
@@ -26,9 +38,9 @@ For some servers, this means you can install the tool without writing YAML or de
 
 Powerboards can also install from a hosted `ServiceTemplate` link when you want to distribute a more opinionated setup flow. For more on those install paths, see [Powerboards](../../interfaces/powerboards).
 
-## CLI path: create the service from an MCP URL
+## Use `meshagent service` to deploy from an MCP URL
 
-If you want to stay in the CLI, you can create the external MCP service directly from the server URL.
+If you want a saved deployed service, you can create the external MCP service directly from the server URL.
 
 If you want to inspect the generated spec first:
 
@@ -46,6 +58,21 @@ meshagent service create \
 ```
 
 The CLI auto-discovers the MCP server metadata. For servers that expose OAuth registration metadata, the generated service is configured for the dynamic client-registration flow.
+
+## Use `meshagent mcp` to connect a toolkit directly
+
+Use the `meshagent mcp` commands when you want to register a toolkit in a room from the CLI instead of creating a saved service first.
+
+For a hosted streamable HTTP server:
+
+```bash
+meshagent mcp http \
+  --room quickstart \
+  --url https://mcp.deepwiki.com/mcp \
+  --toolkit-name deepwiki
+```
+
+Use `meshagent mcp sse` for SSE servers, and `meshagent mcp stdio` when the MCP server runs as a local process and should be bridged into the room.
 
 ## Start an agent that can use MCP tools
 
@@ -65,7 +92,7 @@ If the agent should always have access to the room's MCP tools, use `--require-m
 
 For the deeper difference between dynamic and always-on tool access, see [How Tools and Toolkits Work](./tools_and_toolkits).
 
-## When to write the YAML yourself
+## Write the service config yourself when you need fixed configuration
 
 Use a hand-written service spec when you need to control the service shape directly, pin specific metadata, or define an OpenAI Connector explicitly.
 
@@ -102,12 +129,13 @@ When adding external tools like MCP servers or OpenAI Connectors, think about:
 - what data the external service will receive
 - who operates the MCP server or connector-backed system
 - whether users should opt in per turn with `--mcp` or whether the tool should always be attached with `--require-mcp`
-- whether the server needs additional secrets or OAuth setup
+- whether the server needs additional secrets, headers, or OAuth setup
 
 ## Related topics
 
 - [Built-in MeshAgent Toolkits](./built_in_toolkits): understand the built-in tool flags available from `meshagent process`
 - [Tools and Toolkits](./tools_and_toolkits): understand dynamic versus always-on tool access
 - [Powerboards](../../interfaces/powerboards): install tools from built-ins, templates, or MCP server URLs
-- [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging): choose a deployment path for external services
-- [Deploy Services with MeshAgent](../../services_room_containers/packaging_and_deploying/packaging#ports-endpoints): look up MCP endpoint and service fields
+- [Packaging and Deploying Services](../../services/deployment/deploy_services): choose a deployment path for external services
+- [Room Secrets](../../secrets/room_secrets): pass secrets into MCP headers or service config
+- [MeshAgent CLI Commands](../../reference/meshagent_cli_help): see the full `meshagent mcp` and `meshagent service` command surface

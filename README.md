@@ -9,7 +9,6 @@ This directory is the source tree for the MeshAgent docs corpus.
 - source-first examples under `examples/`
 - generated snippet wrappers under `snippets/examples/`
 - generated CLI help under `reference/meshagent_cli_help.mdx`
-- public-surface metadata in `public-surfaces.yaml`
 
 ## Source Of Truth Rules
 
@@ -31,13 +30,6 @@ npm run build-examples
 `build-examples` rebuilds snippet wrappers from `examples/**`.
 
 `build-cli-help.sh` regenerates the recursive CLI reference page from the current CLI.
-
-## Metadata
-
-- `public-surfaces.yaml`
-  Current, transitional, and archive public-surface contract for docs work.
-- `examples/catalog.yaml`
-  Seed catalog for canonical, archive, and non-canonical examples.
 
 ## Current Maintenance Gaps
 

@@ -3,22 +3,44 @@ title: Mailboxes
 description: Create and manage project mailboxes that route email into rooms and queues.
 ---
 
-Mailboxes let MeshAgent receive inbound email and route it into a room workflow.
+Mailboxes are project-level email addresses that route inbound mail into rooms. They belong at the project level because the address belongs to the project, even though the work is delivered to a queue in a specific room.
 
-Most teams use mailboxes when they want an agent to handle email through a process mail channel or another queue-backed workflow.
+Use mailboxes when an agent listens on a `mail:` channel, or when you want inbound email to land in a queue that something in the room already consumes.
 
-## What a mailbox does
+## Create a mailbox
 
-A mailbox maps an email address to a room and queue so inbound mail can become work for an agent or service.
+```bash
+meshagent mailbox create \
+  --address support@mail.meshagent.com \
+  --room customer-support \
+  --queue support-inbox
+```
+
+This creates a project mailbox and routes messages sent to `support@mail.meshagent.com` into the `support-inbox` queue in the `customer-support` room.
+
+## Inspect and manage mailboxes
+
+```bash
+meshagent mailbox list
+meshagent mailbox show support@mail.meshagent.com
+meshagent mailbox update support@mail.meshagent.com --queue escalations
+meshagent mailbox delete support@mail.meshagent.com
+```
+
+## Permissions
+
+- To create, update, or delete a mailbox for a room, you need permission to administer that room.
+- To list mailboxes across the whole project, you need developer access.
 
 ## Where to manage mailboxes
 
-- Use [MeshAgent Studio](../interfaces/meshagent_studio) for the primary UI flow.
+- Use [MeshAgent Studio](../interfaces/meshagent_studio) for the main UI flow.
 - Use the CLI when you want quick setup or scripting.
 - Use the [REST API](../rest_api/overview) when you need programmatic mailbox management.
 
 ## Related pages
 
 - [Process Agents Overview](../agents/process/overview)
+- [Queue API](../room_api/queue)
 - [Quickstart](../introduction/cli_quickstart)
 - [REST API](../rest_api/overview)

@@ -66,7 +66,7 @@ ChatBots can be extended with rules, tools, and skills depending on the kind of 
 If you've turned on any tools or added the `--room-rules` flag to your agent you can toggle tools on and off and modify the agent's `rules.txt` file to refine the agent's behavior. Changes to the tools and `rules.txt` will be applied per message. 
 
 ### Step 3: Package and deploy the agent
-Once your agent works locally to make it always available you'll need to [package and deploy](../../services_room_containers/packaging_and_deploying/packaging) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
+Once your agent works locally to make it always available you'll need to [package and deploy](../../services/deployment/deploy_services) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
 
 **Both options below deploy the same ChatBot** - choose based on your workflow:
 - **Option 1 (`meshagent chatbot deploy`)**: One command that deploys immediately (fastest/easiest approach)
@@ -140,11 +140,11 @@ If you want to modify and restart the agent run `Ctrl+C` from the terminal to st
 ### Step 4: Package and deploy the agent
 
 To deploy your SDK ChatBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run. 
-For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging). If you want to ship reusable private skills with the chatbot, see [Bundle Private Skills with a Custom Service](../../agent_skills/packaging_and_deploying).
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services/deployment/deploy_services). If you want to ship reusable private skills with the chatbot, see [Bundle Private Skills with a Custom Service](../../agent_skills/packaging_and_deploying).
 
 MeshAgent supports two deployment patterns for containers: 
 1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly. 
-2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services/containers/optimizing_containers).
 
 This example demonstrates approach #1 with a code-only image. The default YAML points at the public `python-docs-examples` image so you can still run the documentation examples without building your own images. If you want to build and push your own code image, follow the steps below and update the image mount section of the `meshagent.yaml` file.
 
@@ -302,5 +302,5 @@ To continue learning about MeshAgent agents check out:
 - [Skills Overview](../../agent_skills/overview): Add reusable workflow guidance without turning everything into inline rules.
 
 To learn more about deploying agents with MeshAgent
-- [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging): Package and deploy agents as room or project services.
-- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment
+- [Packaging and Deploying Services](../../services/deployment/deploy_services): Package and deploy agents as room or project services.
+- [Secrets and Credentials](../../secrets/overview): Learn how to store credentials securely for deployment

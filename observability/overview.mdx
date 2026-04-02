@@ -1,0 +1,101 @@
+---
+title: "Observability"
+description: Understand what MeshAgent captures automatically, where to inspect it, and how to add custom telemetry in your own services.
+---
+
+MeshAgent uses [OpenTelemetry](https://opentelemetry.io/) for traces, logs, and metrics.
+
+Observability is built into MeshAgent. When a room is active, MeshAgent records the runtime activity for that session and exposes it in MeshAgent Studio. You do not need to set up your own telemetry pipeline just to get basic visibility into what happened in a room.
+
+## What you get automatically
+
+Out of the box, MeshAgent gives you:
+
+- **Logs, traces, and metrics** for room activity, agents, tool calls, and service execution
+- **Session data** for each room run, including room lifecycle events and recorded runtime activity
+- **Project-level usage views** for cost, activity, and latency summaries in MeshAgent Studio
+
+## Where to inspect it
+
+### Developer Console
+
+Inside a room in [MeshAgent Studio](../interfaces/meshagent_studio), the **Developer Console** gives you the live view while the room is running.
+
+That is where you inspect:
+
+- logs
+- traces
+- metrics
+- related runtime surfaces such as containers and services
+
+### Session Viewer
+
+Use the **Session** view when you want to inspect one completed or active room run in a more focused way. Sessions preserve the telemetry and events for that runtime period, which makes them the right place to debug what happened in a specific run.
+
+For session-level details, see [Sessions](../room_api/sessions).
+
+### Usage
+
+Use **Usage** in MeshAgent Studio when you want the project-level view across rooms and sessions, such as cost, activity, and latency summaries.
+
+### Developer logs
+
+Developer logs are the room's structured live log stream. They are part of the room runtime rather than generic OTEL instrumentation.
+
+Use developer logs when you want to:
+
+- emit structured debug events from your own code
+- subscribe to live logs from a room
+- inspect room-specific debug output from the CLI or SDK
+
+The main entry points are:
+
+```bash bash
+meshagent room developer watch --room myroom
+```
+
+And from the Room API:
+
+```python Python
+await room.developer.log(type="info", data={"message": "hello"})
+```
+
+For the full API, see [Developer API](../room_api/developer).
+
+## Add telemetry in your own service
+
+You do not need `otel_config()` to see MeshAgent-managed room and session telemetry in Studio. Use it when you want telemetry from your own Python code to show up there too.
+
+If you are building a custom Python service or room client and want your own logs, traces, and metrics to appear alongside MeshAgent's built-in telemetry, call `otel_config()` once at startup:
+
+```python Python
+from meshagent.otel import otel_config
+otel_config(service_name="my-service")
+```
+
+When your code runs inside MeshAgent, deployed services and room runtimes receive `OTEL_ENDPOINT`, `MESHAGENT_PROJECT_ID`, `MESHAGENT_ROOM`, and `MESHAGENT_SESSION_ID`. `otel_config()` uses those values so your service telemetry is exported with the right project, room, and session tags.
+
+If you call `otel_config()` outside MeshAgent, it still configures logging, but traces and metrics are only exported if you provide an `OTEL_ENDPOINT` yourself.
+
+To change the log level:
+
+```python Python
+otel_config(service_name="my-service", level="DEBUG")
+```
+
+## What gets tagged automatically
+
+When you use `otel_config()`, MeshAgent tags telemetry so it lands in the right room and aggregates cleanly at the project level.
+
+| Tag | Description |
+| --- | --- |
+| `project` | The current project ID |
+| `room` | The current room name |
+| `session` | The active session ID |
+| `service.name` | The name you pass to `otel_config()` |
+
+## Next Steps
+
+- [Custom Logs, Traces, and Metrics](./custom_telemetry): add your own spans, logs, and counters inside a custom Python service
+- [Developer API](../room_api/developer): emit and stream structured room developer logs
+- [Sessions](../room_api/sessions): inspect session-level history and telemetry for a room run

@@ -1,0 +1,76 @@
+---
+title: Webhook Handoffs
+description: Handle `room.call` webhook handoffs in your own service with WebhookServer.
+---
+
+import Webhooks from "/snippets/examples/python/snippets/webhooks.mdx"
+
+Use this page when MeshAgent needs to call your service or toolkit over the webhook transport.
+
+This is different from standard project webhooks. For project event delivery such as `room.started` or `storage.file.updated`, see [Projects > Webhooks](../project_admin/webhooks).
+
+## When to use `WebhookServer`
+
+Use `WebhookServer` when your endpoint needs:
+
+- built-in signature verification
+- a default `GET /` health check
+- a default `POST /webhook` handler
+- support for `room.call` handoffs, including websocket upgrades
+
+## What `room.call` sends
+
+For `room.call`, MeshAgent sends:
+
+- `room_name`
+- `room_url`
+- `token`
+- optional `arguments`
+
+That is the handoff MeshAgent uses when it calls your own service endpoint.
+
+## Configure webhook verification
+
+Set the webhook secret if you want the server to verify signed requests:
+
+```bash
+export MESHAGENT_WEBHOOK_SECRET=your-secret
+```
+
+For local development, you can disable verification with `validate_webhook_secret=False`.
+
+## Run `WebhookServer`
+
+The built-in server listens on port `8080` by default and exposes:
+
+- `GET /` for health checks
+- `POST /webhook` for webhook delivery
+- `GET /webhook` for websocket upgrades used by `room.call`
+
+Use the SDK to create the server and handle `room.call`:
+
+<CodeGroup>
+  <Webhooks />
+</CodeGroup>
+
+## Standard project webhooks
+
+If you just want MeshAgent to notify an external system about project events, you do not need `WebhookServer`.
+
+Create a standard project webhook instead:
+
+```bash
+meshagent webhook create \
+  --name room-events \
+  --url https://example.com/webhook \
+  --event room.started \
+  --event room.ended
+```
+
+That setup is covered in [Projects > Webhooks](../project_admin/webhooks).
+
+## Related docs
+
+- [Projects > Webhooks](../project_admin/webhooks)
+- [Deploy Services with MeshAgent](../services/deployment/deploy_services)
+- [MeshAgent CLI Commands](../reference/meshagent_cli_help)

@@ -1,0 +1,55 @@
+---
+title: Scheduled Tasks
+description: Create project-level scheduled tasks that enqueue work into room queues.
+---
+
+Scheduled tasks are project-level triggers that enqueue work into room queues on a schedule.
+
+A scheduled task sends a message into a queue on a schedule. An agent or service in that room reads from the queue and does the work. The task lives at the project level even when it targets one room. For the queue and worker side of that workflow, see [Queues and Scheduled Tasks](../agents/queues_and_scheduled_tasks).
+
+## Create a scheduled task
+
+```bash
+meshagent scheduled-task add \
+  --room support \
+  --queue support-jobs \
+  --schedule "30 17 * * *" \
+  --payload '{"prompt":"Generate the daily support summary."}'
+```
+
+This creates a scheduled task in the active project that enqueues work into the `support-jobs` queue in the `support` room.
+
+## Inspect and manage scheduled tasks
+
+List tasks:
+
+```bash
+meshagent scheduled-task list
+meshagent scheduled-task list --room support
+```
+
+Update a task:
+
+```bash
+meshagent scheduled-task update TASK_ID \
+  --schedule "0 18 * * *" \
+  --active
+```
+
+Delete a task:
+
+```bash
+meshagent scheduled-task delete TASK_ID
+```
+
+## Where to manage them
+
+- Use [MeshAgent Studio](../interfaces/meshagent_studio) when you want the main UI flow.
+- Use the CLI when you want quick setup or automation.
+- Use the [REST API](../rest_api/overview) when you need programmatic provisioning.
+
+## Related docs
+
+- [Queues and Scheduled Tasks](../agents/queues_and_scheduled_tasks)
+- [Queue API](../room_api/queue)
+- [Projects](./projects)
