@@ -4,7 +4,7 @@ title: "Deploy a Customizable Multi-Agent Service"
 
 import NewsReporter from "/snippets/examples/cli/multi-agent-news-reporter/meshagent.mdx"
 
-> **Archived pattern:** This page documents an older multi-runtime service shape built from separate ChatBot, MailBot, and Worker runtimes. For new work, prefer [Deploy a Process Agent](./process_agent_service) and the [`meshagent process`](../../agents/process/overview) runtime.
+> **Archived pattern:** This page documents an older multi-runtime service shape built from separate ChatBot, MailBot, and Worker runtimes. For new work, prefer [Deploy a Process Agent](../deployment/process_agent_service) and the [`meshagent process`](../../agents/process/overview) runtime.
 
 ## Overview
 
@@ -14,7 +14,7 @@ Because different users will want their own email address and recipient, this ex
 
 Use this pattern when your service needs multiple agents coordinating in a room and users need to supply their own configuration.
 
-If you want the same daily news workflow built as **one process-backed agent** instead of several coordinated agents, compare this example with [Deploy a Process Agent](./process_agent_service).
+If you want the same daily news workflow built as **one process-backed agent** instead of several coordinated agents, compare this example with [Deploy a Process Agent](../deployment/process_agent_service).
 
 ## Prerequisites
 - [MeshAgent CLI](../../introduction/cli_quickstart) installed and signed in (`meshagent setup`).
@@ -56,7 +56,7 @@ Because this is a `ServiceTemplate`, three values are left for the user to fill 
 - `send_to_email` — Where the daily digest gets sent.
 - `report_topics` — The topics the worker should cover in the daily digest.
 
-These appear as `{{email}}`, `{{send_to_email}}`, and `{{report_topics}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](./deploy_services#variables-servicetemplate-only) in the field reference.
+These appear as `{{email}}`, `{{send_to_email}}`, and `{{report_topics}}` in the `container.command` field. At deploy time, the `--value` flags (or Powerboards prompts) substitute the actual values in. See [`variables`](../deployment/deploy_services#variables-servicetemplate-only) in the field reference.
 
 #### Container command
 
@@ -76,11 +76,11 @@ After seeding the files, the script runs `meshagent multi join`, which starts mu
 
 #### Participant token
 
-The [`environment`](./deploy_services#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, memory, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
+The [`environment`](../deployment/deploy_services#container-environment) section injects a `MESHAGENT_TOKEN` with specific [API scopes](../../rest_api/api_scopes) granting the service permissions for messaging, storage, memory, agent registration, queues, and more. The `api` object controls exactly what this service is allowed to do in the room.
 
 #### Room storage
 
-The [`storage.room`](./deploy_services#container-storage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
+The [`storage.room`](../deployment/deploy_services#container-storage) mount gives the container read/write access to the room's storage at `/data`. The worker uses this to save daily news reports as markdown files.
 
 ## Step 2: Create the mailbox
 The MailBot agent needs a mailbox to send and receive email. Create one before deploying — update the address with your desired mailbox name: 
@@ -128,6 +128,6 @@ When someone clicks this link, Powerboards will walk them through setup: they'll
 See [Powerboards](../../interfaces/powerboards) for more details.
 
 ## Related Topics
-- [Packaging services](./deploy_services)
-- [Deploy Services with MeshAgent](./deploy_services)
+- [Packaging services](../deployment/deploy_services)
+- [Deploy Services with MeshAgent](../deployment/deploy_services)
 - [Powerboards](../../interfaces/powerboards)

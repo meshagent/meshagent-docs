@@ -5,13 +5,12 @@ description: Connect external MCP tools to MeshAgent with Powerboards, meshagent
 import MCPDeepWikiTool from "/snippets/examples/python/tools/mcp_deepwiki/meshagent.mdx"
 import OpenAIConnectorTool from "/snippets/examples/python/tools/openai_connector/meshagent.mdx"
 
-Use this page when you want tools that live outside MeshAgent to show up in a room.
+MCP servers and OpenAI connectors are two ways to expose external tools in MeshAgent.
 
-This includes:
+- **[OpenAI connectors](https://platform.openai.com/docs/guides/tools-remote-mcp?lang=python)** wrap supported third-party products such as Gmail, Google Drive, Outlook, Microsoft Teams, and Dropbox.
+- **[MCP servers](https://modelcontextprotocol.io/introduction)** expose tools over the Model Context Protocol, whether the server is public, self-hosted, or provided by another vendor.
 
-- a standard MCP server exposed at a URL
-- a local stdio MCP server you want to bridge from the CLI
-- an OpenAI-provided connector configured through a MeshAgent service manifest
+Use an OpenAI connector when OpenAI already provides the integration for the product you want. Use an MCP server when the tool is exposed over MCP by you or by another vendor.
 
 For a concrete vendor-specific walkthrough, see [Supabase MCP Guide](./supabase_mcp).
 
@@ -29,15 +28,21 @@ OpenAI connectors belong to the **`meshagent service`** path. You configure them
 
 Powerboards is the fastest path when the MCP server already exposes a hosted endpoint that can be inspected and installed directly.
 
+### Good fit for Powerboards
+
 - Public no-auth servers such as DeepWiki (`https://mcp.deepwiki.com/mcp`) are the simplest case.
 - Hosted OAuth-aware servers such as [Linear MCP](https://linear.app/docs/mcp) can guide you through sign-in when the server exposes the right remote MCP metadata.
 - Servers that need custom headers, secrets, a saved deployment, or a local stdio process are usually a better fit for `meshagent service` or `meshagent mcp`.
 
-1. Open [Powerboards](../../interfaces/powerboards) and go to the board or room where you want the tool to be available.
-2. Open the install flow for adding a service or integration.
-3. Paste the MCP server URL.
-4. Let Powerboards inspect the server and guide the install flow.
-5. Confirm the room where the tool should be installed.
+### How to install an MCP server in Powerboards
+
+1. Open the room in [Powerboards](https://app.powerboards.com).
+2. Click the agent dropdown.
+3. Click **Manage Agents**.
+4. Click **Install**.
+5. Enter the URL for the custom agent or MCP server.
+
+Powerboards will install the MCP server if it is available.
 
 Powerboards can also install from a hosted `ServiceTemplate` link when you want to distribute a more opinionated setup flow. For more on those install paths, see [Powerboards](../../interfaces/powerboards).
 
