@@ -1,24 +1,52 @@
 ---
-title: Room Connection
-description: Learn how to set up a room connection for your MeshAgent.
+title: Room Connections
+description: Connect your app to a MeshAgent room from React or Flutter.
 ---
 
-## Description
+Use a room connection helper when your app needs a live `RoomClient`.
 
-`RoomConnectionScope` is a widget that manages the connection lifecycle for a MeshAgent `RoomClient`.
+This is the primitive that turns a room URL and participant token into an active room connection your UI can render on top of.
 
-- **authorization**: `Future<RoomConnectionInfo> Function()` that returns URL/JWT (or use helpers like `staticAuthorization`/`developmentAuthorization`).
-- **builder**: `(BuildContext, RoomClient)` called when the client is ready.
-- **authorizingBuilder** *(optional)*: UI while fetching auth.
-- **connectingBuilder** *(optional)*: UI while connecting after auth is fetched.
-- **doneBuilder** *(optional)*: UI when the connection ends or errors.
-- **onReady** *(optional)*: Callback invoked when the client is connected (after messaging is enabled if configured).
-- **enableMessaging** *(default true)*: Auto-enable messaging on connect.
-- **oauthTokenRequestHandler** *(optional)*: Handle OAuth prompts from `secrets.request_oauth_token`.
-- **client** *(optional string)*: Client identifier passed to the SDK.
-- **Returns**: `Widget` that rebuilds based on connection state.
+## What you need
 
-## Example
+- A room URL
+- A participant token
+- A way to fetch both from your backend
+
+In production, your backend usually gets those values from MeshAgent and returns them to the client. For local or controlled development flows, the SDKs also expose static or development authorization helpers.
+
+## React
+
+Use `useRoomConnection` from `@meshagent/meshagent-react`:
+
+```tsx
+import { useRoomConnection } from "@meshagent/meshagent-react";
+
+export function RoomScreen() {
+  const { client, state, error } = useRoomConnection({
+    authorization: async () => {
+      const resp = await fetch("/api/room-connection");
+      return await resp.json(); // { url, jwt }
+    },
+  });
+
+  if (state === "authorizing" || state === "connecting") {
+    return <div>Connecting...</div>;
+  }
+
+  if (state === "done" || !client) {
+    return <div>Connection failed: {String(error)}</div>;
+  }
+
+  return <div>Connected to {client.roomName}</div>;
+}
+```
+
+`useRoomConnection` creates the `RoomClient`, starts it, and optionally enables messaging.
+
+## Flutter
+
+Use `RoomConnectionScope` from `meshagent_flutter`:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -48,16 +76,31 @@ class SampleWidget extends StatelessWidget {
         url: url,
         jwt: jwt,
       ),
-      authorizingBuilder: (context) => const Center(child: CircularProgressIndicator()),
-      connectingBuilder: (context, client) => const Center(child: Text('Connecting...')),
+      authorizingBuilder: (context) =>
+          const Center(child: CircularProgressIndicator()),
+      connectingBuilder: (context, client) =>
+          const Center(child: Text('Connecting...')),
       builder: (context, client) => const Text('Connection established'),
-      doneBuilder: (context, error) => Text('Connection ended with error: $error'),
-      onReady: (client) {
-        // Client is connected; you can start using room APIs here.
-      },
+      doneBuilder: (context, error) =>
+          Text('Connection ended with error: $error'),
       enableMessaging: true,
     );
   }
 }
-
 ```
+
+`RoomConnectionScope` manages authorization, connection state, reconnect behavior, and disposal for you.
+
+## When to use which helper
+
+- Use **React `useRoomConnection`** in web apps built around React hooks.
+- Use **Flutter `RoomConnectionScope`** in Flutter apps where you want connection state to drive the widget tree.
+
+## What to do next
+
+Once the room is connected, you can:
+
+- render messages and participants
+- call agents or tools
+- open documents with [Document Connections](./document_connection_scope)
+- use the runtime APIs documented in [Room API](../room_api/overview)

@@ -92,11 +92,11 @@ Now we can interact with our agent in [MeshAgent Studio](https://studio.meshagen
 
 ### Step 3: Package and deploy the service 
 To deploy your RAG Indexer and RAG agent permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
-For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging).
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services/deployment/deploy_services).
 
 MeshAgent supports two deployment patterns for containers:
 1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
-2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services/containers/optimizing_containers).
 
 This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image. If you build your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
 
@@ -160,10 +160,10 @@ Now the agent and indexer will always be available for us to use!
 ## Next Steps
 Understand other MeshAgent agents
 - [Process Agents Overview](../process/overview) for conversation-based process agents
-- [Voicebot](./voicebot) for voice based agents
+- [Voicebot](../standard/voicebot) for voice based agents
 - [Process Agents Overview](../process/overview) for chat, mail, queue, and toolkit entry points
 - [TaskRunner integrations](./taskrunner_agents_and_tools) and process queue channels for background and queue-based agents
 
 Learn more about deploying agents with MeshAgent
-- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
-- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment
+- [Packaging and Deploying Services](../../services/deployment/deploy_services): Package and deploy agents as room or project services.
+- [Secrets and Credentials](../../secrets/overview): Learn how to store credentials securely for deployment

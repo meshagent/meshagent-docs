@@ -1,0 +1,73 @@
+---
+title: Webhooks
+description: Create project webhooks that send MeshAgent events to your external systems.
+---
+
+Project webhooks let MeshAgent send HTTP events to your own systems when something happens in a project.
+
+Use them when you want an external service to react to events such as rooms starting or ending, or storage files changing.
+
+This page is about managing project webhooks. If you are building a service that handles `room.call` handoffs, see [Webhook Handoffs](../services/webhooks).
+
+## Create a webhook
+
+For standard JSON event delivery, create the webhook without `--action`:
+
+```bash
+meshagent webhook create \
+  --name room-events \
+  --url https://example.com/webhook \
+  --event room.started \
+  --event room.ended
+```
+
+Use `--action call` only when the target URL should be invoked as a `room.call` style handoff.
+
+List and delete webhooks:
+
+```bash
+meshagent webhook list
+meshagent webhook delete WEBHOOK_ID
+```
+
+## Supported events
+
+| Event | Data fields |
+| --- | --- |
+| `room.started` | `room_name` |
+| `room.ended` | `room_name` |
+| `storage.file.updated` | `path`, `participant_id` |
+| `storage.file.deleted` | `path`, `participant_id` |
+| `*` | all supported events |
+
+Standard delivery is JSON:
+
+```json
+{
+  "event": "room.started",
+  "data": {
+    "room_name": "my-room"
+  }
+}
+```
+
+## Signatures
+
+MeshAgent signs webhook requests and sends a `Meshagent-Signature` header.
+
+- The header value is `Bearer <jwt>`.
+- The JWT contains a SHA-256 hash of the payload.
+
+If you want to verify signatures yourself, copy the webhook secret from [MeshAgent Studio](../interfaces/meshagent_studio) or retrieve it through the [REST API](../rest_api/overview), then verify the header in your receiver before processing the event.
+
+## Where to manage webhooks
+
+- Use [MeshAgent Studio](../interfaces/meshagent_studio) for the main UI flow and to copy the webhook secret.
+- Use the CLI for quick setup and basic management.
+- Use the [REST API](../rest_api/overview) if you need programmatic creation, update, or deletion.
+
+## Related docs
+
+- [Projects](./projects)
+- [REST API Overview](../rest_api/overview)
+- [Webhook Handoffs](../services/webhooks)

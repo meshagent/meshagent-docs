@@ -1,0 +1,68 @@
+---
+title: Agents Overview
+description: Understand how agents work in MeshAgent and where to start.
+---
+
+Agents are room-connected participants that receive work, use tools and room capabilities, and produce results back into the room.
+
+[`meshagent process`](./process/overview) is the primary way to run agents in MeshAgent. An agent can stay available over time, accept work through multiple channels, and preserve thread continuity across conversations and jobs.
+
+## How agents fit into MeshAgent
+
+- agents run in rooms and operate over the room's shared context
+- agents can use built-in tools, custom tools, skills, and room capabilities to do work
+- agents can be run locally for development or deployed as services so they are available in rooms when needed
+- agents can receive work through chat, queues, mail, toolkit calls, and other room-connected flows
+- agents run with an identity and a set of scoped permissions that define what they can access
+
+## Core Capabilities
+
+MeshAgent agents are designed for work that needs continuity, steerability, and access to real runtime capabilities. Depending on how you configure them, an agent can:
+
+- stay available over long periods of time instead of running as a one-shot call
+- accept work through chat, queues, mail, and toolkit entry points
+- keep work separated by thread while preserving continuity where you want it
+- use built-in MeshAgent tools such as web search, storage, document authoring, shell, computer use, MCP, memory, and discovery features
+- use custom tools, custom toolkits, and skills
+- be steered with inline rules and room-backed rules files using `--rule` and `--room-rules`
+- use models from supported providers such as OpenAI and Anthropic through MeshAgent's routing and adapter surfaces
+- run with scoped identities and API grants so you can control what an agent is allowed to access
+
+## The main mental model
+
+For most MeshAgent users, the important concepts are:
+
+- the **agent** is the running participant
+- the **channels** are how work reaches that agent
+- the **thread** is the continuity boundary for that work
+- the **tools, skills, and room infrastructure** are the capabilities the agent uses to act
+
+This lets one agent identity grow across several entry points without forcing you to build separate runtimes for chat, queue, mail, and toolkit usage.
+
+## What agents are typically used for
+
+Common patterns include:
+
+- interactive chat agents for support, coding, research, or operations
+- background agents that consume queue work
+- mail-capable agents that turn inbound email into room work
+- toolkit-style agents that can be invoked by other agents
+- prebuilt agents you can add directly in MeshAgent Studio or Powerboards
+- custom agents you package and deploy yourself
+
+Some workflows combine several of those patterns in the same running agent.
+
+## Identity, access, and scope
+
+When an agent is deployed, it runs with a participant identity and a set of room/API grants. That means you can decide whether the agent should be able to read storage, write to the database, use secrets, run containers, or access other room capabilities. Deployment does not automatically grant every capability; the agent only gets the access you give it.
+
+## Related parts of the docs
+
+- Start with [Process Agents](./process/overview) for the main runtime path.
+- Go to [Built-in MeshAgent Toolkits](./tools/built_in_toolkits), [Tools and Toolkits](./tools/tools_and_toolkits), and [Skills](../agent_skills/overview) to understand what agents can do and how you shape their behavior.
+- Go to [Queues and Scheduled Tasks](./queues_and_scheduled_tasks) for recurring and background work patterns.
+- Go to [Deploy & Manage](../services/deployment/deploy_services) when you are ready to package and deploy agents as services.
+
+## Other agent surfaces
+
+[VoiceBot](./standard/voicebot) is the voice-focused runtime for real-time speech interactions.

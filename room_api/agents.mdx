@@ -2,6 +2,16 @@
 
 The `AgentsClient` is the Room API for calling agents and discovering the toolkits available in a room. Use it when you want to send work to a deployed agent, inspect which built-in or service-provided toolkits are available, or call a tool directly.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room agent --help
+meshagent room agent list-toolkits --room myroom
+meshagent room agent invoke-tool --room myroom --toolkit my-toolkit --tool my_tool
+```
+
 ## Why use the Agents API?
 
 - Call a named agent endpoint from the CLI or SDK instead of wiring your own service-to-service protocol.
@@ -18,18 +28,24 @@ The Agents API exposes three core concepts:
 
 `list_toolkits` returns toolkit metadata objects, and each toolkit contains a `tools` list with the corresponding tool metadata. That metadata is useful when you need to inspect available tools or render dynamic tool UIs, but most users only need the three methods below.
 
+If you are looking for how to create or deploy agents, start with [`meshagent process`](../agents/process/overview) and the broader [Agents overview](../agents/overview). This page is about interacting with agents and toolkits that are already available in a room.
+
 ## Permissions and grants
 
-If you want a deployed service to call agents or tools through the Room APIs, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Agents API is controlled by the `agents` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: inspect toolkits and invoke tools with `meshagent room agent ...`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: helper methods are shown below.
+- use `call`, `use_agents`, and `use_tools` when a service needs to call agents or invoke tools
+- use `register_agent`, `register_public_toolkit`, and `register_private_toolkit` when a service needs to publish agents or toolkits into the room
 
-## API Methods
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services/deployment/deploy_services).
 
-### Call
+## API reference
+
+Use the methods below to call a named agent endpoint, inspect toolkits in the room, or invoke a tool directly.
+
+### `call(...)` / `make_call(...)`
 
 - **Description**:
   Send a request to an agent to perform an action. Python uses `make_call`; other SDKs use `call`.
@@ -46,6 +62,7 @@ await room.agents.make_call(
   url="some-endpoint",
   arguments={"foo": "bar"},
 )
+
 ```
 ```javascript NodeJs
 await room.agents.call({
@@ -53,6 +70,7 @@ await room.agents.call({
   url: "some-endpoint",
   arguments: { foo: "bar" },
 });
+
 ```
 ```typescript TypeScript
 await room.agents.call({
@@ -60,6 +78,7 @@ await room.agents.call({
   url: "some-endpoint",
   arguments: { foo: "bar" },
 });
+
 ```
 ```dart Dart
 await room.agents.call(
@@ -67,6 +86,7 @@ await room.agents.call(
   url: "some-endpoint",
   arguments: {"foo": "bar"},
 );
+
 ```
 ```dotnet C#
 await room.Agents.MakeCall(
@@ -77,10 +97,11 @@ await room.Agents.MakeCall(
     ["foo"] = "bar"
   }
 );
+
 ```
 </CodeGroup>
 
-### List toolkits
+### `list_toolkits()`
 
 - **Description**: Get the toolkits currently available in the room.
 - **Parameters**:
@@ -91,12 +112,14 @@ await room.Agents.MakeCall(
 ```bash CLI
 meshagent room agent list-toolkits \
   --room myroom
+
 ```
 ```python Python
 all_toolkits = await room.agents.list_toolkits()
 
 for toolkit in all_toolkits:
   print(f"Toolkit: {toolkit.name}, Tools: {[tool.name for tool in toolkit.tools]}")
+
 ```
 ```javascript NodeJs
 const allToolkits = await room.agents.listToolkits();
@@ -104,6 +127,7 @@ const allToolkits = await room.agents.listToolkits();
 allToolkits.forEach((toolkit) => {
   console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name)}`);
 });
+
 ```
 ```typescript TypeScript
 const allToolkits = await room.agents.listToolkits();
@@ -111,6 +135,7 @@ const allToolkits = await room.agents.listToolkits();
 allToolkits.forEach((toolkit) => {
   console.log(`Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name)}`);
 });
+
 ```
 ```dart Dart
 final allToolkits = await room.agents.listToolkits();
@@ -118,6 +143,7 @@ final allToolkits = await room.agents.listToolkits();
 for (final toolkit in allToolkits) {
   print('Toolkit: ${toolkit.name}, Tools: ${toolkit.tools.map((t) => t.name).join(", ")}');
 }
+
 ```
 ```dotnet C#
 var toolkits = await room.Agents.ListToolkits();
@@ -130,10 +156,11 @@ foreach (var toolkit in toolkits)
     Console.WriteLine($"  {tool.Name}: {tool.Title}");
   }
 }
+
 ```
 </CodeGroup>
 
-### Invoke tool
+### `invoke_tool(...)`
 
 - **Description**:
   Invoke a tool inside a toolkit directly.
@@ -153,6 +180,7 @@ meshagent room agent invoke-tool \
   --toolkit example-toolkit \
   --tool toolA \
   --arguments '{"param1":"value1"}'
+
 ```
 ```python Python
 response = await room.agents.invoke_tool(
@@ -160,6 +188,7 @@ response = await room.agents.invoke_tool(
   tool="toolA",
   input={"param1": "value1"},
 )
+
 ```
 ```javascript NodeJs
 const response = await room.agents.invokeTool({
@@ -167,6 +196,7 @@ const response = await room.agents.invokeTool({
   tool: "toolA",
   arguments: { param1: "value1" },
 });
+
 ```
 ```typescript TypeScript
 const response = await room.agents.invokeTool({
@@ -174,6 +204,7 @@ const response = await room.agents.invokeTool({
   tool: "toolA",
   arguments: { param1: "value1" },
 });
+
 ```
 ```dart Dart
 final response = await room.agents.invokeTool(
@@ -181,6 +212,7 @@ final response = await room.agents.invokeTool(
   tool: "toolA",
   arguments: {"param1": "value1"},
 );
+
 ```
 ```dotnet C#
 var toolArgs = new Dictionary<string, object?>
@@ -188,11 +220,12 @@ var toolArgs = new Dictionary<string, object?>
   ["param1"] = "value1"
 };
 var toolResult = await room.Agents.InvokeTool("example-toolkit", "toolA", toolArgs);
+
 ```
 </CodeGroup>
 
 ## Related guides
 
 - [Room API Overview](./overview)
-- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
-- [Standard Agents](../agents/standard/intro)
+- [Packaging and Deploying Services](../services/deployment/deploy_services)
+- [Agents Overview](../agents/overview)

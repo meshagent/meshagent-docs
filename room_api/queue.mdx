@@ -2,6 +2,17 @@
 
 The `QueuesClient` is the Room API for simple room-scoped work queues. Use it when one participant or service needs to hand off JSON work items to another participant or service asynchronously.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room queue --help
+meshagent room queue list --room myroom
+meshagent room queue send --room myroom --queue my-queue --json '{"payload":"Hello World!"}'
+meshagent room queue receive --room myroom --queue my-queue
+```
+
 ## Why use the Queues API?
 
 - Decouple producers and consumers when work should happen later.
@@ -14,294 +25,87 @@ A queue stores JSON messages until a consumer receives them. Senders and receive
 
 ## Permissions and grants
 
-If a deployed service needs to use room queues, its participant token needs the appropriate queue-related Room API grants. These grants can be scoped to list/send/receive capabilities. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Queues API is controlled by the `queues` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: send and receive messages, and inspect queue sizes, with `meshagent room queue ...`.
-- **SDKs**: helper methods cover `list`, `open`, `send`, `receive`, `drain`, and `close`, with the Python `open` difference noted below.
+- `list` controls queue discovery
+- `send` can be narrowed to specific queue names
+- `receive` can be narrowed separately to specific queue names
 
-## API Methods
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services/deployment/deploy_services).
 
-Below is an example of how you might use the `QueuesClient` in your code:
+## API reference
+
+Use the methods below to inspect queues, send JSON work items, and receive them from another participant or service in the same room.
+
+### `list()`
+
+List the queues currently visible in the room.
 
 <CodeGroup>
 ```bash CLI
-meshagent room queue send \
-  --room myroom \
-  --queue my-queue \
-  --json '{"payload":"Hello World!"}'
+meshagent room queue list \
+  --room myroom
 
-meshagent room queue receive \
-  --room myroom \
-  --queue my-queue
-
-meshagent room queue size \
-  --room myroom \
-  --queue my-queue
 ```
-```python Python
-# List existing Queues
-queues = await room.queues.list()
-print("Queues:", queues)
-
-# Send a messages
-await room.queues.send(name="my-queue", message={"payload": "Hello World!"})
-
-# Receive a message
-message = await room.queues.receive(name="my-queue")
-print("Received message:", message)
-
-# Drain a queue
-await room.queues.drain(name="my-queue")
-
-# Close the queue
-await room.queues.close(name="my-queue")
-```
-```js NodeJs
-// List existing queues
-const queues = await room.queues.list();
-console.log("Queues:", queues);
-
-// Open a queue
-await room.queues.open("my-queue");
-
-// Send a message
-await room.queues.send("my-queue", { payload: "Hello World!" });
-
-// Receive a message
-const message = await room.queues.receive("my-queue");
-console.log("Received message:", message);
-
-// Drain a queue
-await room.queues.drain("my-queue");
-
-// Close the queue
-await room.queues.close("my-queue");
-```
-```ts TypeScript
-// List existing queues
-const queues = await room.queues.list();
-console.log("Queues:", queues);
-
-// Open a queue
-await room.queues.open("my-queue");
-
-// Send a message
-await room.queues.send("my-queue", { payload: "Hello World!" });
-
-// Receive a message
-const message = await room.queues.receive("my-queue");
-console.log("Received message:", message);
-
-// Drain a queue
-await room.queues.drain("my-queue");
-
-// Close the queue
-await room.queues.close("my-queue");
-```
-```dart Dart
-// List existing Queues
-final queues = await room.queues.list();
-print("Queues: $queues");
-
-// Open a queue
-await room.queues.open("my-queue");
-
-// Send a message
-await room.queues.send("my-queue", {"payload": "Hello World!"});
-
-// Receive a message
-final message = await room.queues.receive("my-queue");
-print("Received message: $message");
-
-// Drain a queue
-await room.queues.drain("my-queue");
-
-// Close the queue
-await room.queues.close("my-queue");
-```
-```dotnet C#
-using System.Text.Json;
-
-// List existing queues
-var queues = await room.Queues.List();
-Console.WriteLine("Queues:");
-foreach (var queue in queues)
-{
-    Console.WriteLine($"{queue.Name} - size {queue.Size}");
-}
-
-// Open a queue
-await room.Queues.Open("my-queue");
-
-// Send a message
-var message = new Dictionary<string, object?> { ["payload"] = "Hello World!" };
-await room.Queues.Send("my-queue", message);
-
-// Receive a message
-var received = await room.Queues.Receive("my-queue");
-Console.WriteLine($"Received message: {JsonSerializer.Serialize(received)}");
-
-// Drain a queue
-await room.Queues.Drain("my-queue");
-
-// Close the queue
-await room.Queues.Close("my-queue");
-```
-</CodeGroup>
-
----
-
-### `Queue`
-
-A basic representation of a queue, holding a name and its current size.
-
-<CodeGroup>
-```python Python
-queue = Queue(name="my-queue", size=0)
-```
-```js NodeJs
-const queue = new Queue({ name: "my-queue", size: 0 });
-```
-```ts TypeScript
-const queue = new Queue({ name: "my-queue", size: 0 });
-```
-```dart Dart
-final queue = Queue(name: "my-queue", size: 0);
-```
-```dotnet C#
-var queue = new Queue(name: "my-queue", size: 0);
-```
-</CodeGroup>
-
-- **`name: string`**  
-  The name of the queue.
-- **`size: number`**  
-  The size (or length) of the queue at the time of retrieval.
-
-
----
-
-### `QueuesClient`
-
-The `QueuesClient` is responsible for sending requests through a `RoomClient` to perform various operations on queues.
-
-- **`room: RoomClient`**  
-  An instance of `RoomClient`, which handles the low-level communication with the server or service.
-
-
-#### `list()`
-
-<CodeGroup>
 ```python Python
 queues = await room.queues.list()
+
 ```
-```js NodeJs
+```javascript NodeJs
 const queues = await room.queues.list();
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const queues = await room.queues.list();
+
 ```
 ```dart Dart
 final queues = await room.queues.list();
+
 ```
 ```dotnet C#
 var queues = await room.Queues.List();
+
 ```
 </CodeGroup>
 
+- **Returns**: An array of queue objects, each with a `name` and `size`.
 
-- **Returns**  
-  An array of [`Queue`](#queue) objects containing the name and size of each queue found on the server.
+### `open(name)`
 
-
-#### `open(name)`
+Create or reopen a queue explicitly.
 
 <Alert type="note">
-Python SDK does not expose `open`; queues are created implicitly via `send`/`receive` when `create=True`. Use `open` in JS/TS/Dart/.NET.
+Python does not expose `open()` today. In Python, queues are created implicitly when you call `send(..., create=True)` or `receive(..., create=True)`.
 </Alert>
 
 <CodeGroup>
-```python Python
-# Not available in Python (queues are auto-created via send/receive)
-```
-```js NodeJs
+```javascript NodeJs
 await room.queues.open("my-queue");
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.open("my-queue");
+
 ```
 ```dart Dart
 await room.queues.open("my-queue");
+
 ```
 ```dotnet C#
 await room.Queues.Open("my-queue");
+
 ```
 </CodeGroup>
 
-
 - **Parameters**:
-  - `name` – The name of the queue to open.
-- **Description**  
-  Creates (or reopens) the queue if it is not present. If the queue already exists and is open, the server will reject a duplicate open request.
+  - `name`: Queue name.
 
+### `send(name, message, create=True)`
 
-#### `drain(name)`
-
-<CodeGroup>
-```python Python
-await room.queues.drain(name="my-queue")
-```
-```js NodeJs
-await room.queues.drain("my-queue");
-```
-```ts TypeScript
-await room.queues.drain("my-queue");
-```
-```dart Dart
-await room.queues.drain("my-queue");
-```
-```dotnet C#
-await room.Queues.Drain("my-queue");
-```
-</CodeGroup>
-
-
-- **Parameters**:
-  - `name` – The name of the queue to drain.
-- **Description**  
-  Removes all messages from the specified queue, effectively resetting its size to zero.
-
-
-#### `close(name)`
-
-<CodeGroup>
-```python Python
-await room.queues.close(name="my-queue")
-```
-```js NodeJs
-await room.queues.close("my-queue");
-```
-```ts TypeScript
-await room.queues.close("my-queue");
-```
-```dart Dart
-await room.queues.close("my-queue");
-```
-```dotnet C#
-await room.Queues.Close("my-queue");
-```
-</CodeGroup>
-
-
-- **Parameters**:
-  - `name` – The name of the queue to close.
-- **Description**  
-  Closes the specified queue so that no further messages can be sent or received until it is reopened.
-
-
-#### `send(name, message, create)`
+Send one JSON message to a queue.
 
 <CodeGroup>
 ```bash CLI
@@ -309,90 +113,144 @@ meshagent room queue send \
   --room myroom \
   --queue my-queue \
   --json '{"foo":"bar"}'
+
 ```
 ```python Python
 await room.queues.send(name="my-queue", message={"foo": "bar"}, create=True)
+
 ```
-```js NodeJs
+```javascript NodeJs
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 await room.queues.send("my-queue", { foo: "bar" }, { create: true });
+
 ```
 ```dart Dart
 await room.queues.send("my-queue", {"foo": "bar"}, create: true);
+
 ```
 ```dotnet C#
 var message = new Dictionary<string, object?> { ["payload"] = "Hello World!" };
 await room.Queues.Send("my-queue", message, create: true);
+
 ```
 </CodeGroup>
 
-
 - **Parameters**:
-  - `name` – The name of the queue to send a message to.
-  - `message` – A JSON-serializable object containing the data you want to send.
-  - `create` – (Optional) Whether to create the queue if it does not exist. Defaults to `true`.
-- **Description**  
-  Sends a message to the specified queue. If `create` is true, the queue will be created automatically if it doesn’t exist.
+  - `name`: Queue name.
+  - `message`: JSON-serializable payload.
+  - `create`: When `true`, create the queue if it does not already exist.
 
+### `receive(name, create=True, wait=True)`
 
-#### `receive(name, create, wait)`
+Receive one JSON message from a queue.
 
 <CodeGroup>
 ```bash CLI
 meshagent room queue receive \
   --room myroom \
   --queue my-queue
+
 ```
 ```python Python
 message = await room.queues.receive(name="my-queue", create=True, wait=True)
+
 ```
-```js NodeJs
+```javascript NodeJs
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
+
 ```
-```ts TypeScript
+```typescript TypeScript
 const message = await room.queues.receive("my-queue", { create: true, wait: true });
+
 ```
 ```dart Dart
 final message = await room.queues.receive("my-queue", create: true, wait: true);
+
 ```
 ```dotnet C#
 var received = await room.Queues.Receive("my-queue", create: true, wait: true);
+
 ```
 </CodeGroup>
 
+- **Parameters**:
+  - `name`: Queue name.
+  - `create`: When `true`, create the queue if it does not already exist.
+  - `wait`: When `true`, wait until a message is available.
+- **Returns**: A JSON payload, or `null` if the queue is empty and `wait=False`.
+
+### `drain(name)`
+
+Remove all messages from a queue.
+
+<CodeGroup>
+```python Python
+await room.queues.drain(name="my-queue")
+
+```
+```javascript NodeJs
+await room.queues.drain("my-queue");
+
+```
+```typescript TypeScript
+await room.queues.drain("my-queue");
+
+```
+```dart Dart
+await room.queues.drain("my-queue");
+
+```
+```dotnet C#
+await room.Queues.Drain("my-queue");
+
+```
+</CodeGroup>
 
 - **Parameters**:
-  - `name` – The name of the queue to receive a message from.
-  - `create` – (Optional) Whether to create the queue if it does not exist. Defaults to `true`.
-  - `wait` – (Optional) Whether to wait (block) until a message is available. Defaults to `true`. Behavior may vary based on server-side configuration.
-- **Returns**  
-  A JSON-serializable object if a message is received, or `null` if the queue was empty (represented by an `EmptyChunk`).
+  - `name`: Queue name.
 
-- **Description**  
-  Tries to receive one message from the specified queue. With `wait=True`, the call blocks until a message arrives. With `wait=False`, it returns immediately: `null` if empty or the next message if available.
+### `close(name)`
 
----
+Close a queue so it stops accepting sends or receives until reopened.
 
+<CodeGroup>
+```python Python
+await room.queues.close(name="my-queue")
 
-## Additional Notes
+```
+```javascript NodeJs
+await room.queues.close("my-queue");
 
-- **Error Handling**  
-  When a request fails or the server returns an error response, the underlying `RoomClient` may throw errors. Make sure to wrap calls in `try/catch` if you need to handle them gracefully.
+```
+```typescript TypeScript
+await room.queues.close("my-queue");
 
-- **Concurrency and Performance**  
-  - For high-throughput scenarios, ensure that your server and `RoomClient` configuration is optimized for concurrency.
-  - The `receive` method’s `wait` parameter may affect your application’s design. If `wait` is `true`, the call might block until a message is available (depending on the server’s capabilities).
+```
+```dart Dart
+await room.queues.close("my-queue");
 
-- **Extensibility**  
-  You can add additional queue-related functionality (e.g., message peek, dead-letter queues, etc.) by extending `QueuesClient` or creating related classes that also use `RoomClient`.
+```
+```dotnet C#
+await room.Queues.Close("my-queue");
 
-- **SDK availability**  
-  The server supports `queues.open`, but the Python SDK doesn’t expose an `open` helper today—queues are auto-created when `create=True` on `send`/`receive`. JS/TS/Dart/.NET expose `open`.
+```
+</CodeGroup>
+
+- **Parameters**:
+  - `name`: Queue name.
+
+### `Queue`
+
+Queue objects returned by `list()` include:
+
+- `name`: Queue name.
+- `size`: Queue length at the time of retrieval.
 
 ## Related guides
 
 - [Room API Overview](./overview)
 - [Messaging API](./messaging)
-- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
+- [Packaging and Deploying Services](../services/deployment/deploy_services)

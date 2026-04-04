@@ -1,0 +1,121 @@
+---
+title: Project Roles and Access
+description: Understand project roles, room creation permissions, and how project-level access differs from room grants.
+---
+
+Project roles control who can administer and operate a MeshAgent project.
+
+This is separate from room access. A person can have a project role and still need room access to work in a specific room, and someone can have room access without broad project administration rights.
+
+## Two layers of access
+
+MeshAgent has two related but different permission layers:
+
+- **Project roles** decide who can administer and operate project-level resources.
+- **Room grants** decide who can access a specific room and which Room APIs they can use there.
+
+That distinction matters:
+
+- project roles answer "what can this person manage across the project?"
+- room grants answer "what can this person or service do inside this room?"
+
+For room-specific permissions, see [REST API](../rest_api/overview), [Participant Tokens](../rest_api/participant_tokens), and [API Scopes](../rest_api/api_scopes).
+
+## Common project roles
+
+MeshAgent has a default **Member** role, plus stronger project membership presets such as **Room Creator**, **Developer**, and **Admin**.
+
+This page is ordered from least access to most access.
+
+### Member
+
+Member is the default project collaborator role.
+
+Use this when someone should be part of the project without extra project-wide privileges such as developer access, admin access, or room-creation privileges.
+
+### Room Creator
+
+Room Creator is a limited project role for collaborators who mainly need to create rooms.
+
+Use this when someone should be able to:
+
+- create new rooms
+- organize work into separate rooms
+
+But should not automatically manage the broader project surface such as billing, secrets, or member administration.
+
+### Developer
+
+Developers are for people building and operating workloads without giving them full project administration.
+
+Use this role when someone needs to:
+
+- build and test in project rooms
+- deploy and manage services
+- perform operational tasks such as mailbox creation
+- work in MeshAgent Studio and the CLI without managing the whole project
+
+### Admin
+
+Admins have full project-level control.
+
+Use this role when someone needs to:
+
+- manage members and role assignments
+- edit project settings
+- manage secrets, billing, domains, and other project-wide resources
+- deploy and manage services across the project
+
+## How project roles map to the API
+
+In the admin API and SDKs, project membership is controlled with three flags:
+
+- `is_admin`
+- `is_developer`
+- `can_create_rooms`
+
+MeshAgent Studio's Members UI writes those settings for you. A default member is just a project member with none of those extra flags enabled.
+
+If you are managing access programmatically, use the project user-management endpoints or SDK helpers that add and update project users.
+
+## How room grants and tokens fit in
+
+Project roles and room access are related, but they are not the same thing.
+
+- **Project role** decides what someone can manage across the project.
+- **Room grant** decides what someone can do inside a specific room.
+- **Participant token** is the signed credential MeshAgent issues for an active room connection.
+
+For room access, the important relationship is:
+
+1. A room grant stores the room-specific permissions.
+2. When MeshAgent creates a room connection for that person or service, it signs a participant token.
+3. That participant token carries the room-level API permissions used during the session.
+
+For deployed services, the same idea applies through the service token configuration in the service spec: that token defines what the running service can do in the room.
+
+So if you are asking "what can this participant actually do in the room right now?", the answer lives in the room grant or service token configuration, and in the participant token MeshAgent signed from it, not in the project role by itself.
+
+## Practical mental model
+
+Use this rule of thumb:
+
+- If the question is about **members, billing, domains, secrets, API keys, or project-wide services**, think **project role**.
+- If the question is about **joining a room, using Room APIs, or limiting what a participant can do inside a room**, think **room grant** and **participant token scope**.
+
+This is why a collaborator might need both:
+
+- a project role that lets them create rooms
+- a room grant that lets them access a specific room and use its APIs
+
+## Where to manage roles
+
+- **MeshAgent Studio**: use the Members tab for day-to-day role assignment.
+- **REST API / SDKs**: use the project user-management endpoints such as `POST /accounts/projects/:id/users` and `PUT /accounts/projects/:id/users/:user_id`, or the matching SDK helpers, when provisioning or syncing access from your own systems.
+
+## Related guides
+
+- [MeshAgent Studio](../interfaces/meshagent_studio)
+- [REST API](../rest_api/overview)
+- [Participant Tokens](../rest_api/participant_tokens)
+- [API Scopes](../rest_api/api_scopes)

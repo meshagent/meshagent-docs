@@ -1,30 +1,45 @@
 ---
-title: Overview
-description: Learn what MeshAgent UI SDKs provide and how they help you bring agent experiences into your app quickly.
+title: UI SDKs
+description: Build your own MeshAgent UI with the React and Flutter SDK packages.
 ---
 
-MeshAgent UI SDKs give you drop-in building blocks for bringing agent-powered experiences to your own product. They handle the real-time wiring to rooms and documents, stream updates from your agents, and ship with UI components so your users get a polished interface from day one. 
+MeshAgent UI SDKs are for building your own application on top of MeshAgent rooms, documents, and agent interactions.
 
-## What we ship today
+They are different from [MeshAgent Accounts](../interfaces/accounts), [MeshAgent Studio](../interfaces/meshagent_studio), and [Powerboards](../interfaces/powerboards). Those are product interfaces. The UI SDKs are developer packages you use inside your own app.
 
-- **React UI kit (web)**: A set of React components and hooks for rendering chat threads, streaming responses, and presence indicators, along with Tailwind styles so you can start building your agentic applications today. Explore the code on GitHub for the [React UI kit](https://github.com/meshagent/meshagent-react) and [Tailwind styles](https://github.com/meshagent/meshagent-tailwind).
-- **Flutter UI kit (mobile & desktop)**: Widgets like `RoomConnectionScope` and `DocumentConnectionScope` that manage real-time connections for you and expose builder APIs so you can compose your own layouts.
+## What exists today
 
-## Why use the UI SDKs?
+- **React**
+  - `@meshagent/meshagent-react` for room and document connection hooks, chat helpers, toolkits, and file upload helpers
+  - `@meshagent/meshagent-react-auth` for OAuth login and auth state helpers
+- **Flutter**
+  - `meshagent_flutter` for room and document connection widgets and related helpers
+  - `meshagent_flutter_auth` for auth helpers
+  - `meshagent_flutter_widgets` for higher-level Flutter widgets
 
-- **Faster launches**: Start with prebuilt chat, document, and voice surfaces instead of implementing messaging, streaming, and retries yourself.
-- **Less plumbing**: Connection scopes, auth helpers, and sensible defaults keep you focused on your UX while the SDKs handle room lifecycles and state updates.
-- **Built for growth**: Extend components with your own styling, add custom tools, and reuse the same back-end agents across platforms.
+## Core building blocks
 
-## Pick your path
+The two most important primitives are:
 
-Choose the UI SDK that matches your stack, then drop its components into your app:
+- **Room connections**: establish and hold a `RoomClient` connection inside your app
+- **Document connections**: open a room document and keep it in sync while your UI is mounted
 
-1. Use the **React UI kit** when you want a web-first experience with Tailwind-ready components.
-2. Use the **Flutter UI kit** when you need a single codebase across iOS, Android, desktop, or embedded form factors.
+Those patterns exist in both React and Flutter:
 
-Both SDKs connect to the same rooms, documents, and agents you manage in MeshAgent Studio, so you can prototype in minutes and ship a production-ready UI with minimal effort.
+- React exports hooks such as `useRoomConnection` and `useDocumentConnection`
+- Flutter exports widgets such as `RoomConnectionScope` and `DocumentConnectionScope`
 
-MeshAgent provides room/document clients you can drop into UI frameworks. Use the platform you prefer, and wire in the Room client to connect, sync documents, and react to events.
+## How to use this section
 
+1. Start with [Room Connections](./room_connection_scope) to connect your app to a room.
+2. Use [Document Connections](./document_connection_scope) when your UI needs a live room document.
+3. Use the [Room API](../room_api/overview) docs for the runtime capabilities available after the connection is established.
 
+## Which package to pick
+
+- Use **React** when you are building a web app and want hooks around the MeshAgent JS client.
+- Use **Flutter** when you want one codebase across mobile, desktop, or embedded form factors.
+
+In both cases, the app model is the same: your backend mints a participant token, your UI connects to a room with that token, and then your UI uses the room runtime from there.
+
+For the broader cross-language SDK map, see [SDK Overview](../reference/sdk_reference).

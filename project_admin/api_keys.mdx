@@ -1,30 +1,55 @@
 ---
 title: API Keys
-description: Create, rotate, and secure project-scoped credentials.
+description: Create and manage project-scoped credentials for automation and backend services.
 ---
 
-API keys are project-scoped credentials used by services, CI pipelines, and backend systems to call MeshAgent APIs. If you plan to automate provisioning with the [REST API](../rest_api/overview), start by creating a key in [MeshAgent Studio](../interfaces/meshagent_studio) or the [MeshAgent CLI](../cli/cli_quickstart).
+API keys are project-scoped credentials for backend services, CI, and automation that call MeshAgent APIs. Use them when a service or script needs to act on behalf of the project.
 
-## Create a key in MeshAgent Studio
+Do not put them in end-user clients or use them as the user's sign-in credential. People using MeshAgent Studio or Powerboards sign in with MeshAgent directly. If you are building your own app on top of MeshAgent, use the API key on your backend, create an [OAuth client](./oauth) for user sign-in when needed, and issue [participant tokens](../rest_api/participant_tokens) to the client.
+
+## Create a key
+
+You can create API keys in [MeshAgent Studio](../interfaces/meshagent_studio) or with the CLI. The secret value is only shown once.
+
+### MeshAgent Studio
 
 1. Open your project in MeshAgent Studio.
 2. Go to **API Keys**.
-3. Create a new key and record the secret value. The secret is shown once.
+3. Create a new key and save the secret value.
 
-## Create a key with the CLI
+### MeshAgent CLI
 
-You can also generate a key with the MeshAgent CLI. The value is only shown once. 
+If you want to create a key from the terminal and activate it for local CLI use at the same time:
 
 ```bash
-meshagent api-key create --activate my-service-key
+meshagent api-key create my-service-key \
+  --description "Used by the deploy pipeline" \
+  --activate
+```
+
+`--activate` saves the new key in your local CLI project settings so commands that use an API key can pick it up automatically.
+
+## Rotate or remove keys
+
+List the keys in the active project:
+
+```bash
+meshagent api-key list
+```
+
+Delete a key you no longer need:
+
+```bash
+meshagent api-key delete <key-id>
 ```
 
 ## Best practices
+
 - **Rotate regularly** and delete unused keys.
 - **Store keys securely** in a secret manager or CI vault.
 - **Avoid sharing keys** across multiple services.
 
 ## Related docs
 
-- [Authentication](./authentication)
+- [OAuth Clients](./oauth)
 - [REST API Overview](../rest_api/overview)

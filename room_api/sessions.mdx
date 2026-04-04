@@ -1,0 +1,63 @@
+---
+title: Sessions
+description: Understand how room sessions start, what they contain, and what persists after they end.
+---
+
+## Overview
+
+A **session** is one active run of a room.
+
+The room is the named workspace. The session is the live runtime period during which participants connect, services run, activity is recorded, and the Room APIs are actively being used.
+
+## CLI commands
+
+If you are debugging or trying to understand what happened in a room, start here:
+
+```bash bash
+meshagent session list
+meshagent session show SESSION_ID
+```
+
+Use `meshagent session list` to find recent sessions in the active project, then use `meshagent session show SESSION_ID` to inspect the recorded events for one specific run.
+
+In [MeshAgent Studio](../interfaces/meshagent_studio), use **Active Sessions** and **Recent Sessions** to inspect sessions across rooms, and use the **Developer Console** inside a room for live logs, traces, metrics, and related runtime activity.
+
+## Room vs session
+
+This distinction is important:
+
+- the **room** is the durable collaboration space inside a project
+- the **session** is the active runtime instance of that room
+
+That means a room can exist as a stable place for work even though the actual running state comes and goes over time.
+
+## What happens when a session starts
+
+When a room becomes active:
+
+1. MeshAgent starts a session for that room.
+2. Participants can join and interact through the room APIs.
+3. Room-scoped services start according to the room's saved configuration.
+4. Project services that are available to the room also start running there.
+5. Logs, traces, metrics, and events begin accumulating for that session.
+
+## What happens when a session ends
+
+When room activity stops, MeshAgent shuts the room down automatically. That means active runtime behavior stops, including:
+
+- active participant connections
+- running room-scoped workloads tied to that session
+- ephemeral in-memory runtime state from that run
+
+What does **not** disappear depends on which room APIs you used. Data written to room storage, the database, synchronized documents, or other persistent surfaces remains available according to that API's persistence model. Session history and telemetry remain available so you can inspect what happened during that run.
+
+## Why sessions matter
+
+Understanding sessions helps with three common tasks:
+
+- **debugging**: inspect logs, traces, and events for one runtime period instead of mixing different runs together
+- **deployment reasoning**: understand when services start, restart, or stop relative to room activity
+- **data modeling**: distinguish between runtime state that exists only during a live session and data you intentionally persist through room APIs
+- **operational review**: understand what happened in a room before, during, and after a given piece of work
+
+Use [Observability](../observability/overview) when you want the broader telemetry model, and use the [REST API](../rest_api/overview) when you need to list or inspect sessions programmatically.

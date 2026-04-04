@@ -1,0 +1,80 @@
+---
+title: Intro to Services
+description: Understand what deployed services are, when to use project or room services, and how Service, ServiceTemplate, container, and external fit together.
+---
+
+In MeshAgent, a deployed service is code MeshAgent saves and starts for you when a room session becomes active. That code can be an agent, a toolkit, an MCP server, an external integration, or other supporting application logic.
+
+Use a deployed service when you want something to stay available in a room or across a project. If you only need to run something temporarily, use the [Containers API](../room_api/containers) instead.
+
+## Project services, room services, and on-demand containers
+
+| Option | Use it when |
+| --- | --- |
+| **Project service** | the capability should be available in every room |
+| **Room service** | the capability should be available in one room only or should vary per room |
+| **On-demand container** | you want to run something temporarily without saving it as a deployed service |
+
+Use a project service for shared functionality, a room service for per-room behavior, and the Containers API for temporary runs you do not want to save.
+
+## Project services vs room services
+
+Project services are shared across the whole project. Use them for common capabilities that should always be available, such as a shared toolkit or a project-wide agent.
+
+Room services are saved to one room. Use them when the service is room-specific, user-specific, or something people should choose for their room.
+
+The same service manifest can be deployed either way. The scope is set when you deploy it:
+
+- `--global` creates a project service
+- `--room myroom` creates a room service
+
+## Service vs ServiceTemplate
+
+A `Service` is ready to run as written.
+
+A `ServiceTemplate` asks for values during deployment or installation, then renders a concrete `Service`.
+
+Use:
+
+- **`Service`** when the configuration is already known
+- **`ServiceTemplate`** when users or installers should provide values such as prompts, API keys, names, addresses, or other settings
+
+Both `Service` and `ServiceTemplate` can be used for project services or room services.
+
+## Container vs external
+
+Under either `Service` or `ServiceTemplate`, choose how MeshAgent reaches the service:
+
+- **`container`**: MeshAgent pulls an image and runs it for you
+- **`external`**: the service is already running somewhere else and MeshAgent routes traffic to it
+
+Use `container` when you want MeshAgent to manage the runtime. Use `external` when you already host the service and just want MeshAgent to connect to it.
+
+Both `Service` and `ServiceTemplate` can use either `container` or `external`.
+
+## How deployed services behave
+
+Deployed services are tied to room sessions.
+
+- When a room becomes active, MeshAgent starts the services that should run there.
+- When the room goes idle and the session ends, MeshAgent shuts those services down.
+- Project services are managed at project scope. Changes usually take effect when the room starts a new session.
+- Room services are managed per room. If the saved room service changes during an active session, MeshAgent can reconcile the running service to match.
+
+## What counts as a service?
+
+A service is anything you want MeshAgent to save and make available as part of the room or project runtime.
+
+That can include:
+
+- a process-based agent
+- a toolkit or integration
+- an MCP server
+- a custom HTTP service
+- supporting application logic that should run with the room
+
+## Where to go next
+
+- [Deploy Services with MeshAgent](./deployment/deploy_services): use `meshagent process` for the fast path or `meshagent service` when you want to manage the manifest yourself
+- [Containers API](../room_api/containers): run on-demand containers instead of deployed services
+- [Build and Deploy Images](./containers/meshagent_image): build and ship container images for deployed services

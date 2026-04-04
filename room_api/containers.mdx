@@ -2,6 +2,17 @@
 
 The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
 
+## CLI commands
+
+Start with the CLI help, then use a few common commands:
+
+```bash bash
+meshagent room container --help
+meshagent room container image list --room myroom
+meshagent room container run --room myroom --image meshagent/cli:default
+meshagent room container list --room myroom
+```
+
 ## Why use the Containers API?
 
 - Pull and manage images without leaving the room context.
@@ -14,16 +25,21 @@ Containers are room-scoped workloads. You can pull images, run a container, stre
 
 ## Permissions and grants
 
-If you want a deployed service to use the Containers API, its participant token needs the appropriate Room API grants. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+The Containers API is controlled by the `containers` grant on the participant token.
 
-## CLI and SDK availability
+In practice:
 
-- **CLI**: image and container lifecycle commands are available under `meshagent room container ...`.
-- **Python**: the page below shows the current helper surface.
+- `use_containers` is the main switch for container operations
+- `pull` and `run` can be narrowed to specific image names or prefixes
+- `logs` controls access to container log streaming
 
-## API Methods
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services/deployment/deploy_services).
 
-### list_images
+## API reference
+
+Use the methods below to manage room images, start and inspect containers, and clean up container state.
+
+### `list_images()`
 
 - **Description**: List images currently available to the room (built or pulled previously).
 - **Parameters**: None.
@@ -33,17 +49,17 @@ If you want a deployed service to use the Containers API, its participant token 
 ```bash CLI
 meshagent room container image list \
   --room myroom
+
 ```
 ```python Python
 images = await room.containers.list_images()
 for image in images:
     print(image.tags, image.size)
+
 ```
 </CodeGroup>
 
----
-
-### delete_image
+### `delete_image(image)`
 
 - **Description**: Delete an unused image from the room.
 - **Parameters**:
@@ -55,15 +71,15 @@ for image in images:
 meshagent room container image delete \
   --room myroom \
   --image chatbot:old
+
 ```
 ```python Python
 await room.containers.delete_image(image="chatbot:old")
+
 ```
 </CodeGroup>
 
----
-
-### pull_image
+### `pull_image(tag, credentials=None)`
 
 - **Description**: Pull an image into the room. Supports passing registry credentials when needed.
 - **Parameters**:
@@ -76,15 +92,15 @@ await room.containers.delete_image(image="chatbot:old")
 meshagent room container image pull \
   --room myroom \
   --tag registry.example.com/agents/chatbot:0.2
+
 ```
 ```python Python
 await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
+
 ```
 </CodeGroup>
 
----
-
-### run
+### `run(image, ...)`
 
 - **Description**: Start a container in the room.
 - **Parameters** (all optional except `image`):
@@ -105,6 +121,7 @@ meshagent room container run \
   --image registry.example.com/agents/chatbot:0.2 \
   --env SYSTEM_PROMPT="Always respond with a fun fact." \
   --container-name chatbot-demo
+
 ```
 ```python Python
 container_id = await room.containers.run(
@@ -113,12 +130,11 @@ container_id = await room.containers.run(
     name="chatbot-demo",
 )
 print(f"Container launched: {container_id}")
+
 ```
 </CodeGroup>
 
----
-
-### exec
+### `exec(container_id, ...)`
 
 - **Description**: Attach an interactive command to an existing container and stream its output.
 - **Parameters**:
@@ -126,7 +142,7 @@ print(f"Container launched: {container_id}")
   - `command`: Optional command list; defaults to the container's shell.
   - `tty`: Request a TTY session (`True` for interactive).
   - `detach`: Leave the session running in the background (`True` by default).
-- **Returns**: A `Container` object exposing async helpers to read output, send input, resize the terminal, and await completion.
+- **Returns**: An exec-session object (`ExecSession` in Python) exposing helpers to read output, send input, resize the terminal, and await completion.
 
 <CodeGroup>
 ```bash CLI
@@ -135,6 +151,7 @@ meshagent room container exec \
   --container-id "$CONTAINER_ID" \
   --command "bash" \
   --tty
+
 ```
 ```python Python
 session = await room.containers.exec(
@@ -153,12 +170,11 @@ await session.write(b'exit\n')  # end the interactive session
 
 status = await session.result
 print(f"Exec finished with status: {status}")
+
 ```
 </CodeGroup>
 
----
-
-### logs
+### `logs(container_id, follow=False)`
 
 - **Description**: Stream container logs and optionally follow until exit.
 - **Parameters**:
@@ -172,6 +188,7 @@ meshagent room container log \
   --room myroom \
   --id "$CONTAINER_ID" \
   --follow
+
 ```
 ```python Python
 stream = room.containers.logs(container_id=container_id, follow=True)
@@ -180,12 +197,11 @@ async for line in stream.logs():
     print(line)
 
 await stream  # optional: wait for the request to finish
+
 ```
 </CodeGroup>
 
----
-
-### list
+### `list(all=False)`
 
 - **Description**: List containers in the room, optionally including exited ones.
 - **Parameters**:
@@ -198,17 +214,17 @@ meshagent room container list \
   --room myroom \
   --all \
   --output table
+
 ```
 ```python Python
 containers = await room.containers.list(all=True)
 for container in containers:
     print(container.id, container.state, container.started_by.name)
+
 ```
 </CodeGroup>
 
----
-
-### stop
+### `stop(container_id, force=False)`
 
 - **Description**: Request a graceful stop (or force stop) of a running container.
 - **Parameters**:
@@ -221,15 +237,15 @@ for container in containers:
 meshagent room container stop \
   --room myroom \
   --id "$CONTAINER_ID"
+
 ```
 ```python Python
 await room.containers.stop(container_id=container_id, force=False)
+
 ```
 </CodeGroup>
 
----
-
-### delete
+### `delete(container_id)`
 
 - **Description**: Remove container metadata after it has stopped. Useful for cleaning up history.
 - **Parameters**:
@@ -239,11 +255,11 @@ await room.containers.stop(container_id=container_id, force=False)
 <CodeGroup>
 ```python Python
 await room.containers.delete(container_id=container_id)
+
 ```
 </CodeGroup>
 
 ## Related guides
 
 - [Room API Overview](./overview)
-- [Services Overview](../services_room_containers/overview)
-- [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging)
+- [Packaging and Deploying Services](../services/deployment/deploy_services)

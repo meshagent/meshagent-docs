@@ -1,0 +1,78 @@
+---
+title: OAuth Clients
+description: Create project-owned OAuth clients for your app and connect them to participant-token issuance.
+---
+
+OAuth clients are the project-level auth configuration for your own application.
+
+Use them when you want users to sign in to your app through MeshAgent, then connect to rooms with the right participant tokens and room grants.
+
+Do not use OAuth clients for backend automation or CI. Use [API Keys](./api_keys) for that.
+
+You do not need an OAuth client for MeshAgent Studio, Powerboards, or normal CLI sign-in. Those flows use MeshAgent's built-in auth.
+
+## How OAuth clients work
+
+The flow is:
+
+1. Create an OAuth client for the project.
+2. Send the user through that OAuth flow from your app.
+3. After sign-in, your backend decides which rooms the user should access.
+4. Your backend mints [participant tokens](../rest_api/participant_tokens) for those rooms.
+5. Your app connects to the room with that token.
+
+The OAuth client handles user sign-in. The participant token handles room access.
+
+## Set up an OAuth client
+
+Use [MeshAgent Studio](../interfaces/meshagent_studio) for the main UI flow.
+
+1. Open **OAuth Clients** in your project.
+2. Create a new client.
+3. Enter a **name** for the app.
+4. Add one or more **redirect URIs**.
+5. Choose the **grant types** and **response types** your app uses.
+6. Set the **scopes** your app should request.
+7. Save the client and copy the **client ID** and **client secret**.
+
+The client secret is only shown when the client is created. Store it in your backend secret manager before you close the dialog.
+
+## What the fields mean
+
+- **Name**: a label for the app in MeshAgent Studio
+- **Redirect URIs**: the callback URLs MeshAgent can send users back to after sign-in
+- **Grant types**: the OAuth flows your app is allowed to use, such as `authorization_code`, `refresh_token`, or `client_credentials`
+- **Response types**: the response formats your app expects from the OAuth flow, such as `code`, `token`, or `id_token`
+- **Scopes**: the scopes returned in tokens for this client, such as `openid profile email offline_access`
+
+If you use `authorization_code`, you need at least one redirect URI.
+
+## Typical setup
+
+For a typical app with a backend:
+
+- use `authorization_code`
+- add `refresh_token` if you want long-lived sign-in sessions
+- add your callback URL as a redirect URI
+- request the scopes your app actually needs
+
+After the user signs in, keep using your backend for room access. The backend should mint the [participant tokens](../rest_api/participant_tokens) your client uses to join rooms.
+
+## REST API and SDKs
+
+Use the [REST API](../rest_api/overview) or SDKs when you want to provision clients programmatically.
+
+OAuth clients live under the project:
+
+- `POST /accounts/projects/{project_id}/oauth/clients`
+- `GET /accounts/projects/{project_id}/oauth/clients`
+- `PUT /accounts/projects/{project_id}/oauth/clients/{client_id}`
+- `DELETE /accounts/projects/{project_id}/oauth/clients/{client_id}`
+
+## Related docs
+
+- [Projects](./projects)
+- [API Keys](./api_keys)
+- [Participant Tokens](../rest_api/participant_tokens)
+- [API Scopes](../rest_api/api_scopes)
+- [MeshAgent Studio](../interfaces/meshagent_studio)

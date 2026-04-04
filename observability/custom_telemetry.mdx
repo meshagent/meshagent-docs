@@ -1,0 +1,193 @@
+---
+title: "Custom Logs, Traces, and Metrics"
+description: Add your own OpenTelemetry spans, logs, and metrics inside a MeshAgent service.
+---
+
+import OtelExample from "/snippets/examples/python/deployable/observability/observability.mdx"
+import OtelYAML from "/snippets/examples/python/deployable/observability/meshagent.mdx"
+import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
+
+MeshAgent already gives you logs, traces, metrics, session data, and developer logs in MeshAgent Studio.
+
+Use this page when you want to add your own spans, logs, and metrics inside a custom Python service.
+
+For the built-in observability model first, see [Observability](./overview).
+
+## Enable telemetry in your service
+Add two lines at startup before you create your `ServiceHost`:
+
+```python Python
+from meshagent.otel import otel_config
+otel_config(service_name="weather-service")
+```
+
+When this code runs inside MeshAgent, `otel_config()` uses the injected `OTEL_ENDPOINT` and room/session environment to send telemetry to MeshAgent Studio.
+
+## Example: Weather Toolkit with custom instrumentation
+
+The example adds custom spans around validation, the external HTTP call, and response parsing. It also adds logs and metrics.
+
+<CodeGroup>
+    <OtelExample />
+</CodeGroup>
+
+### Custom spans
+
+Use spans to track specific operations inside a trace.
+
+This example records:
+
+- `execute.weather-toolkit.get_weather`, which MeshAgent creates for the overall tool call
+- `validate_input` for city and units validation
+- `fetch_weather_api` for the outbound HTTP request, including attributes such as `http.url`, `http.method`, `http.status_code`, and `http.response_size`
+- `parse_response` for the final response shaping step
+
+This gives you finer-grained visibility inside the spans MeshAgent already creates.
+
+**Pattern:**
+```python Python
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
+tracer = trace.get_tracer(__name__)
+with tracer.start_as_current_span("fetch_weather_api") as span:
+    span.set_attribute("http.url", api_url)
+    span.add_event("api_request_start")
+    ...
+    if resp.status_code == 429:
+        span.set_status(Status(StatusCode.ERROR, "Rate limited"))
+```
+These spans appear in the room's **Traces** tab.
+
+### Custom logs
+`otel_config()` sets up an OTEL logging handler so normal `logging` calls are captured too.
+
+```python Python
+import logging
+log = logging.getLogger(__name__)
+
+log.info(f"Weather tool is running for city: {city} with units: {units}")
+```
+
+These logs appear in the room's **Logs** tab.
+
+### Custom metrics
+You can also add counters and histograms to track trends over time.
+
+```python Python
+from opentelemetry import metrics
+meter = metrics.get_meter("weather.tools")
+
+calls = meter.create_counter("weather.calls", unit="1",
+                             description="Total weather tool invocations")
+
+# When a call starts
+calls.add(1, attributes={"city": city.lower(), "units": units})
+```
+
+These metrics appear in the room's **Metrics** tab.
+
+## Deploy the sample
+
+You can deploy this toolkit as a service and invoke `get_weather()` from Studio or the CLI.
+
+### Step 1: Package and deploy the room service
+
+Package the sample with a `meshagent.yaml` file and a container image that MeshAgent can run. For the general deployment flow, see [Deploy Services with MeshAgent](../services/deployment/deploy_services).
+
+This example uses a MeshAgent runtime image plus a lightweight code image. The default YAML points at the public `python-docs-examples` image so you can run the docs example without building your own image first.
+
+Project structure:
+
+```bash
+your-project/
+├── Dockerfile                    # Shared by all samples
+├── observability/
+│   ├── observability.py
+│   └── meshagent.yaml            # Config specific to this sample
+└── another_sample/               # Other samples follow same pattern
+    ├── another_sample.py
+    └── meshagent.yaml
+```
+
+If you are building a single tool, you only need the `observability/` folder.
+
+### Step 1a: Build a Docker image
+
+Create a scratch Dockerfile and copy the files you want to run:
+
+<CodeGroup>
+    <ScratchDockerfile />
+</CodeGroup>
+
+Build and push the image:
+
+```bash bash
+docker buildx build . \
+  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
+  --platform linux/amd64 \
+  --push
+```
+
+### Step 1b: Define the service
+
+Create a `meshagent.yaml` file that references:
+
+- Runtime image: The MeshAgent Python SDK image with all dependencies
+- Code mount: Your code-only image mounted at /src
+- Command path: Points to your sample's specific location
+
+<CodeGroup>
+    <OtelYAML />
+</CodeGroup>
+
+Path mapping:
+- Your code image contains `/observability/observability.py`
+- It's mounted at `/src` in the runtime container
+- The command runs `python /src/observability/observability.py`
+
+The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your own image tag when deploying your code.
+
+### Step 1c: Deploy the service
+
+From the directory that contains `meshagent.yaml`:
+
+```bash
+meshagent service create --file "meshagent.yaml" --room=otel
+```
+
+### Step 2: Invoke the tool
+
+Once the service is deployed, invoke the tool from MeshAgent Studio or the CLI.
+
+You can also invoke the tool using the MeshAgent CLI:
+
+```bash bash 
+meshagent room agent invoke-tool \
+  --room=otel \
+  --toolkit=weather-toolkit \
+  --tool=get_weather \
+  --arguments='{"city":"Costa Mesa","units":"imperial"}'
+```
+
+## View telemetry
+
+In [MeshAgent Studio](https://studio.meshagent.com), you can inspect the telemetry from this example in both the **Session** view and the **Developer Console**.
+
+After you invoke the weather tool, the **Traces** tab should show a tree like:
+
+```
+execute.weather-toolkit.get_weather
+ ├─ validate_input
+ ├─ fetch_weather_api
+ └─ parse_response
+```
+
+Logs and metrics appear under their respective tabs.
+
+## Next Steps
+
+- [Observability](./overview): understand the built-in telemetry model and where to inspect it in MeshAgent Studio
+- [Agents](../agents/overview): understand how agents work in MeshAgent and start building your first one
+- [Tools and Toolkits](../agents/tools/tools_and_toolkits): learn how tools are discovered, shared, and called inside a MeshAgent room
+- [Deploy Services with MeshAgent](../services/deployment/deploy_services): deploy instrumented agents and tools as room or project services

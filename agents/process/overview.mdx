@@ -1,84 +1,12 @@
 ---
-title: "Process Agents Overview"
+title: "Process Agents"
 ---
 
-## Overview
+`meshagent process` is the main CLI runtime for agents that stay available in a room. Use it when you want one agent identity that people can talk to conversationally and that can also handle background work from queues, mail, or toolkit calls.
 
-`meshagent process` is MeshAgent's CLI command group for process-backed agents.
+## Run a multi-channel process agent locally
 
-It is the main runtime for new conversational and background agents. Use it when you want one agent that stays available over time, can accept work through one or more channels, and keeps thread-based continuity instead of treating every request as an isolated run.
-
-## What a process-backed agent can do
-
-A process-backed agent can:
-
-- answer people in chat
-- handle inbound mail
-- consume queued jobs
-- expose itself as a callable toolkit
-- use built-in and custom tools
-- keep work separated by thread
-- stay available as a deployed service
-
-That makes `meshagent process` a good fit for support agents, coding agents, research agents, and operations agents.
-
-## When to use `meshagent process`
-
-Use `meshagent process` when you need an agent that:
-
-- should stay available over time
-- may need more than one entry point
-- should keep one rules and tool setup across those entry points
-- should preserve thread continuity across turns
-- should be easy to run locally and deploy with the CLI
-
-## Supported channels
-
-Today, `meshagent process` supports:
-
-- `chat`
-- `mail:EMAIL`
-- `queue:NAME`
-- `toolkit:NAME`
-
-Each `--channel` flag adds another entry point to the same process-backed agent.
-
-| Channel | Use it for | What it enables |
-| --- | --- | --- |
-| `chat` | Interactive conversation in MeshAgent Studio or another chat client | Threaded conversation, streaming responses, human interaction |
-| `mail:EMAIL` | Turning inbound email into agent work | Mailbox-backed replies, attachments, email-first workflows |
-| `queue:NAME` | Background jobs delivered through a room queue | Non-interactive work, queued job handling |
-| `toolkit:NAME` | Exposing the agent as a callable toolkit | Agent-as-tool workflows and agent composition |
-
-## How to think about it
-
-The simplest mental model is:
-
-- the **process** is the running agent
-- the **channels** are the ways work reaches that agent
-- the **thread** is the continuity boundary
-
-That means one process-backed agent can serve several entry points without mixing unrelated work together. Work only shares history when it uses the same thread path.
-
-## Main commands
-
-Most users will touch these `meshagent process` commands:
-
-| Command | Use |
-| --- | --- |
-| `meshagent process join` | Join a room and run a process-backed agent |
-| `meshagent process run` | Run a process-backed agent and wait for interactive messages |
-| `meshagent process use` | Send a one-shot or interactive message to a running process-backed agent |
-| `meshagent process spec` | Generate a service spec for deployment |
-| `meshagent process deploy` | Deploy a process-backed agent service |
-
-## Build one agent with all four primary channels
-
-If you want one agent that can answer in chat, receive email, handle queued work, and be called like a toolkit, set up the mailbox first and then start the process with all four channels.
-
-### Step 1: Create the mailbox
-
-Create the mailbox before you add a `mail:EMAIL` channel:
+If you want the agent to receive email, create the mailbox first:
 
 ```bash
 meshagent mailbox create \
@@ -87,9 +15,7 @@ meshagent mailbox create \
   --queue support-agent@mail.meshagent.com
 ```
 
-### Step 2: Start the process-backed agent
-
-Run one agent with chat, mail, queue, and toolkit entry points:
+Then start one agent with chat, mail, queue, and toolkit channels:
 
 ```bash
 meshagent process join \
@@ -106,56 +32,48 @@ meshagent process join \
   --rule "You are a helpful support agent. Answer clearly, use web search when needed, and save important artifacts to storage."
 ```
 
-This gives you:
+This gives you one room-connected agent that:
 
-- one long-running process-backed agent
-- one shared identity across four entry points
-- thread-aware chat behavior
-- mailbox-backed email handling
-- queue-driven background work
-- a callable toolkit for other participants or apps
+- can be reached through chat, mail, queue, and toolkit channels
+- keeps thread history under `.threads/support-agent`
+- has built-in web search and storage tools
+- has one inline rule
 
-### Step 3: Chat with the agent
+This is the default `meshagent process` pattern: one long-running agent can serve several entry points while keeping continuity organized by thread.
 
-Open [MeshAgent Studio](https://studio.meshagent.com), join the `quickstart` room, and start chatting with `support-agent`.
+If you want to see more channels, model options, and built-in tool flags, run:
 
-### Step 4: Email the agent
+```bash
+meshagent process join --help
+```
 
-Now email `support-agent@mail.meshagent.com`. The mail channel turns that inbound email into work for the same running agent.
+## How to reach the agent
 
-Use `mail:EMAIL` when you want:
+Once the process is running, you can use the same agent in a few different ways.
 
-- mailbox-backed inbound email
-- reply behavior through the mailbox flow
-- attachment and metadata handling inside the same thread-aware runtime
+### Chat with it conversationally
 
-### Step 5: Send work through the queue
+Open the same room in [MeshAgent Studio](https://studio.meshagent.com) and start chatting with `support-agent`.
 
-Use `queue:NAME` when you want non-interactive background jobs:
+- MeshAgent Studio is the main place to test the agent while you are building
+- you can inspect the room, participants, logs, traces, and metrics while the process is running
+
+### Send background work through the queue
+
+Use the queue channel when you want the same agent to do non-interactive work:
 
 ```bash
 meshagent room queue send \
   --room quickstart \
   --queue support-jobs \
-  --json '{"prompt":"Summarize the latest support backlog and save a report."}'
+  --json '{"prompt":"Summarize the current support backlog and save a report."}'
 ```
 
-This keeps the useful worker-style behavior:
+This is the background-task path. It is useful for recurring jobs, automation, imports, and other work that should not start from a live chat message.
 
-- queued job handling
-- background execution without a human back-and-forth
-- optional continuity when queued work reuses a thread path
+### Invoke it from another agent or app
 
-### Step 6: Invoke the agent through the toolkit channel
-
-List toolkits in the room:
-
-```bash
-meshagent room agent list-toolkits \
-  --room quickstart
-```
-
-Then invoke the process-backed agent as a toolkit:
+Use the toolkit channel when another participant should be able to call this agent as a tool:
 
 ```bash
 meshagent room agent invoke-tool \
@@ -165,15 +83,13 @@ meshagent room agent invoke-tool \
   --arguments '{"prompt":"Draft a short reply explaining the refund policy."}'
 ```
 
-Use `toolkit:NAME` when you want:
+### Send it email
 
-- a clean invocation boundary
-- an agent that can be called by other agents or applications
-- the same rules and tools available through a toolkit entry point
+If you enabled `mail:support-agent@mail.meshagent.com`, you can also email the agent at that address and let the mail channel turn the message into room work.
 
-## Deploy the same agent shape
+## Deploy the same agent
 
-Once the agent works locally, you can deploy it directly with the CLI:
+When the local version looks right, deploy the same agent shape so it stays available without your terminal open:
 
 ```bash
 meshagent process deploy \
@@ -185,36 +101,80 @@ meshagent process deploy \
   --channel queue:support-jobs \
   --channel toolkit:support-agent \
   --threading-mode default-new \
+  --thread-dir ".threads/support-agent" \
   --web-search \
   --require-storage \
   --rule "You are a helpful support agent. Answer clearly, use web search when needed, and save important artifacts to storage."
 ```
 
-That deploys the same process shape you just tested locally.
+Use `meshagent process join` while developing and `meshagent process deploy` when you want the agent to stay available as a room or project service.
 
-## How process-backed agents behave
+## What `meshagent process` is
 
-Process-backed agents are built around threads.
+Supported channels:
 
-- one agent can receive work from several channels
-- the running agent is shared
-- thread history is only shared when turns reuse the same thread path
-- different thread paths stay separate
+| Channel | Use it for |
+| --- | --- |
+| `chat` | Interactive conversation in MeshAgent Studio, Powerboards, or other chat clients |
+| `mail:EMAIL` | Turning inbound email into agent work |
+| `queue:NAME` | Running background jobs from a room queue |
+| `toolkit:NAME` | Letting other agents or apps call this agent like a toolkit |
 
-This is what allows one deployed agent to handle many conversations or jobs without collapsing them into one shared context.
+Each `--channel` flag adds another entry point to the same running agent.
 
-## How `meshagent process` works
+The core idea is simple:
 
-At a high level:
+- the **agent** is the running participant
+- the **channels** are how work reaches that agent
+- the **thread** is the continuity boundary
 
-- channels turn chat, mail, queue, or toolkit input into process messages
-- a supervisor routes those messages by `thread_id`
-- one thread process handles each active thread
-- a thread adapter persists turn state, outputs, and status
+That means one running agent can serve several entry points without automatically mixing unrelated work together. Work shares continuity when it uses the same thread path.
 
-See [Process Agent Architecture](./architecture) for the implementation details and the runtime pieces involved.
+## Shape the agent with rules and tools
+
+The process command is also where you shape what the agent can do.
+
+- use `--rule` for inline instructions
+- use `--room-rules` when you want editable room-backed rules
+- use tool flags such as `--web-search`, `--require-storage`, `--mcp`, `--shell`, or `--require-advanced-shell` to add capabilities
+- choose the model with `--model`
+
+That means `meshagent process` is not just how the agent starts. It is also how you define its channels, rules, tools, and continuity behavior.
+
+## When to use `meshagent process`
+
+Use `meshagent process` when you want an agent that should:
+
+- stay available over time instead of acting like a one-shot run
+- work across chat, mail, queues, or toolkit calls
+- keep one rules and tools setup across those entry points
+- preserve thread continuity across longer workflows
+- be easy to run locally and then deploy with the CLI
+
+## Threads and continuity
+
+Thread configuration matters most when the agent needs durable history.
+
+- `--thread-dir` controls where thread documents are stored
+- `--threading-mode` controls how chat-oriented clients treat thread creation and selection
+
+Use a dedicated thread directory when you want one agent to support many conversations or jobs without mixing them together.
+
+For the deeper persistence model, see [Threads Overview](../threads_overview).
+
+## Main commands
+
+| Command | Use |
+| --- | --- |
+| `meshagent process join` | Run the agent locally in a room |
+| `meshagent process run` | Run the agent and wait for interactive messages |
+| `meshagent process use` | Send work to a running process agent |
+| `meshagent process spec` | Generate a service manifest from CLI flags |
+| `meshagent process deploy` | Deploy the agent as a service |
 
 ## Where to go next
 
-- [Process Agent Architecture](./architecture): what the CLI builds behind the scenes
-- [Threads Overview](../threads_overview): how thread paths control continuity and isolation
+- [Process Agent Architecture](./architecture): understand how channels, supervisors, and per-thread execution fit together
+- [Threads Overview](../threads_overview): understand thread paths, thread directories, and persisted continuity
+- [Tools and Toolkits](../tools/tools_and_toolkits): understand built-in tools, custom tools, and toolkit patterns
+- [Queues and Scheduled Tasks](../queues_and_scheduled_tasks): use queues for background work

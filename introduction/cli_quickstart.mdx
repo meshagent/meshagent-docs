@@ -1,0 +1,211 @@
+---
+title: Quickstart
+description: Install MeshAgent, connect the CLI, run your first agent, and deploy it.
+---
+
+MeshAgent is a platform for building, deploying, and operating room-based agent systems.
+
+If you want to start with built-in agents, you can start in [Powerboards](../interfaces/powerboards) instead. Powerboards is included with your MeshAgent account. Sign in, create a project and room, install one of the built-in agents, and start using it. This guide walks you through installing the MeshAgent CLI and deploying your first agent.
+
+## Step 1: Install the MeshAgent CLI
+
+Choose the installation path that matches how you plan to work.
+
+### Option 1: Install globally
+
+<CodeGroup>
+```bash macOS
+brew tap meshagent/homebrew-meshagent
+brew install meshagent
+meshagent --help
+```
+```bash Windows
+choco install meshagent
+meshagent --help
+
+# Alternatively:
+Invoke-WebRequest -Uri "https://storage.googleapis.com/meshagent-cli-builds/0.31.3/meshagent.0.31.3.nupkg" -OutFile "C:\Downloads\meshagent.0.31.3.nupkg"
+choco install meshagent --source "C:\Downloads\meshagent.0.31.3.nupkg"
+```
+```bash Other
+pipx install "meshagent[cli]" --include-deps
+pipx ensurepath
+meshagent --help
+```
+</CodeGroup>
+
+### Option 2: Install in a Python environment
+
+If you are developing with the Python SDK, you can install the CLI in your project environment instead. If you need help setting up Python and `uv`, start with the [Machine Setup Guide](../reference/machine_setup).
+
+<CodeGroup>
+```bash pip
+pip install "meshagent[cli]" # or "meshagent[all]"
+```
+```bash uv
+uv add "meshagent[cli]" # or "meshagent[all]"
+```
+</CodeGroup>
+
+If you install MeshAgent in a Python virtual environment, you can prefix the commands below with `uv run` instead of activating the environment first. For the full command reference, see [MeshAgent CLI Commands](../reference/meshagent_cli_help).
+
+## Step 2: Connect the CLI to MeshAgent and activate a project
+
+Authenticate in the browser and run the setup flow:
+
+```bash bash
+meshagent setup
+```
+
+`meshagent setup` signs you in, lets you choose or create a project, and activates the project for the CLI. After this completes, the CLI is ready to create rooms, run agents, and deploy services in the active project.
+
+## Step 3: Create a room and mailbox
+
+`meshagent setup` does not create a room, so create the room you will use for this guide now. If you already created a room in the MeshAgent Studio or Powerboards UI, you can reuse it here:
+
+```bash bash
+meshagent rooms create --name gettingstarted --if-not-exists
+```
+
+This example uses chat, mail, queue, and toolkit channels. Before starting the agent, create the mailbox for the mail channel:
+
+```bash bash
+# You will need to create a unique email address
+meshagent mailbox create \
+  --address my-first-agent@mail.meshagent.com \
+  --room gettingstarted \
+  --queue my-first-agent@mail.meshagent.com
+```
+
+## Step 4: Start your first agent
+
+`meshagent process` is the main CLI path for running a room-connected agent. This example starts one agent identity with all four primary channels:
+
+- `chat`
+- `mail:EMAIL`
+- `queue:NAME`
+- `toolkit:NAME`
+
+```bash bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name my-first-agent \
+  --channel chat \
+  --channel mail:my-first-agent@mail.meshagent.com \
+  --channel queue:my-first-agent \
+  --channel toolkit:my-first-agent \
+  --threading-mode default-new \
+  --thread-dir ".threads/my-first-agent" \
+  --model gpt-5.4 \
+  --web-search \
+  --require-storage \
+  --rule "You are a helpful first agent. Answer clearly, use web search when needed, and save important artifacts to storage."
+```
+
+This keeps the agent running from your terminal. Press `Ctrl+C` when you want to stop it.
+
+## Step 5: Talk to the agent in MeshAgent Studio
+
+1. Open [MeshAgent Studio](https://studio.meshagent.com/).
+2. Join the `gettingstarted` room.
+3. In the participants tab, select `my-first-agent`.
+4. Send it a message and ask it to do something that uses the tools you enabled.
+
+At this point you have a live room-connected agent running through the CLI.
+
+You can also open the same room in [Powerboards](https://powerboards.com) if you want to use an end-user-facing UI instead of Studio. Studio and Powerboards both connect to the same underlying room.
+
+## Step 6: Try the other channels
+
+You can now reach the same agent through queue, mail, and toolkit entry points.
+
+Send work through the queue:
+
+```bash bash
+meshagent room queue send \
+  --room gettingstarted \
+  --queue my-first-agent \
+  --json '{"prompt":"Summarize the current room activity and save a note."}'
+```
+
+Invoke the toolkit channel:
+
+```bash bash
+meshagent room agent invoke-tool \
+  --room gettingstarted \
+  --toolkit my-first-agent \
+  --tool run_my_first_agent_task \
+  --arguments '{"prompt":"Draft a short welcome message for a new customer."}'
+```
+
+You can also email the agent at `my-first-agent@mail.meshagent.com`.
+
+## Step 7: Deploy the agent as a managed service
+
+Running the agent locally is the fastest way to test it. When you want it to stay available without keeping your terminal open, deploy it as a service.
+
+The fastest path is to deploy it directly from `meshagent process`:
+
+```bash bash
+meshagent process deploy \
+  --room gettingstarted \
+  --service-name my-first-agent \
+  --agent-name my-first-agent \
+  --channel chat \
+  --channel mail:my-first-agent@mail.meshagent.com \
+  --channel queue:my-first-agent \
+  --channel toolkit:my-first-agent \
+  --model gpt-5.4 \
+  --require-web-search \
+  --require-storage
+```
+
+If you want to inspect or customize the service manifest first, generate it and deploy it yourself:
+
+```bash bash
+meshagent process spec \
+  --service-name my-first-agent \
+  --agent-name my-first-agent \
+  --channel chat \
+  --channel mail:my-first-agent@mail.meshagent.com \
+  --channel queue:my-first-agent \
+  --channel toolkit:my-first-agent \
+  --model gpt-5.4 \
+  --require-web-search \
+  --require-storage > meshagent.yaml
+
+# Deploy as a room service
+meshagent service create --file meshagent.yaml --room gettingstarted
+
+# Deploy as a project service
+meshagent service create --file meshagent.yaml --global
+```
+
+## Step 8: Inspect and manage what you deployed
+
+Use these commands to inspect the project and the services you now have running:
+
+```bash bash
+# List projects
+meshagent project list
+
+# Activate a different project
+meshagent project activate -i
+
+# List project services
+meshagent service list
+
+# List services in a room
+meshagent service list --room gettingstarted
+
+# View service details
+meshagent service show <service-id>
+```
+
+## Next steps
+
+- [Process Agents Overview](../agents/process/overview): learn how `meshagent process` works and how to shape rules, tools, channels, and threads
+- [Powerboards](../interfaces/powerboards): learn how end users can work with deployed and built-in agents
+- [Rooms](../room_api/overview): learn the room runtime and built-in room APIs
+- [Packaging and Deploying Services](../services/deployment/deploy_services): go deeper on manifests, permissions, and deployment
+- [MeshAgent CLI Commands](../reference/meshagent_cli_help): browse the full CLI reference

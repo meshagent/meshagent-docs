@@ -1,47 +1,84 @@
-MeshAgent Rooms provide real-time collaborative workspaces for agents and participants. Each room dynamically manages participant lists, tracks presence, and enables information sharing. Rooms are automatically provisioned when participants join, ensuring effortless integration and minimizing synchronization complexity.
+## Overview
+
+Rooms are the runtime and collaboration boundary in MeshAgent.
+
+A room is where humans, agents, tools, services, files, queues, and shared documents come together around the same live context. Projects can contain many rooms, and each room can have its own participants, room-scoped services, and persisted state.
+
+The Room APIs are how you interact with that runtime. They give you the built-in primitives for messaging, storage, queues, documents, containers, secrets, and the other capabilities that make a room useful as an execution environment.
+
+## CLI commands
+
+Use `meshagent rooms ...` to create and manage rooms in a project:
+
+```bash bash
+meshagent rooms --help
+meshagent setup
+meshagent rooms create --name myroom --if-not-exists
+meshagent rooms list
+meshagent rooms get --name myroom
+```
+
+Use `meshagent room <api> ...` to work inside a specific room through the Room APIs. Start with `meshagent room --help`, then drill into the API you need:
+
+```bash bash
+meshagent room --help
+meshagent room agent --help
+meshagent room secret --help
+meshagent room queue --help
+meshagent room messaging --help
+meshagent room storage --help
+meshagent room database --help
+meshagent room memory --help
+meshagent room developer --help
+meshagent room container --help
+meshagent room sync --help
+meshagent room service --help
+```
+
+Use `meshagent room service ...` when you want to inspect or restart services that are already running in a room session. Use the project-level `meshagent service ...` command when you want to deploy, update, validate, or delete saved services. See [Deploy Services with MeshAgent](../services/deployment/deploy_services).
+
+## How rooms fit into MeshAgent
+
+- A **project** groups many rooms.
+- A **room** is the live workspace for one stream of collaboration or execution.
+- A **session** is one active run of that room.
+
+When a room becomes active, MeshAgent starts a session for that room and starts any services that should run there. From that point on, participants can use the Room APIs and work over the same shared context.
 
 ## Room APIs
 
-Rooms also expose a set of room-scoped APIs through the room client:
+Rooms expose a set of room-scoped APIs through the `RoomClient`:
 
-- **[Agents API](./agents) `AgentsClient`:** Manages agent interactions. 
-- **[Containers API](./containers) `ContainersClient`:** Interact with containers on demand in a room.
-- **[Database API](./database) `DatabaseClient`:** Provides a simple relational-like API for data storage and retrieval through tables.
-- **[Memory API](./memory) `MemoryClient`:** Manage room-scoped knowledge memories and recall context.
-- **[Developer API](./developer) `DeveloperClient`:** Send structured logs to the Developer Console and stream developer log events.
-- **[Messaging API](./messaging) `MessagingClient`:** Enables real-time chat messaging among participants.
-- **[Queues API](./queue) `QueuesClient`:** Facilitates reliable data/message exchange with other agents or participants.
-- **[Secrets API](./secrets) `SecretsClient`:** Create and manage oauth tokens and user secrets.
-- **[Storage API](./storage) `StorageClient`:** Manages file storage and retrieval.
-- **[Sync API](./sync) `SyncClient`:** Offers document synchronization capabilities, listing remote participants, allowing participants to collaborate on shared documents.
-- **`ServicesClient` (Python/TypeScript/Dart):** List and restart room services. For deployment patterns, see [Services & Containers](../services_room_containers/overview).
+- **[Agents API](./agents) `AgentsClient`:** Call agents, invoke toolkits, and work with agent participants in the room.
+- **[Containers API](./containers) `ContainersClient`:** Run containers and inspect container activity in the room runtime.
+- **[Database API](./database) `DatabaseClient`:** Store and query structured room data in tables.
+- **[Memory API](./memory) `MemoryClient`:** Store and recall room-scoped memories for agents and workflows.
+- **[Developer API](./developer) `DeveloperClient`:** Send logs and inspect developer events for the room.
+- **[Messaging API](./messaging) `MessagingClient`:** Send and receive real-time messages between room participants.
+- **[Queues API](./queue) `QueuesClient`:** Send and receive queued work inside the room.
+- **[Secrets API](./secrets) `SecretsClient`:** Create and use room-scoped secrets, OAuth tokens, and related credentials.
+- **[Services API](./services) `ServicesClient`:** List running services in the room and request a restart for one service.
+- **[Storage API](./storage) `StorageClient`:** Read and write files in room storage.
+- **[Sync API](./sync) `SyncClient`:** Work with shared documents and synchronized room state.
 
-## Using the Room APIs with the MeshAgent CLI
+## Room lifecycle and sessions
 
-The Room APIs are accessible from both the MeshAgent CLI and SDKs. You can explore the CLI for each Room API by running:
+Rooms are durable named workspaces, but runtime activity happens in **sessions**.
 
-```bash CLI
-meshagent room agent --help
-meshagent room container --help
-meshagent room database --help
-meshagent room developer --help
-meshagent room memory --help
-meshagent room messaging --help
-meshagent room queue --help
-meshagent room secret --help
-meshagent room service --help
-meshagent room storage --help
-meshagent room sync --help
-```
+- A room session starts when the room becomes active.
+- During that session, participants connect, services run, and room activity is recorded.
+- When activity stops, the room shuts down automatically so compute is not kept running unnecessarily. Persisted data written through storage, database, or sync remains available according to that API's behavior.
+
+See [Sessions](./sessions) for the runtime implications.
 
 ## Using Room APIs in Deployed Services
 
-If you deploy a MeshAgent service and want that service to use the Room APIs, you must grant the service the appropriate Room API access through its participant token `api` scope. Deployment alone does not automatically give a service access to storage, database, secrets, containers, or the other Room APIs.
+If you deploy a MeshAgent service and want that service to use the Room APIs, you must grant that access through the participant token `api` scope. Deployment alone does not automatically give a service access to storage, database, secrets, containers, or the other Room APIs.
 
-The relevant places to configure that are:
+In practice, that means:
 
-- **Service tokens injected through `container.environment[].token`**: set the token's `api` scope in the service manifest.
-- **MeshAgent endpoints in a service manifest**: set the endpoint `api` scope for the participant identity that joins the room.
+- set the token `api` scope on service tokens injected through `container.environment[].token`
+- or set the endpoint `api` scope for the participant identity that joins through a MeshAgent endpoint
 
 Useful defaults:
 
@@ -56,24 +93,7 @@ Many Room APIs can also be narrowed further inside the scope:
 - **Messaging**: broadcast/list/send controls
 - **Containers**: pull/run/log controls
 
-For the full scope model and manifest fields, see [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/participant_tokens), and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
-
-For information on how to create and manage rooms and their permissions in a project check out the [REST API](../rest_api/overview) documentation.
-
-## Getting Started from the CLI
-
-If you want to start using the Room APIs quickly, the simplest path is:
-
-```bash bash
-meshagent setup
-meshagent rooms create --name myroom --if-not-exists
-```
-
-After that you can:
-
-- use the Room APIs from the CLI with `--room myroom`
-- connect to `myroom` from any SDK using the examples in [Getting Started](../introduction/get_started)
-- deploy room-scoped services into `myroom`
+For the full scope model and manifest fields, see [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/participant_tokens), and [Packaging and Deploying Services](../services/deployment/deploy_services).
 
 If you are building your own application and minting participant tokens yourself, make sure the participant has both:
 
@@ -82,37 +102,18 @@ If you are building your own application and minting participant tokens yourself
 
 See [REST API overview](../rest_api/overview), [Participant Tokens](../rest_api/participant_tokens), and [API Scopes](../rest_api/api_scopes).
 
-## Room Class Overview
+## Using RoomClient from SDKs
 
-Core Room behavior is consistent across SDKs, but available sub-clients vary by language. Use the section below that matches your client library.
+All of the main SDKs expose a `RoomClient` with the same overall shape:
 
-#### Python 
-`from meshagent.api import RoomClient`
-- Connect with `async with RoomClient(protocol=...) as room:`; the async context manager starts and stops the connection for you.
-- Issue requests with `await room.send_request(...)`; session metadata is available via `room.session_id`, `room.room_url`, and `room.room_name`.
-- Register event handlers with `room.on("room.status", handler)`; use `room.emit(...)` to publish custom events.
-- Access sub-clients through snake_case attributes such as `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.livekit`, `room.memory`, `room.messaging`, `room.queues`, `room.secrets`, `room.services`, `room.storage`, and `room.sync`.
+- connect to a room
+- wait for readiness
+- use sub-clients such as agents, messaging, storage, database, queues, secrets, and sync
+- dispose the client when you are done
 
-#### TypeScript / JavaScript 
-`RoomClient` in `@meshagent/meshagent`
-- Instantiate the client with `{ protocol }` and call `await room.start({ onDone, onError })` to wait for `room_ready`.
-- Clean up with `room.dispose()` when you are finished.
-- Send RPCs with `await room.sendRequest(type, payload, data?)`; readiness is exposed via `await room.ready`.
-- Emit events with `room.emit(event)` and consume them using `for await (const evt of room.listen())`.
-- Sub-clients are camelCase properties: `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.memory`, `room.messaging`, `room.queues`, `room.secrets`, `room.services`, `room.storage`, and `room.sync`.
+The exact method names and property casing vary by language, but the underlying room model is the same. Use the SDK and language guides for the concrete examples:
 
-#### Dart / Flutter 
-`RoomClient` in `package:meshagent/room_server_client.dart`
-- Call `await room.start(onDone: ..., onError: ...)` after constructing the client; `room.ready` completes when the server sends `room_ready`.
-- Dispose resources with `room.dispose()`; use `await room.exec(...)` for container execution helpers.
-- Send requests with `await room.sendRequest(type, payload, data: ...)`.
-- Observe room activity with `room.events.listen(handler)` or by keeping the `StreamSubscription` returned from `room.listen(...)`.
-- Access sub-clients via camelCase getters: `room.agents`, `room.containers`, `room.database`, `room.developer`, `room.memory`, `room.messaging`, `room.queues`, `room.secrets`, `room.services`, `room.storage`, and `room.sync`.
-
-#### .NET 
-`Meshagent.RoomClient`
-- Construct `var room = new RoomClient(protocol);` and call `await room.ConnectAsync();` to wait for readiness.
-- Dispose with `await room.DisposeAsync();` or `await using var room = new RoomClient(protocol);`.
-- Send RPCs using `await room.SendRequest(type, payload, data);`; session metadata is available via `room.SessionId`, `room.RoomUrl`, and `room.RoomName`.
-- Register handlers with `room.On("room.status", handler)` and raise custom events through `room.Emit(name, data)`.
-- Sub-clients are exposed as PascalCase properties: `room.Agents`, `room.Database`, `room.Developer`, `room.Livekit`, `room.Messaging`, `room.Queues`, `room.Secrets`, `room.Storage`, and `room.Sync`.
+- **Python**: `RoomClient` in `meshagent.api`
+- **TypeScript / JavaScript**: `RoomClient` in `@meshagent/meshagent`
+- **Dart / Flutter**: `RoomClient` in `package:meshagent/room_server_client.dart`
+- **.NET**: `Meshagent.RoomClient`

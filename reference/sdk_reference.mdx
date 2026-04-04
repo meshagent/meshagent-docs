@@ -1,18 +1,22 @@
 ---
-title: Language SDKs
+title: SDK Overview
+description: Choose the right MeshAgent SDK for your stack.
 ---
 
-MeshAgent ships **official SDKs for Python, TypeScript/JavaScript, Dart (Flutter), and .NET**. Every SDK includes a room client, but the exact room sub-clients, admin helpers, and agent authoring surface vary by language. Python is still the fullest agent-authoring runtime; the other SDKs now expose broader room and REST/admin clients than older summaries of the platform suggested.
+MeshAgent ships official SDKs for Python, TypeScript/JavaScript, Dart/Flutter, and .NET.
 
-| Language | Packages | Room API | Agent authoring/runtime | REST / project admin | UI widgets & embeddables |
-| --- | --- | --- | --- | --- | --- |
-| **Python** | [`meshagent`](https://pypi.org/project/meshagent/) (+ [`meshagent-livekit`](https://pypi.org/project/meshagent-livekit/)) | ✅ Full client (rooms, messaging, docs, storage, queues, tools) | ✅ Process-oriented CLI workflow, VoiceBot, room-connected agent building blocks, and legacy compatibility classes | ✅ Project/room/secret/token helpers via REST | — |
-| **TypeScript / JavaScript** | [`@meshagent/meshagent`](https://www.npmjs.com/package/@meshagent/meshagent) | ✅ Node + browser room client with agents, containers, database, developer logs, memory, messaging, queues, secrets, services, storage, and sync | 🚧 In progress (agent base + toolkits available; broader runtime parity coming) | ✅ Project/room/admin REST client for projects, users, rooms, services, secrets, shares, sessions, webhooks, room grants, OAuth, billing, and usage | ✅ React/Tailwind chatbot widget + document sync helpers |
-| **Dart / Flutter** | [`meshagent`](https://pub.dev/documentation/meshagent/latest/) + [`meshagent_flutter`](https://pub.dev/packages/meshagent_flutter) / `meshagent_flutter_shadcn` | ✅ Flutter room client with agents, containers, database, developer logs, memory, messaging, queues, secrets, services, storage, and sync | 🚧 In progress (agent APIs present; production voice/chat agents landing soon) | ✅ Project/room/admin REST client for services, secrets, routes, shares, sessions, webhooks, room grants, OAuth, scheduled tasks, and billing | ✅ Flutter chat widgets and `VoiceAgentCaller` for voice bot sessions |
-| **.NET** | [`Meshagent.Api`](https://www.nuget.org/packages/Meshagent.Api) | ✅ Room client with agents, database, developer logs, LiveKit, messaging, queues, secrets, storage, and sync | 🚧 Planned (use Python for authoring today) | ✅ Project/room/admin REST client for services, secrets, shares, mailboxes, sessions, webhooks, OAuth, billing, storage, and related project operations | — |
+Python is the only SDK that uses a split package family. The other SDKs center on one core package, with optional UI, auth, or service packages layered on top.
 
-**How to choose**
-- Build and deploy agents now → Python (full CLI/runtime coverage plus the strongest SDK surface).
-- Embed web chat or connect browser/Node apps → TypeScript/JavaScript room and admin clients + React/Tailwind widget.
-- Ship Flutter apps → Dart room and admin clients with chat + voice caller widgets.
-- .NET services or tools → Room and admin clients today; agent authoring coming soon.
+| Language | Start with | Add-on packages | Best fit |
+| --- | --- | --- | --- |
+| **Python** | `meshagent[all]` | `meshagent-api`, `meshagent-agents`, `meshagent-cli`, `meshagent-tools`, `meshagent-openai`, `meshagent-anthropic`, `meshagent-livekit`, `meshagent-mcp`, `meshagent-computers` | Full agent authoring, CLI workflows, room clients, and project admin |
+| **TypeScript / JavaScript** | `@meshagent/meshagent` | `@meshagent/meshagent-react`, `@meshagent/meshagent-react-auth` | Browser and Node apps, room clients, admin clients, and React UI |
+| **Dart / Flutter** | `meshagent` | `meshagent_flutter`, `meshagent_flutter_auth`, `meshagent_flutter_shadcn`, `meshagent_service` | Flutter apps, room clients, admin clients, widgets, and Dart services |
+| **.NET** | `Meshagent.Api` | `None` | Room clients and project admin from .NET services |
+
+- Need the fullest MeshAgent runtime and CLI today: start with Python.
+- Building browser or Node apps: start with `@meshagent/meshagent`.
+- Building Flutter apps: start with `meshagent`, then add the Flutter packages you need.
+- Building .NET services or tools: start with `Meshagent.Api`.
+
+If you are working in Python and need to choose between `meshagent[all]`, `meshagent[cli]`, and the split packages, continue to [Install the Python SDK](./python_package_overview).

@@ -1,0 +1,156 @@
+---
+title: "Skills Overview"
+---
+
+Skills are reusable task instructions that agents can consult when they are relevant. A skill tells the agent how to approach a class of work. Tools give the agent the capabilities to actually do that work.
+
+MeshAgent supports the open [Agent Skills](https://agentskills.io/home) format. You can load one skill, a folder of skills, or a repo of skills into an agent with `--skill-dir` in the CLI or `skill_dirs` in the SDKs that expose it.
+
+## What a skill is
+
+A skill is a directory that contains instructions and optional supporting files:
+
+```text
+my-skill/
+├── SKILL.md
+├── references/
+│   └── examples.md
+└── scripts/
+    └── helper.sh
+```
+
+The main entrypoint is `SKILL.md`. MeshAgent also accepts lowercase `skill.md`.
+
+The file starts with YAML frontmatter such as:
+
+- `name`
+- `description`
+
+Then the Markdown body explains the workflow, what to inspect, which tools to use, and what output to produce.
+
+## Skills vs rules and tools
+
+These pieces work together, but they do different jobs:
+
+- **Rules** shape the agent's ongoing behavior.
+- **User prompts** describe the current request.
+- **Skills** give the agent reusable workflows for specific kinds of work.
+- **Tools** give the agent callable capabilities such as storage, shell access, web search, or room APIs.
+
+The practical distinction is simple:
+
+- Tools do work.
+- Skills explain how to do work.
+
+## Load skills into an agent
+
+You can point `--skill-dir` at either:
+
+- one skill directory
+- a parent directory that contains multiple skill directories
+
+This example creates one skill under `./skills` and then loads the parent folder:
+
+```bash bash
+mkdir -p ./skills/release-summary
+
+cat > ./skills/release-summary/SKILL.md <<'EOF'
+---
+name: release-summary
+description: Summarize release notes, changelogs, or shipped features into a concise update for humans. Use this when the user asks for a release summary, changelog rewrite, product update, or announcement draft.
+---
+
+# Release Summary
+
+## Goal
+
+Turn raw release notes or a changelog into a short, clear summary.
+
+## Process
+
+1. Read the source material carefully.
+2. Group related changes together.
+3. Highlight user-facing impact, not just implementation details.
+4. Keep the output concise and easy to skim.
+EOF
+
+meshagent setup
+
+meshagent process join \
+  --room quickstart \
+  --agent-name assistant \
+  --channel chat \
+  --require-storage \
+  --skill-dir ./skills \
+  --rule "You are a helpful assistant."
+```
+
+After the agent starts, ask it for a release summary. The model can inspect the available skill and decide to use it for that task.
+
+## Auto-detecting skills from a folder
+
+When `--skill-dir` points at a parent folder, MeshAgent auto-detects the immediate child directories that contain `SKILL.md` or `skill.md`.
+
+That means this works:
+
+```text
+./skills/
+├── release-summary/
+│   └── SKILL.md
+└── brand-review/
+    └── SKILL.md
+```
+
+And this CLI command loads both:
+
+```bash bash
+meshagent process join \
+  --room quickstart \
+  --agent-name assistant \
+  --channel chat \
+  --skill-dir ./skills
+```
+
+Use repeated `--skill-dir` flags when you want to combine multiple roots.
+
+## Pull skills from GitHub
+
+MeshAgent does not need a special GitHub-specific skill loader. It reads skills from local directories.
+
+That means there are two practical patterns:
+
+- tell an agent with shell access to clone or pull a public skills repo into room storage
+- configure a custom service with `--skill-dir` pointing at the room-backed skills folder
+
+This is especially relevant for the built-in room assistant. The shipped assistant template already includes shell access, storage access, and mounts room files at `/data`, so you can tell it to create skills in the room or pull a public skills repo into the room for you.
+
+If the repo is private, the agent needs a token or other credentials that let it authenticate with GitHub.
+
+One important distinction: the built-in assistant template does not currently start with `--skill-dir`. That means cloned skill files are not automatically loaded through MeshAgent's formal skills runtime just because they exist in the room. The assistant can still fetch them, inspect them, and use them as files. To have a service auto-load them as skills, the agent or service needs to be configured with `--skill-dir` pointed at that folder.
+
+Because MeshAgent reads configured skill directories from disk when it builds the agent's rules, skills added to a configured room-backed path can be picked up on later turns.
+
+## When to use skills
+
+Use skills when you want to:
+
+- package a repeatable workflow once and reuse it across many turns or rooms
+- keep long task playbooks out of inline `--rule` strings
+- teach an agent how to choose tools, inspect files, and structure its output
+- ship domain-specific guidance with a deployed service
+
+## When not to use skills
+
+Do not use skills as a replacement for:
+
+- **tools**, when the agent needs a new capability
+- **rules**, when the instruction should apply on every turn
+- **schemas**, when the system needs strict structured input or output
+
+If the task needs new abilities, add tools first. If the task needs better reusable judgment about how to use those abilities, add a skill.
+
+## Where to go next
+
+- [Authoring Skills](./authoring): write `SKILL.md` files and organize supporting resources.
+- [Bundle Private Skills with a Custom Service](./packaging_and_deploying): ship a fixed or private set of skills with a service.
+- [How Tools and Toolkits Work](../agents/tools/tools_and_toolkits): understand the capabilities that skills often rely on.

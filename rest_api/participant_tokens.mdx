@@ -40,6 +40,47 @@ MeshAgent signs participant tokens automatically for anything it launches on you
 - **End-user connections**: When a participant connects to the room, MeshAgent looks up the participant’s permissions and returns the JWT to the browser or client that is joining the room.
 - **Custom apps built on MeshAgent**: When building a custom app on MeshAgent, you will need to manually create a ``ParticipantToken`` and define permissions for your users. 
 
+## Generate a token from the CLI
+
+Use `meshagent token generate` when you need to sign a participant token yourself.
+
+This is useful for custom clients, CLI coding agents, or temporary room identities that need to access room APIs directly.
+
+Create a token spec file such as `token-spec.yaml`:
+
+```yaml
+version: v1
+kind: ParticipantToken
+identity: my-client
+room: my-room
+role: user
+api:
+  messaging: {}
+  storage: {}
+```
+
+The main fields are:
+
+- `identity`: the participant name in the room
+- `room`: the room this token should join
+- `role`: `user`, `agent`, or `tool`
+- `api`: the [API scope](./api_scopes) for that participant
+
+Generate the token:
+
+```bash
+meshagent token generate --input token-spec.yaml
+```
+
+Write it to a file instead:
+
+```bash
+meshagent token generate --input token-spec.yaml --output room.token
+```
+
+By default, the command uses the active project and active API key. Use `--project-id` or `--key` when you want to override those defaults.
+
 ## Related topics
 - [`ApiScope` reference](./api_scopes)
 - [Managing project room grants](../rest_api/overview)
+- [Using CLI Coding Agents with the MeshAgent Room Proxy](../agents/routing/cli_agents)

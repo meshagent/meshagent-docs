@@ -32,7 +32,7 @@ long‑running or asynchronous jobs that shouldn't block an interactive chat age
 - Batch operations that process multiple items sequentially
 - Schedule or trigger work externally and have the agent pick it up
 
-If you need an interactive assistant, use [ChatBot](./chatbot). For real-time speech, see [VoiceBot](./voicebot). For a callable function/agent pattern with structured schemas, see [TaskRunner](./taskrunner).
+If you need an interactive assistant, use [ChatBot](./chatbot). For real-time speech, see [VoiceBot](../standard/voicebot). For a callable function/agent pattern with structured schemas, see [TaskRunner](./taskrunner).
 
 ## Run and deploy a Worker with the CLI
 ### Step 1: Run a ``Worker`` from the CLI
@@ -50,7 +50,7 @@ meshagent worker join --room quickstart --agent-name worker --queue tasks --requ
 When you add the `--room-rules "agents/worker/rules.txt"` flag and supply a file path for the rules, the file will be created if it does not already exist, this file is relative to the room storage. The `--queue` flag is required.
 
 > **Tip:** Use `meshagent worker join --help` to see all available tools and options.
-Workers can also be extended with rules, tools, and skills for repeatable background workflows. See [Tools Overview](../tools/intro) and [Skills Overview](../../skills/overview).
+Workers can also be extended with rules, tools, and skills for repeatable background workflows. See [Tools and Toolkits](../tools/tools_and_toolkits) and [Skills Overview](../../agent_skills/overview).
 
 ### Step 2: Send work to the queue
 ```bash bash
@@ -148,11 +148,11 @@ From [studio.meshagent.com](https://studio.meshagent.com) open the room ``quicks
 
 ### Step 4: Package and deploy the agent
 To deploy your SDK Worker permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
-For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging). If you want to bundle reusable skills with the worker, see [Packaging and Deploying Skills](../../skills/packaging_and_deploying).
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services/deployment/deploy_services). If you want to bundle reusable private skills with the worker, see [Bundle Private Skills with a Custom Service](../../agent_skills/packaging_and_deploying).
 
 MeshAgent supports two deployment patterns for containers:
 1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
-2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services/containers/optimizing_containers).
 
 This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image.
 If you want to build and push your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
@@ -263,7 +263,7 @@ A ``Worker`` accepts everything from ``SingleRoomAgent`` (``title``, ``descripti
 ## Next Steps
 Continue Learning about Agents and Explore a variety of other base agents including:
 - [ChatBot](./chatbot) for conversational text-based agents
-- [VoiceBot](./voicebot) for conversational speech/voice based agents
+- [VoiceBot](../standard/voicebot) for conversational speech/voice based agents
 - [TaskRunner](./taskrunner) for agents that run in the background with defined inputs and outputs
 - [MailBot](./mailbot) for email based agents
-- [Skills Overview](../../skills/overview) for reusable workflow guidance shared across agent runs
+- [Skills Overview](../../agent_skills/overview) for reusable workflow guidance shared across agent runs

@@ -1,0 +1,69 @@
+---
+title: Projects
+description: Create projects, choose the active project in the CLI, and understand where project-level settings live.
+---
+
+Projects are the top-level workspace in MeshAgent.
+
+A project owns your [rooms](../room_api/overview), [deployed services](../services/deployment/deploy_services), [API keys](./api_keys), [OAuth clients](./oauth), [integrations](./integrations), [routes](./routes), [mailboxes](./mailboxes), [scheduled tasks](./scheduled_tasks), [webhooks](./webhooks), [billing and usage](./billing), and [membership](./project_roles).
+
+First run `meshagent setup` to sign in, choose or create a project, and activate that project from the CLI. For the full command surface, see [MeshAgent CLI](../reference/meshagent_cli_help).
+
+```bash
+meshagent setup
+```
+
+Use [MeshAgent Accounts](../interfaces/accounts) for membership, billing, and usage. Use [MeshAgent Studio](../interfaces/meshagent_studio) to work inside a project. Both surfaces, along with the CLI, operate on the same underlying project.
+
+## Manage projects from the CLI
+
+Use `meshagent project` when you want to create, list, or activate projects from the terminal.
+
+Create a project:
+
+```bash
+meshagent project create my-project
+```
+
+List the projects you can access:
+
+```bash
+meshagent project list
+```
+
+Switch the active project:
+
+```bash
+meshagent project activate PROJECT_ID
+```
+
+Use interactive selection when you do not want to paste the ID:
+
+```bash
+meshagent project activate -i
+```
+
+Once a project is active, commands for [rooms](../room_api/overview), [services](../services/deployment/deploy_services), [API keys](./api_keys), [routes](./routes), [mailboxes](./mailboxes), [scheduled tasks](./scheduled_tasks), and [webhooks](./webhooks) use that project by default.
+
+## What lives at the project level
+
+- [Project Roles and Access](./project_roles): members, roles, and room-creation permissions
+- [API Keys](./api_keys): project-scoped credentials for automation and backend services
+- [OAuth Clients](./oauth): sign users in to your own app with project-owned OAuth clients
+- [Integrations](./integrations): project-level model routing, telemetry, and related shared settings
+- [Billing and Usage](./billing): project credits, usage, and recharge settings
+- [Routes](./routes): map domains and published ports into rooms
+- [Mailboxes](./mailboxes): route email into room queues
+- [Scheduled Tasks](./scheduled_tasks): enqueue recurring work on a schedule
+- [Webhooks](./webhooks): send project events to your external systems
+
+Project secrets and project-wide service deployment are covered in [Deploy & Manage](../services/deployment/deploy_services). Sessions and room services are covered with [Rooms](../room_api/sessions) and service deployment docs because they are tied to a room runtime rather than project administration alone.
+
+## Related docs
+
+- [MeshAgent Accounts](../interfaces/accounts)
+- [MeshAgent Studio](../interfaces/meshagent_studio)
+- [CLI Quickstart](../introduction/cli_quickstart)
+- [MeshAgent CLI](../reference/meshagent_cli_help)
+- [Project Secrets](../secrets/project_secrets)
+- [Sessions](../room_api/sessions)

@@ -1,190 +1,194 @@
 ---
-title: "Overview"
+title: "Key Concepts"
+description: What MeshAgent is, the core concepts to know, and how the main product surfaces fit together.
 ---
 
 # MeshAgent
 
-[MeshAgent](https://www.meshagent.com) is the **agent-native application platform** for building, deploying, and operating **multiplayer AI applications**—where **humans, agents, and tools** work together in real time over shared context.
+[MeshAgent](https://www.meshagent.com) is the platform for building, deploying, and operating **room-based agent systems**.
 
-MeshAgent is designed for the world where AI isn’t a chatbot inside your product, but a **digital team member** that:
-- executes work continuously,
-- coordinates with other agents and people,
-- uses tools and services at “agent speed,” and
-- must be governed, observed, and cost-controlled like production software.
+A **room** is the runtime and collaboration boundary where humans, agents, tools, services, and shared state work together. Instead of treating every agent interaction as an isolated run, MeshAgent gives you a live workspace with built-in infrastructure, deployment surfaces, and product interfaces around that room.
 
-MeshAgent gives teams a single place to **build, deploy, and operate** these systems collaboratively, securely, and at any scale—without stitching together databases, storage, auth, queues, tracing, and runtime infrastructure by hand.
+If you want commands you can copy and run, start with [Quickstart](./cli_quickstart). This page is the short mental model for everything else in the docs.
 
-Any conversational agents you deploy with MeshAgent can be used immediately in [Powerboards](../interfaces/powerboards), an open-source AI-native app built entirely on MeshAgent. Use it to share agents today, or fork it into your own MeshAgent-powered application. See [Share Agents in Powerboards](../services_room_containers/share_agents_in_powerboards) for deployment details.
+Most agent products give you one part of the stack: model access, a sandbox, an orchestration loop, or a chat surface. MeshAgent gives you the full operating surface for collaborative agent applications: rooms, agents, built-in runtime APIs, deployable services, developer tooling, end-user interfaces, permissions, and observability.
 
----
+If you want agents that can do real work with people, data, documents, queues, mail, tools, and custom code without stitching together your own runtime, that is what MeshAgent is for.
 
-## Why MeshAgent in 30 seconds
+Every MeshAgent account includes [MeshAgent Accounts](../interfaces/accounts), [MeshAgent Studio](../interfaces/meshagent_studio), and [Powerboards](../interfaces/powerboards). They share the same underlying projects and rooms, but each surface is optimized for a different kind of work.
 
-MeshAgent is built for the “agentic” era where the hard problems shift from prompting to **coordination, context, governance, and reliability**:
+## Why teams use MeshAgent
 
-- **A platform, not a framework**: Build complete applications—not just agent logic. MeshAgent provides the runtime, control plane, and managed infrastructure needed for production.
-- **Multiplayer by design**: Real AI systems are multi-participant: multiple humans + multiple agents + tools, collaborating in shared context with handoffs and parallel work.
-- **Context is infrastructure**: Shared state (documents, files, database, messages) must be live, synchronized, and permissioned—not rebuilt per prompt.
-- **Operate with confidence**: Built-in tracing, streaming logs, cost attribution, and granular permissions let you run agent systems safely in production.
+- **Rooms as the center of the system**: Every room has shared context, participants, built-in APIs, and runtime behavior in one place.
+- **Built-in infrastructure**: Storage, database, queues, sync/documents, containers, secrets, messaging, and developer events are already part of the room runtime.
+- **Agents that can do more than chat**: Run agents across chat, mail, queues, toolkit calls, and other room-connected workflows.
+- **One platform from local testing to production**: Use the CLI and MeshAgent Studio to iterate quickly, then deploy the same capabilities as project or room services.
+- **Developer and end-user surfaces**: Developers build and inspect in [MeshAgent Studio](../interfaces/meshagent_studio). End users can work with agents in [Powerboards](../interfaces/powerboards), and both surfaces can reach the same rooms.
+- **Fast start or full customization**: Start with built-in agents in Powerboards or MeshAgent Studio, or bring and build your own agents, tools, and services.
+- **Governance and observability built in**: Control access, scope permissions, inspect logs and traces, and understand usage and cost without bolting on a separate control plane.
 
----
+## What MeshAgent includes
 
-## The core idea: Rooms are the coordination substrate
+- **[Rooms](../room_api/overview)** with built-in runtime APIs for messaging, storage, database, queues, documents, containers, secrets, and developer events
+- **[Agents](../agents/overview)** that can work across chat, mail, queues, toolkit calls, and other room-connected workflows
+- **[Services](../services/intro)** you can deploy at the project or room level
+- **[MeshAgent Accounts](../interfaces/accounts)** for project membership, billing, and usage
+- **[MeshAgent Studio](../interfaces/meshagent_studio)** for developers and operators
+- **[Powerboards](../interfaces/powerboards)** for end users working with agents in rooms
+- **[CLI and SDKs](../reference/sdk_reference)** for local development, automation, and custom applications
 
-[Rooms](./key_concepts) are secure, on-demand workspaces that provision when the first participant joins and retire automatically when the last leaves.
+## Core concepts
 
-Inside a Room, MeshAgent provides the primitives you need to run real agent applications:
+### [Project](../project_admin/projects)
 
-### Participants (humans + agents + tools)
-- Register **[agents](../agents/standard/intro)** as first-class participants for chat, voice, background work, and tool-driven workflows
-- Register **[tools](../agents/tools/intro)** (built-in, custom, MCP) and invoke them programmatically
-- Invite teammates to collaborate live from [MeshAgent Studio](../interfaces/meshagent_studio), [Powerboards](../interfaces/powerboards), or your own application
+A **project** is the top-level container for related work in MeshAgent.
 
-### Built-in Room APIs
-Rooms include [built-in capabilities](../room_api/overview) that remove infrastructure glue work:
+Projects group:
 
-- **[Agents API](../room_api/agents)** — invoke agents and tools as services
-- **[Containers API](../room_api/containers)** — ad-hoc code execution on demand
-- **[Database API](../room_api/database)** — store, query, and power semantic search / vector embedding / RAG workloads
-- **[Memory API](../room_api/memory)** — build room-scoped structured memory and recall context across interactions
-- **[Developer API](../room_api/developer)** — send structured logs to the developer console and subscribe to events
-- **[Messaging API](../room_api/messaging)** — real-time communication between humans and agents
-- **[Queues API](../room_api/queue)** — async task distribution and coordination for multi-agent workloads
-- **[Secrets API](../room_api/secrets)** — secure credential and OAuth token management
-- **[Storage API](../room_api/storage)** — upload, download, and manage files
-- **[Sync API](../room_api/sync)** — real-time collaborative document editing with [MeshDocuments](../documents/quickstart)
+- rooms
+- members and roles
+- API keys and credentials
+- deployed services
+- routes, mailboxes, and scheduled tasks
+- billing and other project-level settings
 
-### Governance and observability (built-in, not bolted on)
-- Granular permissions for every participant and service
-- Streaming logs and traces so you can observe every message, tool call, latency, and cost
-- Cost attribution across agents, Rooms, providers, and projects
+Most administrative and deployment actions happen at the project level.
 
----
+### [Room](../room_api/overview)
 
-## Built for “agent-speed” workloads
+A **room** is the runtime and collaboration boundary in MeshAgent.
 
-Agent applications behave differently than human-driven apps:
-- Work arrives in bursts (fan-out tool calls, parallel agents, retries)
-- Latency and cold starts matter more (agent loops magnify delays)
-- Reliability requires coordination (queues, permissions, state, backpressure)
+It is the place where humans, agents, tools, services, files, queues, and shared documents come together around the same live context. Rooms belong to projects, and each room can have its own participants, room-scoped services, and persisted state.
 
-MeshAgent is built to eliminate the typical “agent infrastructure” tax by giving you:
-- a production runtime for agents and services,
-- a collaborative execution boundary (Rooms),
-- and platform primitives (database/storage/queues/secrets/containers) that are already wired together.
+Rooms become active on demand, provision the runtime they need for that session, and shut down automatically when idle. That means they scale with usage rather than staying running all the time.
 
----
+### [Session](../room_api/sessions)
 
-## MeshDocuments: shared state beyond chat logs
+A **session** is one active run of a room.
 
-Most “agents” collapse into brittle prompt chains because the only shared state is chat history.
+When a room becomes active, MeshAgent starts a session for that room. During the session, participants connect, services run, and logs, traces, metrics, and events are recorded. When activity stops, the room shuts down automatically.
 
-**[MeshDocuments](../documents/quickstart)** provides an AI-native, synchronized context plane:
-- **Live shared documents** agents and humans can read/write together
-- **Structured, durable state** that reduces prompt fragility
-- A foundation for rich collaborative UIs and agent-driven editing
-- **MeshWidgets** for cross-platform interactive experiences with scripting and agent-assisted development
+### Participant
 
----
+A **participant** is anything that joins a room and takes part in the runtime.
 
-## Powerful agents, batteries included
+Participants can be:
 
-MeshAgent includes production-ready agent templates that handle real-world complexity:
+- humans
+- agents
+- services
+- tools exposed into the room
 
-- Process-backed agents for chat, mail, queues, toolkit-style calls, and voice workflows
-- Advanced capabilities: computer use, media generation, secure local shell access, coding workflows
-- Built-in meetings + transcription so agents can reason and act during live conversations
-- Multimodal pipelines (image/video/audio models) for generative media and rich authoring experiences
-- Mail-capable process agents + document intelligence: process attachments, categorize and query documents, generate insights, and enrich context with research tools
+Participants run with identities and permissions that control what they can access.
 
----
+See [Participant Tokens](../rest_api/participant_tokens) and [API Scopes](../rest_api/api_scopes).
 
-## Deploy services without rewrites
+### [Agent](../agents/overview)
 
-Moving from prototype to production often fails because deployment, permissions, and service wiring are an afterthought.
+An **agent** is a room-connected participant that receives work, uses tools and room capabilities, and produces results back into the room.
 
-[MeshAgent Services](../services_room_containers/overview) make it easy to package and run:
-- agents,
-- tools,
-- connectors,
-- and supporting services.
+Agents can:
 
-Key workflows:
-- **Start quickly with the CLI** — use [`meshagent process`](../agents/process/overview) to run a process-backed agent locally
-- **Built-in integrations** — native support for MCP Servers and OpenAI Connectors, plus prebuilt toolkits
-- **Flexible deployment** — deploy as a **project service** (available to all Rooms) or a **room service** (scoped to specific Rooms)
+- answer in chat
+- consume queued work
+- handle mail
+- be invoked by other agents
+- run locally during development or be deployed as services
 
----
+For agent workflows, MeshAgent uses [`meshagent process`](../agents/process/overview).
 
-## Enterprise-grade governance
+### [Tool / Toolkit](../agents/tools/tools_and_toolkits)
 
-Production agent systems require fine-grained controls defining who can join, what can run, and what data can be accessed.
+A **tool** is a callable capability an agent can use to take action.
 
-MeshAgent includes governance at every level:
-- **Room access control** — define who can join which Rooms
-- **Participant permissions (API Scopes)** — lock down what humans/agents can do (e.g., read storage but not write)
-- **Service permissions** — control what deployed services can access (e.g., can use storage but not containers)
-- **Project vs. Room scoping** — expose services broadly or only within specific Rooms
+A **toolkit** is a group of related tools exposed together.
 
----
+MeshAgent supports built-in tools, custom tools, MCP-based tools, and toolkit-style agents that can be invoked by other agents.
 
-## Enterprise-grade observability and cost management
+### [Skills](../agent_skills/overview)
 
-Debugging agent systems means tracking prompts, tool calls, latency, errors, and cost across distributed components.
+A **skill** is reusable guidance that helps an agent handle a class of tasks better.
 
-MeshAgent provides:
-- streaming logs and OpenTelemetry traces (no middleware required). See [Observability](../observability/intro).
-- automatic recording of prompts, tool calls, and results
-- latency histograms + real-time error tracking
-- per-agent cost attribution and billing breakdowns
-- an in-room [LLM proxy](../agents/routing/llm_proxy) that secures API keys and provides automatic cost attribution and controls
+Skills are not callable tools. They are playbooks the agent can discover and apply when relevant. In practice, skills often tell the agent which tools to use, what files to inspect, and how to structure the output.
 
----
+### [Threads](../agents/threads_overview)
 
-## Powerboards: an open-source distribution and collaboration surface
+A **thread** is the continuity boundary for agent work.
 
-[Powerboards](../interfaces/powerboards) is an open-source AI-native application built entirely on MeshAgent. See [Share Agents in Powerboards](../services_room_containers/share_agents_in_powerboards).
+Threads let an agent keep related work together without mixing unrelated conversations or jobs into the same history. This is especially important for agents that work across chat, queues, mail, and toolkit calls.
 
-Use Powerboards to:
-- share your MeshAgent-deployed conversational agents immediately
-- collaborate in real time with humans + agents over shared context
-- adopt it as-is, or fork it into your own MeshAgent-powered product
+### [Service](../services/intro)
 
-Powerboards demonstrates the “multiplayer AI” model end-to-end: Rooms, shared context, governed access, and real-time collaboration—without requiring every team to build the app surface from scratch.
+A **service** is how code is packaged and deployed into MeshAgent.
 
----
+Services can package:
 
-## Core components
+- agents
+- tools and toolkits
+- connectors and integrations
+- supporting application logic
 
-| Component | What it does | Typical use |
-|-----------|--------------|-------------|
-| **[MeshAgent SDKs](../reference/sdk_reference)** | Language clients ([Python](https://pypi.org/project/meshagent/), [TypeScript/JavaScript](https://www.npmjs.com/package/@meshagent/meshagent), [Dart](https://pub.dev/documentation/meshagent/latest/), [.NET](https://www.nuget.org/packages/Meshagent.Api)) that wrap Rooms, agents, messaging, storage, queue APIs and more. | Build agent apps and call platform services with a few lines of code. |
-| **[MeshAgent Studio](../interfaces/meshagent_studio)** | [Browser workspace](https://studio.meshagent.com) + CLI for prototyping, testing tools, evaluating agents, and inviting teammates into live Rooms. | Multiplayer development: iterate fast with stakeholders and teammates in the same live Room. |
-| **MeshAgent Server** | Managed backend that hosts agents, provisions secure Rooms, scales infrastructure, and exposes usage & billing dashboards. | Run agent applications in production without maintaining the underlying infrastructure. |
-| **[Powerboards](../interfaces/powerboards)** | Open-source AI-native app built on MeshAgent for sharing and collaborating with deployed agents. | Use as-is for distribution, or fork into your own MeshAgent-powered application surface. |
+Services can be **MeshAgent-native** for deeper room integration or **external** when MeshAgent is routing to something you host elsewhere.
 
----
+Once deployed, a service can be made available across a project or scoped to a specific room.
 
-## Works with your stack
+### [Project Services and Room Services](../services/intro)
 
-MeshAgent is designed for real teams and real stacks:
-- Official SDKs for Python, JavaScript/TypeScript, Dart/Flutter, and .NET
-- UI starters when you want them (React/Tailwind web widget and Flutter chat/voice widgets), or bring your own components
-- Cross-language collaboration: TypeScript UI + Python agent + .NET/Go service can work together in one Room
-- Bring your existing agents: run agents built with Pydantic AI, CrewAI, etc. alongside MeshAgent agents
+A **project service** is available across the project.
 
-| Language | What you get today | Best for |
-| --- | --- | --- |
-| **[Python](https://pypi.org/project/meshagent/)** | Room API, tools, voice support, agent building blocks, and legacy compatibility classes | Authoring and hosting production integrations and custom services |
-| **[TypeScript / JavaScript](https://www.npmjs.com/package/@meshagent/meshagent)** | Room client (browser/Node), document sync, starter React/Tailwind chat widget | Web apps and embeddable chat |
-| **[Dart / Flutter](https://pub.dev/packages/meshagent)** | Room client, Flutter chat + voice caller widgets, project/secret/service REST helpers | Mobile apps and Flutter UIs |
-| **[.NET](https://www.nuget.org/packages/Meshagent.Api)** | Room client + REST/project administration helpers | Server integrations and services |
+A **room service** is scoped to one room.
 
-See the full breakdown in [Language SDKs](../reference/sdk_reference).
+Use project services for shared capabilities that should be broadly available. Use room services for room-specific or user-specific behavior. Choose that scope when you deploy the service.
 
----
+### [Room APIs](../room_api/overview)
 
-## Next steps
+The **Room APIs** are the built-in runtime capabilities available inside a room.
 
-- [**Getting Started**](./get_started): Install MeshAgent, connect to your first Room, and run your first agent.
-- [**Key Concepts**](./key_concepts): Learn how Rooms, Agents, Tools, and Services fit together.
+These include:
+
+- messaging
+- storage
+- database
+- queues
+- sync/documents
+- containers
+- secrets
+- developer events and logs
+
+They are the main way agents, services, and humans interact with room infrastructure.
+
+### [Interfaces](../interfaces/overview)
+
+An **interface** is a product surface people use to work with MeshAgent.
+
+Today the main interfaces are:
+
+- **[MeshAgent Accounts](../interfaces/accounts)** for project membership, billing, and usage
+- **[MeshAgent Studio](../interfaces/meshagent_studio)** for developers building, testing, deploying, and inspecting
+- **[Powerboards](../interfaces/powerboards)** for end users interacting with deployed agents
+
+## How the system fits together
+
+1. Work starts inside a **project**.
+2. People and services create or join a **room**.
+3. When the room becomes active, MeshAgent starts a **session**, provisions the room runtime, and starts the services that should run there.
+4. Humans and agents use the room's built-in APIs and shared state to do work together.
+5. [MeshAgent Accounts](../interfaces/accounts), [MeshAgent Studio](../interfaces/meshagent_studio), and [Powerboards](../interfaces/powerboards) give different kinds of users access to the same underlying projects and rooms.
+
+The important boundary is the room. That is where runtime state, live collaboration, room APIs, room-scoped services, and participant permissions come together.
+
+## What MeshAgent lets you build
+
+- custom agents and tools that work with teams over shared context
+- customer-facing agents you can ship in Powerboards or your own UI
+- document-heavy workflows where agents and people need to read, write, and coordinate over the same data
+- multi-agent systems that combine chat, background queues, mail, toolkit calls, and scheduled work
+- custom applications where agents need real runtime capabilities, not just prompt wrappers
+
+## Where to go next
+
+- [**Quickstart**](./cli_quickstart): install MeshAgent, connect the CLI, run your first agent, and deploy it
+- [**Rooms**](../room_api/overview): explore the room runtime and built-in APIs
+- [**Agents & Tools**](../agents/overview): learn how agents work in MeshAgent
+- [**Deploy & Manage**](../services/deployment/deploy_services): package, deploy, observe, and manage services
+- [**Interfaces**](../interfaces/overview): see how Studio and Powerboards fit together

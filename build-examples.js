@@ -29,6 +29,7 @@ const ignore = [
     `${exampleDir}/**/*.test.*`,
     `${exampleDir}/**/*.spec.*`,
     `${exampleDir}/**/*.mdx`, // Ignore existing MDX files
+    `${exampleDir}/typescript/*.js`, // Ignore generated JS artifacts alongside TS sources
 ];
 
 

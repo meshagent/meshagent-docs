@@ -1,19 +1,36 @@
 ---
-title: Document Connection
-description: Learn how to set up a document connection for your MeshAgent.
+title: Document Connections
+description: Open and keep a MeshAgent room document in sync from React or Flutter.
 ---
 
-## Description
+Use a document connection helper when your UI needs a live room document.
 
-`DocumentConnectionScope` is a builder widget that manages opening and keeping a document connection alive (with simple retry and close-on-dispose).
+This sits one level below a room connection: first connect to the room, then open the document you want to render or edit.
 
-- **path**: Document path to open (created if missing).
-- **room**: Connected `RoomClient`.
-- **builder**: `(BuildContext, MeshDocument?, Object?)` called with the current document (or null while loading) and any error.
-- **Returns**: `Widget` that rebuilds as the document loads/retries.
+## React
 
+Use `useDocumentConnection` from `@meshagent/meshagent-react`:
 
-## Example
+```tsx
+import { useDocumentConnection } from "@meshagent/meshagent-react";
+
+export function DocumentView({ room }: { room: any }) {
+  const { document, error, loading } = useDocumentConnection({
+    room,
+    path: "/notes/thread.thread",
+  });
+
+  if (loading) return <div>Loading document...</div>;
+  if (error) return <div>Error: {String(error)}</div>;
+  if (!document) return <div>No document</div>;
+
+  return <div>Connected to document {document.id}</div>;
+}
+```
+
+## Flutter
+
+Use `DocumentConnectionScope` from `meshagent_flutter`:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -34,21 +51,36 @@ class SampleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return DocumentConnectionScope(
       path: path,
-      room: room, // instance of MeshRoom
+      room: room,
       builder: (context, document, error) {
         if (error != null) {
-          // Handle the error
           return Text('Error: $error');
         }
 
         if (document == null) {
-          // Document is still loading
           return Text('Loading...');
         }
 
         return Text('Document loaded: ${document.id}');
-      });
+      },
+    );
   }
 }
-
 ```
+
+## What these helpers do
+
+- open the document from an existing `RoomClient`
+- keep the connection alive while your component or widget is mounted
+- surface loading or error state back into the UI
+- close the document connection when the UI goes away
+
+## When to use this
+
+Use a document connection when your app needs a live, room-backed document surface such as:
+
+- shared notes
+- thread documents
+- structured room content
+
+For the lower-level runtime model behind these helpers, see [Sync / Documents](../room_api/sync).

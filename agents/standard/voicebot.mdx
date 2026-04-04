@@ -9,7 +9,7 @@ import VoiceBotYaml from "/snippets/examples/python/deployable/simple_voicebot/m
 
 
 ## Overview
-`VoiceBot` is the standard agent for building real-time, speech-based conversational experiences in MeshAgent. It builds on [`SingleRoomAgent`](./singleroomagent) and adds streaming audio input/output, LiveKit session management, speech recognition, and natural voice responses.
+`VoiceBot` is the standard agent for building real-time, speech-based conversational experiences in MeshAgent. It builds on the Python `SingleRoomAgent` base class from [`meshagent-agents`](../../reference/python_package_overview) and adds streaming audio input/output, LiveKit session management, speech recognition, and natural voice responses.
 
 A `VoiceBot` joins a MeshAgent room, listens for `voice_call` messages, connects to a LiveKit breakout room where it can speak and listen to participants in real-time. It combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), LLM reasoning, and tool calling automatically. 
 
@@ -59,7 +59,7 @@ If you've added the `--room-rules` flag to your agent you can modify the agent's
 > **Tip**: Mute your microphone after you finish speaking to prevent background noise from interfering with the agent. 
 
 ### Step 3: Package and deploy the agent
-Once your agent works locally to make it always available you'll need to [package and deploy](../../services_room_containers/packaging_and_deploying/packaging) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
+Once your agent works locally to make it always available you'll need to [package and deploy](../../services/deployment/deploy_services) it as a project or room service. You can do this using the CLI, by creating a YAML file, or from MeshAgent Studio.
 
 **Both options below deploy the same VoiceBot** - choose based on your workflow:
 - **Option 1 (`meshagent voicebot deploy`)**: One command that deploys immediately (fastest/easiest approach)
@@ -73,7 +73,7 @@ meshagent voicebot deploy --service-name voiceagent --room quickstart --agent-na
 **Option 2: Generate a YAML spec** Create a `meshagent.yaml` file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
 
 ```bash bash 
-meshagent voicebot spec --service-name voiceagent ---agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
+meshagent voicebot spec --service-name voiceagent --agent-name voiceagent --room-rules "agents/voiceagent/rules.txt" --rule "You are a helpful assistant"
 ```
 
 Next, copy the output to a `meshagent.yaml` file
@@ -124,11 +124,11 @@ If you want to modify and restart the agent run `Ctrl+C` from the terminal to st
 
 ### Step 4: Package and deploy the agent
 To deploy your SDK VoiceBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
-For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services_room_containers/packaging_and_deploying/packaging).
+For full details on the service spec and deployment flow, see [Packaging and Deploying Services](../../services/deployment/deploy_services).
 
 MeshAgent supports two deployment patterns for containers:
 1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
-2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services_room_containers/containers/optimizing_containers).
+2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services/containers/optimizing_containers).
 
 This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image.
 If you want to build and push your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
@@ -194,7 +194,7 @@ The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will alwa
 
 ## How VoiceBot Works
 ### Constructor Parameters
-``VoiceBot`` accepts everything from ``SingleRoomAgent`` (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
+``VoiceBot`` accepts everything from the Python ``SingleRoomAgent`` base class (``name``, ``title``, ``description``, ``requires``, ``labels``) and adds voice-specific configuration options.
 
 | Parameter             | Type                          | Description                                                                                                           |
 | -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -211,11 +211,11 @@ The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will alwa
 | `client_rules`       | `dict[str, list[str]] \| None` | Optional map keyed by the participant's `client` attribute that appends extra rules when matched.                      |
 
 ### Lifecycle Overview
-``VoiceBot`` inherits all lifecycle hooks from SingleRoomAgent and adds voice session handling on top.
+``VoiceBot`` inherits all lifecycle hooks from ``SingleRoomAgent`` and adds voice session handling on top.
 
 - ``await start(room: RoomClient)``: Registers the bot as a voice-capable participant by setting ``"supports_voice": True`` and listening for ``voice_call`` messages. When a voice call is received, the bot joins a LiveKit breakout room and starts a real-time session.
 - ``await stop()``: Clears the room reference. Active voice sessions end when the LiveKit room disconnects (for example, when the caller hangs up).
-- **room** property: Returns the active ``RoomClient`` (inherited from SingleRoomAgent).
+- **room** property: Returns the active ``RoomClient`` (inherited from ``SingleRoomAgent``).
 
 ### Conversational Flow
 When a user starts a voice call:
@@ -276,8 +276,8 @@ These components can be swapped or extended through adapters if you need differe
 
 Discover other agents in MeshAgent:
 - [Process Agents Overview](../process/overview): Text-based and multi-channel process-backed agents.
-- [Process Agents Overview](../process/overview): Chat, mail, queue, and toolkit entry points.
+- [Agents Overview](../overview): How agents, channels, threads, and tools fit together.
 
 To learn more about deploying agents with MeshAgent
-- [Services & Containers](../../services_room_containers/overview): Understand different options for running, deploying, and managing agents with MeshAgent
-- [Secrets & Registries](../../secrets/secrets_overview): Learn how to store credentials securely for deployment
+- [Packaging and Deploying Services](../../services/deployment/deploy_services): Package and deploy voice agents as room or project services.
+- [Secrets and Credentials](../../secrets/overview): Learn how to store credentials securely for deployment

@@ -35,6 +35,13 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 - `list_tables`: boolean (defaults to `True`).
 - Helper methods (`can_read`, `can_write`, `can_alter`) enforce the per-table flags.
 
+### `memory`
+`MemoryGrant` controls room-memory access:
+
+- `list`: boolean controlling whether the participant may list memories.
+- `memories`: optional list of `MemoryEntryGrant` objects, each scoped by `name` and optional `namespace`.
+- Each memory entry has its own `permissions` object with booleans for `create`, `drop`, `inspect`, `query`, `upsert`, `ingest`, `recall`, and `optimize`.
+
 ### `sync`
 `SyncGrant` accepts `paths`: a list of `SyncPathGrant { path, read_only }`. Paths may end with `*` to match prefixes. When no paths are supplied, read and write access is global. `can_read` and `can_write` verify the constraints.
 
@@ -65,6 +72,9 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 ### `secrets`
 `SecretsGrant` lets a participant ask MeshAgent to exchange OAuth credentials. Provide a list of `OAuthEndpoint { endpoint, client_id }`. Wildcard suffixes (`*`) are supported (`can_request_oauth_token`).
 
+### `services`
+`ServicesGrant` currently exposes a `list` boolean for service-listing operations in the room.
+
 ## Examples
 ```yaml
 # Restrict a service to a single queue and read-only storage
@@ -93,4 +103,4 @@ scope = ApiScope(
 )
 ```
 
-Combine these snippets with the `api` field when [packaging a service](../services_room_containers/packaging_and_deploying/packaging) to set the appropriate permissions for your service.
+Combine these snippets with the `api` field when [packaging a service](../services/deployment/deploy_services) to set the appropriate permissions for your service.

@@ -2,6 +2,15 @@
 
 The `DeveloperClient` is the Room API for structured developer logs. Use it to send logs into the Developer Console and subscribe to live logs from other participants in the room.
 
+## CLI commands
+
+Start with the CLI help, then use the main live-log command:
+
+```bash bash
+meshagent room developer --help
+meshagent room developer watch --room myroom
+```
+
 ## Why use the Developer API?
 
 - Debug agents, tools, and services while a room is live.
@@ -14,12 +23,11 @@ The Developer API is event-oriented. Producers call `log` (or convenience helper
 
 ## Permissions and grants
 
-Developer log forwarding is controlled by the `developer` scope. If a deployed service needs to emit or consume developer logs, grant it the appropriate Room API permissions. See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services_room_containers/packaging_and_deploying/packaging).
+Developer logs are controlled by the `developer` grant on the participant token.
 
-## CLI and SDK availability
+In practice, `developer.logs` enables emitting and consuming developer-log events for the room.
 
-- **CLI**: watch room developer logs with `meshagent room developer watch`.
-- **Python, JavaScript/TypeScript, Dart, and .NET**: emit and consume developer logs with the helpers shown below.
+See [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](../services/deployment/deploy_services).
 
 ## Streaming Logs
 
@@ -30,39 +38,45 @@ Developer log forwarding is controlled by the `developer` scope. If a deployed s
 ```bash CLI
 meshagent room developer watch \
   --room myroom
+
 ```
 ```python Python
 async for event in room.developer.logs():
     print(f"[{event.type}] {event.data}")
+
 ```
 ```javascript NodeJs
 for await (const event of room.developer.logs()) {
   console.log(`[${event.type}]`, event.data);
 }
+
 ```
 ```typescript TypeScript
 for await (const event of room.developer.logs()) {
   console.log(`[${event.type}]`, event.data);
 }
+
 ```
 ```dart Dart
 await for (final event in room.developer.logs()) {
   print("[${event.type}] ${event.data}");
 }
+
 ```
 ```dotnet C#
 await foreach (var log in room.Developer.Logs())
 {
   Console.WriteLine($"[{log.Type}] {log.Data}");
 }
+
 ```
 </CodeGroup>
 
----
+## API reference
 
-## API Methods
+Use the methods below to emit structured developer logs or subscribe to the live room log stream.
 
-### log
+### `log(type, data)`
 - **Description**: Emit a developer log event.
 - **Parameters**:
   - `type`: A log category string (for example, `"info"` or `"error"`).
@@ -72,27 +86,30 @@ await foreach (var log in room.Developer.Logs())
 <CodeGroup>
 ```python Python
 await room.developer.log(type="info", data={"message": "Hello from DeveloperClient!"})
+
 ```
 ```javascript NodeJs
 await room.developer.log("info", { message: "Hello from DeveloperClient!" });
+
 ```
 ```typescript TypeScript
 await room.developer.log("info", { message: "Hello from DeveloperClient!" });
+
 ```
 ```dart Dart
 await room.developer.log("info", {"message": "Hello from DeveloperClient!"});
+
 ```
 ```dotnet C#
 await room.Developer.Log("info", new Dictionary<string, object?>
 {
   ["message"] = "Hello from DeveloperClient!"
 });
+
 ```
 </CodeGroup>
 
----
-
-### log_nowait
+### `log_nowait(type, data)`
 - **Description**: Fire-and-forget log emission without awaiting a response.
 - **Availability**: Python and .NET SDKs.
 - **Parameters**:
@@ -103,18 +120,18 @@ await room.Developer.Log("info", new Dictionary<string, object?>
 <CodeGroup>
 ```python Python
 room.developer.log_nowait(type="info", data={"message": "Log without await"})
+
 ```
 ```dotnet C#
 room.Developer.LogNowait("info", new Dictionary<string, object?>
 {
   ["message"] = "Log without await"
 });
+
 ```
 </CodeGroup>
 
----
-
-### info / warning / error
+### `info(...)`, `warning(...)`, `error(...)`
 - **Description**: Convenience helpers for emitting structured logs with common severity labels.
 - **Availability**: Python and Dart SDKs.
 - **Parameters**:
@@ -127,17 +144,17 @@ room.Developer.LogNowait("info", new Dictionary<string, object?>
 room.developer.info("Background sync started", extra={"phase": "init"})
 room.developer.warning("Retrying sync", extra={"attempt": 2})
 room.developer.error("Sync failed", extra={"reason": "timeout"})
+
 ```
 ```dart Dart
 await room.developer.info("Background sync started", extra: {"phase": "init"});
 await room.developer.warning("Retrying sync", extra: {"attempt": 2});
 await room.developer.error("Sync failed", extra: {"reason": "timeout"});
+
 ```
 </CodeGroup>
 
----
-
-### logs
+### `logs()`
 - **Description**: Open a streamed subscription to developer logs for the room.
 - **Parameters**: None.
 - **Returns**: A stream / async iterator of log events.
@@ -146,36 +163,42 @@ await room.developer.error("Sync failed", extra: {"reason": "timeout"});
 ```bash CLI
 meshagent room developer watch \
   --room myroom
+
 ```
 ```python Python
 async for event in room.developer.logs():
     print(event.type, event.data)
+
 ```
 ```javascript NodeJs
 for await (const event of room.developer.logs()) {
   console.log(event.type, event.data);
 }
+
 ```
 ```typescript TypeScript
 for await (const event of room.developer.logs()) {
   console.log(event.type, event.data);
 }
+
 ```
 ```dart Dart
 await for (final event in room.developer.logs()) {
   print(event.type);
 }
+
 ```
 ```dotnet C#
 await foreach (var log in room.Developer.Logs())
 {
   Console.WriteLine(log.Type);
 }
+
 ```
 </CodeGroup>
 
 ## Related guides
 
 - [Room API Overview](./overview)
-- [Observability Overview](../observability/intro)
+- [Observability Overview](../observability/overview)
 - [API Scopes](../rest_api/api_scopes)
