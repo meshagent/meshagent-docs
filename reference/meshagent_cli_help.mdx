@@ -7542,7 +7542,7 @@ $ meshagent  build [OPTIONS]
 
 ### `meshagent  deploy`
 
-Create or update a room service from an image.
+Create or update a room service from an image, optionally building it first.
 
 **Usage**:
 
@@ -7555,6 +7555,12 @@ $ meshagent  deploy [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
 * `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag.  [required]
+* `--pack TEXT`: Pack a local directory, upload it to room storage, build the image, and then deploy it. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+* `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with --pack.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with --pack.
+* `--arch TEXT`: Architecture metadata for the packed build context image. Only used with --pack. Defaults to amd64 for room runtimes.  [default: amd64]
+* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive during the build stage. Defaults to a temporary path under /temp/build/packs/ that is deleted after the build completes.
+* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with --pack.  [default: optimize]
 * `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -7562,7 +7568,7 @@ $ meshagent  deploy [OPTIONS]
 * `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `-e, --env TEXT`: Set environment variable as KEY=VALUE
 * `--env-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
-* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated.
+* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
 * `--help`: Show this message and exit.
 
 ### `meshagent  pack`
