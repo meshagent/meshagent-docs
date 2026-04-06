@@ -19,6 +19,18 @@ meshagent scheduled-task add \
 
 This creates a scheduled task in the active project that enqueues work into the `support-jobs` queue in the `support` room.
 
+The payload can be any JSON value. For MeshAgent queue consumers, that includes the same structured `prompt`, `content`, and `thread_id` fields supported by `meshagent room queue send`.
+
+Example:
+
+```bash
+meshagent scheduled-task add \
+  --room support \
+  --queue support-jobs \
+  --schedule "0 * * * *" \
+  --payload '{"thread_id":"/threads/support/{YYYY}/{MM}/{DD}/{HH}/summary.thread","prompt":[{"type":"file","url":"room:///prompts/hourly-summary.md"},{"type":"text","text":"Generate the hourly support summary."}]}'
+```
+
 ## Inspect and manage scheduled tasks
 
 List tasks:
@@ -47,6 +59,8 @@ meshagent scheduled-task delete TASK_ID
 - Use [MeshAgent Studio](../interfaces/meshagent_studio) when you want the main UI flow.
 - Use the CLI when you want quick setup or automation.
 - Use the [REST API](../rest_api/overview) when you need programmatic provisioning.
+
+If you want a recurring turn owned by one agent inside a service manifest, use `agents[].heartbeat` instead of a separate scheduled task.
 
 ## Related docs
 

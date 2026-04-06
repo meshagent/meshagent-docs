@@ -143,6 +143,61 @@ await room.Queues.Send("my-queue", message, create: true);
   - `message`: JSON-serializable payload.
   - `create`: When `true`, create the queue if it does not already exist.
 
+When the queue consumer is a MeshAgent queue channel, the payload can include turn-oriented fields such as:
+
+- `prompt`: string or typed content items for the next turn
+- `content`: typed content items that should be passed through directly
+- `thread_id` or `path`: explicit thread path for the work item
+- `model`, `instructions`, `tools`, `sender_name`: optional turn settings
+
+#### Structured agent payloads
+
+For queue-backed MeshAgent agents, `prompt` and `content` can carry typed content instead of a plain string.
+
+- Think of `prompt` as "text the agent should read".
+- Think of `content` as "input items the agent should receive".
+- Use `prompt` when you want a `room:///...` text file read from room storage and inlined into the turn as text before the turn starts.
+- Use `content` when you want a `room:///...` file passed through as a file item in the turn input instead of being converted into text.
+- `content` does not create or update room artifacts by itself. It only defines the turn input that the queue consumer receives.
+- `prompt` can be plain text, typed content, or typed content that includes `room:///...` files. You only need a room file when you want to pull existing room content into the prompt.
+- `thread_id` and `path` can use UTC time tokens such as `{YYYY}`, `{MM}`, `{DD}`, `{HH}`, `{mm}`, and `{SECOND}`.
+- Legacy `prompt_file` payloads still work, but typed `prompt` items are the preferred format.
+
+Examples:
+
+1. Plain text prompt
+
+```bash
+meshagent room queue send \
+  --room myroom \
+  --queue support-jobs \
+  --json '{"prompt":"Summarize the current support backlog and highlight urgent issues."}'
+```
+
+This sends plain prompt text. No room file is involved.
+
+2. Prompt that reads a room file and turns it into text
+
+```bash
+meshagent room queue send \
+  --room myroom \
+  --queue support-jobs \
+  --json '{"thread_id":"/threads/support/{YYYY}/{MM}/{DD}/{HH}/{mm}/summary.thread","prompt":[{"type":"file","url":"room:///prompts/support-summary.md"},{"type":"text","text":"Summarize the current support backlog and highlight urgent issues."}]}'
+```
+
+In this example, MeshAgent reads `room:///prompts/support-summary.md` from room storage and inserts that file's UTF-8 text into the turn before the agent runs.
+
+3. Content that preserves the room file as a file input
+
+```bash
+meshagent room queue send \
+  --room myroom \
+  --queue support-jobs \
+  --json '{"content":[{"type":"file","url":"room:///docs/report.md"}]}'
+```
+
+In this example, MeshAgent keeps `room:///docs/report.md` as a file item in the turn input. It does not inline the file into prompt text, and it does not create a new room artifact.
+
 ### `receive(name, create=True, wait=True)`
 
 Receive one JSON message from a queue.

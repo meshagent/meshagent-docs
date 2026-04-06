@@ -41,6 +41,17 @@ This is the main queue pattern:
 - the agent consumes it
 - the agent runs without needing a live chat message
 
+For MeshAgent queue consumers such as `meshagent process` queue channels, the payload can also be structured. For example, you can provide typed prompt content and a thread template:
+
+```bash
+meshagent room queue send \
+  --room myroom \
+  --queue support-jobs \
+  --json '{"thread_id":"/threads/support/{YYYY}/{MM}/{DD}/{HH}/{mm}/summary.thread","prompt":[{"type":"file","url":"room:///prompts/support-summary.md"},{"type":"text","text":"Summarize the current support backlog and highlight urgent issues."}]}'
+```
+
+Use `prompt` when you want room prompt files such as `room:///prompts/support-summary.md` resolved into text before the turn starts. Use `content` when you want typed file items preserved as file inputs for the agent.
+
 ## Schedule recurring work
 
 Scheduled tasks enqueue work on a cron schedule.
@@ -56,6 +67,8 @@ meshagent scheduled-task add \
 ```
 
 This creates a project-level scheduled task that targets the `support-jobs` queue in `myroom`.
+
+Scheduled-task payloads use the same queue message format, so you can also send structured `prompt` or `content` payloads and thread templates when the target consumer is a MeshAgent queue channel.
 
 List scheduled tasks:
 
