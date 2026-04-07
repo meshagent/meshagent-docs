@@ -8,7 +8,7 @@ MeshAgent publishes base images so you can package and ship agents/services quic
 - [Docker Hub](https://hub.docker.com/u/meshagent)
 - [Google Artifact Registry](https://console.cloud.google.com/artifacts/docker/meshagent-public/us-central1/images)
 
-For faster cold starts, every image has a stargz-optimized variant with an `-esgz` tag (e.g., `meshagent/python-sdk-slim:<tag>-esgz` or `meshagent/cli:{version}-esgz`). If you are building your own container we recommend [creating a stargz-optimized image](./optimizing_containers), this will make it much faster to pull and run your image.
+For faster cold starts, every image has a stargz-optimized variant with an `-esgz` tag (e.g., `meshagent/python:<tag>-esgz` or `meshagent/cli:{version}-esgz`). If you are building your own container we recommend [creating a stargz-optimized image](./optimizing_containers), this will make it much faster to pull and run your image.
 
 **Image catalog**
 
@@ -16,9 +16,9 @@ For faster cold starts, every image has a stargz-optimized variant with an `-esg
 | --- | --- | --- | --- |
 | `meshagent/cli` | Running or modifying process-backed CLI agents or VoiceBot. Great starting point to set custom rules and add tools to an agent without writing custom code. | Prebuilt `meshagent` binary with all CLI flags | Typically use `meshagent process join ...` for text agents or `meshagent voicebot join ...` for voice agents when the agent connects directly with `MESHAGENT_TOKEN`. Use the `... service` form only when you want the process to expose an HTTP endpoint and wire it through `ports:`. |
 | `meshagent/python-sdk-slim` | Default Python services. Does not include livekit, so not suitable for voice agents. | Python 3.13 slim + MeshAgent API/Agents/Tools/OpenAI + OTEL; `uv` preinstalled | Recommended starting point for custom Python agents/tools. |
-| `meshagent/python-sdk` | Python services needing additional packages (e.g. livekit for voice agents) | Everything in `python-sdk-slim` **plus** LiveKit/audio, MCP, Computers, MarkItDown, etc. | Heavier; use if you need the extended deps out of the box. |
+| `meshagent/python` | Python services needing additional packages (e.g. livekit for voice agents) | Everything in `python-sdk-slim` **plus** LiveKit/audio, MCP, Computers, MarkItDown, etc. | Preferred full Python runtime image. Also published as the compatibility alias `meshagent/python-sdk`. |
 | `meshagent/shell` | Shell-based tools/agents that need common Linux utilities | Python 3.13 slim + MeshAgent SDK + common CLI tools (curl, git, ripgrep, etc.) | Handy for “developer” style agents or shell-based utilities. |
-| `meshagent/nodejs-sdk` | JavaScript/TypeScript services | Node 22 + MeshAgent TS SDK workspace scaffold | Bring your own build/start command. |
+| `meshagent/node` | JavaScript/TypeScript services | Node 22 + MeshAgent TS SDK workspace scaffold | Preferred Node runtime image. Also published as the compatibility alias `meshagent/nodejs-sdk`. Bring your own build/start command. |
 | `meshagent/dotnet-sdk` | .NET services | Latest .NET SDK + MeshAgent .NET SDK source | Use `dotnet publish` in your Dockerfile stage. |
 | `meshagent/flutter` | Flutter UI builds | Flutter SDK + MeshAgent Flutter/Dart workspaces | For building/publishing Flutter-based UIs. |
 
