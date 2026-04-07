@@ -177,6 +177,7 @@ Omit `--room myroom` when you are updating, listing, or deleting a project servi
 | `kind` | Yes | `Service` or `ServiceTemplate`. |
 | `metadata` | Yes | Service identity and display information. |
 | `agents` | No | Agent identities exposed by this service. |
+| `files` | No | Files MeshAgent should seed into room storage if they do not already exist. |
 | `ports` | No | Network ports and HTTP endpoints MeshAgent can route to. |
 | `container` | * | Container configuration. Mutually exclusive with `external`. |
 | `external` | * | External service URL. Mutually exclusive with `container`. |
@@ -205,6 +206,93 @@ Declares the participant identities this service provides. MeshAgent uses this t
 | `name` | string | Yes | Unique agent identity within the service. |
 | `description` | string | No | Display text describing the agent. |
 | `annotations` | object | No | Key-value metadata. See [Annotations](#annotations). |
+| `channels` | object | No | Channel-specific routing config for mail, messaging, queues, and toolkits. |
+| `email` | object | No | Mailbox settings for this agent identity. |
+| `heartbeat` | object | No | Recurring queue turn for this agent. |
+
+#### agents.channels
+
+Use `channels` when one deployed agent should participate in more than one entry point.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | list | No | Inbound email channels for the agent. |
+| `messaging` | list | No | Messaging channels and optional named prompts. |
+| `queue` | list | No | Queue channels the agent should consume. |
+| `toolkit` | list | No | Toolkits the agent should register or expose. |
+
+Queue channel entries support:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `queue` | string | Yes | Queue name the agent should consume. |
+| `threading_mode` | string | No | Threading mode for queue-delivered work, such as `default-new`. |
+| `message_schema` | object | No | JSON schema describing expected queue payload shape. |
+
+Messaging channel entries support:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `protocol` | string | No | Messaging protocol. Defaults to `meshagent.agent-message.v1`. |
+| `prompts` | list | No | Named prompts available on that messaging channel. |
+
+#### agents.email
+
+Use `email` when the agent identity itself should have mailbox settings attached to it.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `address` | string | Yes | Email address for the agent. |
+| `public` | boolean | No | Whether anyone can send to it. Defaults to `false`. |
+
+#### agents.heartbeat
+
+Use `heartbeat` when the agent should enqueue a recurring turn for itself without creating a separate scheduled-task resource by hand.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `queue` | string | Yes | Queue that receives the recurring work item. |
+| `thread_id` | string | No | Optional thread path or template. Time tokens such as `{YYYY}`, `{MM}`, `{DD}`, `{HH}`, and `{mm}` are expanded at runtime. |
+| `prompt` | list | Yes | Prompt content for each heartbeat turn. Uses typed content items such as `text` and `file`. |
+| `minutes` | integer | Yes | Interval, in minutes, between heartbeats. |
+
+Heartbeat `prompt` items use the same typed content model as agent turns:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | `text` or `file`. |
+| `text` | string | No | Text content when `type: text`. |
+| `url` | string | No | File URL when `type: file`, including `room:///...` references. |
+
+Example:
+
+```yaml
+agents:
+  - name: assistant
+    email:
+      address: assistant@example.com
+      public: true
+    heartbeat:
+      queue: heartbeats
+      thread_id: /agents/assistant/threads/heartbeats/{YYYY}/{MM}/{DD}/{HH}/{mm}/heartbeat.thread
+      prompt:
+        - type: file
+          url: room:///agents/assistant/heartbeat.md
+        - type: text
+          text: Review unresolved room work and summarize what changed.
+      minutes: 60
+```
+
+### files
+
+Top-level `files` seed room storage before the service starts. MeshAgent creates each file only if it does not already exist, which makes this useful for editable starter content such as prompts, rules, or templates.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | Yes | Room-storage path to create. |
+| `text` | string | Yes | Initial file contents. |
+
+Use top-level `files` when the content should live in room storage and remain editable after deploy. Use `container.storage.files` when the file should be mounted inside the running container itself.
 
 ### container
 
@@ -219,7 +307,6 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 | `secrets` | list | No | IDs of project `keys` secrets to inject as environment variables. `Service` only. **†** |
 | `pull_secret` | string | No | Project secret ID for authenticating with a private container registry. `Service` only. **†** |
 | `storage` | object | No | Storage volumes to mount into the container. |
-| `api_key` | object | No | Auto-provision an admin API key and inject it into the container. **†** |
 | `on_demand` | boolean | No | When true, the container runs only when explicitly invoked. |
 | `writable_root_fs` | boolean | No | Allow writes to the container's root filesystem for the life of that container instance. Default: read-only. |
 | `private` | boolean | No | Advanced setting that keeps interactive container access private to the owning service. Default: true. |
@@ -271,6 +358,7 @@ Mounts storage volumes into the container.
 | `images` | list | Content from another container image. Read-only by default. |
 | `files` | list | Inline text content mounted as a file. Read-only by default. |
 | `empty_dirs` | list | Writable temporary directories mounted into the container. |
+| `configs` | list | MeshAgent runtime config mounts such as `spec.json` and `members.json`. |
 
 Room and project mount fields:
 
@@ -304,15 +392,13 @@ Empty directory mount fields:
 | `path` | string | Yes | Mount path inside the container. |
 | `read_only` | boolean | No | Whether the temporary directory is read-only. |
 
-#### container.api_key
-
-Provisions an admin API key and injects it into the container. `Service` only.
+Config mount fields:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `role` | string | Yes | Always `admin`. |
-| `name` | string | Yes | Name for the API key. |
-| `auto_provision` | boolean | No | Automatically provision on deployment. |
+| `path` | string | Yes | Directory inside the container where MeshAgent runtime config files should be mounted. Defaults to `/var/run/meshagent`. |
+
+Config mounts are useful when a shell tool or helper process inside the container needs access to runtime files such as `spec.json` and `members.json`.
 
 ### external
 

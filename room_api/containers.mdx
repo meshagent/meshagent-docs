@@ -1,6 +1,6 @@
 ## Overview
 
-The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
+The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, room registry management, or testing code in the same room environment that deployed services use.
 
 ## CLI commands
 
@@ -16,6 +16,7 @@ meshagent room container list --room myroom
 ## Why use the Containers API?
 
 - Pull and manage images without leaving the room context.
+- Inspect and manage room registry repositories and tags.
 - Run short-lived workloads or exploratory commands on demand.
 - Inspect logs or open an interactive terminal in a running container.
 
@@ -100,6 +101,78 @@ await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 ```
 </CodeGroup>
 
+### Room registry management
+
+MeshAgent also exposes a room-scoped registry surface for published image repositories and tags. This is the same registry view used by MeshAgent Studio's **Registry** tab.
+
+These helpers are currently surfaced in the Dart/Flutter client and Studio UI.
+
+### `listRegistryImages({ last, n })`
+
+- **Description**: List repositories currently available in the room registry.
+- **Parameters**:
+  - `last`: Optional pagination cursor.
+  - `n`: Optional page size.
+- **Returns**: A page of registry repositories.
+
+```dart Dart
+final page = await room.containers.listRegistryImages(n: 100);
+
+for (final repository in page.repositories) {
+  print(repository);
+}
+```
+
+### `listRegistryTags({ image, last, n })`
+
+- **Description**: List tags for one room-registry repository.
+- **Parameters**:
+  - `image`: Repository ref such as `room.meshagent.com/my-app`.
+  - `last`: Optional pagination cursor.
+  - `n`: Optional page size.
+- **Returns**: A page of tag versions, including digest metadata when available.
+
+```dart Dart
+final tags = await room.containers.listRegistryTags(
+  image: "room.meshagent.com/my-app",
+  n: 100,
+);
+
+for (final version in tags.versions) {
+  print('${version.tag} ${version.digest}');
+}
+```
+
+### `updateRegistryTag({ image, tag, deleteSource })`
+
+- **Description**: Create a new tag from an existing registry ref, or rename the source tag when `deleteSource` is `true`.
+- **Parameters**:
+  - `image`: Source image ref such as `room.meshagent.com/my-app:dev`.
+  - `tag`: Destination tag name.
+  - `deleteSource`: When `true`, remove the original tag after retagging.
+- **Returns**: Information about the updated tag.
+
+```dart Dart
+await room.containers.updateRegistryTag(
+  image: "room.meshagent.com/my-app:dev",
+  tag: "latest",
+  deleteSource: false,
+);
+```
+
+### `deleteRegistryImage({ image })`
+
+- **Description**: Delete a room-registry tag or digest reference.
+- **Parameters**:
+  - `image`: Registry ref such as `room.meshagent.com/my-app:old`.
+- **Returns**: Metadata about the deleted ref.
+
+```dart Dart
+await room.containers.deleteRegistryImage(
+  image: "room.meshagent.com/my-app:old",
+);
+```
+
 ### `run(image, ...)`
 
 - **Description**: Start a container in the room.
@@ -149,8 +222,7 @@ print(f"Container launched: {container_id}")
 meshagent room container exec \
   --room myroom \
   --container-id "$CONTAINER_ID" \
-  --command "bash" \
-  --tty
+  --command "bash"
 
 ```
 ```python Python
@@ -173,6 +245,8 @@ print(f"Exec finished with status: {status}")
 
 ```
 </CodeGroup>
+
+The CLI streams a non-TTY exec session. Use the SDK directly when you need an explicit TTY session and terminal resize control.
 
 ### `logs(container_id, follow=False)`
 
@@ -263,3 +337,4 @@ await room.containers.delete(container_id=container_id)
 
 - [Room API Overview](./overview)
 - [Packaging and Deploying Services](../services/deployment/deploy_services)
+- [MeshAgent Studio](../interfaces/meshagent_studio)

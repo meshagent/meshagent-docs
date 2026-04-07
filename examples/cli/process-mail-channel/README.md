@@ -26,7 +26,7 @@ meshagent process join \
   --channel=mail:support-agent@mail.meshagent.com \
   --require-storage \
   --require-web-search \
-  --room-rules="agents/support-agent-mail/rules.txt" \
+  --room-rules="agents/support-agent-mail/rules.md" \
   --rule="You are a helpful support agent. Reply clearly by email, save important attachments or artifacts to storage, and use web search when needed."
 ```
 
