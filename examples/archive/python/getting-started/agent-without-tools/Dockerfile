@@ -1,4 +1,4 @@
-FROM meshagent/python:default-slim-trixie
+FROM python:3.13-slim-trixie
 
 ARG MESHAGENT_VERSION="0.0.31"
 
