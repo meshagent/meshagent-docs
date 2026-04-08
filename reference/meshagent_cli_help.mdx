@@ -1516,6 +1516,7 @@ $ meshagent  list [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-o, --output TEXT`: output format   [default: table]
 * `--limit INTEGER RANGE`: Max rooms to return  [default: 50; 1&lt;=x&lt;=500]
 * `--offset INTEGER RANGE`: Offset for pagination  [default: 0; x&gt;=0]
 * `--order-by TEXT`: Order by column (e.g. &quot;room_name&quot;, &quot;created_at&quot;)  [default: room_name]
@@ -5259,6 +5260,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `oauth`: Request an OAuth token from another...
 * `request`: Request a secret from another participant.
 * `get`: Fetch a stored secret by ID.
+* `exists`: Check whether a stored secret exists by ID.
 * `set`: Store a secret by ID.
 * `list`: List secrets in the room.
 * `delete`: Delete a secret by ID.
@@ -5326,6 +5328,25 @@ $ meshagent   get [OPTIONS]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Fetch a secret delegated to this participant name
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent   exists`
+
+Check whether a stored secret exists by ID.
+
+**Usage**:
+
+```console
+$ meshagent   exists [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Secret ID  [required]
+* `--delegated-to TEXT`: Check a secret delegated to this participant name
+* `--for-identity TEXT`: Check a secret for a specific identity
 * `--help`: Show this message and exit.
 
 #### `meshagent   set`
@@ -5410,6 +5431,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `oauth`: Request an OAuth token from another...
 * `request`: Request a secret from another participant.
 * `get`: Fetch a stored secret by ID.
+* `exists`: Check whether a stored secret exists by ID.
 * `set`: Store a secret by ID.
 * `list`: List secrets in the room.
 * `delete`: Delete a secret by ID.
@@ -5477,6 +5499,25 @@ $ meshagent   get [OPTIONS]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Fetch a secret delegated to this participant name
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
+* `--help`: Show this message and exit.
+
+#### `meshagent   exists`
+
+Check whether a stored secret exists by ID.
+
+**Usage**:
+
+```console
+$ meshagent   exists [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--id TEXT`: Secret ID  [required]
+* `--delegated-to TEXT`: Check a secret delegated to this participant name
+* `--for-identity TEXT`: Check a secret for a specific identity
 * `--help`: Show this message and exit.
 
 #### `meshagent   set`
@@ -7585,7 +7626,9 @@ $ meshagent  deploy [OPTIONS]
 * `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `-e, --env TEXT`: Set environment variable as KEY=VALUE
-* `--env-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
+* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
+* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
+* `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
 * `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
 * `--help`: Show this message and exit.
 
