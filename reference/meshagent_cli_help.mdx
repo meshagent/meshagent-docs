@@ -4442,6 +4442,7 @@ $ meshagent  join [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
@@ -4515,6 +4516,7 @@ $ meshagent  run [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
@@ -4588,6 +4590,7 @@ $ meshagent  service [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
@@ -4665,6 +4668,7 @@ $ meshagent  spec [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
@@ -4738,6 +4742,7 @@ $ meshagent  deploy [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
@@ -4844,7 +4849,7 @@ $ meshagent  join [OPTIONS]
 * `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
-* `--database-namespace TEXT`: Use a specific database namespace (JSON list or dotted)
+* `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
 * `--require-table-read TEXT`: Enable table read tools for these tables
 * `--require-table-write TEXT`: Enable table write tools for these tables
 * `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
@@ -6064,12 +6069,12 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `optimize`: Optimize a room database table.
 * `version`: List versions for a room database table.
 * `versions`: List versions for a room database table.
-* `checkout`: Check out a room database table at a...
 * `restore`: Restore a room database table to a...
 * `index`: List indexes on a room database table.
 * `indexes`: List indexes on a room database table.
 * `index-create`: Create an index on a room database table.
 * `index-drop`: Drop an index from a room database table.
+* `branch`: Manage database branches in a room namespace.
 
 #### `meshagent   table`
 
@@ -6086,6 +6091,7 @@ $ meshagent   table [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   tables`
@@ -6103,6 +6109,7 @@ $ meshagent   tables [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   inspect`
@@ -6121,6 +6128,8 @@ $ meshagent   inspect [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--json`: Output raw schema JSON
 * `--help`: Show this message and exit.
 
@@ -6158,6 +6167,7 @@ $ meshagent   create [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
 * `--schema-json TEXT`: Schema JSON as a string
 * `--schema-file TEXT`: Path to schema JSON file
@@ -6181,6 +6191,7 @@ $ meshagent   drop [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--ignore-missing`: Ignore missing table
 * `--help`: Show this message and exit.
 
@@ -6200,6 +6211,7 @@ $ meshagent   add-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. Allowed types: int, bool, date, timestamp, float, text, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
 * `--columns-json TEXT`: JSON object of new columns. Supports DataType JSON including list/struct (e.g. &#x27;&#123;&quot;meta&quot;:&#123;&quot;type&quot;:&quot;struct&quot;,&quot;fields&quot;:&#123;&quot;owner&quot;:&#123;&quot;type&quot;:&quot;text&quot;&#125;&#125;&#125;&#125;&#x27;).
 * `--help`: Show this message and exit.
@@ -6220,6 +6232,7 @@ $ meshagent   drop-columns [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `-c, --column TEXT`: Column to drop (repeatable)
 * `--help`: Show this message and exit.
 
@@ -6239,6 +6252,7 @@ $ meshagent   insert [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--json TEXT`: JSON list of records
 * `-f, --file TEXT`: Path to JSON file (list of records)
 * `--help`: Show this message and exit.
@@ -6260,6 +6274,7 @@ $ meshagent   merge [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--on TEXT`: Column to match for upsert  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--json TEXT`: JSON records (list)
 * `-f, --file TEXT`: Path to JSON file (list)
 * `--help`: Show this message and exit.
@@ -6281,6 +6296,7 @@ $ meshagent   update [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--where TEXT`: SQL WHERE clause, e.g. &quot;id = 1&quot;  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--values-json TEXT`: JSON object of literal values
 * `--values-sql-json TEXT`: JSON object of SQL expressions
 * `--help`: Show this message and exit.
@@ -6302,6 +6318,7 @@ $ meshagent   delete [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `--where TEXT`: SQL WHERE clause  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   search`
@@ -6320,6 +6337,8 @@ $ meshagent   search [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--text TEXT`: Full-text query
 * `--vector-json TEXT`: Vector JSON array
 * `--where TEXT`: SQL WHERE clause
@@ -6351,6 +6370,8 @@ $ meshagent   sql [OPTIONS]
 * `--tables-file TEXT`: Path/URL to JSON array of table refs (same format as --tables-json)
 * `--params-json TEXT`: JSON object of SQL parameters for DataFusion param binding
 * `--params-file TEXT`: Path/URL to JSON object of SQL parameters
+* `--branch TEXT`: Database branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
@@ -6370,6 +6391,7 @@ $ meshagent   optimize [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   version`
@@ -6388,6 +6410,7 @@ $ meshagent   version [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
@@ -6407,26 +6430,8 @@ $ meshagent   versions [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
-* `--help`: Show this message and exit.
-
-#### `meshagent   checkout`
-
-Check out a room database table at a specific version.
-
-**Usage**:
-
-```console
-$ meshagent   checkout [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
-* `-t, --table TEXT`: Table name  [required]
-* `-v, --version INTEGER`: Table version  [required]
-* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
 #### `meshagent   restore`
@@ -6446,6 +6451,7 @@ $ meshagent   restore [OPTIONS]
 * `-t, --table TEXT`: Table name  [required]
 * `-v, --version INTEGER`: Table version  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   index`
@@ -6464,6 +6470,8 @@ $ meshagent   index [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
@@ -6483,6 +6491,8 @@ $ meshagent   indexes [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
@@ -6505,6 +6515,7 @@ $ meshagent   index-create [OPTIONS]
 * `--kind TEXT`: vector | scalar | fts  [default: scalar]
 * `--replace / --no-replace`: Replace existing index if it already exists
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   index-drop`
@@ -6523,6 +6534,82 @@ $ meshagent   index-drop [OPTIONS]
 * `--room TEXT`: Room name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `--name TEXT`: Index name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Database branch name (defaults to main)
+* `--help`: Show this message and exit.
+
+#### `meshagent   branch`
+
+Manage database branches in a room namespace.
+
+**Usage**:
+
+```console
+$ meshagent   branch [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List database branches in a room namespace.
+* `create`: Create a database branch.
+* `delete`: Delete a database branch.
+
+##### `meshagent   branch list`
+
+List database branches in a room namespace.
+
+**Usage**:
+
+```console
+$ meshagent   branch list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+##### `meshagent   branch create`
+
+Create a database branch.
+
+**Usage**:
+
+```console
+$ meshagent   branch create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--branch TEXT`: New branch name  [required]
+* `--from-branch TEXT`: Source branch to branch from
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+##### `meshagent   branch delete`
+
+Delete a database branch.
+
+**Usage**:
+
+```console
+$ meshagent   branch delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [required]
+* `--branch TEXT`: Branch name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
@@ -7623,6 +7710,7 @@ $ meshagent  deploy [OPTIONS]
 * `--arch TEXT`: Architecture metadata for the packed build context image. Only used with --pack. Defaults to amd64 for room runtimes.  [default: amd64]
 * `--pack-room-path TEXT`: Room storage path for the uploaded packed archive during the build stage. Defaults to a temporary path under /temp/build/packs/ that is deleted after the build completes.
 * `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with --pack.  [default: optimize]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
