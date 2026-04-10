@@ -39,15 +39,6 @@ container:
       token:
         identity: news-reporter
         role: agent
-          memory:
-            list: true
-            memories:
-              - name: memories
-                namespace: ["agents", "news-reporter"]
-                permissions:
-                  ingest: true
-                  recall: true
-                  query: true
   storage:
     room:
       - path: /data
@@ -101,3 +92,4 @@ container:
                 worker --agent-name=news-reporter --queue=news_updates --threading-mode=auto --thread-dir=/agents/news-reporter/threads --use-memory=agents/news-reporter/memories --require-toolkit=email --require-storage --require-web-search --rule='Create today''s curated news digest. Follow the shared news reporter rules and include enough detail for the topics to be well understood. Use web search and include the links to your sources. Save the full report to storage at news/YYYY/MM/DD/ai-news-YYYY-MM-DD.md. Send the news digest email to {{send_to_email}} using the email toolkit. Do not include the saved report in your email. The email response should be in text, never in HTML or JSON.' --room-rules='agents/news-reporter/news-reporter-rules.md' --room-rules='agents/news-reporter/worker-rules.md'"
 
 ```
+
