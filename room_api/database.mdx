@@ -525,8 +525,7 @@ await room.Database.Insert(
 - **Parameters**:
   - **table**: Name of the table to update.
   - **where**: A SQL `WHERE` clause specifying which records to update (e.g. `"id = 123"`).
-  - **values**: A record of key-value pairs for direct assignment (e.g. `{ age: 30 }`).
-  - **valuesSql**: A record of key-value pairs for SQL expressions (e.g. `{ age: "age + 1" }`).
+  - **values**: A record of key-value pairs for direct assignment or expressions (e.g. `{ age: 30 }` or `{ age: new DatabaseExpression("age + 1") }` in typed clients).
 - **Returns**: A promise that resolves once the update is complete.
 
 **Example**:
@@ -537,16 +536,17 @@ meshagent room database update \
   --room myroom \
   --table users \
   --where "id = 3" \
-  --values-json '{"email":"newcharlie@example.com"}' \
-  --values-sql-json '{"loginCount":"loginCount + 1"}'
+  --values-json '{"email":"newcharlie@example.com","loginCount":{"expression":"loginCount + 1"}}'
 
 ```
 ```python Python
 await room.database.update(
   table="users",
   where="id = 3",
-  values={ "email": "newcharlie@example.com" },
-  values_sql={ "loginCount": "loginCount + 1" },
+  values={
+    "email": "newcharlie@example.com",
+    "loginCount": DatabaseExpression("loginCount + 1"),
+  },
 )
 
 ```
@@ -554,8 +554,10 @@ await room.database.update(
 await room.database.update({
   table: "users",
   where: "id = 3",
-  values: { email: "newcharlie@example.com" },
-  valuesSql: { loginCount: "loginCount + 1" },
+  values: {
+    email: "newcharlie@example.com",
+    loginCount: new DatabaseExpression("loginCount + 1"),
+  },
 });
 
 ```
@@ -563,8 +565,10 @@ await room.database.update({
 await room.database.update({
   table: "users",
   where: "id = 3",
-  values: { email: "newcharlie@example.com" },
-  valuesSql: { loginCount: "loginCount + 1" },
+  values: {
+    email: "newcharlie@example.com",
+    loginCount: new DatabaseExpression("loginCount + 1"),
+  },
 });
 
 ```
@@ -572,8 +576,10 @@ await room.database.update({
 await room.database.update(
   table: "users",
   where: "id = 3",
-  values: {"email": "newcharlie@example.com"},
-  valuesSql: {"loginCount": "loginCount + 1"},
+  values: {
+    "email": "newcharlie@example.com",
+    "loginCount": DatabaseExpression("loginCount + 1"),
+  },
 );
 
 ```
@@ -581,8 +587,11 @@ await room.database.update(
 await room.Database.Update(
   "users",
   "id = 3",
-  values: new Dictionary<string, object?> { ["email"] = "newcharlie@example.com" },
-  valuesSql: new Dictionary<string, string> { ["loginCount"] = "loginCount + 1" }
+  values: new Dictionary<string, object?>
+  {
+    ["email"] = "newcharlie@example.com",
+    ["loginCount"] = new DatabaseExpression("loginCount + 1")
+  }
 );
 
 ```
