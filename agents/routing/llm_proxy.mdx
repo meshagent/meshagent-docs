@@ -1,12 +1,12 @@
 ---
-title: "LLM Proxy"
+title: "Making Requests"
 ---
 
-The MeshAgent LLM proxy is a room-scoped HTTP proxy that lets services call OpenAI and Anthropic without shipping provider API keys in your code. You can use MeshAgent API keys by default, or bring your own API key. The LLM proxy authenticates with the MeshAgent room token and attributes LLM usage to rooms, sessions, and participants.
+The MeshAgent LLM proxy is an HTTP proxy that lets services and external clients call OpenAI and Anthropic without shipping provider API keys in your code. The proxy can authenticate with either MeshAgent room participant tokens or OAuth access tokens issued by a registered [OAuth client](../../project_admin/oauth). Usage is attributed to the room or project context established by that credential.
 
 ## Proxied endpoints
 ### OpenAI
-Base URL: `{room_url}/openai/v1` (also accepts `{room_url}/v1` for OpenAI compatible clients).
+Base URL: `https://api.meshagent.com/openai/v1` (also accepts `https://api.meshagent.com/v1` for OpenAI compatible clients).
 
 Supported endpoints:
 - `/v1/chat/completions`
@@ -22,9 +22,9 @@ Supported endpoints:
 - `/v1/realtime` and `/v1/realtime/*`
 
 ### Anthropic
-Base URL for raw HTTP requests: `{room_url}/anthropic/v1`.
+Base URL for raw HTTP requests: `https://api.meshagent.com/anthropic/v1`.
 
-When you use the MeshAgent Anthropic SDK helper or the injected `ANTHROPIC_BASE_URL`, the base URL is `{room_url}/anthropic`; the Anthropic SDK appends the `/v1` paths itself.
+When you use the MeshAgent Anthropic SDK helper or the injected `ANTHROPIC_BASE_URL`, the base URL is `https://api.meshagent.com/anthropic`; the Anthropic SDK appends the `/v1` paths itself.
 
 Supported endpoints:
 - `/v1/messages`
@@ -46,7 +46,9 @@ openai_client = get_openai_client(room=room)
 anthropic_client = get_anthropic_client(room=room)
 ```
 
-For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to the room proxy and pass the MeshAgent room token as `api_key`. Room containers set `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, and `MESHAGENT_SESSION_ID` automatically.
+For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to `https://api.meshagent.com/openai/v1` and pass the MeshAgent participant token as `api_key`. Room containers set `OPENAI_BASE_URL` and `ANTHROPIC_BASE_URL` automatically.
+
+If you are calling the proxy from your own application instead of from a room participant, you can also use an OAuth access token from a registered [OAuth client](../../project_admin/oauth). In that case, send the OAuth access token in the normal auth header for the route and include `Meshagent-Project-Id: <project_id>`. The user behind that token must have developer access to the project named by that header.
 
 ## Automatic usage tracking
 The proxy inspects responses and streams to record usage and cost:
@@ -58,36 +60,24 @@ The proxy inspects responses and streams to record usage and cost:
 
 Usage is emitted as OpenTelemetry metrics/traces and also appears in MeshAgent's built-in dashboards (view from MeshAgent Studio usage and billing tabs). If you configure your own OTEL endpoint, the same data can be exported to your provider.
 
-## API key protection
-- Clients authenticate with the MeshAgent room token (not a provider key).
-- OpenAI proxy requires `Authorization: Bearer <room_token>`.
-- Anthropic proxy accepts either `Authorization: Bearer <room_token>` or `x-api-key: <room_token>`.
+## Authentication and provider key protection
+- Clients authenticate with either a MeshAgent room participant token or an OAuth access token issued by a registered [OAuth client](../../project_admin/oauth).
+- OpenAI proxy requires `Authorization: Bearer <token>`.
+- Anthropic proxy accepts either `Authorization: Bearer <token>` or `x-api-key: <token>`.
+- OAuth-authenticated LLM requests must also send `Meshagent-Project-Id: <project_id>`.
+- The OAuth user must have developer access to the project named by `Meshagent-Project-Id`.
 - The proxy strips provider auth headers and injects provider keys from server-side env vars.
 - Provider keys never need to exist inside room containers or client code.
 - Optional HTTP logging clients redact auth headers by default.
 
-## Using a custom API key
-If you want to use your own provider key, bypass the proxy and construct the SDK client yourself, then pass it into the adapter:
-
-```python Python
-from openai import AsyncOpenAI
-from meshagent.openai import OpenAIResponsesAdapter
-
-client = AsyncOpenAI(api_key="sk-your-key", base_url="https://api.openai.com/v1")
-adapter = OpenAIResponsesAdapter(client=client)
-```
-
-Repeat the same pattern for Anthropic by constructing an `AsyncAnthropic` client with your key and passing it to `AnthropicMessagesAdapter`.
-
-For project-wide defaults, use MeshAgent Studio (Integrations > LLM Router) to set provider keys and optional base URLs. If you automate project settings, you can also update them via the [Project Settings REST API](../../rest_api/overview).
-
 ## Environment variables
 - **Provider keys (router/proxy):** You can set your own default `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL` from MeshAgent Studio or the REST API to use your own API keys across your MeshAgent rooms.
-- **Room service defaults:** Certain environment variables are auto-injected for services running inside a room. You can override them in a service template/container env if you need a different base URL. Examples: `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `MESHAGENT_SESSION_ID`.
+- **Room service defaults:** Certain environment variables are auto-injected for services running inside a room. You can override them in a service template/container env if you need a different base URL. Examples: `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`.
 - **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model to use or set a default by updating the `OPENAI_MODEL` or `ANTHROPIC_MODEL` environment variable.
 
 ## Related topics
 - [Adapters Overview](../adapters/index)
 - [OpenAI Responses Adapter](../adapters/openai_responses_adapter)
 - [Anthropic Messages Adapter](../adapters/anthropic_messages_adapter)
+- [OAuth Clients](../../project_admin/oauth)
 - [Observability](../../observability/overview)
