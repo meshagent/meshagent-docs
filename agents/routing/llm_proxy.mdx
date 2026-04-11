@@ -36,17 +36,22 @@ Supported endpoints:
 Requests to other paths are rejected.
 
 ## Using the proxy
-Use the proxy helpers so the MeshAgent token and headers are applied automatically:
+Use the proxy helpers so the provider SDK resolves the injected MeshAgent proxy
+environment variables automatically:
 
 ```python Python
 from meshagent.openai.proxy import get_client as get_openai_client
 from meshagent.anthropic.proxy import get_client as get_anthropic_client
 
-openai_client = get_openai_client(room=room)
-anthropic_client = get_anthropic_client(room=room)
+openai_client = get_openai_client()
+anthropic_client = get_anthropic_client()
 ```
 
-For OpenAI compatible SDKs, you can also set `OPENAI_BASE_URL` to `https://api.meshagent.com/openai/v1` and pass the MeshAgent participant token as `api_key`. Room containers set `OPENAI_BASE_URL` and `ANTHROPIC_BASE_URL` automatically.
+Room containers and `meshagent room connect` set `OPENAI_API_KEY`,
+`OPENAI_BASE_URL`, `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL`
+automatically. For OpenAI-compatible SDKs, you can also set
+`OPENAI_BASE_URL` to `https://api.meshagent.com/openai/v1` and pass the
+MeshAgent participant token as `api_key`.
 
 If you are calling the proxy from your own application instead of from a room participant, you can also use an OAuth access token from a registered [OAuth client](../../project_admin/oauth). In that case, send the OAuth access token in the normal auth header for the route and include `Meshagent-Project-Id: <project_id>`. The user behind that token must have developer access to the project named by that header.
 
@@ -73,7 +78,7 @@ Usage is emitted as OpenTelemetry metrics/traces and also appears in MeshAgent's
 ## Environment variables
 - **Provider keys (router/proxy):** You can set your own default `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `ANTHROPIC_API_KEY`, and `ANTHROPIC_BASE_URL` from MeshAgent Studio or the REST API to use your own API keys across your MeshAgent rooms.
 - **Room service defaults:** Certain environment variables are auto-injected for services running inside a room. You can override them in a service template/container env if you need a different base URL. Examples: `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`.
-- **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model to use or set a default by updating the `OPENAI_MODEL` or `ANTHROPIC_MODEL` environment variable.
+- **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model or base URL explicitly, or set defaults with `OPENAI_MODEL`, `OPENAI_BASE_URL`, `ANTHROPIC_MODEL`, and `ANTHROPIC_BASE_URL`.
 
 ## Related topics
 - [Adapters Overview](../adapters/index)

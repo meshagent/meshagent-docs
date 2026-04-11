@@ -41,9 +41,9 @@ system_prompt = f"""
     Provide two translations, one in French and one in Spanish.    
     """
 
-def build_translation_agent(*, room):
-    # Use the MeshAgent room proxy so API keys are provided by the room router.
-    client = get_anthropic_client(room=room)
+def build_translation_agent():
+    # Use the MeshAgent proxy environment variables for Anthropic credentials.
+    client = get_anthropic_client()
     provider = AnthropicProvider(anthropic_client=client)
     return Agent(
         model=AnthropicModel(model_name="claude-sonnet-4-5-20250929", provider=provider),
@@ -76,7 +76,7 @@ class TranslationTaskRunner(TaskRunner):
         inputs = TranslationInput(**arguments)
         log.info(f"Translating Text: {inputs.text}")
 
-        translation_agent = build_translation_agent(room=room)
+        translation_agent = build_translation_agent()
         translations = await translation_agent.run(inputs.text)
         log.info(f"Translation Result: {translations.output}")
 
@@ -101,4 +101,3 @@ class TranslationTaskRunner(TaskRunner):
 asyncio.run(service.run())
 
 ```
-

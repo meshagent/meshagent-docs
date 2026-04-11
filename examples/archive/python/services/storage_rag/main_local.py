@@ -1,4 +1,4 @@
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -61,7 +61,7 @@ class RagChatBot(ChatBot):
             size=3072,
             max_length=8191,
             model="text-embedding-3-large",
-            openai=get_client(room=room),
+            openai=get_client(),
         )
         await super().start(room=room)
 
@@ -117,7 +117,7 @@ class MarkitDownFileIndexer(StorageIndexer):
             size=3072,
             max_length=8191,
             model="text-embedding-3-large",
-            openai=get_client(room=room),
+            openai=get_client(),
         )
         await super().start(room=room)
 

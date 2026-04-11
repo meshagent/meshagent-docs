@@ -38,11 +38,11 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - `create_session()`: Creates a fresh `AgentSessionContext`. Implementations can use this to set provider and model specific roles (e.g., some models prefer a "developer" prompt vs a "system" prompt).
 - `context_window_size(model: str)`: Declare the model's context window size if known.
 - `needs_compaction(context)`: Decide if the current context should be compacted before the next request.
-- `compact(context, room, model?)`: Mutate the context to a smaller representation (provider-specific).
+- `compact(context, model?)`: Mutate the context to a smaller representation (provider-specific).
 - `get_input_tokens(...)`: Optional helper to estimate the token count for the current request.
 - `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves.
-- `make_toolkit(room, model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
-- `check_for_termination(context, room)`: Allows you to use the session context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
+- `make_toolkit(model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
+- `check_for_termination(context)`: Allows you to use the session context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
 - `next(...)`: The core method: given the session context, room, toolkits for this turn, and an optional `ToolResponseAdapter`, call the underlying LLM, stream events (via `event_handler`), execute tool calls, inject tool results into the context, and return the final output. You can pass `output_schema` for structured responses, override `model`, and act `on_behalf_of` a participant. See [OpenAI Responses Adapter](./openai_responses_adapter) for a detailed implementation.
 - `validate(response, output_schema)`: Validate structured output using JSON Schema.
 
@@ -73,7 +73,7 @@ While `LLMAdapter` talks to the model, a `ToolResponseAdapter` decides how to su
 ```python Python
 class ToolResponseAdapter(ABC):
     @abstractmethod
-    async def to_plain_text(self, *, room: RoomClient, response: Response) -> str:
+    async def to_plain_text(self, *, response: Response) -> str:
         ...
 
     @abstractmethod
@@ -82,7 +82,6 @@ class ToolResponseAdapter(ABC):
         *,
         context: AgentSessionContext,
         tool_call: Any,
-        room: RoomClient,
         response: Response,
     ) -> list:
         ...

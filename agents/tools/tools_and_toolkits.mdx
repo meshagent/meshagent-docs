@@ -9,7 +9,7 @@ MeshAgent tools are room-connected capabilities that humans and agents can disco
 - `Tool` = one discrete action an agent or human participant can take.
 - `ToolContext` = the execution context available when a tool runs.
 - `Toolkit` = a named bundle of related tools plus optional rules and descriptions.
-- `RemoteToolkit` = a toolkit that is registered with a room so other participants can discover and call it.
+- Hosted toolkit = a `Toolkit` that a service or room participant registers with a room so other participants can discover and call it.
 - `ToolkitConfig` = the options used to construct a toolkit.
 - `ToolkitBuilder` = a factory that turns a config into a concrete toolkit.
 
@@ -30,7 +30,6 @@ A `Tool` defines one action that an agent or person can perform. The tool declar
 | `rules` | `Optional[list[str]]` | `None` | Behavioral guidance for LLMs. |
 | `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail shown in UIs. |
 | `defs` | `Optional[dict[str, dict]]` | `None` | Reusable JSON Schema definitions merged into the schema via `$defs`. |
-| `supports_context` | `Optional[bool]` | `False` | Indicates the tool can use `caller_context` when provided. |
 
 **Method**
 
@@ -63,11 +62,11 @@ Tools return subclasses of `Response` declared in `meshagent.api.messaging`.
 
 ## Toolkits
 
-### Toolkit vs remote toolkit
+### Toolkit vs hosted toolkit
 
 A `Toolkit` is best for in-process scenarios, usually when only one agent needs access to the tools.
 
-A `RemoteToolkit` is hosted and registered with the room so any participant can discover and call its tools. Use this when the toolkit should live outside the agent process or be shared across multiple participants.
+A hosted toolkit is still just a `Toolkit`, but it is run through MeshAgent's hosting layer so any participant can discover and call its tools. Use this when the toolkit should live outside the agent process or be shared across multiple participants.
 
 ### `Toolkit`
 
@@ -83,6 +82,8 @@ A `Toolkit` bundles related tools under a single name so callers can discover, i
 | `title` | `Optional[str]` | `name` | Human-readable toolkit name. |
 | `description` | `Optional[str]` | `""` | Description used for discovery and display in MeshAgent Studio. |
 | `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail for the toolkit. |
+| `validation_mode` | `ValidationMode` | `"full"` | Validation policy used when the toolkit is invoked. |
+| `public` | `bool` | `True` | Whether the toolkit should be publicly discoverable when it is hosted in a room. |
 
 **Methods**
 
@@ -91,19 +92,20 @@ A `Toolkit` bundles related tools under a single name so callers can discover, i
 
 > Toolkits emit OpenTelemetry spans out of the box, so MeshAgent can track who called a tool, how long it took, and what room it ran in.
 
-### `RemoteToolkit`
+### Hosted toolkit lifecycle
 
-A `RemoteToolkit` adds lifecycle management around a `Toolkit` so it can be discoverable and callable by others.
+Hosted toolkits are plain `Toolkit` instances across the SDKs.
 
-**Methods**
+- In Python, `ServiceHost`, `connect_remote_toolkit(...)`, and MeshAgent's internal room-hosting wrappers add the lifecycle management needed to make a toolkit discoverable and callable by others.
+- In TypeScript and Dart, `startHostedToolkit(...)` returns a `HostedToolkit` handle. Higher-level helpers like React's `useClientToolkits(...)` and Flutter's `ClientToolkits` widget use that same hosting API internally.
 
-- `start()`:
-  - starts child remote tools,
-  - subscribes to room messages for toolkit calls,
-  - registers the toolkit with the room.
+`Toolkit` itself does not expose `start()` / `stop()`. Those lifecycle operations live on the room-hosting helper or the returned hosted-toolkit handle.
+
+**Hosted handle methods**
+
 - `stop()`:
-  - stops child remote tools safely,
-  - unregisters the toolkit.
+  - stops listening for room tool calls,
+  - unregisters the toolkit from the room.
 
 ## Toolkit patterns
 

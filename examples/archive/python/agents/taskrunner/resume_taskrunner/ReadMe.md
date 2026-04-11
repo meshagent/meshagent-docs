@@ -17,7 +17,7 @@ Once the candidate information is stored, another agent compares the candidates 
 
 Now we can test the agent out locally before deploying: 
 
-1. Run the remote toolkit in the resume_runner file. We will give this toolkit to the mail agent so it can update the `candidates` table in the database with information about each candidate.
+1. Run the hosted toolkit in the resume_runner file. We will give this toolkit to the mail agent so it can update the `candidates` table in the database with information about each candidate.
 
     `meshagent service run mailbot_toolkit.py --room resume`
 

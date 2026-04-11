@@ -3,7 +3,7 @@ import asyncio
 import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
-from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, Toolkit
 from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
@@ -163,7 +163,7 @@ class Survey(FunctionTool):
 
 
 @service.path(path="/survey", identity="survey-toolkit")
-class SurveyToolkit(RemoteToolkit):
+class SurveyToolkit(Toolkit):
     def __init__(self):
         super().__init__(
             name="survey-toolkit",

@@ -26,11 +26,13 @@ OpenAIResponsesAdapter(
     max_output_tokens: Optional[int] = 32000,
     context_management: Literal["auto", "standalone", "none"] = "auto",
     compaction_threshold: int = 200000,
+    base_url: Optional[str] = None,
 )
 ```
 - `model` – default model name; can be overridden per message.
 - `parallel_tool_calls` – request parallel tool execution when supported.
 - `client` – reuse an existing `AsyncOpenAI` client; otherwise the adapter creates one via `meshagent.openai.proxy.get_client`.
+- `base_url` – override the provider base URL used when the adapter creates its own client. Defaults to `OPENAI_BASE_URL` when omitted.
 - `response_options` – extra parameters passed to `responses.create`.
 - `reasoning_effort` – populates the Responses API `reasoning` options.
 - `provider` – label emitted in telemetry and logs.

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -15,10 +15,11 @@ from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.tools import ToolContext
 from meshagent.otel import otel_config
 
-otel_config(service_name="storage-rag") 
+otel_config(service_name="storage-rag")
 log = logging.getLogger("storage-rag")
 
 service = ServiceHost()
+
 
 @service.path(path="/agent", identity="meshagent.chatbot.storage_rag")
 class RagChatBot(ChatBot):
@@ -47,6 +48,7 @@ class RagChatBot(ChatBot):
             ],
             annotations=["chatbot", "rag"],
         )
+
     async def start(self, *, room):
         rag_toolkit = RagToolkit(
             table="rag-index",
@@ -54,7 +56,7 @@ class RagChatBot(ChatBot):
                 size=3072,
                 max_length=8191,
                 model="text-embedding-3-large",
-                openai=get_client(room=room),
+                openai=get_client(),
             ),
         )
         self._rag_toolkit = rag_toolkit

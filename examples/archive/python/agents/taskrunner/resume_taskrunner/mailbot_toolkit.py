@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, Toolkit
 from meshagent.api.messaging import JsonContent
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
@@ -9,7 +9,6 @@ from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
 from meshagent.tools.storage import StorageToolkitBuilder
-from meshagent.tools.database import DatabaseToolkitBuilder
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
@@ -29,7 +28,6 @@ class ResumeTaskRunner(LLMTaskRunner):
         return [
             WebSearchToolkitBuilder(),
             StorageToolkitBuilder(),
-            DatabaseToolkitBuilder(),
         ]
 
 
@@ -231,7 +229,7 @@ class ProcessResume(FunctionTool):
 
 
 @service.path(identity="/mailbot-toolkit", path="/mailbot-toolkit")
-class MailBotToolkit(RemoteToolkit):
+class MailBotToolkit(Toolkit):
     def __init__(self):
         super().__init__(
             name="mailbot-toolkit",
