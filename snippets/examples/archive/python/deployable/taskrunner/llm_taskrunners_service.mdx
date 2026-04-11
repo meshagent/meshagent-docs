@@ -3,9 +3,11 @@ import asyncio
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
+from meshagent.api import RoomClient
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder, LocalShellToolkitBuilder
-from meshagent.tools.storage import StorageToolkitBuilder
+from meshagent.openai.tools.responses_adapter import ShellTool, WebSearchTool
+from meshagent.tools import Toolkit
+from meshagent.tools.storage import StorageToolRoomMount, StorageToolkit
 
 otel_config(service_name="llm-taskrunners")
 service = ServiceHost()
@@ -18,7 +20,7 @@ class LLMRunner(LLMTaskRunner):
             title="LLM Task Runner",
             description="Returns {result: string} unless overridden.",
             llm_adapter=OpenAIResponsesAdapter(),
-            toolkits=None,
+            toolkits=[],
             supports_tools=True,
             input_prompt=True,
             output_schema={
@@ -28,14 +30,22 @@ class LLMRunner(LLMTaskRunner):
                 "properties": {"result": {"type": "string"}},
             },
         )
-    def get_toolkit_builders(self):
-        return [
-            WebSearchToolkitBuilder(),
-            StorageToolkitBuilder(),
-            LocalShellToolkitBuilder(),
+
+    async def start(self, *, room: RoomClient):
+        self.toolkits = [
+            Toolkit(name="web_search", tools=[WebSearchTool()]),
+            StorageToolkit(
+                mounts=[StorageToolRoomMount(room=room, path="/")],
+            ),
+            Toolkit(
+                name="shell",
+                room=room,
+                tools=[ShellTool(room=room, image=None)],
+            ),
         ]
+        await super().start(room=room)
+
 
 asyncio.run(service.run())
 
 ```
-

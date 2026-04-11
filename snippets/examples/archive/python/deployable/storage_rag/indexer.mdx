@@ -1,7 +1,8 @@
 ```python Python
 import asyncio
 import logging
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
+from meshagent.api.messaging import JsonContent, TextContent
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -16,10 +17,11 @@ from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.tools import ToolContext
 from meshagent.otel import otel_config
 
-otel_config(service_name="storage-rag") 
+otel_config(service_name="storage-rag")
 log = logging.getLogger("storage-rag")
 
 service = ServiceHost()
+
 
 @service.path(path="/agent", identity="meshagent.chatbot.storage_rag")
 class RagChatBot(ChatBot):
@@ -48,6 +50,7 @@ class RagChatBot(ChatBot):
             ],
             annotations=["chatbot", "rag"],
         )
+
     async def start(self, *, room):
         rag_toolkit = RagToolkit(
             table="rag-index",
@@ -75,7 +78,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         embedder=None,
         table="rag-index",
     ):
-        self._markitdown = MarkItDownToolkit()
+        self._markitdown: MarkItDownToolkit | None = None
 
         super().__init__(
             title=title,
@@ -87,16 +90,18 @@ class MarkitDownFileIndexer(StorageIndexer):
         )
 
     async def read_file(self, *, path: str):
-        context = ToolContext(
-            room=self.room,
-            caller=self.room.local_participant,
-        )
+        if self._markitdown is None:
+            raise RuntimeError("markitdown toolkit has not been started")
         response = await self._markitdown.execute(
-            context=context,
+            context=ToolContext(caller=self.room.local_participant),
             name="markitdown_from_file",
-            arguments={"path": path},
+            input=JsonContent(json={"path": path}),
         )
-        return getattr(response, "text", None)
+        return response.text if isinstance(response, TextContent) else None
+
+    async def start(self, *, room):
+        self._markitdown = MarkItDownToolkit(room=room)
+        await super().start(room=room)
 
 
 asyncio.run(service.run())

@@ -3262,11 +3262,10 @@ $ meshagent  join [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
@@ -3282,27 +3281,19 @@ $ meshagent  join [OPTIONS]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -3337,10 +3328,9 @@ $ meshagent  service [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3357,28 +3347,20 @@ $ meshagent  service [OPTIONS]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--host TEXT`: Host to bind the service on
@@ -3416,10 +3398,9 @@ $ meshagent  spec [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3435,28 +3416,20 @@ $ meshagent  spec [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--always-reply / --no-always-reply`: Always reply
@@ -3491,10 +3464,9 @@ $ meshagent  deploy [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3510,28 +3482,20 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--always-reply / --no-always-reply`: Always reply
@@ -3568,11 +3532,10 @@ $ meshagent  run [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
@@ -3587,27 +3550,19 @@ $ meshagent  run [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -3647,9 +3602,6 @@ $ meshagent  use [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call
 * `--thread-path TEXT`: log all requests to the llm
 * `--message TEXT`: the input message to use
-* `--use-web-search / --no-use-web-search`: request the web search tool
-* `--use-image-gen / --no-use-image-gen`: request the image gen tool
-* `--use-storage / --no-use-storage`: request the storage tool
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -3698,11 +3650,10 @@ $ meshagent  join [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
@@ -3718,27 +3669,19 @@ $ meshagent  join [OPTIONS]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -3775,10 +3718,9 @@ $ meshagent  service [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3795,28 +3737,20 @@ $ meshagent  service [OPTIONS]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--host TEXT`: Host to bind the service on
@@ -3854,10 +3788,9 @@ $ meshagent  spec [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3873,28 +3806,20 @@ $ meshagent  spec [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--always-reply / --no-always-reply`: Always reply
@@ -3929,10 +3854,9 @@ $ meshagent  deploy [OPTIONS]
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
@@ -3948,28 +3872,20 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--decision-model TEXT`: Model used for thread naming and other secondary LLM decisions
 * `--always-reply / --no-always-reply`: Always reply
@@ -4006,11 +3922,10 @@ $ meshagent  run [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
@@ -4025,27 +3940,19 @@ $ meshagent  run [OPTIONS]
 * `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
-* `--require-image-generation TEXT`: Name of an image gen model
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
+* `--advanced-shell`: Enable the managed container toolkit with start/list/stop/run tools.
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--working-dir TEXT`: The default working directory for shell commands
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -4085,9 +3992,6 @@ $ meshagent  use [OPTIONS]
 * `--agent-name TEXT`: Name of the agent to call
 * `--thread-path TEXT`: log all requests to the llm
 * `--message TEXT`: the input message to use
-* `--use-web-search / --no-use-web-search`: request the web search tool
-* `--use-image-gen / --no-use-image-gen`: request the image gen tool
-* `--use-storage / --no-use-storage`: request the storage tool
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -4133,47 +4037,34 @@ $ meshagent  join [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--shell`: Enable function shell tool calling
+* `--web-search`: Enable web search tool calling
+* `--web-fetch`: Enable web fetch tool calling
+* `--apply-patch`: Enable apply patch tool calling
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--storage`: Enable storage toolkit
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4191,14 +4082,12 @@ $ meshagent  service [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--shell`: Enable function shell tool calling
+* `--web-search`: Enable web search tool calling
+* `--web-fetch`: Enable web fetch tool calling
+* `--apply-patch`: Enable apply patch tool calling
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
@@ -4207,33 +4096,22 @@ $ meshagent  service [OPTIONS]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--storage`: Enable storage toolkit
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4256,46 +4134,33 @@ $ meshagent  spec [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--shell`: Enable function shell tool calling
+* `--web-search`: Enable web search tool calling
+* `--web-fetch`: Enable web fetch tool calling
+* `--apply-patch`: Enable apply patch tool calling
 * `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--storage`: Enable storage toolkit
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4318,46 +4183,33 @@ $ meshagent  deploy [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
+* `--shell`: Enable function shell tool calling
+* `--web-search`: Enable web search tool calling
+* `--web-fetch`: Enable web fetch tool calling
+* `--apply-patch`: Enable apply patch tool calling
 * `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
 * `--toolkit-name TEXT`: the name of a toolkit to expose mail operations
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--whitelist TEXT`: an email to whitelist
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--storage`: Enable storage toolkit
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Use a specific database namespace
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
@@ -4407,49 +4259,30 @@ $ meshagent  join [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
-* `--working-dir TEXT`: The default working directory for shell commands
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
@@ -4483,47 +4316,29 @@ $ meshagent  run [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `--rules-file TEXT`
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--require-document-authoring / --no-require-document-authoring`: Enable MeshDocument authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
-* `--working-dir TEXT`: The default working directory for shell commands
+* `--document-authoring`: Enable MeshDocument authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
@@ -4555,49 +4370,30 @@ $ meshagent  service [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
-* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable document authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -4633,49 +4429,30 @@ $ meshagent  spec [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
-* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable document authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
 * `--output-schema-path TEXT`: the path or url to output schema to use
@@ -4708,48 +4485,30 @@ $ meshagent  deploy [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
+* `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use for the task runner  [default: gpt-5.4]
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--require-image-generation TEXT`: Name of an image gen model
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool  [default: no-require-apply-patch]
-* `--require-web-search / --no-require-web-search`: Enable web search tool calling  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Enable web fetch tool calling  [default: no-require-web-fetch]
-* `--require-mcp / --no-require-mcp`: Enable mcp tool calling  [default: no-require-mcp]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-table-read TEXT`: Enable table read tools for a specific table
-* `--require-table-write TEXT`: Enable table write tools for a specific table
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--table-read TEXT`: Enable table read tools for a specific table
+* `--table-write TEXT`: Enable table write tools for a specific table
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
-* `--require-document-authoring / --no-require-document-authoring`: Enable document authoring  [default: no-require-document-authoring]
-* `--require-discovery / --no-require-discovery`: Enable discovery of agents and tools  [default: no-require-discovery]
+* `--document-authoring`: Enable document authoring
+* `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
 * `--output-schema-path TEXT`: the path or url to output schema to use
@@ -4808,57 +4567,38 @@ $ meshagent  join [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
 * `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
 * `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
 * `--initial-message [summary|code|none]`: Initial thread message mode: summary (LLM summary), code (markdown code block), or none  [default: code]
 * `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
 * `--decision-model TEXT`: Model used for summary decisions and payload summarization
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--require-local-shell / --no-require-local-shell`: Enable local shell tool calling  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: optional toolkit name to expose worker operations
 * `-rr, --room-rules TEXT`: path(s) in room storage to load rules from
 * `--image-generation TEXT`: Name of an image gen model
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--require-storage / --no-require-storage`: Enable storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Enable read only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--read-only-storage`: Enable read only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-table-read TEXT`: Enable table read tools for these tables
-* `--require-table-write TEXT`: Enable table write tools for these tables
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Enable table read tools for these tables
+* `--table-write TEXT`: Enable table write tools for these tables
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -4877,7 +4617,7 @@ $ meshagent  service [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
 * `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
 * `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
@@ -4885,51 +4625,32 @@ $ meshagent  service [OPTIONS]
 * `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
 * `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
-* `--require-storage / --no-require-storage`: Require storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Require read-only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--read-only-storage`: Require read-only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-table-read TEXT`: Require table read tool for table (repeatable)
-* `--require-table-write TEXT`: Require table write tool for table (repeatable)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Require table read tool for table (repeatable)
+* `--table-write TEXT`: Require table write tool for table (repeatable)
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -4953,7 +4674,7 @@ $ meshagent  spec [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
 * `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
 * `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
@@ -4961,48 +4682,29 @@ $ meshagent  spec [OPTIONS]
 * `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
 * `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
-* `--require-storage / --no-require-storage`: Require storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Require read-only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--read-only-storage`: Require read-only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-table-read TEXT`: Require table read tool for table (repeatable)
-* `--require-table-write TEXT`: Require table write tool for table (repeatable)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Require table read tool for table (repeatable)
+* `--table-write TEXT`: Require table write tool for table (repeatable)
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -5026,7 +4728,7 @@ $ meshagent  deploy [OPTIONS]
 * `-r, --rule TEXT`: a system rule
 * `--rules-file TEXT`
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
-* `-rs, --require-schema TEXT`: the name or url of a required schema
+* `-s, --schema TEXT`: the name or url of a required schema
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
 * `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
 * `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
@@ -5034,48 +4736,29 @@ $ meshagent  deploy [OPTIONS]
 * `--initial-message-from TEXT`: Author name used for the initial thread message  [default: worker]
 * `--decision-model TEXT`: Model used for summary decisions and payload summarization
 * `--image-generation TEXT`: Name of an image gen model
-* `--require-shell / --no-require-shell`: Enable function shell tool calling  [default: no-require-shell]
-* `--local-shell / --no-local-shell`: Enable local shell tool calling  [default: no-local-shell]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
-* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--mcp / --no-mcp`: Enable mcp tool calling  [default: no-mcp]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
-* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--require-local-shell / --no-require-local-shell`: Require local shell tool  [default: no-require-local-shell]
-* `--require-web-search / --no-require-web-search`: Require web search tool  [default: no-require-web-search]
-* `--require-web-fetch / --no-require-web-fetch`: Require web fetch tool  [default: no-require-web-fetch]
-* `--require-apply-patch / --no-require-apply-patch`: Enable apply patch tool calling  [default: no-require-apply-patch]
-* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
-* `--require-storage / --no-require-storage`: Require storage toolkit  [default: no-require-storage]
-* `--require-read-only-storage / --no-require-read-only-storage`: Require read-only storage toolkit  [default: no-require-read-only-storage]
-* `--require-time / --no-require-time`: Enable time/datetime tools  [default: require-time]
-* `--require-uuid / --no-require-uuid`: Enable UUID generation tools  [default: no-require-uuid]
+* `--read-only-storage`: Require read-only storage toolkit
+* `--time`: Enable time/datetime tools  [default: True]
+* `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
 * `--memory-model TEXT`: Model name for memory LLM ingestion
 * `--database-namespace TEXT`: Database namespace (e.g. foo::bar)
-* `--require-table-read TEXT`: Require table read tool for table (repeatable)
-* `--require-table-write TEXT`: Require table write tool for table (repeatable)
-* `--require-computer-use / --no-require-computer-use`: Enable computer use  [default: no-require-computer-use]
+* `--table-read TEXT`: Require table read tool for table (repeatable)
+* `--table-write TEXT`: Require table write tool for table (repeatable)
+* `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
-* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
-* `--shell-image TEXT`: an image tag to use to run shell commands in
-* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
-* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
-* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]

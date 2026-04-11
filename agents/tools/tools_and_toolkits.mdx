@@ -8,10 +8,9 @@ MeshAgent tools are room-connected capabilities that humans and agents can disco
 
 - `Tool` = one discrete action an agent or human participant can take.
 - `ToolContext` = the execution context available when a tool runs.
+- `LocalRoomTool` = a mixin for tools that need a bound `RoomClient`; room-aware tools use `self.room`.
 - `Toolkit` = a named bundle of related tools plus optional rules and descriptions.
 - Hosted toolkit = a `Toolkit` that a service or room participant registers with a room so other participants can discover and call it.
-- `ToolkitConfig` = the options used to construct a toolkit.
-- `ToolkitBuilder` = a factory that turns a config into a concrete toolkit.
 
 ## Tools
 
@@ -34,20 +33,21 @@ A `Tool` defines one action that an agent or person can perform. The tool declar
 **Method**
 
 ```python Python
-async def execute(self, context: ToolContext, **kwargs) -> Response:
+async def execute(self, context: ToolContext, **kwargs):
     ...
 ```
 
 ### Tool return types
 
-Tools return subclasses of `Response` declared in `meshagent.api.messaging`.
+Tools commonly return subclasses of `Content` declared in `meshagent.api.messaging`.
 
-| Response type | When to use it |
+| Content type | When to use it |
 | --- | --- |
-| `JsonChunk` | Structured JSON output, such as API payloads or summarized data. |
-| `TextChunk` | Plain-text answers or status messages. |
-| `FileChunk` | Binary content such as generated documents, images, or archives. |
-| `LinkChunk` | A URL pointing to an external resource. |
+| `JsonContent` | Structured JSON output, such as API payloads or summarized data. |
+| `TextContent` | Plain-text answers or status messages. |
+| `FileContent` | Binary content such as generated documents, images, or archives. |
+| `LinkContent` | A URL pointing to an external resource. |
+| `EmptyContent` | No payload, usually for successful operations that do not need a response body. |
 
 ### `ToolContext`
 
@@ -55,10 +55,11 @@ Tools return subclasses of `Response` declared in `meshagent.api.messaging`.
 
 | Property | Description |
 | --- | --- |
-| `room` | A room client the tool can use to interact with the room or its participants. |
 | `caller` | The participant who called the tool. |
 | `on_behalf_of` | The participant a calling agent is acting for, if any. |
 | `caller_context` | Optional caller-specific context data. Useful for chat context, handoffs, or custom workflow state. |
+
+If a tool needs room access, inherit `LocalRoomTool` and use `self.room` inside `execute(...)`. Toolkits and hosting helpers bind the active `RoomClient` before the tool runs.
 
 ## Toolkits
 
@@ -88,7 +89,7 @@ A `Toolkit` bundles related tools under a single name so callers can discover, i
 **Methods**
 
 - `get_tool(name)`: returns the named tool or raises a `RoomException` if it is not present.
-- `execute(context, name, arguments, optional attachment)`: validates input, invokes the tool, and returns a response.
+- `execute(context, name, input)`: validates the input content, invokes the tool, and returns a response.
 
 > Toolkits emit OpenTelemetry spans out of the box, so MeshAgent can track who called a tool, how long it took, and what room it ran in.
 
@@ -119,40 +120,9 @@ Static toolkits stay attached to the agent for its full lifetime.
 - The toolkit is instantiated once and participates in every LLM turn.
 - Use this when the agent should always have a capability available.
 
-On the CLI, this is usually the `--require-*` form of a flag.
+On the CLI, built-in capabilities now use one canonical flag per capability, such as `--web-search`, `--web-fetch`, `--storage`, `--shell`, `--advanced-shell`, `--document-authoring`, and `--discovery`. `--require-toolkit` remains the flag for attaching an external toolkit by name.
 
-| Optional per-turn | Always on | What it means |
-| --- | --- | --- |
-| `--web-search` | `--require-web-search` | `--web-search` lets the client enable web search for a turn. `--require-web-search` keeps it available on every turn. |
-| `--web-fetch` | `--require-web-fetch` | `--web-fetch` is user-selectable per turn. `--require-web-fetch` is always attached. |
-| `--storage` | `--require-storage` | `--storage` exposes storage through the builder flow. `--require-storage` attaches storage tools directly. |
-| `--mcp` | not currently available from `meshagent process` | `--mcp` enables dynamic MCP selection for a turn. |
-
-### Dynamic toolkits
-
-Dynamic toolkits are created on demand from `ToolkitBuilder` and `ToolkitConfig` pairs.
-
-- Register one or more `ToolkitBuilder` instances.
-- The client or UI selects the tools for a turn and sends a `tools` array.
-- During the turn, `make_toolkits(...)` validates the configs and instantiates only the requested toolkits.
-- Use this for capabilities that should be opt-in, temporary, or user-selected, such as MCP connectors, local shell access, or turn-specific storage tools.
-
-On the CLI, the non-`require` form is the dynamic version. For example:
-
-- `--web-search` lets the UI or caller enable web search for a turn.
-- `--storage` lets the UI or caller enable storage tools for a turn.
-- `--mcp` lets the UI or caller attach MCP tools for a turn.
-
-> CLI note: CLI agents that expose toolkit builders follow the same dynamic pattern and accept a `tools` array for per-message selection. Flags like `--require-*` attach always-on toolkits in addition to any dynamic ones.
-
-## Dynamic toolkit flow
-
-1. The client asks the agent for supported toolkit builders.
-2. The user or calling application selects tools and sends configs for that turn.
-3. The agent merges any always-on toolkits with the requested dynamic toolkits.
-4. The LLM adapter converts the resulting toolkits into provider-specific tool definitions.
-5. Tool calls are routed back to the owning toolkit and executed.
-6. On the next message, the tool list is rebuilt again.
+If you need a capability available for every turn, add the corresponding toolkit directly in code or start the agent with the relevant CLI flag. If the capability should be discoverable by other participants, host the toolkit in a room and let callers invoke it over MeshAgent's room-tool protocol.
 
 ## Tool access and availability
 

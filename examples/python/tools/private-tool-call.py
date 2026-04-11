@@ -3,10 +3,11 @@ import asyncio
 import logging
 from meshagent.otel import otel_config
 from meshagent.api.services import ServiceHost
-from meshagent.tools import FunctionTool, ToolContext, Toolkit
+from meshagent.api.room_server_client import RoomClient
 from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
+from meshagent.tools import LocalRoomTool, ToolContext, Toolkit
 
 otel_config(service_name="my-service")
 log = logging.getLogger("my-service")
@@ -14,15 +15,16 @@ log = logging.getLogger("my-service")
 service = ServiceHost()
 
 
-async def save_to_storage(room, path: str, data: bytes):
+async def save_to_storage(room: RoomClient, path: str, data: bytes):
     handle = await room.storage.open(path=path, overwrite=True)
     await room.storage.write(handle=handle, data=data)
     await room.storage.close(handle=handle)
 
 
-class Survey(FunctionTool):
-    def __init__(self):
+class Survey(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="survey",
             title="survey",
             description="a tool that conducts a survey of the participants",
@@ -50,7 +52,7 @@ class Survey(FunctionTool):
     async def execute(
         self, context: ToolContext, subject: str, description: str, name: str
     ):
-        room = context.room
+        room = self.room
         participants = [
             p for p in room.messaging.remote_participants if p.role == "user"
         ]
@@ -119,7 +121,7 @@ class Survey(FunctionTool):
         # write survey results to the room
         log.info("Survey completed, writing raw results to Room storage")
         await save_to_storage(
-            room=context.room,
+            room=room,
             path=f"survey/{room.room_name}-{name}.json",
             data=json.dumps({"summary": summary}, indent=2).encode("utf-8"),
         )
@@ -137,7 +139,7 @@ class Survey(FunctionTool):
             output_schema=summary_schema,
         )
         summary_resp = await runner.run(
-            room=context.room,
+            room=room,
             arguments={
                 "prompt": f"Summarize these survey results:\n{json.dumps(summary)}",
                 "model": None,
@@ -154,7 +156,7 @@ class Survey(FunctionTool):
             summary_text = str(summary_resp)
         log.info("Saving survey result summary")
         await save_to_storage(
-            room=context.room,
+            room=room,
             path=f"survey/{room.room_name}-{name}-summary.doc",
             data=summary_text.encode("utf-8"),
         )
@@ -169,8 +171,11 @@ class SurveyToolkit(Toolkit):
             name="survey-toolkit",
             title="survey-toolkit",
             description="a toolkit for conducting a survey",
-            tools=[Survey()],
+            tools=[],
         )
+
+    async def start(self, *, room: RoomClient):
+        self.tools = [Survey(room=room)]
 
 
 print(f"running on port {service.port}")

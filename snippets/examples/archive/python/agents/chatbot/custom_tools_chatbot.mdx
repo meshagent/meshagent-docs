@@ -4,9 +4,10 @@ import uuid
 
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
+from meshagent.openai.tools.responses_adapter import WebSearchTool
+from meshagent.api import RoomClient
 from meshagent.api.services import ServiceHost
-from meshagent.tools.storage import StorageToolkit
+from meshagent.tools.storage import StorageToolRoomMount, StorageToolkit
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
     DocumentTypeAuthoringToolkit,
@@ -14,7 +15,7 @@ from meshagent.tools.document_tools import (
 from meshagent.agents.schemas.document import document_schema
 from meshagent.api.room_server_client import TextDataType
 from meshagent.api.messaging import TextContent, JsonContent
-from meshagent.tools import FunctionTool, Toolkit
+from meshagent.tools import LocalRoomTool, Toolkit, ToolContext
 from meshagent.otel import otel_config
 
 service = ServiceHost()  # port defaults to an available port if not assigned
@@ -24,9 +25,10 @@ otel_config(
 )  # automatically enables telemetry data collection for your agents and tools
 
 
-class WriteTask(FunctionTool):
-    def __init__(self):
+class WriteTask(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="WriteTask",
             title="Add a task",
             description="A tool to add tasks to the database",
@@ -38,8 +40,9 @@ class WriteTask(FunctionTool):
             },
         )
 
-    async def execute(self, context, taskdescription: str):
-        await context.room.database.insert(
+    async def execute(self, context: ToolContext, taskdescription: str):
+        del context
+        await self.room.database.insert(
             table="tasks",
             records=[
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
@@ -48,9 +51,10 @@ class WriteTask(FunctionTool):
         return TextContent(text="Task added!")
 
 
-class GetTasks(FunctionTool):
-    def __init__(self):
+class GetTasks(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="GetTasks",
             title="List tasks",
             description="List tasks recorded today or this week",
@@ -62,9 +66,19 @@ class GetTasks(FunctionTool):
             },
         )
 
-    async def execute(self, context):
+    async def execute(self, context: ToolContext):
+        del context
         return JsonContent(
-            json={"values": await context.room.database.search(table="tasks")}
+            json={"values": await self.room.database.search(table="tasks")}
+        )
+
+
+class TaskTrackerToolkit(Toolkit):
+    def __init__(self, *, room: RoomClient):
+        super().__init__(
+            name="tasktracker",
+            room=room,
+            tools=[WriteTask(room=room), GetTasks(room=room)],
         )
 
 
@@ -85,22 +99,23 @@ class SimpleChatbot(ChatBot):
                 "blob URLs MUST not be added to documents, they must be saved as files first",
             ],
             llm_adapter=OpenAIResponsesAdapter(),
-            toolkits=[  # Add built in and custom tools here!
-                StorageToolkit(),
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema, document_type="document"
-                ),
-                Toolkit(name="tasktracker", tools=[WriteTask(), GetTasks()]),
-            ],
+            toolkits=[],
         )
 
-    def get_toolkit_builders(self):
-        builders = super().get_toolkit_builders()
-        builders.append(WebSearchToolkitBuilder())  # add web search
-        return builders
-
     async def start(self, *, room):
+        self.toolkits = [  # Add built in and custom tools here!
+            StorageToolkit(
+                mounts=[StorageToolRoomMount(room=room, path="/")],
+            ),
+            Toolkit(name="web_search", tools=[WebSearchTool()]),
+            DocumentAuthoringToolkit(room=room),
+            DocumentTypeAuthoringToolkit(
+                room=room,
+                schema=document_schema,
+                document_type="document",
+            ),
+            TaskTrackerToolkit(room=room),
+        ]
         await super().start(room=room)
         # One tiny table:
         await room.database.create_table_with_schema(
@@ -114,4 +129,3 @@ class SimpleChatbot(ChatBot):
 asyncio.run(service.run())
 
 ```
-

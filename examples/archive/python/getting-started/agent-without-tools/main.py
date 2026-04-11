@@ -6,9 +6,8 @@ from livekit.plugins import openai, silero
 
 from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
-from meshagent.livekit.agents.voice import VoiceBot
+from meshagent.livekit.agents.voice import VoiceBot, VoiceBotContext
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.tools import ToolContext
 
 # MeshAgent Service, Tools, and Agent
 service = ServiceHost()
@@ -41,7 +40,7 @@ class SimpleVoicebot(VoiceBot):
             ],
         )
 
-    def create_session(self, *, context: ToolContext) -> AgentSession:
+    def create_session(self, *, context: VoiceBotContext) -> AgentSession:
         token: str = context.room.protocol.token
         url: str = context.room.room_url
 

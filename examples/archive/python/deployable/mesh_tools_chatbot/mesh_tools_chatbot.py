@@ -1,9 +1,9 @@
 import asyncio
-from meshagent.api import RequiredSchema
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
+from meshagent.openai.tools.responses_adapter import WebSearchTool
 from meshagent.api.services import ServiceHost
+from meshagent.tools import Toolkit
 from meshagent.tools.storage import StorageToolkit
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -38,16 +38,13 @@ class SimpleChatbot(ChatBot):
             llm_adapter=OpenAIResponsesAdapter(),
             toolkits=[
                 StorageToolkit(),
+                Toolkit(name="web_search", tools=[WebSearchTool()]),
                 DocumentAuthoringToolkit(),
                 DocumentTypeAuthoringToolkit(
                     schema=document_schema, document_type="document"
                 ),
             ],
         )
-    
-    def get_toolkit_builders(self):
-        builders = super().get_toolkit_builders()
-        builders.append(WebSearchToolkitBuilder())  # add web search
-        return builders
+
 
 asyncio.run(service.run())

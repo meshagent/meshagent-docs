@@ -13,8 +13,8 @@ meshagent process join \
   --room=myroom \
   --agent-name=research-helper \
   --channel=toolkit:research-helper \
-  --require-web-search \
-  --require-storage \
+  --web-search \
+  --storage \
   --rule="You are a callable research helper. Produce concise results, cite sources when possible, and save larger artifacts to storage."
 ```
 

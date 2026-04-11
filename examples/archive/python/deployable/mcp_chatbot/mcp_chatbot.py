@@ -3,7 +3,7 @@ import logging
 from meshagent.tools import Toolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import MCPConfig, MCPServer, MCPTool
+from meshagent.openai.tools.responses_adapter import MCPServer, MCPTool
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 
@@ -25,15 +25,12 @@ class MCPChatbot(ChatBot):
                     name="mcp-deepwiki-toolkit",
                     tools=[
                         MCPTool(
-                            config=MCPConfig(
-                                name="mcp",
-                                servers=[
-                                    MCPServer(
-                                        server_label="mcp",
-                                        server_url="https://mcp.deepwiki.com/mcp",
-                                    )
-                                ],
-                            )
+                            servers=[
+                                MCPServer(
+                                    server_label="mcp",
+                                    server_url="https://mcp.deepwiki.com/mcp",
+                                )
+                            ]
                         )
                     ],
                 )

@@ -1,4 +1,4 @@
-from meshagent.livekit.agents.voice import VoiceBot
+from meshagent.livekit.agents.voice import VoiceBot, VoiceBotContext
 from meshagent.api.services import ServiceHost
 from meshagent.api import RequiredToolkit
 from meshagent.tools import Toolkit
@@ -9,7 +9,6 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.storage import SaveFileFromUrlTool
-from meshagent.tools import ToolContext
 import livekit.agents.utils.http_context
 import livekit.agents.cli.log
 
@@ -214,8 +213,8 @@ class SampleVoiceAgentWithTools(VoiceBot):
 
             return {}
 
-    def create_session(self, *, context: ToolContext):
-        session = super().create_session()
+    def create_session(self, *, context: VoiceBotContext):
+        session = super().create_session(context=context)
 
         def watch_done(task: asyncio.Task):
             try:

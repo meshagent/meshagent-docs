@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from meshagent.api import RequiredToolkit
+from meshagent.api.messaging import JsonContent, TextContent
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -76,7 +77,7 @@ class MarkitDownFileIndexer(StorageIndexer):
         embedder=None,
         table="rag-index",
     ):
-        self._markitdown = MarkItDownToolkit()
+        self._markitdown: MarkItDownToolkit | None = None
 
         super().__init__(
             title=title,
@@ -88,16 +89,18 @@ class MarkitDownFileIndexer(StorageIndexer):
         )
 
     async def read_file(self, *, path: str):
-        context = ToolContext(
-            room=self.room,
-            caller=self.room.local_participant,
-        )
+        if self._markitdown is None:
+            raise RuntimeError("markitdown toolkit has not been started")
         response = await self._markitdown.execute(
-            context=context,
+            context=ToolContext(caller=self.room.local_participant),
             name="markitdown_from_file",
-            arguments={"path": path},
+            input=JsonContent(json={"path": path}),
         )
-        return getattr(response, "text", None)
+        return response.text if isinstance(response, TextContent) else None
+
+    async def start(self, *, room):
+        self._markitdown = MarkItDownToolkit(room=room)
+        await super().start(room=room)
 
 
 asyncio.run(service.run())
