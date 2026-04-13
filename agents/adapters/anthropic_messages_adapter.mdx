@@ -23,15 +23,17 @@ AnthropicMessagesAdapter(
     message_options: Optional[dict] = None,
     provider: str = "anthropic",
     log_requests: bool = False,
-    context_management: Literal["auto", "none"] = "none",
+    context_management: Literal["auto", "none"] = "auto",
     compaction_threshold: int = 150000,
     compaction_pause_after: bool = False,
     compaction_instructions: Optional[str] = None,
+    base_url: Optional[str] = None,
 )
 ```
 - `model` - default model name; can be overridden per call.
 - `max_tokens` - cap on output tokens per response.
-- `client` - reuse an existing Anthropic client; otherwise the adapter builds one via `meshagent.anthropic.client.get_client`.
+- `client` - reuse an existing Anthropic client; otherwise the adapter builds one via `meshagent.anthropic.proxy.get_client`.
+- `base_url` - override the provider base URL used when the adapter creates its own client. Defaults to `ANTHROPIC_BASE_URL` when omitted.
 - `message_options` - extra parameters passed to `messages.create` (for example `temperature`, `top_p`, `tools`, `betas`).
 - `provider` - label emitted in telemetry and logs.
 - `log_requests` - when true, uses a logging HTTP client for debugging.
@@ -56,7 +58,7 @@ When `next()` is called it:
 
 ## Related Topics
 - [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters
-- [LLM Proxy](../routing/llm_proxy): How requests are routed and metered inside rooms
+- [Making Requests](../routing/llm_proxy): How requests are routed and metered inside rooms
 - [OpenAI Responses Adapter](./openai_responses_adapter): A detailed reference implementation
 - [Anthropic Tool Response Adapter](./anthropic_tool_response_adapter): How tool outputs are rendered back into the chat transcript
 - [Process Agents Overview](../process/overview): Shows where adapters are used in the recommended runtime

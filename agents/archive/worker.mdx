@@ -43,7 +43,7 @@ Let's run a Worker that listens on a queue and can write files to room storage.
 meshagent setup
 
 # Call a worker into your room
-meshagent worker join --room quickstart --agent-name worker --queue tasks --require-storage \
+meshagent worker join --room quickstart --agent-name worker --queue tasks --storage \
   --room-rules "agents/worker/rules.txt" --rule "Process queued tasks and save results to storage."
 ```
 
@@ -69,14 +69,14 @@ Once your worker runs locally, package it as a service so it is always available
 Use the CLI to automatically deploy the worker to your room. 
 
 ```bash bash 
-meshagent worker deploy --room quickstart --service-name worker --agent-name worker --queue tasks --require-storage \
+meshagent worker deploy --room quickstart --service-name worker --agent-name worker --queue tasks --storage \
   --room-rules "agents/worker/rules.txt" --rule "Process queued tasks and save results to storage."
 ```
 
 **Option 2: Generate a YAML spec**  Create a `meshagent.yaml` file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running: 
 
 ```bash 
-meshagent worker spec --service-name worker --agent-name worker --queue tasks --require-storage \
+meshagent worker spec --service-name worker --agent-name worker --queue tasks --storage \
   --room-rules "agents/worker/rules.txt" --rule "Process queued tasks and save results to storage."
 ```
 

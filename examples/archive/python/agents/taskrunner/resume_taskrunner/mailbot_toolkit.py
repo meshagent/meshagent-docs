@@ -1,15 +1,15 @@
 import asyncio
 import logging
 import os
-from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
+from meshagent.api import RoomClient
+from meshagent.tools import LocalRoomTool, ToolContext, Toolkit
 from meshagent.api.messaging import JsonContent
 from meshagent.api.services import ServiceHost
 from meshagent.otel import otel_config
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
-from meshagent.tools.storage import StorageToolkitBuilder
-from meshagent.tools.database import DatabaseToolkitBuilder
+from meshagent.openai.tools.responses_adapter import WebSearchTool
+from meshagent.tools.storage import StorageToolRoomMount, StorageToolkit
 
 otel_config(service_name="resume-runner")
 log = logging.getLogger("resume-runner")
@@ -19,24 +19,24 @@ service = ServiceHost()
 
 
 class ResumeTaskRunner(LLMTaskRunner):
-    def __init__(self):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
             llm_adapter=OpenAIResponsesAdapter(),
             supports_tools=True,
+            toolkits=[
+                Toolkit(name="web_search", tools=[WebSearchTool()]),
+                StorageToolkit(
+                    mounts=[StorageToolRoomMount(room=room, path="/")],
+                ),
+            ],
         )
-
-    def get_toolkit_builders(self):
-        return [
-            WebSearchToolkitBuilder(),
-            StorageToolkitBuilder(),
-            DatabaseToolkitBuilder(),
-        ]
 
 
 # Tool for Mailbot to trigger the resume processing
-class ProcessResume(FunctionTool):
-    def __init__(self):
+class ProcessResume(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="process-resume",
             title="process-resume",
             description="Copy a resume attachment from an email into the resumes folder for processing",
@@ -62,19 +62,20 @@ class ProcessResume(FunctionTool):
         candidate_name: str | None = None,
         candidate_email: str | None = None,
     ):
+        room = self.room
         # MailBot saves attachments into .emails/.../attachments/<file>. Copy that into resumes/<file>
         filename = os.path.basename(attachment_path.rstrip("/"))
         target_path = f"resumes/{filename}"
 
         try:
             log.info(f"Saving resume to {target_path}")
-            download = await context.room.storage.download(path=attachment_path)
+            download = await room.storage.download(path=attachment_path)
             data = download.data
-            handle = await context.room.storage.open(path=target_path, overwrite=True)
+            handle = await room.storage.open(path=target_path, overwrite=True)
             try:
-                await context.room.storage.write(handle=handle, data=data)
+                await room.storage.write(handle=handle, data=data)
             finally:
-                await context.room.storage.close(handle=handle)
+                await room.storage.close(handle=handle)
         except Exception as e:
             return JsonContent(
                 json={
@@ -92,9 +93,9 @@ class ProcessResume(FunctionTool):
         )
         log.info(f"Processing resume with prompt: {resume_processing_prompt}")
 
-        runner = ResumeTaskRunner()
+        runner = ResumeTaskRunner(room=room)
         resume_response = await runner.run(
-            room=context.room,
+            room=room,
             caller=context.caller,
             arguments={
                 "prompt": resume_processing_prompt,
@@ -116,7 +117,7 @@ class ProcessResume(FunctionTool):
         # Invoke the TaskRunner to score the resume against each open role
         log.info("Loading open roles from the database for scoring")
         try:
-            open_roles = await context.room.database.search(table="open_roles")
+            open_roles = await room.database.search(table="open_roles")
         except Exception as e:
             log.exception("Failed to fetch open roles for scoring: %s", e)
             return JsonContent(
@@ -131,7 +132,7 @@ class ProcessResume(FunctionTool):
         else:
             candidate_record = None
             try:
-                candidates = await context.room.database.search(
+                candidates = await room.database.search(
                     table="candidates", where={"resume_path": target_path}, limit=1
                 )
                 if candidates:
@@ -177,7 +178,7 @@ class ProcessResume(FunctionTool):
                 log.info("Scoring candidate for role '%s'", role.get("job_title"))
                 try:
                     resume_score_response = await runner.run(
-                        room=context.room,
+                        room=room,
                         caller=context.caller,
                         arguments={
                             "prompt": prompt,
@@ -231,14 +232,17 @@ class ProcessResume(FunctionTool):
 
 
 @service.path(identity="/mailbot-toolkit", path="/mailbot-toolkit")
-class MailBotToolkit(RemoteToolkit):
+class MailBotToolkit(Toolkit):
     def __init__(self):
         super().__init__(
             name="mailbot-toolkit",
             title="mailbot-toolkit",
             description="A Toolkit for the MailBot to kickoff resume processing",
-            tools=[ProcessResume()],
+            tools=[],
         )
+
+    async def start(self, *, room: RoomClient):
+        self.tools = [ProcessResume(room=room)]
 
 
 asyncio.run(service.run())

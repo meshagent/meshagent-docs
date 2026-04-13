@@ -2,7 +2,7 @@ import asyncio
 import httpx
 import logging
 from meshagent.api.services import ServiceHost
-from meshagent.tools import FunctionTool, ToolContext, RemoteToolkit
+from meshagent.tools import FunctionTool, ToolContext, Toolkit
 from meshagent.otel import otel_config
 from opentelemetry import trace, metrics
 from opentelemetry.trace import Status, StatusCode
@@ -153,7 +153,7 @@ class WeatherTool(FunctionTool):
 
 
 @service.path(path="/weather", identity="weather-toolkit")
-class WeatherToolkit(RemoteToolkit):
+class WeatherToolkit(Toolkit):
     def __init__(self):
         super().__init__(
             name="weather-toolkit",

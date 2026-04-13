@@ -38,11 +38,9 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - `create_session()`: Creates a fresh `AgentSessionContext`. Implementations can use this to set provider and model specific roles (e.g., some models prefer a "developer" prompt vs a "system" prompt).
 - `context_window_size(model: str)`: Declare the model's context window size if known.
 - `needs_compaction(context)`: Decide if the current context should be compacted before the next request.
-- `compact(context, room, model?)`: Mutate the context to a smaller representation (provider-specific).
+- `compact(context, model?)`: Mutate the context to a smaller representation (provider-specific).
 - `get_input_tokens(...)`: Optional helper to estimate the token count for the current request.
-- `tool_providers(model: str)`: Can be used to advertise `ToolkitBuilder` instances this adapter can supply for a given model. This is one way to bundle built-in provider tools. Alternatively, agents can manage the builders themselves.
-- `make_toolkit(room, model, config)`: Helper to turn a `ToolkitConfig` into a `Toolkit` using `tool_providers`.
-- `check_for_termination(context, room)`: Allows you to use the session context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
+- `check_for_termination(context)`: Allows you to use the session context to decide whether the conversation should continue. Can be used to check end-of-turn events based on provider semantics.
 - `next(...)`: The core method: given the session context, room, toolkits for this turn, and an optional `ToolResponseAdapter`, call the underlying LLM, stream events (via `event_handler`), execute tool calls, inject tool results into the context, and return the final output. You can pass `output_schema` for structured responses, override `model`, and act `on_behalf_of` a participant. See [OpenAI Responses Adapter](./openai_responses_adapter) for a detailed implementation.
 - `validate(response, output_schema)`: Validate structured output using JSON Schema.
 
@@ -57,7 +55,7 @@ LLM adapters can optionally compact a session context before a new request when 
 ### Implementing your own LLM Adapter
 1. **Subclass `LLMAdapter`.** Provide defaults for the model name and optionally a custom `create_session()`. 
 2. **Implement `next()`.** Use your provider’s SDK or API to send the session context, include tool definitions derived from the supplied toolkits, stream result, execute any tool calls, and append tool outputs back to the session context. 
-3. **Expose native tool builders (optional).** You can include built-in toolkits with your adapter by overriding `tool_providers()` to return `ToolkitBuilder`s so UIs can offer them as toggles.
+3. **Bundle native tools (optional).** If your provider works best with provider-native tools, expose them as ordinary `Toolkit` instances and let the caller include those toolkits for the turn.
 4. **Be mindful of cancellation and telemetry.** Make appropriate operations async, apply appropriate timeouts/retries, and emit tracing data if you integrate with OpenTelemetry (the base adapters do).
 
 ## `ToolResponseAdapter`
@@ -73,7 +71,7 @@ While `LLMAdapter` talks to the model, a `ToolResponseAdapter` decides how to su
 ```python Python
 class ToolResponseAdapter(ABC):
     @abstractmethod
-    async def to_plain_text(self, *, room: RoomClient, response: Response) -> str:
+    async def to_plain_text(self, *, response: Response) -> str:
         ...
 
     @abstractmethod
@@ -82,7 +80,6 @@ class ToolResponseAdapter(ABC):
         *,
         context: AgentSessionContext,
         tool_call: Any,
-        room: RoomClient,
         response: Response,
     ) -> list:
         ...
@@ -104,7 +101,7 @@ During each tool call the LLM adapter:
 If you use the OpenAI Responses adapter and omit `tool_adapter`, it defaults to the OpenAI-focused implementation described next.
 
 ## Related Topics
-- [LLM Proxy](../routing/llm_proxy)
+- [Making Requests](../routing/llm_proxy)
 - [OpenAI Responses Adapter](./openai_responses_adapter)
 - [OpenAI Tool Response Adapter](./openai_tool_response_adapter)
 - [Anthropic Messages Adapter](./anthropic_messages_adapter)

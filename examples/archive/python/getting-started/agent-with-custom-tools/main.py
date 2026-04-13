@@ -5,10 +5,10 @@ from openai import AsyncOpenAI
 from livekit.agents import function_tool, ChatContext, Agent, RunContext, AgentSession
 from livekit.plugins import openai, silero
 
-from meshagent.api import RequiredToolkit
+from meshagent.api import RequiredToolkit, RoomClient
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.livekit.agents.voice import VoiceBot
+from meshagent.livekit.agents.voice import VoiceBot, VoiceBotContext
 from meshagent.api.services import ServiceHost
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -16,17 +16,19 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
+from meshagent.api.room_server_client import TextDataType
 from meshagent.api.messaging import TextContent, JsonContent
-from meshagent.tools import FunctionTool, Toolkit, ToolContext
+from meshagent.tools import LocalRoomTool, Toolkit, ToolContext
 
 
 # MeshAgent Service, Tools, and Agent
 service = ServiceHost()
 
 
-class WriteTask(FunctionTool):
-    def __init__(self):
+class WriteTask(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="WriteTask",
             title="Add a task",
             description="A tool to add tasks to the database",
@@ -38,8 +40,9 @@ class WriteTask(FunctionTool):
             },
         )
 
-    async def execute(self, context, taskdescription: str):
-        await context.room.database.insert(
+    async def execute(self, context: ToolContext, taskdescription: str):
+        del context
+        await self.room.database.insert(
             table="tasks",
             records=[
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
@@ -48,9 +51,10 @@ class WriteTask(FunctionTool):
         return TextContent(text="Task added!")
 
 
-class GetTasks(FunctionTool):
-    def __init__(self):
+class GetTasks(LocalRoomTool):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
+            room=room,
             name="GetTasks",
             title="List tasks",
             description="List tasks recorded today or this week",
@@ -62,9 +66,19 @@ class GetTasks(FunctionTool):
             },
         )
 
-    async def execute(self, context):
+    async def execute(self, context: ToolContext):
+        del context
         return JsonContent(
-            json={"values": await context.room.database.search(table="tasks")}
+            json={"values": await self.room.database.search(table="tasks")}
+        )
+
+
+class TaskToolkit(Toolkit):
+    def __init__(self, *, room: RoomClient):
+        super().__init__(
+            name="tasktools",
+            room=room,
+            tools=[WriteTask(room=room), GetTasks(room=room)],
         )
 
 
@@ -86,14 +100,27 @@ class SimpleChatbot(ChatBot):
             ],
             llm_adapter=OpenAIResponsesAdapter(),
             requires=[RequiredToolkit(name="ui")],
-            toolkits=[
-                MarkItDownToolkit(),
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema, document_type="document"
-                ),
-                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()]),
-            ],
+            toolkits=[],
+        )
+
+    async def start(self, *, room):
+        self.toolkits = [
+            MarkItDownToolkit(room=room),
+            DocumentAuthoringToolkit(room=room),
+            DocumentTypeAuthoringToolkit(
+                room=room,
+                schema=document_schema,
+                document_type="document",
+            ),
+            TaskToolkit(room=room),
+        ]
+        await super().start(room=room)
+
+        await room.database.create_table_with_schema(
+            name="tasks",
+            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
+            mode="create_if_not_exists",
+            data=None,
         )
 
 
@@ -117,17 +144,30 @@ class SimpleVoicebot(VoiceBot):
             requires=[
                 RequiredToolkit(name="ui"),
             ],
-            toolkits=[
-                MarkItDownToolkit(),
-                DocumentAuthoringToolkit(),
-                DocumentTypeAuthoringToolkit(
-                    schema=document_schema, document_type="document"
-                ),
-                Toolkit(name="tasktools", tools=[WriteTask(), GetTasks()]),
-            ],
+            toolkits=[],
         )
 
-    def create_session(self, *, context: ToolContext) -> AgentSession:
+    async def start(self, *, room):
+        self.toolkits = [
+            MarkItDownToolkit(room=room),
+            DocumentAuthoringToolkit(room=room),
+            DocumentTypeAuthoringToolkit(
+                room=room,
+                schema=document_schema,
+                document_type="document",
+            ),
+            TaskToolkit(room=room),
+        ]
+        await super().start(room=room)
+
+        await room.database.create_table_with_schema(
+            name="tasks",
+            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
+            mode="create_if_not_exists",
+            data=None,
+        )
+
+    def create_session(self, *, context: VoiceBotContext) -> AgentSession:
         token: str = context.room.protocol.token
         url: str = context.room.room_url
 

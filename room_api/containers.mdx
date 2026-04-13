@@ -103,7 +103,7 @@ await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 
 ### Room registry management
 
-MeshAgent also exposes a room-scoped registry surface for published image repositories and tags. This is the same registry view used by MeshAgent Studio's **Registry** tab.
+MeshAgent also exposes a room-scoped registry surface for published image repositories, tags, and untagged manifest digests. This is the same registry view used by MeshAgent Studio's **Registry** tab.
 
 These helpers are currently surfaced in the Dart/Flutter client and Studio UI.
 
@@ -140,6 +140,26 @@ final tags = await room.containers.listRegistryTags(
 
 for (final version in tags.versions) {
   print('${version.tag} ${version.digest}');
+}
+```
+
+### `listRegistryReferences({ image, last, n })`
+
+- **Description**: List all visible refs for one room-registry repository, including untagged manifest digests.
+- **Parameters**:
+  - `image`: Repository ref such as `room.meshagent.com/my-app`.
+  - `last`: Optional pagination cursor.
+  - `n`: Optional page size.
+- **Returns**: A page of registry refs. Tagged entries include `tag`; untagged entries return `tag == null`.
+
+```dart Dart
+final refs = await room.containers.listRegistryReferences(
+  image: "room.meshagent.com/my-app",
+  n: 100,
+);
+
+for (final ref in refs.references) {
+  print('${ref.tag ?? "(untagged)"} ${ref.digest}');
 }
 ```
 

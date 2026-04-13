@@ -26,11 +26,13 @@ OpenAIResponsesAdapter(
     max_output_tokens: Optional[int] = 32000,
     context_management: Literal["auto", "standalone", "none"] = "auto",
     compaction_threshold: int = 200000,
+    base_url: Optional[str] = None,
 )
 ```
 - `model` – default model name; can be overridden per message.
 - `parallel_tool_calls` – request parallel tool execution when supported.
 - `client` – reuse an existing `AsyncOpenAI` client; otherwise the adapter creates one via `meshagent.openai.proxy.get_client`.
+- `base_url` – override the provider base URL used when the adapter creates its own client. Defaults to `OPENAI_BASE_URL` when omitted.
 - `response_options` – extra parameters passed to `responses.create`.
 - `reasoning_effort` – populates the Responses API `reasoning` options.
 - `provider` – label emitted in telemetry and logs.
@@ -43,12 +45,12 @@ OpenAIResponsesAdapter(
 - `compaction_threshold` – threshold used for compaction (`compact_threshold` in Responses `context_management` entries and manual preflight trigger in `standalone` mode).
 
 ## Tool provider integration
-The adapter includes several builders and tools for OpenAI native tools. Agents can use them directly, or override them with agent-specific wrappers that add persistence and room-specific behavior.
+The adapter includes several OpenAI native tool wrappers. Agents can use them directly, or override them with agent-specific wrappers that add persistence and room-specific behavior.
 
-- **Image generation** – `ImageGenerationConfig`, `ImageGenerationToolkitBuilder`, `ImageGenerationTool`
-- **Local shell** – `LocalShellConfig`, `LocalShellToolkitBuilder`, `LocalShellTool`
-- **MCP** – `MCPConfig`, `MCPToolkitBuilder`, `MCPTool`
-- **Web search preview** – `WebSearchConfig`, `WebSearchToolkitBuilder`, `WebSearchTool`
+- **Image generation** – `ImageGenerationTool`
+- **Shell execution** – `ShellTool`
+- **MCP** – `MCPServer`, `MCPTool`
+- **Web search preview** – `WebSearchTool`
 - **File Search** - `FileSearchTool`
 - **Code Interpreter** - `CodeInterpreterTool`
 - **Reasoning** - `ReasoningTool`
@@ -73,6 +75,6 @@ You can switch to:
 
 ## Related Topics
 - [Adapters Overview](./index): Understand LLMAdapters and ToolResponseAdapters
-- [LLM Proxy](../routing/llm_proxy): How requests are routed and metered inside rooms
+- [Making Requests](../routing/llm_proxy): How requests are routed and metered inside rooms
 - [OpenAI Tool Response Adapter](./openai_tool_response_adapter): How tool outputs are rendered back into the chat transcript.
 - [Process Agents Overview](../process/overview): Shows where the adapter is invoked in the recommended overall agent flow.

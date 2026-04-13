@@ -55,16 +55,17 @@ identity: my-client
 room: my-room
 role: user
 api:
-  messaging: {}
-  storage: {}
+  llm: {}
 ```
+
+Tokens that will make LLM proxy requests must include the `api.llm` grant. Tokens without `api.llm` are rejected by the proxy.
 
 The main fields are:
 
 - `identity`: the participant name in the room
 - `room`: the room this token should join
 - `role`: `user`, `agent`, or `tool`
-- `api`: the [API scope](./api_scopes) for that participant
+- `api`: the [API scope](./api_scopes) for that participant. For LLM proxy access, this must include `llm`.
 
 Generate the token:
 
@@ -83,4 +84,4 @@ By default, the command uses the active project and active API key. Use `--proje
 ## Related topics
 - [`ApiScope` reference](./api_scopes)
 - [Managing project room grants](../rest_api/overview)
-- [Using CLI Coding Agents with the MeshAgent Room Proxy](../agents/routing/cli_agents)
+- [Using CLI Coding Agents with the MeshAgent LLM Proxy](../agents/routing/cli_agents)

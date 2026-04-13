@@ -4,9 +4,11 @@ from html import escape
 
 from aiohttp import web
 
+from meshagent.api.messaging import JsonContent
 from meshagent.agents.llmrunner import LLMTaskRunner
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import WebSearchToolkitBuilder
+from meshagent.openai.tools.responses_adapter import WebSearchTool
+from meshagent.tools import Toolkit
 
 METHODS = ["GET", "POST"]
 
@@ -356,6 +358,7 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
             super().__init__(
                 llm_adapter=OpenAIResponsesAdapter(),
                 supports_tools=True,
+                toolkits=[Toolkit(name="web_search", tools=[WebSearchTool()])],
                 output_schema={
                     "type": "object",
                     "required": ["next_step", "commands"],
@@ -366,9 +369,6 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
                     },
                 },
             )
-
-        def get_toolkit_builders(self):
-            return [WebSearchToolkitBuilder()]
 
     runner = GettingStartedTaskRunner()
     response = await runner.run(
@@ -382,7 +382,7 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
     print(response)
     next_step = ""
     commands: list[str] = []
-    if hasattr(response, "json"):
+    if isinstance(response, JsonContent):
         payload = response.json
         next_step = str(payload.get("next_step", "")).strip()
         raw_commands = payload.get("commands")

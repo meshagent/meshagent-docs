@@ -9,6 +9,8 @@ Use them when you want a stable URL for something running inside a room, such as
 
 This is the normal way to publish an HTTP service from a room. A common pattern is: an agent or service creates a web app in the room, serves it on a published port, and then a route gives that app a stable URL.
 
+Routes can front either a fully public site or a private app protected by MeshAgent. For browser apps, MeshAgent can act as an identity-aware proxy in front of your service: it authenticates the user, checks that they are allowed into the room, and only then forwards the request to your app.
+
 For deployment basics, see [Deploy Services with MeshAgent](../services/deployment/deploy_services). Routes are managed from the [MeshAgent CLI](../reference/meshagent_cli_help).
 
 ## How routes work
@@ -16,6 +18,7 @@ For deployment basics, see [Deploy Services with MeshAgent](../services/deployme
 - A service in the room listens on an HTTP port.
 - That port is marked as `published` in the service config.
 - The route maps a domain to that room and published port.
+- When a request arrives, MeshAgent resolves the room and port, applies the port's security rules, and then proxies the request to the service.
 
 ## Create a route
 
@@ -41,6 +44,186 @@ ports:
     published: true
 ```
 
+## Public and private published ports
+
+`published: true` makes a port routable from a route.
+
+`public` controls whether that routed URL is open to the internet or protected by MeshAgent:
+
+- `public: true`: MeshAgent forwards requests without requiring room authentication.
+- `public: false`: MeshAgent requires the caller to authenticate before the request can reach the app.
+- If you omit `public`, the port is treated as private.
+
+For API clients and server-to-server callers, a private published port expects a participant token:
+
+```http
+Authorization: Bearer <participant-token>
+```
+
+That token must be valid for the room. If the caller does not have access to the room, MeshAgent rejects the request before it reaches your app.
+
+## Integrated security for browser apps
+
+For browser-based apps, use cookie validation so MeshAgent behaves like an identity-aware proxy in front of your route. This is the easiest way to publish a private app without making the app itself handle MeshAgent tokens directly.
+
+```yaml
+ports:
+  - num: 5002
+    type: http
+    published: true
+    public: false
+    liveness: /healthz
+    annotations:
+      meshagent.request.validation.method: cookie
+```
+
+You can set `meshagent.request.validation.method: cookie` on the port or on a specific endpoint. Endpoint annotations override port annotations.
+
+With that configuration, the request flow looks like this:
+
+1. A user visits the routed URL.
+2. If they do not already have a valid MeshAgent IAP session for that route, MeshAgent redirects the browser to sign in.
+3. After sign-in, MeshAgent stores a secure, HTTP-only session cookie and retries the request through the route.
+4. On each request, MeshAgent validates that the session still maps to a participant token for the target room.
+5. If the user is not allowed in the room, the request is rejected before it reaches your app.
+
+This gives you a stable URL with MeshAgent-managed authentication and room-level authorization in front of the service.
+
+For normal browser navigation, unauthenticated `GET` requests are redirected into the login flow automatically. Non-`GET` requests without a valid session are rejected until the browser has signed in.
+
+## Headers your app receives
+
+When a request passes through cookie-based IAP, MeshAgent removes the internal `__meshagent_iap` cookie before forwarding the request to your app and adds trusted identity headers:
+
+| Header | Meaning |
+|-------|---------|
+| `X-MESHAGENT-USER` | The participant token `name`, typically the signed-in user's email or display identity. |
+| `X-MESHAGENT-API-SCOPE` | The participant token API permissions, serialized as JSON. If the token has no API grant, this is `{}`. |
+
+These headers are intended for the destination app to consume.
+
+MeshAgent also strips any client-supplied `X-MESHAGENT-USER` or `X-MESHAGENT-API-SCOPE` headers before forwarding the request, so callers cannot spoof them without actually going through MeshAgent IAP.
+
+## Queue-backed routes and room-secret validation
+
+Routes are not limited to proxying traffic into an HTTP app. They can also turn incoming HTTP requests into queue messages for agents or workers inside the room.
+
+This is useful for webhook ingestion patterns where you want:
+
+- a stable public URL
+- signature validation at the edge
+- no always-on HTTP app inside the room
+- an internal queue that workers can process asynchronously
+
+When `meshagent.request.queue` is configured on the matched port or endpoint, MeshAgent enqueues the request body instead of proxying the request to a destination app.
+
+```yaml
+ports:
+  - num: 5002
+    type: http
+    published: true
+    public: false
+    annotations:
+      meshagent.request.queue: inbound-webhooks
+      meshagent.request.processor: webhook-gateway
+      meshagent.request.validation.method: stripe
+      meshagent.request.validation.secret: stripe-webhook-secret
+```
+
+With that configuration:
+
+1. A request arrives at the route.
+2. MeshAgent validates the request using the configured validation method.
+3. MeshAgent reads the validation secret from the room as the configured processor identity.
+4. If validation succeeds, MeshAgent publishes the request body to the queue.
+5. MeshAgent returns `202 Accepted`.
+
+Today the queued message payload is:
+
+```json
+{"body":"<raw request body text>"}
+```
+
+### Required annotations
+
+| Annotation | Purpose |
+|-----------|---------|
+| `meshagent.request.queue` | Queue name to publish into. |
+| `meshagent.request.processor` | In-room identity MeshAgent uses when reading the secret and publishing the work. |
+| `meshagent.request.validation.method` | Request validation method. |
+| `meshagent.request.validation.secret` | Room secret id used for signature verification. |
+
+You can place these annotations on the port or on a specific endpoint. Endpoint annotations override port annotations.
+
+### Secret-backed validation
+
+The validation secret is not copied into the route itself. Instead, MeshAgent reads it from room secrets at request time and uses it to verify the incoming webhook or signed request before anything is placed on the queue.
+
+This keeps the shared secret inside the room security boundary while still letting you publish an external URL.
+
+Supported validation methods currently include:
+
+- `github`
+- `salesforce`
+- `sentry`
+- `slack`
+- `shopify`
+- `stripe`
+- `twilio`
+- `zendesk`
+
+### What to store in the room secret
+
+Store the provider's original shared secret value in the room secret.
+
+Do not store:
+
+- the incoming signature header value
+- a computed HMAC or digest
+- a JSON wrapper object unless the provider explicitly gives you a plain secret inside it
+
+Use the raw secret string or key that the provider tells you to use for request verification.
+
+| Method | Secret value to store in the room | Provider docs |
+|-------|------------------------------------|---------------|
+| `github` | The webhook secret token you configured for that GitHub webhook. | [GitHub: Validating webhook deliveries](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) |
+| `slack` | Your Slack app's signing secret. | [Slack: Verifying requests from Slack](https://api.slack.com/docs/verifying-requests-from-slack) |
+| `stripe` | The webhook endpoint's signing secret. This is not a Stripe API key. | [Stripe: Receive events with an HTTPS server](https://docs.stripe.com/webhooks/test) |
+| `shopify` | For Shopify app webhooks, your app client secret. | [Shopify: Deliver webhooks through HTTPS](https://shopify.dev/docs/apps/build/webhooks/subscribe/https), [Shopify: About client credentials](https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets) |
+| `twilio` | Your Twilio Auth Token used for request validation. | [Twilio: Security](https://www.twilio.com/docs/usage/security), [Twilio: REST API Auth Token](https://www.twilio.com/docs/iam/api/authtoken) |
+| `zendesk` | The webhook signing secret key from the Zendesk webhook configuration. | [Zendesk: Verifying webhook authenticity](https://developer.zendesk.com/documentation/event-connectors/webhooks/verifying) |
+| `sentry` | The Sentry service hook `secret` value for that hook. | [Sentry: Register a New Service Hook](https://docs.sentry.io/api/projects/register-a-new-service-hook/), [Sentry: Retrieve a Service Hook](https://docs.sentry.io/api/projects/retrieve-a-service-hook/) |
+| `salesforce` | The signing key or shared secret for the Salesforce webhook product that is sending the request. Common cases are Marketing Cloud ENS callback signature keys and Data Cloud generated signing keys. | [Salesforce Marketing Cloud ENS: Notification Signing](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ens-notification-signing.html), [Salesforce Data Cloud: Generate a Secret Key for Signature Validation](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-generate-secret-key-for-signature-validation.htm), [Salesforce Data Cloud: Payload Signature](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-payload-signature.htm) |
+
+Queue-backed validated routes must remain non-public. They are intended for authenticated or signature-validated ingress handled by MeshAgent, not open anonymous forwarding.
+
+## Liveness and startup behavior
+
+`liveness` is the HTTP path MeshAgent uses to decide when a published port is actually ready to serve traffic.
+
+```yaml
+ports:
+  - num: 5002
+    type: http
+    published: true
+    liveness: /healthz
+```
+
+When a request hits a route and MeshAgent cannot connect to the target port yet, it checks the `liveness` URL and waits for it to return `2xx`. Once the service is live, MeshAgent retries the original request.
+
+This matters during startup, cold starts, and restarts:
+
+- With a liveness URL, MeshAgent can wait for the app to finish booting instead of immediately failing the first request.
+- Without a liveness URL, an early request is more likely to fail with a bad gateway while the process is still starting.
+
+You should give published HTTP ports a liveness URL that is:
+
+- Cheap to evaluate.
+- Available without external user auth.
+- Wired to real readiness, not just process start.
+
+A good pattern is `/healthz` or `/ready` returning `200` only after the app is ready to serve the same traffic the route will send.
+
 ## Manage routes
 
 ```bash
@@ -51,10 +234,6 @@ meshagent route delete my-app.meshagent.app
 ```
 
 To create or update a route, you need permission to administer the target room.
-
-## Access control note
-
-If the published port is not public, requests must include a [participant token](../rest_api/participant_tokens). This lets you keep a stable URL while still requiring authentication.
 
 ## Related docs
 

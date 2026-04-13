@@ -36,8 +36,8 @@ container:
           exec /usr/bin/meshagent process join \
             --model=claude-sonnet-4-5 \
             --channel=chat \
-            --require-storage \
-            --require-web-search \
+            --storage \
+            --web-search \
             --rule="when the user requests help with competitive analysis, content creation, brand voice, campaign planning, or performance analytics you MUST read and follow the corresponding skill from /data/knowledge-work-plugins/skills" \
             --rule="you can use the storage tool to read skills not just the shell tool" \
             --rule="when a question could be served by a skill, read the skill and follow the pattern specified in the skill" \
@@ -2181,31 +2181,7 @@ container:
     - name: MESHAGENT_TOKEN
       token:  
         identity: claude-marketing
-        api:
-          livekit: {}
-          queues:
-            list: true
-          messaging:
-            broadcast: true
-            list: true
-            send: true
-          database:
-            list_tables: true
-          sync: {}
-          storage: {}
-          containers:
-            logs: true
-            use_containers: true
-          developer:
-            logs: true
-          agents:
-            register_agent: true
-            register_public_toolkit: true
-            register_private_toolkit: true
-            call: true
-            use_agents: true
-            use_tools: true
-            allowed_toolkits: null
+        role: agent
 
 ```
 

@@ -50,7 +50,7 @@ Let's run a `ChatBot` from the CLI with the web search tool, access to room stor
 meshagent setup
 
 # Call a chatbot into your room
-meshagent chatbot join --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+meshagent chatbot join --room quickstart --agent-name chatbot --web-search --storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
 ```
 
 When you add the `--room-rules "agents/chatbot/rules.txt"` flag and supply a file path for the rules, the file path is resolved relative to room storage. Create the file through a service template or room storage before relying on it. 
@@ -75,13 +75,13 @@ Once your agent works locally to make it always available you'll need to [packag
 **Option 1: Deploy directly** Use the CLI to automatically deploy the `ChatBot` to your room.
 
 ```bash bash 
-meshagent chatbot deploy --service-name chatbot --room quickstart --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+meshagent chatbot deploy --service-name chatbot --room quickstart --agent-name chatbot --web-search --storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
 ```
 
 **Option 2: Generate a YAML spec** Create a meshagent.yaml file that defines how our service should run, then deploy the agent to our room. The service spec can be dynamically generated from the CLI by running:
 
 ```bash bash 
-meshagent chatbot spec --service-name chatbot --agent-name chatbot --web-search --require-storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
+meshagent chatbot spec --service-name chatbot --agent-name chatbot --web-search --storage --room-rules "agents/chatbot/rules.txt" --rule "You are a helpful assistant"
 ```
 
 Next, copy the output to a `meshagent.yaml` file
@@ -241,7 +241,7 @@ When a participant sends a message:
 2. It identifies or spawns a chat thread corresponding to that conversation path.
 3. A session context (``AgentSessionContext``) is initialized using the ``llm_adapter``.
 4. The message history is synchronized with the room’s ``"thread"`` document.
-5. ChatBot resolves this turn’s toolkits: it collects `ToolkitBuilder`s from `get_toolkit_builders(...)`, merges per-turn `ToolkitConfig`s (from MeshAgent Studio/CLI/App UI), calls `make_tools(...)` to create any dynamic toolkits, and combines the result with any static toolkits.
+5. ChatBot resolves this turn’s toolkits by combining the toolkits required by `requires` with any always-on toolkits returned by `get_thread_toolkits(...)`.
 6. The LLM is invoked with the prepared session context and the resolved toolkits; tool calls are routed back into those toolkits, tokens are streamed, and the results are appended to the thread document.
 
 All of this happens automatically once your bot is started.
@@ -250,8 +250,7 @@ All of this happens automatically once your bot is started.
 - **Thread management:** Every conversation lives inside a MeshDocument thread. The ChatBot opens the thread as soon as a user sends a message and keeps it in sync with the document store.
 - **Context building:** `init_session()` asks the LLM adapter for a fresh context and appends any rules you provided. Override this if you need to preload the context with extra data.
 - **Static tool resolution:** `get_thread_toolkits()` gathers toolkits declared in `requires`, and any always-on toolkits passed through `toolkits`.
-- **Dynamic tool providers:** `get_toolkit_builders()` lists the `ToolkitBuilder` factories the ChatBot is willing to spin up on demand (MCP, storage uploads, local shell, image generation, etc.). The chat UI calls this hook first to learn which tool toggles to display, and later sends back matching configs so the ChatBot can hydrate those toolkits with `make_tools()`.
-- **Message-specific toolkits:** When the user sends a message with a `tools` payload, `make_tools()` combines the selected configs with the provider list to hydrate just the toolkits needed for that turn before the LLM is invoked. (For example, in MeshAgent Studio, when the user selects which tools to add to an agent, these tools are added to the `tools` payload so the agent can use them.)
+- **Always-on toolkit model:** Tool availability is now driven by the toolkits you attach directly to the bot, plus any toolkits installed through `requires`.
 - **Thread helpers:** Use `open_thread()` and `close_thread()` to manage `ThreadAdapter` instances, and call `ThreadAdapter.append_messages(...)` to replay stored messages into an existing session context (for example, when resuming a conversation).
 - **LLM customization:** Override `prepare_llm_context()` if you need to mutate the context right before calling the LLM (for example to provide additional background context for the agent outside of the system prompt).
 - **Participant utilities:** `get_online_participants()` returns the participants included in the thread so you can tailor responses or access their attributes.
@@ -261,7 +260,6 @@ All of this happens automatically once your bot is started.
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `async def init_session()`                                     | Creates a new session context using the configured `llm_adapter` and applies rules.            |
 | `async def get_thread_toolkits(thread_context, participant)`   | Resolves all always-on toolkits for a participant, including built-in reasoning tools.      |
-| `def get_toolkit_builders()`                                   | Returns the `ToolkitBuilder` list the UI can offer for message-level tool selection.         |
 | `async def open_thread(path)` / `async def close_thread(path)` | Opens or closes a thread adapter that persists the thread document.                          |
 | `ThreadAdapter.append_messages(thread, session_context)`          | Loads historical messages into the current session context from the thread document.           |
 | `async def prepare_llm_context(thread_context)`                | Hook for modifying the session context before invoking the LLM. Override as needed.            |

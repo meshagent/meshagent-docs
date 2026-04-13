@@ -32,31 +32,7 @@ container:
     - name: MESHAGENT_TOKEN
       token:
         identity: news-agent
-        api:
-          livekit: {}
-          queues:
-            list: true
-          messaging:
-            broadcast: true
-            list: true
-            send: true
-          database:
-            list_tables: true
-          sync: {}
-          storage: {}
-          containers:
-            logs: true
-            use_containers: true
-          developer:
-            logs: true
-          agents:
-            register_agent: true
-            register_public_toolkit: true
-            register_private_toolkit: true
-            call: true
-            use_agents: true
-            use_tools: true
-            allowed_toolkits: null
+        role: agent
   storage:
     room:
       - path: /data
@@ -97,8 +73,8 @@ container:
             --channel=chat \
             --channel=mail:{{email}} \
             --channel=queue:news-updates \
-            --require-web-search \
-            --require-storage \
+            --web-search \
+            --storage \
             --rule="You are a daily AI news agent. Use web search to find the most important AI news from the last 24 hours, include source links, and produce clear briefings." \
             --room-rules="agents/news-agent/news-agent-rules.md" \
             --room-rules="agents/news-agent/process-rules.md"

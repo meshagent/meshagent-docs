@@ -1,4 +1,4 @@
-from meshagent.api import RequiredToolkit, RequiredSchema
+from meshagent.api import RequiredToolkit
 from meshagent.agents.schemas.document import document_schema
 from meshagent.tools.document_tools import (
     DocumentAuthoringToolkit,
@@ -13,6 +13,7 @@ from meshagent.agents.indexer import (
     OpenAIEmbedder,
 )
 from meshagent.agents.agent import SingleRoomAgent
+from meshagent.api.messaging import JsonContent, TextContent
 from meshagent.api.services import ServiceHost
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.tools import ToolContext
@@ -61,7 +62,7 @@ class RagChatBot(ChatBot):
             size=3072,
             max_length=8191,
             model="text-embedding-3-large",
-            openai=get_client(room=room),
+            openai=get_client(),
         )
         await super().start(room=room)
 
@@ -87,7 +88,8 @@ class MarkitDownFileIndexer(StorageIndexer):
         embedder=None,
         table="rag-index",
     ):
-        self._markitdown = MarkItDownToolkit()
+        self._markitdown: MarkItDownToolkit | None = None
+        self._index_task: asyncio.Task[None] | None = None
         if embedder is None:
             embedder = _DeferredEmbedder()
         super().__init__(
@@ -101,35 +103,33 @@ class MarkitDownFileIndexer(StorageIndexer):
         )
 
     async def read_file(self, *, path: str):
-        context = ToolContext(
-            room=self.room,
-            caller=self.room.local_participant,
-        )
+        if self._markitdown is None:
+            raise RuntimeError("markitdown toolkit has not been started")
         response = await self._markitdown.execute(
-            context=context,
+            context=ToolContext(caller=self.room.local_participant),
             name="markitdown_from_file",
-            arguments={"path": path},
+            input=JsonContent(json={"path": path}),
         )
-        return getattr(response, "text", None)
+        return response.text if isinstance(response, TextContent) else None
 
     async def start(self, *, room):
+        self._markitdown = MarkItDownToolkit(room=room)
         self.embedder = OpenAIEmbedder(
             size=3072,
             max_length=8191,
             model="text-embedding-3-large",
-            openai=get_client(room=room),
+            openai=get_client(),
         )
         await super().start(room=room)
 
     async def stop(self):
-        if getattr(self, "_chan", None) is not None and not self._chan.closed:
+        if not self._chan.closed:
             self._chan.close()
 
-        index_task = getattr(self, "_index_task", None)
-        if index_task is not None and not index_task.done():
-            index_task.cancel()
+        if self._index_task is not None and not self._index_task.done():
+            self._index_task.cancel()
             with suppress(Exception):
-                await index_task
+                await self._index_task
 
         await SingleRoomAgent.stop(self)
 

@@ -1,7 +1,6 @@
 import json
 import asyncio
 import logging
-import os
 from typing import Optional
 from datetime import date, datetime
 from meshagent.otel import otel_config
@@ -19,6 +18,7 @@ otel_config(service_name="translator")
 log = logging.getLogger("translator")
 
 service = ServiceHost()  # port defaults to an available port if not assigned
+
 
 # Define Inputs, Outputs, and Pydantic AI Agent for Translation
 class TranslationInput(BaseModel):
@@ -40,12 +40,15 @@ system_prompt = f"""
     Provide two translations, one in French and one in Spanish.    
     """
 
-def build_translation_agent(*, room):
-    # Use the MeshAgent room proxy so API keys are provided by the room router.
-    client = get_anthropic_client(room=room)
+
+def build_translation_agent():
+    # Use the MeshAgent proxy environment variables for Anthropic credentials.
+    client = get_anthropic_client()
     provider = AnthropicProvider(anthropic_client=client)
     return Agent(
-        model=AnthropicModel(model_name="claude-sonnet-4-5-20250929", provider=provider),
+        model=AnthropicModel(
+            model_name="claude-sonnet-4-5-20250929", provider=provider
+        ),
         deps_type=None,
         instructions=system_prompt,
         output_type=TranslationResult,
@@ -75,7 +78,7 @@ class TranslationTaskRunner(TaskRunner):
         inputs = TranslationInput(**arguments)
         log.info(f"Translating Text: {inputs.text}")
 
-        translation_agent = build_translation_agent(room=room)
+        translation_agent = build_translation_agent()
         translations = await translation_agent.run(inputs.text)
         log.info(f"Translation Result: {translations.output}")
 
@@ -96,5 +99,6 @@ class TranslationTaskRunner(TaskRunner):
         )
 
         return translations.output.model_dump()
+
 
 asyncio.run(service.run())

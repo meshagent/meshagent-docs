@@ -13,8 +13,8 @@ meshagent process join \
   --room=myroom \
   --agent-name=queue-agent \
   --channel=queue:support-jobs \
-  --require-storage \
-  --require-web-search \
+  --storage \
+  --web-search \
   --rule="You are a queue-based support operations agent. Process queued jobs without asking follow-up questions unless the job explicitly asks for interactive behavior."
 ```
 

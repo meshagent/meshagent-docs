@@ -1,4 +1,4 @@
-from meshagent.tools import FunctionTool, RemoteToolkit, Toolkit
+from meshagent.tools import FunctionTool, Toolkit
 from meshagent.api.services import ServiceHost
 from meshagent.agents.chat import ChatBot
 from meshagent.api import MeshDocument
@@ -72,7 +72,7 @@ decoration: {
 
 
 @service.path("/renderer", identity="renderer")
-class DynamicUI(RemoteToolkit):
+class DynamicUI(Toolkit):
     def __init__(self):
         super().__init__(name="renderer", tools=[ProductWidget()])
 

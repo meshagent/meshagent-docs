@@ -18,25 +18,13 @@ meshagent process join \
   --model gpt-5.4 \
   --web-search \
   --mcp \
-  --require-storage \
+  --storage \
   --use-memory agents/researcher/memories
 ```
 
-This command starts an agent that:
+This command starts an agent that can use web search, MCP tools, storage, and room-backed memory tools.
 
-- can use web search when it is enabled for a turn
-- can use MCP tools available in the room when they are enabled for a turn
-- always has storage access
-- always has room-backed memory tools
-
-For capabilities that support both modes:
-
-- `--flag` makes the capability available for turn-by-turn selection
-- `--require-*` attaches it directly so the agent always has it
-
-This matters most for queue, mail, and toolkit workflows. If the agent must always have a capability during background work, use the `--require-*` form.
-
-Not every capability supports both forms. The tables below show the current CLI flags for each built-in capability.
+Most built-in capabilities now use one canonical CLI flag, such as `--web-search`, `--storage`, `--shell`, or `--document-authoring`. `--require-toolkit` is the exception for attaching an external toolkit by name. The tables below show the current CLI flags for each built-in capability.
 
 Run `meshagent process join --help` to see the current tool flags and related configuration options.
 
@@ -44,65 +32,64 @@ Run `meshagent process join --help` to see the current tool flags and related co
 
 ### Web and retrieval
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Web search | `WebSearchToolkitBuilder` | `--web-search`, `--require-web-search` | Search the web |
-| Web fetch | `WebFetchToolkitBuilder` | `--web-fetch`, `--require-web-fetch` | Fetch and read web pages directly |
+| Web search | `WebSearchTool` | `--web-search` | Search the web |
+| Web fetch | `WebFetchTool` | `--web-fetch` | Fetch and read web pages directly |
 
 ### Storage and memory
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Storage | `StorageToolkit`, `StorageToolkitBuilder` | `--storage`, `--require-storage`, `--require-read-only-storage` | Work with room or mounted storage |
-| Memory | `MemoriesToolkit`, `MemoriesToolkitBuilder` | `--use-memory <name-or-path>` | Add, search, inspect, and delete room-backed memories |
-| Database access | `DatabaseToolkitBuilder` | `--database-namespace`, `--require-table-read <table>`, `--require-table-write <table>` | Add table-specific database tools |
-| UUID tools | `UUIDToolkit` | `--require-uuid` | Provide UUID generation helpers |
-| Time tools | `DatetimeToolkit` | `--require-time` | Provide time and datetime tools |
+| Storage | `StorageToolkit` | `--storage`, `--read-only-storage` | Work with room or mounted storage |
+| Memory | `MemoriesToolkit` | `--use-memory <name-or-path>` | Add, search, inspect, and delete room-backed memories |
+| Database access | `DatabaseToolkit`, `make_database_toolkit` | `--database-namespace`, `--table-read <table>`, `--table-write <table>` | Add table-specific database tools |
+| UUID tools | `UUIDToolkit` | `--uuid` | Provide UUID generation helpers |
+| Time tools | `DatetimeToolkit` | `--time` | Provide time and datetime tools |
 
 ### MCP and external tools
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| MCP tools | `MCPToolkitBuilder` | `--mcp` | Use MCP tools available in the room on turns where MCP is enabled |
+| MCP tools | room-provided MCP toolkits | `--mcp` | Use MCP tools available in the room on turns where MCP is enabled |
 
 For setup paths such as Powerboards installs, MCP URL auto-discovery, and OpenAI connector manifests, see [MCP Servers](./mcp_servers).
 
-In the current `meshagent process` runtime, MCP is exposed through the optional `--mcp` flow rather than as an always-on required toolkit.
+In the current `meshagent process` runtime, MCP is exposed through `--mcp` rather than as a required named toolkit.
 
 ### Shell and execution
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Function shell | `ShellToolkitBuilder` | `--shell`, `--require-shell` | Give the agent direct shell tool calling |
-| Managed container shell | `ContainerToolkit` | `--require-advanced-shell` | Give the agent container start, list, stop, and run tools |
-| Local shell | `LocalShellToolkitBuilder` | `--local-shell`, `--require-local-shell` | Use OpenAI's native local shell tool |
-| Script tools | `ScriptToolkitBuilder` | `--script-tool`, `--discover-script-tools` | Add script-based tools or discover script tools from the room |
+| Function shell | `ShellTool` or `ContainerShellTool` | `--shell` | Give the agent direct shell tool calling |
+| Managed container shell | `ContainerToolkit` | `--advanced-shell` | Give the agent container start, list, stop, and run tools |
+| Script tools | `get_script_tools(...)` | `--script-tool`, `--discover-script-tools` | Add script-based tools or discover script tools from the room |
 
-`--require-advanced-shell` is the right choice when the agent needs to manage a working container across several steps instead of treating each shell command as an isolated call.
+`--advanced-shell` is the right choice when the agent needs to manage a working container across several steps instead of treating each shell command as an isolated call.
 
 If the shell environment needs access to runtime metadata from the current room or service, add `--shell-tool-config-mount <mount>`. When the current runtime exposes `MESHAGENT_SPEC_PATH` or `MESHAGENT_MEMBERS_PATH`, MeshAgent mounts those runtime files into the shell container as `spec.json` and `members.json` under the target directory and points the env vars at the mounted paths.
 
 ### Provider-native tools
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Image generation | `ImageGenerationToolkitBuilder` | `--image-generation <model>`, `--require-image-generation <model>` | Use OpenAI-native image generation |
-| Apply patch | `ApplyPatchToolkitBuilder` | `--apply-patch`, `--require-apply-patch` | Use OpenAI-native patch editing |
-| Computer use | `ComputerToolkit` | `--computer-use`, `--require-computer-use`, `--starting-url`, `--allow-goto-url` | Use browser and computer-interaction tools |
+| Image generation | `ImageGenerationTool` | `--image-generation <model>` | Use OpenAI-native image generation |
+| Apply patch | `ApplyPatchTool` | `--apply-patch` | Use OpenAI-native patch editing |
+| Computer use | `ComputerToolkit` | `--computer-use`, `--starting-url`, `--allow-goto-url` | Use browser and computer-interaction tools |
 
 ### Document and content tools
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Document authoring | `DocumentAuthoringToolkit` | `--require-document-authoring` | Create and modify MeshDocuments |
-| Document type authoring | `DocumentTypeAuthoringToolkit` | `--require-document-authoring` | Add type-specific document tools for the built-in widget document type |
+| Document authoring | `DocumentAuthoringToolkit` | `--document-authoring` | Create and modify MeshDocuments |
+| Document type authoring | `DocumentTypeAuthoringToolkit` | `--document-authoring` | Add type-specific document tools for the built-in widget document type |
 | MarkItDown | `MarkItDownToolkit` | no direct `meshagent process` flag | Convert PDFs and Office documents into LLM-friendly formats |
 
 ### Discovery
 
-| Capability | Toolkit or builder | Flags | What it does |
+| Capability | Toolkit or tool | Flags | What it does |
 | --- | --- | --- | --- |
-| Discovery tools | `DiscoveryToolkit` | `--require-discovery` | Discover agents and tools available in the room |
+| Discovery tools | `DiscoveryToolkit` | `--discovery` | Discover agents and tools available in the room |
 
 If a built-in capability does not have a direct `meshagent process` flag, add it from the SDK or package it into your own service or custom toolkit.
 

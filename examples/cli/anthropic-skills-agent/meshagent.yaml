@@ -42,13 +42,13 @@ container:
           exec /usr/bin/meshagent process join \
             --model=claude-sonnet-4-6 \
             --channel=chat \
-            --require-shell \
+            --shell \
             --shell-image=meshagent/shell-terminal:default \
             --shell-tool-room-path=/:/data \
             --script-tool \
             --web-search \
             --use-memory agents/claudeskills/memories \
-            --require-storage \
+            --storage \
             --storage-tool-room-path=/:/data \
             -rr=agents/claudeskills/rules.md \
             --skill-dir /data/skills \
@@ -60,37 +60,4 @@ container:
     - name: MESHAGENT_TOKEN
       token:
         identity: claudeskills
-        api:
-          livekit: {}
-          queues:
-            list: true
-          messaging:
-            broadcast: true
-            list: true
-            send: true
-          database:
-            list_tables: true
-          sync: {}
-          storage: {}
-          containers:
-            logs: true
-            use_containers: true
-          developer:
-            logs: true
-          agents:
-            register_agent: true
-            register_public_toolkit: true
-            register_private_toolkit: true
-            call: true
-            use_agents: true
-            use_tools: true
-            allowed_toolkits: null
-          memory:
-            list: true
-            memories:
-              - name: memories
-                namespace: ["agents", "claudeskills"]
-                permissions:
-                  ingest: true
-                  recall: true
-                  query: true
+        role: agent

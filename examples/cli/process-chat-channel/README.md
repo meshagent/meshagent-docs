@@ -19,8 +19,8 @@ meshagent process join \
   --channel=chat \
   --threading-mode=default-new \
   --thread-dir=".threads/support-agent" \
-  --require-web-search \
-  --require-storage \
+  --web-search \
+  --storage \
   --room-rules="agents/support-agent/rules.md" \
   --rule="You are a helpful support agent. Answer clearly, use web search when needed, and save important artifacts to storage."
 ```

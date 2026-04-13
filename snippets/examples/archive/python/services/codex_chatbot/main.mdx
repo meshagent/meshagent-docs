@@ -2,7 +2,7 @@
 from meshagent.tools import Toolkit
 from meshagent.agents.chat import ChatBot
 from meshagent.openai import OpenAIResponsesAdapter
-from meshagent.openai.tools.responses_adapter import LocalShellTool
+from meshagent.openai.tools.responses_adapter import ShellTool
 
 
 import asyncio
@@ -29,7 +29,15 @@ class CodexChatbot(ChatBot):
         )
 
     async def get_thread_toolkits(self, *, thread_context, participant):
-        return [Toolkit(name="builtin", tools=[LocalShellTool()])]
+        del thread_context
+        del participant
+        return [
+            Toolkit(
+                name="builtin",
+                room=self.room,
+                tools=[ShellTool(room=self.room, image=None)],
+            )
+        ]
 
 
 asyncio.run(service.run())

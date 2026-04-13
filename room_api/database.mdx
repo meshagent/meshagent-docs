@@ -23,7 +23,7 @@ meshagent room database search --room myroom --table users
 
 Each room database contains named tables. You can create tables from a schema or from raw data, update rows, create scalar/full-text/vector indexes, and run searches that combine filters with text or vector similarity. Use it when your room needs structured records instead of only files or chat history.
 
-> Current implementation: MeshAgent room database is currently backed by [LanceDB](https://lancedb.com/), a storage engine that fits table, vector, text, and multimodal workloads.
+> Current implementation: MeshAgent room database is currently backed directly by Lance datasets, which provide the table, vector, and full-text primitives used by the room database toolkit.
 
 ## Permissions and grants
 
@@ -525,8 +525,7 @@ await room.Database.Insert(
 - **Parameters**:
   - **table**: Name of the table to update.
   - **where**: A SQL `WHERE` clause specifying which records to update (e.g. `"id = 123"`).
-  - **values**: A record of key-value pairs for direct assignment (e.g. `{ age: 30 }`).
-  - **valuesSql**: A record of key-value pairs for SQL expressions (e.g. `{ age: "age + 1" }`).
+  - **values**: A record of key-value pairs for direct assignment or expressions (e.g. `{ age: 30 }` or `{ age: new DatabaseExpression("age + 1") }` in typed clients).
 - **Returns**: A promise that resolves once the update is complete.
 
 **Example**:
@@ -537,16 +536,17 @@ meshagent room database update \
   --room myroom \
   --table users \
   --where "id = 3" \
-  --values-json '{"email":"newcharlie@example.com"}' \
-  --values-sql-json '{"loginCount":"loginCount + 1"}'
+  --values-json '{"email":"newcharlie@example.com","loginCount":{"expression":"loginCount + 1"}}'
 
 ```
 ```python Python
 await room.database.update(
   table="users",
   where="id = 3",
-  values={ "email": "newcharlie@example.com" },
-  values_sql={ "loginCount": "loginCount + 1" },
+  values={
+    "email": "newcharlie@example.com",
+    "loginCount": DatabaseExpression("loginCount + 1"),
+  },
 )
 
 ```
@@ -554,8 +554,10 @@ await room.database.update(
 await room.database.update({
   table: "users",
   where: "id = 3",
-  values: { email: "newcharlie@example.com" },
-  valuesSql: { loginCount: "loginCount + 1" },
+  values: {
+    email: "newcharlie@example.com",
+    loginCount: new DatabaseExpression("loginCount + 1"),
+  },
 });
 
 ```
@@ -563,8 +565,10 @@ await room.database.update({
 await room.database.update({
   table: "users",
   where: "id = 3",
-  values: { email: "newcharlie@example.com" },
-  valuesSql: { loginCount: "loginCount + 1" },
+  values: {
+    email: "newcharlie@example.com",
+    loginCount: new DatabaseExpression("loginCount + 1"),
+  },
 });
 
 ```
@@ -572,8 +576,10 @@ await room.database.update({
 await room.database.update(
   table: "users",
   where: "id = 3",
-  values: {"email": "newcharlie@example.com"},
-  valuesSql: {"loginCount": "loginCount + 1"},
+  values: {
+    "email": "newcharlie@example.com",
+    "loginCount": DatabaseExpression("loginCount + 1"),
+  },
 );
 
 ```
@@ -581,8 +587,11 @@ await room.database.update(
 await room.Database.Update(
   "users",
   "id = 3",
-  values: new Dictionary<string, object?> { ["email"] = "newcharlie@example.com" },
-  valuesSql: new Dictionary<string, string> { ["loginCount"] = "loginCount + 1" }
+  values: new Dictionary<string, object?>
+  {
+    ["email"] = "newcharlie@example.com",
+    ["loginCount"] = new DatabaseExpression("loginCount + 1")
+  }
 );
 
 ```
@@ -1077,12 +1086,12 @@ Console.WriteLine(indexes);
 
 ### `list_versions(table)`
 
-- **Description**: List historical versions of a table and, in Python, restore or checkout a specific version.
+- **Description**: List historical versions of a table. Reads can target a specific `version` directly, and `restore` creates a new head version from an older snapshot.
 - **Methods**:
-  - `list_versions(table)` → list of versions (`version`, `timestamp`, `metadata`).
-  - `restore(table, version)` → restore table to a prior version.
-  - `checkout(table, version)` → load a version as the current working copy.
-- **Availability**: Python exposes `list_versions`, `restore`, and `checkout`. Dart currently exposes `listVersions`.
+  - `list_versions(table, branch=None)` → list of versions (`version`, `timestamp`, `metadata`) for the selected branch.
+  - `search(table, branch=None, version=None)` → read a branch head or a specific historical version without any checkout step.
+  - `restore(table, version, branch=None)` → restore a table branch to a prior version by creating a new head commit.
+- **Availability**: Python exposes `list_versions`, `search(..., version=...)`, `restore`, and database branch operations. Dart currently exposes `listVersions`.
 
 <CodeGroup>
 ```bash CLI
@@ -1101,6 +1110,28 @@ final versions = await room.database.listVersions("users");
 for (final version in versions) {
   print("${version.version} ${version.timestamp}");
 }
+
+```
+</CodeGroup>
+
+### `list_branches()`
+
+- **Description**: List, create, and delete database branches for a namespace. Table reads and writes can then target a branch directly with `branch=...`.
+- **Methods**:
+  - `list_branches()` → list available branches.
+  - `create_branch(branch, from_branch=None)` → create a branch from the head of `main` or another branch.
+  - `delete_branch(branch)` → delete a non-`main` branch.
+
+<CodeGroup>
+```bash CLI
+meshagent room database branch list --room myroom
+meshagent room database branch create --room myroom --branch exp --from-branch main
+
+```
+```python Python
+await room.database.create_branch(branch="exp")
+rows = await room.database.search(table="users", branch="exp")
+branches = await room.database.list_branches()
 
 ```
 </CodeGroup>
