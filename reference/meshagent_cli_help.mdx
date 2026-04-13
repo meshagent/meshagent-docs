@@ -28,6 +28,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `generate`: Generate a participant token (JWT) from a...
 * ``: Manage project webhooks
 * ``: Manage services for your project
+* ``: Build, run, and deploy packaged services.
 * ``: Bridge MCP servers into MeshAgent rooms
 * ``: Manage secrets for your project.
 * `service`: Run local helper HTTP services
@@ -882,6 +883,73 @@ $ meshagent  delete [OPTIONS] SERVICE_ID
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: Room name
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
+Build, run, and deploy packaged services.
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `deploy`: Deploy a packaged service into a room.
+* `run`: Run a packaged service container in a room.
+
+### `meshagent  deploy`
+
+Deploy a packaged service into a room.
+
+**Usage**:
+
+```console
+$ meshagent  deploy [OPTIONS] MODULE
+```
+
+**Arguments**:
+
+* `MODULE`: Path to a Python file exporting a Package  [required]
+
+**Options**:
+
+* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Export name in the Python module  [default: main]
+* `--builder-name TEXT`: Optional reusable builder name for package image builds.
+* `--verbose`: Print all files that will be added to the package.
+* `--help`: Show this message and exit.
+
+### `meshagent  run`
+
+Run a packaged service container in a room.
+
+**Usage**:
+
+```console
+$ meshagent  run [OPTIONS] MODULE
+```
+
+**Arguments**:
+
+* `MODULE`: Path to a Python file exporting a Package  [required]
+
+**Options**:
+
+* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--name TEXT`: Export name in the Python module  [default: main]
+* `--builder-name TEXT`: Optional reusable builder name for package image builds.
+* `--verbose`: Print all files that will be added to the package.
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -7354,15 +7422,11 @@ $ meshagent  build [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to build, e.g. repo/name:tag. When --pack is used, this must start with room.meshagent.com/.  [required]
-* `--context-path TEXT`: Build context path inside one of the mounted paths (absolute path). Defaults to the mounted path when there is exactly one context source.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside one of the mounted paths (absolute path)
-* `--pack TEXT`: Pack a local directory, upload it to room storage, and mount it as an image volume. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
-* `--arch TEXT`: Architecture metadata for the packed build context image. Defaults to amd64 for room runtimes.  [default: amd64]
-* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive. Defaults to a temporary path under /temp/build/packs/ that is deleted after the build completes. If a directory is provided, the repository path from --tag is appended.
-* `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
-* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;[:&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
-* `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;[=&lt;mount&gt;[:ro|rw]]&#x27;. If mount is omitted, /context is used.
+* `--tag TEXT`: Image tag to build, e.g. repo/name:tag.  [required]
+* `--pack TEXT`: Local directory to stream as the build context. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.  [required]
+* `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the pack mount path.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
+* `--builder-name TEXT`: Optional reusable builder name for streamed local builds.
 * `--private / --public`: Whether the build container is private to the participant  [default: public]
 * `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz before publishing. Enabled by default.  [default: optimize]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
@@ -7383,13 +7447,12 @@ $ meshagent  deploy [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
 * `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag.  [required]
-* `--pack TEXT`: Pack a local directory, upload it to room storage, build the image, and then deploy it. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+* `--pack TEXT`: Stream a local directory as the build context, build the image, and then deploy it. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
 * `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with --pack.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with --pack.
-* `--arch TEXT`: Architecture metadata for the packed build context image. Only used with --pack. Defaults to amd64 for room runtimes.  [default: amd64]
-* `--pack-room-path TEXT`: Room storage path for the uploaded packed archive during the build stage. Defaults to a temporary path under /temp/build/packs/ that is deleted after the build completes.
 * `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with --pack.  [default: optimize]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
 * `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -7424,6 +7487,5 @@ $ meshagent  pack [OPTIONS] PATH
 * `--tag TEXT`: Image reference to embed in the packed archive. Required with --room, and must start with room.meshagent.com/ there.
 * `-o, --output TEXT`: Local path to write the OCI archive tar. Required unless --room is set.
 * `--base TEXT`: Optional base image reference. Defaults to scratch semantics.
-* `--arch TEXT`: Architecture to use when resolving --base  [default: amd64]
 * `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the repository path from --tag.
 * `--help`: Show this message and exit.
