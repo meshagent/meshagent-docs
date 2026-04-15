@@ -11,12 +11,12 @@ void main() async {
   token.addRoleGrant("agent");
   token.addApiGrant(ApiScope.agentDefault());
 
-  final protocol = WebSocketClientProtocol(
+  final protocolFactory = WebSocketClientProtocol.createFactory(
     url: Uri.parse("wss://api.meshagent.com/rooms/$roomName"),
     token: token.toJwt(apiKey: apiKey),
   );
 
-  final room = RoomClient(protocol: protocol);
+  final room = RoomClient(protocolFactory: protocolFactory);
 
   // Connect to the room
   await room.start();

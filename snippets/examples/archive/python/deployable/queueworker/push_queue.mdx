@@ -1,43 +1,18 @@
 ```python Python
-import os
 import asyncio
 import logging
-from meshagent.api import (
-    RoomClient,
-    WebSocketClientProtocol,
-    ParticipantToken,
-    ApiScope,
-    ParticipantGrant,
-)
-from meshagent.api.helpers import websocket_room_url
+from meshagent.api import RoomClient
 from meshagent.otel import otel_config
 
 otel_config(service_name="worker")
 log = logging.getLogger("worker")
 
-api_key = os.getenv("MESHAGENT_API_KEY")
-if not api_key:
-    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
-
 
 async def push():
-    room_name = (
-        "quickstart"  # make sure this matches the room your service is running in
-    )
-    token = ParticipantToken(
-        name="sample-participant",
-        grants=[
-            ParticipantGrant(name="room", scope=room_name),
-            ParticipantGrant(name="role", scope="agent"),
-            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-        ],
-    ).to_jwt(api_key=api_key)
-
-    protocol = WebSocketClientProtocol(
-        url=websocket_room_url(room_name=room_name), token=token
-    )
+    # Run with:
+    # meshagent room connect --room=quickstart --identity=sample-participant -- python3 push_queue.py
     try:
-        async with RoomClient(protocol=protocol) as room:
+        async with RoomClient() as room:
             log.info(f"Connected to room: {room.room_name}")
             await room.queues.send(
                 name="storage-worker-queue",

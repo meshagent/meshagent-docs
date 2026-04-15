@@ -1,5 +1,6 @@
 ```python Python
-import asyncio,json
+import asyncio
+import json
 from pathlib import Path
 from meshagent.api.client import Meshagent
 
@@ -11,14 +12,7 @@ from meshagent.api.client import Meshagent
 # asyncio.run(main())
 
 import os
-import asyncio
-from meshagent.api import (
-    RoomClient,
-    WebSocketClientProtocol,
-    ParticipantToken,
-    ApiScope,
-    ParticipantGrant,
-)
+
 
 def env(name: str) -> str:
     val = os.getenv(name)
@@ -31,7 +25,7 @@ def env(name: str) -> str:
 #     room_name = "tula"
 #     api_key = env("MESHAGENT_API_KEY")
 #     async with RoomClient(
-#         protocol=WebSocketClientProtocol(
+#         protocol_factory=WebSocketClientProtocol(
 #             url=f"wss://api.meshagent.life/rooms/{room_name}", # CHANGE TO LIFE OR COM DEPENDING ON WHERE RUNNING!
 #             token=ParticipantToken(
 #                 name="participant",
@@ -42,7 +36,7 @@ def env(name: str) -> str:
 #                 ],
 #             ).to_jwt(api_key=api_key),
 #         )
-#     ) as room:
+#     .create_factory()) as room:
 #         print(f"Connected to room: {room.room_name}")
 
 # asyncio.run(main())
@@ -51,8 +45,9 @@ SESSION = Path("~/.meshagent/session.json").expanduser()
 tokens = json.loads(SESSION.read_text())
 access_token = tokens["access_token"]
 
+
 async def main():
-    client = Meshagent(base_url="https://api.meshagent.life", token=access_token) 
+    client = Meshagent(base_url="https://api.meshagent.life", token=access_token)
     try:
         role = await client.get_project_status("1fd090a4-8dc5-4918-948b-2b1b2c981eb0")
         print("Result:", role)
@@ -63,6 +58,7 @@ async def main():
         print(projects)
     finally:
         await client.close()
+
 
 asyncio.run(main())
 

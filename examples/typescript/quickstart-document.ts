@@ -1,38 +1,33 @@
-import { RoomClient, WebSocketClientProtocol, websocketProtocol } from '@meshagent/meshagent';
+import { RoomClient } from "@meshagent/meshagent";
+
+// Run with:
+// meshagent room connect --room=quickstart --identity=my-user -- <your node command>
 
 async function main() {
+    const path = "sample.document";
+    const room = new RoomClient();
+
     try {
-        const roomName: string = 'quickstart';
-        const participantName: string = 'my user';
-
-        const protocol: WebSocketClientProtocol = await websocketProtocol({ roomName, participantName });
-        const room = new RoomClient({protocol});
-
-        // Connect to the room
         await room.start();
-
-        // Document path in the MeshAgent environment
-        const path = 'sample.document';
-
-        // the document will be automatically created if it does not already exist
-        // open the document and start synchronizing it
         const document = await room.sync.open(path, { create: true });
+        try {
+            await document.synchronized;
+            document.root.createChildElement("body", { text: "hello world!" });
+        } finally {
+            await room.sync.close(path);
+        }
 
-        // the document will be automatically created if it does not already exist
-        // open the document and start synchronizing it
-        document.root.createChildElement('body', { text: 'hello world!' });
-
-        // Always disconnect when done
-        console.log('Disconnecting from room...');
-
-        // Close the document and stop synchronizing it
-        await room.sync.close(path);
-
-        // Dispose of the room to clean up resources
-        room.dispose();
+        const projectId = process.env.MESHAGENT_PROJECT_ID;
+        if (projectId != null && projectId.length > 0) {
+            console.log(
+                `Take a look at it at https://studio.meshagent.com/projects/${projectId}/rooms/${room.roomName}?p=${path}`,
+            );
+        }
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
+    } finally {
+        room.dispose();
     }
 }
 
-main();
+void main();

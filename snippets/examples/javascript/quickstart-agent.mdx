@@ -1,52 +1,46 @@
 ```javascript NodeJs
-import { RoomClient, websocketProtocol } from "@meshagent/meshagent";
+import { RoomClient } from "@meshagent/meshagent";
+
+// Run with:
+// meshagent room connect --room=quickstart --identity=my-user -- <your node command>
 
 async function main() {
+    const path = "sample-agent.document";
+    const room = new RoomClient();
+
     try {
-        const roomName = 'quickstart';
-        const participantName = 'my user';
-
-        // Document path in the MeshAgent environment
-        const path = 'sample-agent.document';
-
-        const protocol = await websocketProtocol({roomName, participantName});
-
-        const room = new RoomClient({protocol});
-
-        // Connect to the room (automatically creating it if it doesn't exist)
         await room.start();
+        const roomName = room.roomName ?? "quickstart";
 
-        // Add Agents to the room
         await room.agents.call({
-            name: 'meshagent.document-writer',
-            url: 'https://api.meshagent.life/agents/meshagent.document-writer',
+            name: "meshagent.document-writer",
+            url: "https://api.meshagent.life/agents/meshagent.document-writer",
             arguments: { },
         });
 
-        // Invoke the TaskRunner tool to write content to the document.
         await room.agents.invokeTool({
-            toolkit: 'meshagent.document-writer',
-            tool: 'run_meshagent.document-writer_task',
+            toolkit: "meshagent.document-writer",
+            tool: "run_meshagent.document-writer_task",
             arguments: {
                 path,
-                prompt: 'write a paragraph about AI and how agents are shaping the future',
+                prompt: "write a paragraph about AI and how agents are shaping the future",
             },
         });
 
-        console.log(
-            'Take a look at it at',
-            `https://studio.meshagent.com/projects/${projectId}/rooms/${roomName}?p=${path}`
-        );
-
-        // Always disconnect when done
-        await room.disconnect();
-
+        const projectId = process.env.MESHAGENT_PROJECT_ID;
+        if (projectId != null && projectId.length > 0) {
+            console.log(
+                `Take a look at it at https://studio.meshagent.com/projects/${projectId}/rooms/${roomName}?p=${path}`,
+            );
+        }
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
+    } finally {
+        room.dispose();
     }
 }
 
-main();
+void main();
 
 ```
 

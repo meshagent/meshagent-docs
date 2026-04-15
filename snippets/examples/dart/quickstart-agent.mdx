@@ -1,69 +1,44 @@
 ```dart Dart
-import 'dart:async';
-import 'dart:convert';
-import 'package:dotenv/dotenv.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:meshagent/meshagent.dart';
+import 'package:meshagent/helpers.dart' show websocketProtocol;
 
 Future<void> main() async {
-  // Load environment variables (if you have a .env file)
-  // Otherwise, you can rely on `Platform.environment` or pass them directly.
+  const roomName = 'quickstart';
+  const participantName = 'my-user';
+  const path = 'sample-agent.document';
 
-  final secret = env['MESHAGENT_SECRET'] ?? '';
-  final projectId = env['MESHAGENT_PROJECT_ID'] ?? '';
-  final apiKeyId = env['MESHAGENT_KEY_ID'] ?? '';
-
-  if (secret.isEmpty || projectId.isEmpty || apiKeyId.isEmpty) {
-    print('Missing environment variables. Please set:');
-    print('  MESHAGENT_SECRET, MESHAGENT_PROJECT_ID, MESHAGENT_KEY_ID');
-    return;
-  }
-
-  final roomName = 'quickstart';
-
-  // Create a participant token
-  final token = ParticipantToken(
-    name: 'my user',
-    projectId: projectId,
-    apiKeyId: apiKeyId,
+  final protocolFactory = websocketProtocol(
+    roomName: roomName,
+    participantName: participantName,
   );
-
-  // Grant this token access to the target room
-  token.addRoomGrant(roomName);
-
-  // Generate a signed JWT
-  final jwt = token.toJWT(secret);
-
-  // Build the WebSocket URL
-  final wsUrl = websocketRoomUrl(roomName);
-
-  // Create and connect the room client
-  final roomClient = RoomClient(url: wsUrl, token: jwt);
-  await roomClient.connect();
+  final room = RoomClient(protocolFactory: protocolFactory);
 
   try {
-    // In your original Python code, you wrote to "sample-agent.document"
-    final path = 'sample-agent.document';
+    await room.start();
 
-    // Ask the "meshagent.document-writer" agent to create/write content
-    await roomClient.ask(
-      agent: 'meshagent.document-writer',
-      arguments: {
-        'path': path,
-        'prompt':
-            'write a paragraph about AI and how agents are shaping the future',
-      },
+    await room.agents.call(
+      name: 'meshagent.document-writer',
+      url: 'https://api.meshagent.life/agents/meshagent.document-writer',
+      arguments: const {},
     );
 
-    print(
-      'Take a look at it at '
-      'https://studio.meshagent.com/projects/$projectId/rooms/$roomName?p=$path',
+    await room.agents.invokeTool(
+      toolkit: 'meshagent.document-writer',
+      tool: 'run_meshagent.document-writer_task',
+      input: ToolContentInput(
+        JsonContent(
+          json: {
+            'path': path,
+            'prompt':
+                'write a paragraph about AI and how agents are shaping the future',
+          },
+        ),
+      ),
     );
-  } catch (e) {
-    print('Error: $e');
+
+    print('Take a look at it in MeshAgent Studio.');
   } finally {
-    // Ensure we close the connection
-    await roomClient.disconnect();
+    room.dispose();
   }
 }
 

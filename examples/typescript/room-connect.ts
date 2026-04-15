@@ -1,36 +1,20 @@
-import { RoomClient, WebSocketClientProtocol, ParticipantToken, ApiScope } from "@meshagent/meshagent";
+import { RoomClient } from "@meshagent/meshagent";
+
+// Run with:
+// meshagent room connect --room=my-room --identity=participant -- <your node command>
 
 async function main() {
+    const room = new RoomClient();
+
     try {
-        // Define a unique room name and chose your participant name
-        const roomName = "my-room";
-        const participantName = "participant-name";
-        const apiKey = "my-api-key";
-
-        const token = new ParticipantToken({ name: participantName })
-        token.addRoomGrant(roomName);
-        token.addRoleGrant("agent");
-        token.addApiGrant(ApiScope.agentDefault());
-
-        // Initialize the communication protocol
-        const protocol = new WebSocketClientProtocol({
-            url: "wss://api.meshagent.com/rooms/" + roomName,
-            token: await token.toJwt({ apiKey: apiKey })
-        });
-
-        // Instantiate a new RoomClient for interacting with the room
-        const room = new RoomClient({ protocol });
-
-        // Connect to the room
         await room.start();
-
-        // Sleep for 5 seconds to allow the connection to establish
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        room.dispose();
-
+        console.log(`Connected to room: ${room.roomName}`);
+        await new Promise((resolve) => setTimeout(resolve, 5000));
     } catch (error) {
         console.error("Error starting the room client:", error);
+    } finally {
+        room.dispose();
     }
 }
-main();
+
+void main();

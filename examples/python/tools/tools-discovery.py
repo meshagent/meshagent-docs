@@ -1,41 +1,17 @@
-import os
 import asyncio
 import logging
-from meshagent.api import (
-    RoomClient,
-    WebSocketClientProtocol,
-    ParticipantToken,
-    ApiScope,
-    ParticipantGrant,
-)
-from meshagent.api.helpers import websocket_room_url
+from meshagent.api import RoomClient
 from meshagent.otel import otel_config
 
 otel_config()
 log = logging.getLogger(__name__)
 
-api_key = os.getenv("MESHAGENT_API_KEY")
-if not api_key:
-    raise RuntimeError("Set MESHAGENT_API_KEY before running this script.")
-
 
 async def main():
-    room_name = "toolsroom"
-
-    token = ParticipantToken(
-        name="sample-participant",
-        grants=[
-            ParticipantGrant(name="room", scope=room_name),
-            ParticipantGrant(name="role", scope="agent"),
-            ParticipantGrant(name="api", scope=ApiScope.agent_default()),
-        ],
-    ).to_jwt(api_key=api_key)
-
-    protocol = WebSocketClientProtocol(
-        url=websocket_room_url(room_name=room_name), token=token
-    )
+    # Run with:
+    # meshagent room connect --room=toolsroom --identity=sample-participant -- python3 tools-discovery.py
     try:
-        async with RoomClient(protocol=protocol) as room:
+        async with RoomClient() as room:
             toolkits = await room.agents.list_toolkits()
 
             print("The tools connected to our room are:")
@@ -47,7 +23,7 @@ async def main():
                     print(f" Tool: {tool.name}: {tool.title} - {tool.description}")
 
     except Exception as e:
-        log.error(f"Error listing available toolkits:{e}")
+        log.error("Error listing available toolkits: %s", e)
         raise
 
 

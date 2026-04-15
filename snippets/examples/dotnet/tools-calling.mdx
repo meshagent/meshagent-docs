@@ -2,51 +2,25 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Meshagent.Api;
+using System.Threading.Tasks;
 using Meshagent.Api.Room;
-using Meshagent.Api.Protocol;
-using Meshagent.Api.Tokens;
+
+// Run with:
+// meshagent room connect --room=toolsroom --identity=sample-participant -- <your dotnet command>
 
 class Program
 {
-    static string Env(string name)
-    {
-        var value = Environment.GetEnvironmentVariable(name);
-        if (string.IsNullOrEmpty(value))
-        {
-            throw new Exception($"Missing required environment variable: {name}.");
-        }
-        return value;
-    }
     static async Task Main()
     {
-        var roomName = "toolsroom";
-        var meshagentApiKey = Env("MESHAGENT_API_KEY");
-        var parsedApiKey = ApiKey.Parse(meshagentApiKey);
-
-        var token = new ParticipantToken(
-            name: "participant",
-            projectId: parsedApiKey.ProjectId,
-            apiKeyId: parsedApiKey.Id
-        );
-        token.AddRoomGrant(roomName);
-        token.AddRoleGrant("agent");
-        token.AddApiGrant(ApiScope.AgentDefault());
-
-        var protocol = new WebSocketClientProtocol(
-            url: Helpers.WebSocketRoomUrl(roomName),
-            token: token.ToJwt(parsedApiKey.Secret)
-        );
-
-        await using var room = new RoomClient(protocol);
+        await using var room = new RoomClient();
         await room.ConnectAsync();
 
         var arguments = new Dictionary<string, object> { ["a"] = 1, ["b"] = 2 };
-        var add_result = await room.Agents.InvokeTool("math-toolkit", "add", arguments);
-        LogProvider.GetLogger().LogInformation($"The result from adding the numbers is: {JsonSerializer.Serialize(add_result.ToJson())}");
+        var addResult = await room.Agents.InvokeTool("math-toolkit", "add", arguments);
+        Console.WriteLine($"The result from adding the numbers is: {JsonSerializer.Serialize(addResult.ToJson())}");
 
-        var subtract_result = await room.Agents.InvokeTool("math-toolkit", "subtract", arguments);
-        LogProvider.GetLogger().LogInformation($"The result from subtracting the numbers is: {JsonSerializer.Serialize(subtract_result.ToJson())}");
+        var subtractResult = await room.Agents.InvokeTool("math-toolkit", "subtract", arguments);
+        Console.WriteLine($"The result from subtracting the numbers is: {JsonSerializer.Serialize(subtractResult.ToJson())}");
     }
 }
 

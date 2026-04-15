@@ -1,18 +1,12 @@
-import { RoomClient, websocketProtocol } from "@meshagent/meshagent";
+import { RoomClient } from "@meshagent/meshagent";
+
+// Run with:
+// meshagent room connect --room=my-room --identity=participant-name -- <your node command>
 
 async function main() {
+    const room = new RoomClient();
+
     try {
-        // Define a unique room name and chose your participant name
-        const roomName = "my-room";
-        const participantName = "participant-name";
-
-        // Initialize the communication protocol
-        const protocol = await websocketProtocol({roomName, participantName});
-
-        // Instantiate a new RoomClient for interacting with the room
-        const room = new RoomClient({protocol});
-
-        // Connect to the room
         await room.start();
 
         const data = new TextEncoder().encode("Hello, Storage!");
@@ -24,11 +18,11 @@ async function main() {
         console.log("Downloaded content:", new TextDecoder().decode(response.data));
 
         await room.storage.delete("example.txt");
-
-        room.dispose();
-
     } catch (error) {
         console.error("Error starting the room client:", error);
+    } finally {
+        room.dispose();
     }
 }
-main();
+
+void main();
