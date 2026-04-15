@@ -25,6 +25,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Manage or activate your meshagent projects
 * ``: Manage or activate api-keys for your project
 * ``: Inspect recent sessions and events
+* `ask`: Send a one-shot LLM prompt.
 * `generate`: Generate a participant token (JWT) from a...
 * ``: Manage project webhooks
 * ``: Manage services for your project
@@ -510,6 +511,26 @@ $ meshagent  show [OPTIONS] SESSION_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent ask`
+
+Send a one-shot LLM prompt.
+
+**Usage**:
+
+```console
+$ meshagent ask [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-m, --message TEXT`: Prompt to send to the LLM
+* `--format TEXT`: Output format for non-interactive responses.  [default: text]
+* `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
 
 ## `meshagent generate`
@@ -4120,6 +4141,7 @@ $ meshagent  join [OPTIONS]
 * `--shell`: Enable function shell tool calling
 * `--web-search`: Enable web search tool calling
 * `--web-fetch`: Enable web fetch tool calling
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--apply-patch`: Enable apply patch tool calling
 * `--key TEXT`: an api key to sign the token with
 * `--queue TEXT`: the name of the mail queue
@@ -4129,6 +4151,12 @@ $ meshagent  join [OPTIONS]
 * `--whitelist TEXT`: an email to whitelist
 * `--storage`: Enable storage toolkit
 * `--read-only-storage`: Enable read only storage toolkit
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--time`: Enable time/datetime tools  [default: True]
 * `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
@@ -4141,8 +4169,13 @@ $ meshagent  join [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4165,6 +4198,7 @@ $ meshagent  service [OPTIONS]
 * `--shell`: Enable function shell tool calling
 * `--web-search`: Enable web search tool calling
 * `--web-fetch`: Enable web fetch tool calling
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--apply-patch`: Enable apply patch tool calling
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
@@ -4176,6 +4210,12 @@ $ meshagent  service [OPTIONS]
 * `--whitelist TEXT`: an email to whitelist
 * `--storage`: Enable storage toolkit
 * `--read-only-storage`: Enable read only storage toolkit
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--time`: Enable time/datetime tools  [default: True]
 * `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
@@ -4188,8 +4228,13 @@ $ meshagent  service [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4217,6 +4262,7 @@ $ meshagent  spec [OPTIONS]
 * `--shell`: Enable function shell tool calling
 * `--web-search`: Enable web search tool calling
 * `--web-fetch`: Enable web fetch tool calling
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--apply-patch`: Enable apply patch tool calling
 * `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
@@ -4225,6 +4271,12 @@ $ meshagent  spec [OPTIONS]
 * `--whitelist TEXT`: an email to whitelist
 * `--storage`: Enable storage toolkit
 * `--read-only-storage`: Enable read only storage toolkit
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--time`: Enable time/datetime tools  [default: True]
 * `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
@@ -4237,8 +4289,13 @@ $ meshagent  spec [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
 
@@ -4266,6 +4323,7 @@ $ meshagent  deploy [OPTIONS]
 * `--shell`: Enable function shell tool calling
 * `--web-search`: Enable web search tool calling
 * `--web-fetch`: Enable web fetch tool calling
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--apply-patch`: Enable apply patch tool calling
 * `--queue TEXT`: the name of the mail queue
 * `--email-address TEXT`: the email address of the agent  [required]
@@ -4274,6 +4332,12 @@ $ meshagent  deploy [OPTIONS]
 * `--whitelist TEXT`: an email to whitelist
 * `--storage`: Enable storage toolkit
 * `--read-only-storage`: Enable read only storage toolkit
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--time`: Enable time/datetime tools  [default: True]
 * `--uuid`: Enable UUID generation tools
 * `--use-memory TEXT`: Use memories toolkit for &lt;name&gt; or &lt;namespace&gt;/&lt;name&gt;
@@ -4286,8 +4350,13 @@ $ meshagent  deploy [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--reply-all / --no-reply-all`: Reply-all when responding to emails  [default: no-reply-all]
 * `--enable-attachments / --no-enable-attachments`: Allow downloading and processing email attachments  [default: no-enable-attachments]
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
 * `--room TEXT`: The name of a room to create the service for
@@ -4345,7 +4414,14 @@ $ meshagent  join [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--table-read TEXT`: Enable table read tools for a specific table
 * `--table-write TEXT`: Enable table write tools for a specific table
 * `--read-only-storage`: Enable read only storage toolkit
@@ -4359,7 +4435,12 @@ $ meshagent  join [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--document-authoring`: Enable MeshDocument authoring
 * `--discovery`: Enable discovery of agents and tools
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
@@ -4400,7 +4481,14 @@ $ meshagent  run [OPTIONS]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--table-read TEXT`: Enable table read tools for a specific table
 * `--table-write TEXT`: Enable table write tools for a specific table
 * `--read-only-storage`: Enable read only storage toolkit
@@ -4414,7 +4502,12 @@ $ meshagent  run [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--document-authoring`: Enable MeshDocument authoring
 * `--discovery`: Enable discovery of agents and tools
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--key TEXT`: an api key to sign the token with
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
 * `--output-schema TEXT`: an output schema to use
@@ -4454,7 +4547,14 @@ $ meshagent  service [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--table-read TEXT`: Enable table read tools for a specific table
 * `--table-write TEXT`: Enable table write tools for a specific table
 * `--read-only-storage`: Enable read only storage toolkit
@@ -4466,7 +4566,12 @@ $ meshagent  service [OPTIONS]
 * `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--document-authoring`: Enable document authoring
 * `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -4512,7 +4617,14 @@ $ meshagent  spec [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--table-read TEXT`: Enable table read tools for a specific table
 * `--table-write TEXT`: Enable table write tools for a specific table
 * `--read-only-storage`: Enable read only storage toolkit
@@ -4524,7 +4636,12 @@ $ meshagent  spec [OPTIONS]
 * `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--document-authoring`: Enable document authoring
 * `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -4567,7 +4684,13 @@ $ meshagent  deploy [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--table-read TEXT`: Enable table read tools for a specific table
 * `--table-write TEXT`: Enable table write tools for a specific table
 * `--read-only-storage`: Enable read only storage toolkit
@@ -4579,7 +4702,12 @@ $ meshagent  deploy [OPTIONS]
 * `--computer-use`: Enable computer use
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--document-authoring`: Enable document authoring
 * `--discovery`: Enable discovery of agents and tools
 * `--llm-participant TEXT`: Delegate LLM interactions to a remote participant
@@ -4656,7 +4784,14 @@ $ meshagent  join [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--read-only-storage`: Enable read only storage toolkit
 * `--time`: Enable time/datetime tools  [default: True]
 * `--uuid`: Enable UUID generation tools
@@ -4670,7 +4805,12 @@ $ meshagent  join [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -4701,10 +4841,17 @@ $ meshagent  service [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
@@ -4721,7 +4868,12 @@ $ meshagent  service [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -4757,7 +4909,14 @@ $ meshagent  spec [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
@@ -4774,7 +4933,12 @@ $ meshagent  spec [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--help`: Show this message and exit.
@@ -4810,7 +4974,13 @@ $ meshagent  deploy [OPTIONS]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
 * `--web-search / --no-web-search`: Enable web search tool calling  [default: no-web-search]
 * `--web-fetch / --no-web-fetch`: Enable web fetch tool calling  [default: no-web-fetch]
+* `--discover-script-tools / --no-discover-script-tools`: Automatically add script tools from the room  [default: no-discover-script-tools]
 * `--storage / --no-storage`: Enable storage toolkit  [default: no-storage]
+* `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--queue TEXT`: the queue to consume  [required]
 * `--toolkit-name TEXT`: Toolkit name to expose (optional)
 * `-rr, --room-rules TEXT`: Path(s) to rules files inside the room
@@ -4827,7 +4997,13 @@ $ meshagent  deploy [OPTIONS]
 * `--allow-goto-url`: Expose the goto URL helper tool for computer use
 * `--title TEXT`: a display name for the agent
 * `--description TEXT`: a description for the agent
+* `--working-dir TEXT`: The default working directory for shell commands
 * `--skill-dir TEXT`: an agent skills directory
+* `--shell-image TEXT`: an image tag to use to run shell commands in
+* `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
+* `--delegate-shell-token / --no-delegate-shell-token`: Delegate the room token to shell tools  [default: no-delegate-shell-token]
+* `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
+* `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
