@@ -11,7 +11,8 @@ They are different from [MeshAgent Accounts](../interfaces/accounts), [MeshAgent
 
 - **React**
   - `@meshagent/meshagent-react` for room and document connection hooks, chat helpers, toolkits, and file upload helpers
-  - `@meshagent/meshagent-react-auth` for provider-free OAuth login and auth state helpers
+  - `@meshagent/meshagent-ts-auth` for framework-agnostic OAuth/PKCE login, token storage, and refresh helpers
+  - `@meshagent/meshagent-react-auth` for React auth helpers built on top of the TypeScript auth package, including `useAuth` and `useEnsureLogin`
 - **Flutter**
   - `meshagent_flutter` for room and document connection widgets and related helpers
   - `meshagent_flutter_auth` for auth helpers
@@ -38,6 +39,8 @@ Those patterns exist in both React and Flutter:
 ## Which package to pick
 
 - Use **React** when you are building a web app and want hooks around the MeshAgent JS client.
+- Add **`@meshagent/meshagent-ts-auth`** when you want provider-agnostic auth helpers outside React.
+- Add **`@meshagent/meshagent-react-auth`** when your React app should handle OAuth login, callback exchange, token refresh, and profile loading with hooks.
 - Use **Flutter** when you want one codebase across mobile, desktop, or embedded form factors.
 
 In both cases, the app model is the same: your backend mints a participant token, your UI connects to a room with that token, and then your UI uses the room runtime from there.
