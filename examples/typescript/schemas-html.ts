@@ -3,6 +3,7 @@ import {
   ElementType,
   ChildProperty,
   ValueProperty,
+  SimpleValue,
 } from '@meshagent/meshagent';
 
 // Create the schema
@@ -37,10 +38,9 @@ const schema = new MeshSchema({
         // A ValueProperty describes an attribute that contains a single value.
         new ValueProperty({
           name: 'class',
-          type: 'string',
+          type: SimpleValue.string,
         }),
       ],
     }),
   ],
 });
-

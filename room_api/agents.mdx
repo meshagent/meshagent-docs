@@ -167,8 +167,8 @@ foreach (var toolkit in toolkits)
 - **Parameters**:
   - `toolkit`: Toolkit name.
   - `tool`: Tool name.
-  - `input` *(Python)*: Payload for the tool.
-  - `arguments` *(JS/TS/Dart/.NET)*: Payload for the tool.
+  - `input` *(Python/Dart)*: Payload for the tool.
+  - `arguments` *(JS/TS/.NET)*: Payload for the tool.
   - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
   - `caller_context` *(optional, Python)*: Additional context metadata for the call.
 - **Returns**: Tool output (`Content` / `JsonChunk`, depending on the SDK).
@@ -210,7 +210,9 @@ const response = await room.agents.invokeTool({
 final response = await room.agents.invokeTool(
   toolkit: "example-toolkit",
   tool: "toolA",
-  arguments: {"param1": "value1"},
+  input: ToolContentInput(
+    JsonContent(json: {"param1": "value1"}),
+  ),
 );
 
 ```
