@@ -52,6 +52,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Join a worker agent to a room
 * ``: Operate within a room
 * ``: Build and publish OCI images
+* ``: Local LLM proxy utilities
 
 ## `meshagent version`
 
@@ -7783,4 +7784,45 @@ $ meshagent  pack [OPTIONS] PATH
 * `--room TEXT`: Room name
 * `--tag TEXT`: Image reference to publish. Must use registry.meshagent.com/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;.  [required]
 * `--base TEXT`: Optional base image reference for the generated Dockerfile.
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
+Local LLM proxy utilities
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `proxy`: Expose a local MeshAgent-authenticated LLM...
+
+### `meshagent  proxy`
+
+Expose a local MeshAgent-authenticated LLM proxy.
+
+**Usage**:
+
+```console
+$ meshagent  proxy [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--host TEXT`: Local host to bind the proxy to.  [default: 127.0.0.1]
+* `--port INTEGER`: Local port to bind the proxy to.  [default: 8766]
+* `--bearer TEXT`: Explicit local bearer token. If omitted, the stored token is reused or generated on first run.
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token to forward upstream.
+* `--insecure`: Disable local bearer-token enforcement.
+* `--tui / --no-tui`: Show the live usage dashboard when attached to a TTY.  [default: tui]
 * `--help`: Show this message and exit.

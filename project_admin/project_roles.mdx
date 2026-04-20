@@ -31,7 +31,7 @@ This page is ordered from least access to most access.
 
 Member is the default project collaborator role.
 
-Use this when someone should be part of the project without extra project-wide privileges such as developer access, admin access, or room-creation privileges.
+Use this when someone should be part of the project without extra project-wide privileges such as developer access, admin access, room-creation privileges, or LLM proxy/OAuth management access.
 
 ### Room Creator
 
@@ -55,6 +55,18 @@ Use this role when someone needs to:
 - perform operational tasks such as mailbox creation
 - work in MeshAgent Studio and the CLI without managing the whole project
 
+### LLM Proxy User
+
+LLM Proxy User is a focused project permission for collaborators who need project-level OpenAI or Anthropic routing without broader developer access.
+
+Use this when someone needs to:
+
+- call the project LLM proxy with OAuth access tokens
+- manage project OAuth clients used for LLM proxy access
+- manage project external OAuth registrations used by the LLM proxy
+
+But should not automatically get the rest of the developer project surface.
+
 ### Admin
 
 Admins have full project-level control.
@@ -68,11 +80,12 @@ Use this role when someone needs to:
 
 ## How project roles map to the API
 
-In the admin API and SDKs, project membership is controlled with three flags:
+In the admin API and SDKs, project membership is controlled with four flags:
 
 - `is_admin`
 - `is_developer`
 - `can_create_rooms`
+- `can_use_llm_proxy`
 
 MeshAgent Studio's Members UI writes those settings for you. A default member is just a project member with none of those extra flags enabled.
 
