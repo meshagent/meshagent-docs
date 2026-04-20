@@ -1,6 +1,6 @@
 ---
 title: Build and Deploy Images
-description: Use `meshagent image` to pack local directories, build images inside a room, and deploy them as room services.
+description: Use `meshagent image` to publish local directories, build images inside a room, and deploy them as room services.
 ---
 
 ## Overview
@@ -9,7 +9,7 @@ description: Use `meshagent image` to pack local directories, build images insid
 
 Use it when you want to:
 
-- pack a local directory into an OCI archive
+- publish a local directory directly into the project registry
 - build an image inside a room from room, project, image, or packed context
 - deploy an image directly as a room service
 
@@ -19,7 +19,7 @@ This command is useful both for developers working from the CLI and for agent wo
 
 `meshagent image` sits between source files and a deployable MeshAgent service:
 
-1. `meshagent image pack` turns a local directory into an OCI archive.
+1. `meshagent image pack` publishes a local directory with a generated Dockerfile.
 2. `meshagent image build` builds an image inside a room using mounted context.
 3. `meshagent image deploy` creates or updates a room service from that image.
 
@@ -35,31 +35,31 @@ That makes `meshagent image` especially useful for workflows where an agent is e
 
 ### `meshagent image pack`
 
-Use `pack` when you want to turn a local directory into an OCI archive.
+Use `pack` when you want to publish a local directory into the project registry without writing a Dockerfile.
 
 This is useful when:
 
-- you want a portable OCI archive locally
-- you want to upload a packed context into a room
-- you want to prepare a build context without pushing to an external registry first
+- you just want `FROM scratch` plus the contents of a directory
+- you want to seed a repository from local files quickly
+- you want to use a simple base image without maintaining a custom Dockerfile
 
-Local output example:
-
-```bash
-meshagent image pack ./my-app \
-  --output ./my-app.oci.tar \
-  --base python:3.13
-```
-
-Room-upload example:
+Example:
 
 ```bash
 meshagent image pack ./my-app \
   --room myroom \
-  --tag registry.meshagent.com/myproject/my-app:dev
+  --tag registry.meshagent.com/myproject/my-app:dev \
+  --base python:3.13
 ```
 
-When `--room` is used, the tag must use `registry.meshagent.com/<project-key>/<repository>:<tag>`.
+`pack` uses a generated Dockerfile:
+
+```dockerfile
+FROM <base or scratch>
+COPY . /
+```
+
+The tag must use `registry.meshagent.com/<project-key>/<repository>:<tag>`.
 
 ### `meshagent image build`
 
@@ -134,7 +134,7 @@ Use `meshagent image` when:
 
 - your workflow is image-first
 - you want to build inside a room
-- you want to pack local content into a buildable OCI archive
+- you want to publish local content with a generated Dockerfile
 - you want a fast path from image tag to room service
 - you want an agent in the room to participate in building and shipping the service
 

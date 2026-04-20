@@ -51,7 +51,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Join a taskrunner to a room
 * ``: Join a worker agent to a room
 * ``: Operate within a room
-* ``: Build and pack OCI images
+* ``: Build and publish OCI images
 
 ## `meshagent version`
 
@@ -7685,7 +7685,7 @@ $ meshagent  connect [OPTIONS] [COMMAND]...
 
 ## `meshagent `
 
-Build and pack OCI images
+Build and publish OCI images
 
 **Usage**:
 
@@ -7703,7 +7703,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 * `build`: Build a container image inside a room.
 * `deploy`: Create or update a room service from an...
-* `pack`: Pack a local directory into an OCI image...
+* `pack`: Publish a local directory as an image...
 
 ### `meshagent  build`
 
@@ -7765,7 +7765,7 @@ $ meshagent  deploy [OPTIONS]
 
 ### `meshagent  pack`
 
-Pack a local directory into an OCI image archive.
+Publish a local directory as an image inside a room using a generated Dockerfile.
 
 **Usage**:
 
@@ -7775,14 +7775,12 @@ $ meshagent  pack [OPTIONS] PATH
 
 **Arguments**:
 
-* `PATH`: Local directory to pack  [required]
+* `PATH`: Local directory to publish  [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
-* `--tag TEXT`: Image reference to embed in the packed archive. Required with --room, and must use registry.meshagent.com/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; there.
-* `-o, --output TEXT`: Local path to write the OCI archive tar. Required unless --room is set.
-* `--base TEXT`: Optional base image reference. Defaults to scratch semantics.
-* `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the repository path from --tag.
+* `--tag TEXT`: Image reference to publish. Must use registry.meshagent.com/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;.  [required]
+* `--base TEXT`: Optional base image reference for the generated Dockerfile.
 * `--help`: Show this message and exit.
