@@ -53,7 +53,25 @@ automatically. For OpenAI-compatible SDKs, you can also set
 `OPENAI_BASE_URL` to `https://api.meshagent.com/openai/v1` and pass the
 MeshAgent participant token as `api_key`.
 
-If you are calling the proxy from your own application instead of from a room participant, you can also use an OAuth access token from a registered [OAuth client](../../project_admin/oauth). In that case, send the OAuth access token in the normal auth header for the route and include `Meshagent-Project-Id: <project_id>`. The user behind that token must have developer access to the project named by that header.
+If you are calling the proxy from your own application instead of from a room participant, you can also use an OAuth access token from a registered [OAuth client](../../project_admin/oauth). In that case, send the OAuth access token in the normal auth header for the route and include `Meshagent-Project-Id: <project_id>`. The token must include the `llm_proxy` scope, and the user behind that token must have the `can_use_llm_proxy` project permission (admins also qualify) for the project named by that header.
+
+## Local CLI proxy
+
+If you want to point local SDKs and tools at MeshAgent without exposing your OAuth access token directly, run:
+
+```bash
+meshagent llm proxy --project-id <project_id>
+```
+
+The command:
+
+- signs upstream requests with `MESHAGENT_TOKEN` when that env var is set, or with your OAuth access token otherwise
+- lets you force a specific token env var with `--token-from-env <ENV_NAME>`
+- refreshes the OAuth token automatically when OAuth is being used
+- proxies both OpenAI and Anthropic traffic, including supported websockets
+- prints the local `OPENAI_*` and `ANTHROPIC_*` environment variables to use
+- stores a randomly generated local bearer token in your meshagent config on first run unless you pass `--insecure` or `--bearer`
+- shows a fullscreen live usage and pricing dashboard when attached to a TTY
 
 ## Automatic usage tracking
 The proxy inspects responses and streams to record usage and cost:
@@ -65,12 +83,15 @@ The proxy inspects responses and streams to record usage and cost:
 
 Usage is emitted as OpenTelemetry metrics/traces and also appears in MeshAgent's built-in dashboards (view from MeshAgent Studio usage and billing tabs). If you configure your own OTEL endpoint, the same data can be exported to your provider.
 
+LLM proxy billing also adds a separate `llm_proxy_surcharge` line item on top of the underlying provider usage charges.
+
 ## Authentication and provider key protection
 - Clients authenticate with either a MeshAgent room participant token or an OAuth access token issued by a registered [OAuth client](../../project_admin/oauth).
 - OpenAI proxy requires `Authorization: Bearer <token>`.
 - Anthropic proxy accepts either `Authorization: Bearer <token>` or `x-api-key: <token>`.
 - OAuth-authenticated LLM requests must also send `Meshagent-Project-Id: <project_id>`.
-- The OAuth user must have developer access to the project named by `Meshagent-Project-Id`.
+- The OAuth token must include the `llm_proxy` scope.
+- The OAuth user must have the `can_use_llm_proxy` project permission for the project named by `Meshagent-Project-Id` (admins also qualify).
 - The proxy strips provider auth headers and injects provider keys from server-side env vars.
 - Provider keys never need to exist inside room containers or client code.
 - Optional HTTP logging clients redact auth headers by default.
