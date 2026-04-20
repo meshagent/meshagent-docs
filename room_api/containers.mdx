@@ -1,6 +1,6 @@
 ## Overview
 
-The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, room registry management, or testing code in the same room environment that deployed services use.
+The `ContainersClient` lets you run temporary containers inside a room. Use it for one-off jobs, debugging, image management, or testing code in the same room environment that deployed services use.
 
 ## CLI commands
 
@@ -16,7 +16,6 @@ meshagent room container list --room myroom
 ## Why use the Containers API?
 
 - Pull and manage images without leaving the room context.
-- Inspect and manage room registry repositories and tags.
 - Run short-lived workloads or exploratory commands on demand.
 - Inspect logs or open an interactive terminal in a running container.
 
@@ -100,98 +99,6 @@ await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 
 ```
 </CodeGroup>
-
-### Room registry management
-
-MeshAgent also exposes a room-scoped registry surface for published image repositories, tags, and untagged manifest digests. This is the same registry view used by MeshAgent Studio's **Registry** tab.
-
-These helpers are currently surfaced in the Dart/Flutter client and Studio UI.
-
-### `listRegistryImages({ last, n })`
-
-- **Description**: List repositories currently available in the room registry.
-- **Parameters**:
-  - `last`: Optional pagination cursor.
-  - `n`: Optional page size.
-- **Returns**: A page of registry repositories.
-
-```dart Dart
-final page = await room.containers.listRegistryImages(n: 100);
-
-for (final repository in page.repositories) {
-  print(repository);
-}
-```
-
-### `listRegistryTags({ image, last, n })`
-
-- **Description**: List tags for one room-registry repository.
-- **Parameters**:
-  - `image`: Repository ref such as `room.meshagent.com/my-app`.
-  - `last`: Optional pagination cursor.
-  - `n`: Optional page size.
-- **Returns**: A page of tag versions, including digest metadata when available.
-
-```dart Dart
-final tags = await room.containers.listRegistryTags(
-  image: "room.meshagent.com/my-app",
-  n: 100,
-);
-
-for (final version in tags.versions) {
-  print('${version.tag} ${version.digest}');
-}
-```
-
-### `listRegistryReferences({ image, last, n })`
-
-- **Description**: List all visible refs for one room-registry repository, including untagged manifest digests.
-- **Parameters**:
-  - `image`: Repository ref such as `room.meshagent.com/my-app`.
-  - `last`: Optional pagination cursor.
-  - `n`: Optional page size.
-- **Returns**: A page of registry refs. Tagged entries include `tag`; untagged entries return `tag == null`.
-
-```dart Dart
-final refs = await room.containers.listRegistryReferences(
-  image: "room.meshagent.com/my-app",
-  n: 100,
-);
-
-for (final ref in refs.references) {
-  print('${ref.tag ?? "(untagged)"} ${ref.digest}');
-}
-```
-
-### `updateRegistryTag({ image, tag, deleteSource })`
-
-- **Description**: Create a new tag from an existing registry ref, or rename the source tag when `deleteSource` is `true`.
-- **Parameters**:
-  - `image`: Source image ref such as `room.meshagent.com/my-app:dev`.
-  - `tag`: Destination tag name.
-  - `deleteSource`: When `true`, remove the original tag after retagging.
-- **Returns**: Information about the updated tag.
-
-```dart Dart
-await room.containers.updateRegistryTag(
-  image: "room.meshagent.com/my-app:dev",
-  tag: "latest",
-  deleteSource: false,
-);
-```
-
-### `deleteRegistryImage({ image })`
-
-- **Description**: Delete a room-registry tag or digest reference.
-- **Parameters**:
-  - `image`: Registry ref such as `room.meshagent.com/my-app:old`.
-- **Returns**: Metadata about the deleted ref.
-
-```dart Dart
-await room.containers.deleteRegistryImage(
-  image: "room.meshagent.com/my-app:old",
-);
-```
 
 ### `run(image, ...)`
 

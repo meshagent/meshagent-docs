@@ -37,6 +37,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Create, list, and manage rooms in a project
 * ``: Manage mailboxes for your project
 * ``: Manage routes for your project
+* ``: Manage registries for your project
 * ``: Manage scheduled tasks for your project
 * ``: Join a meeting transcriber to a room
 * `forward`: Forward a container port to localhost
@@ -50,7 +51,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Join a taskrunner to a room
 * ``: Join a worker agent to a room
 * ``: Operate within a room
-* ``: Build and pack OCI images
+* ``: Build and publish OCI images
 
 ## `meshagent version`
 
@@ -1865,6 +1866,124 @@ $ meshagent  delete [OPTIONS] DOMAIN
 **Arguments**:
 
 * `DOMAIN`: Domain name to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
+Manage registries for your project
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a project registry repository.
+* `update`: Update a project registry repository.
+* `show`: Show registry details.
+* `list`: List registries for the project.
+* `delete`: Delete a project registry repository.
+
+### `meshagent  create`
+
+Create a project registry repository.
+
+**Usage**:
+
+```console
+$ meshagent  create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-n, --name TEXT`: Repository path in the public registry, for example &#x27;apps/demo&#x27;  [required]
+* `-d, --description TEXT`: Human-readable description
+* `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent  update`
+
+Update a project registry repository.
+
+**Usage**:
+
+```console
+$ meshagent  update [OPTIONS] REPOSITORY_ID
+```
+
+**Arguments**:
+
+* `REPOSITORY_ID`: Repository id to update  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-n, --name TEXT`: Updated repository path
+* `-d, --description TEXT`: Updated description
+* `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent  show`
+
+Show registry details.
+
+**Usage**:
+
+```console
+$ meshagent  show [OPTIONS] REPOSITORY_ID
+```
+
+**Arguments**:
+
+* `REPOSITORY_ID`: Repository id to show  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent  list`
+
+List registries for the project.
+
+**Usage**:
+
+```console
+$ meshagent  list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent  delete`
+
+Delete a project registry repository.
+
+**Usage**:
+
+```console
+$ meshagent  delete [OPTIONS] REPOSITORY_ID
+```
+
+**Arguments**:
+
+* `REPOSITORY_ID`: Repository id to delete  [required]
 
 **Options**:
 
@@ -7566,7 +7685,7 @@ $ meshagent  connect [OPTIONS] [COMMAND]...
 
 ## `meshagent `
 
-Build and pack OCI images
+Build and publish OCI images
 
 **Usage**:
 
@@ -7584,7 +7703,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 * `build`: Build a container image inside a room.
 * `deploy`: Create or update a room service from an...
-* `pack`: Pack a local directory into an OCI image...
+* `pack`: Publish a local directory as an image...
 
 ### `meshagent  build`
 
@@ -7646,7 +7765,7 @@ $ meshagent  deploy [OPTIONS]
 
 ### `meshagent  pack`
 
-Pack a local directory into an OCI image archive.
+Publish a local directory as an image inside a room using a generated Dockerfile.
 
 **Usage**:
 
@@ -7656,14 +7775,12 @@ $ meshagent  pack [OPTIONS] PATH
 
 **Arguments**:
 
-* `PATH`: Local directory to pack  [required]
+* `PATH`: Local directory to publish  [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
-* `--tag TEXT`: Image reference to embed in the packed archive. Required with --room, and must start with room.meshagent.com/ there.
-* `-o, --output TEXT`: Local path to write the OCI archive tar. Required unless --room is set.
-* `--base TEXT`: Optional base image reference. Defaults to scratch semantics.
-* `--room-path TEXT`: Room storage path to upload the archive to when --room is set. Defaults to the repository path from --tag.
+* `--tag TEXT`: Image reference to publish. Must use registry.meshagent.com/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;.  [required]
+* `--base TEXT`: Optional base image reference for the generated Dockerfile.
 * `--help`: Show this message and exit.
