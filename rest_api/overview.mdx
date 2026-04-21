@@ -101,7 +101,7 @@ The `Meshagent()` client accepts a `base_url` and `token`.
 - `token`: a bearer token for the Authorization header. 
     - This will default to `MESHAGENT_API_KEY`. API keys are scoped to a specific project, so most REST calls will also require a `project_id`.
 
-Every method raises `meshagent.api.RoomException` on non-2xx responses and validates responses with Pydantic models, so malformed payloads surface as rich errors.
+REST calls raise `meshagent.api.RoomException` on non-2xx responses. Many methods also validate responses with typed models, while others still return plain JSON dicts or lists directly.
 
 ## Projects & Rooms
 Create and manage projects and Rooms. Room connection returns a signed token and a room URL to join the room. 
@@ -112,7 +112,7 @@ Create and manage projects and Rooms. Room connection returns a signed token and
 | `list_projects()`                                                        | `GET /accounts/projects`                                         | List projects you can access.                                     |
 | `get_project(project_id)`                                                | `GET /accounts/projects/{project_id}`                            | Fetch one project.                                                |
 | `update_project_settings(project_id, settings)`                          | `PUT /accounts/projects/{project_id}/settings`                   | Update project settings.                                          |
-| `get_status(project_id)`                                                 | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
+| `get_project_status(project_id)`                                         | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
 | `get_project_role(project_id)`                                           | `GET /accounts/projects/{project_id}/role`                       | Get your role in the project.                                     |
 | `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user (optionally admin/developer/can_create_rooms/can_use_llm_proxy).         |
 | `remove_user_from_project(project_id, user_id)`                          | `DELETE /accounts/projects/{project_id}/users/{user_id}`         | Remove a user from the project.                                   |

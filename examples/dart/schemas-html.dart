@@ -5,6 +5,7 @@ final schema = MeshSchema(
   elements: [
     ElementType(
       tagName: 'html',
+      description: 'The root html element.',
       properties: [
         // A ChildProperty describes the type of children that
         // an element allows. There can be at most one child
@@ -15,6 +16,7 @@ final schema = MeshSchema(
     ),
     ElementType(
       tagName: 'body',
+      description: 'The document body element.',
       properties: [
         // Our body can only contain paragraph elements.
         ChildProperty(name: 'children', childTagNames: ['p']),
@@ -25,7 +27,7 @@ final schema = MeshSchema(
       properties: [
         // A ValueProperty describes an attribute that
         // contains a single value.
-        ValueProperty(name: 'class', type: 'string'),
+        ValueProperty(name: 'class', type: SimpleValue.string),
       ],
     ),
   ],

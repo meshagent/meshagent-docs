@@ -65,9 +65,11 @@ If a tool needs room access, inherit `LocalRoomTool` and use `self.room` inside 
 
 ### Toolkit vs hosted toolkit
 
-A `Toolkit` is best for in-process scenarios, usually when only one agent needs access to the tools.
+A `Toolkit` is the definition of a group of tools plus the metadata and validation rules that go with them.
 
-A hosted toolkit is still just a `Toolkit`, but it is run through MeshAgent's hosting layer so any participant can discover and call its tools. Use this when the toolkit should live outside the agent process or be shared across multiple participants.
+Use a plain `Toolkit` when the tools only need to exist inside one process, such as a single agent runtime.
+
+Use a hosted toolkit when the tools should be registered in a room so other participants can discover and call them.
 
 ### `Toolkit`
 
@@ -97,8 +99,8 @@ A `Toolkit` bundles related tools under a single name so callers can discover, i
 
 Hosted toolkits are plain `Toolkit` instances across the SDKs.
 
-- In Python, `ServiceHost`, `connect_remote_toolkit(...)`, and MeshAgent's internal room-hosting wrappers add the lifecycle management needed to make a toolkit discoverable and callable by others.
-- In TypeScript and Dart, `startHostedToolkit(...)` returns a `HostedToolkit` handle. Higher-level helpers like React's `useClientToolkits(...)` and Flutter's `ClientToolkits` widget use that same hosting API internally.
+- In Python, `ServiceHost`, `connect_remote_toolkit(...)`, and MeshAgent's room-hosting helpers register the toolkit and keep it available for room calls.
+- In TypeScript and Dart, `startHostedToolkit(...)` registers the toolkit and returns a `HostedToolkit` handle. Higher-level helpers like React's `useClientToolkits(...)` and Flutter's `ClientToolkits` widget use that same hosting API internally.
 
 `Toolkit` itself does not expose `start()` / `stop()`. Those lifecycle operations live on the room-hosting helper or the returned hosted-toolkit handle.
 

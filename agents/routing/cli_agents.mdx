@@ -1,5 +1,6 @@
 ---
 title: "Using CLI Coding Agents with the MeshAgent LLM Proxy"
+description: Use Codex CLI and Claude Code with MeshAgent's OpenAI- and Anthropic-compatible LLM proxy endpoints.
 ---
 
 Terminal-based coding agents such as [OpenAI Codex CLI](https://github.com/openai/codex) and [Claude Code](https://claude.ai/code) use LLMs to reason about code, generate changes, and complete development tasks from the terminal. By default, these tools send model requests directly to a provider such as OpenAI or Anthropic.
@@ -17,15 +18,10 @@ Use this when you want people to run coding agents through MeshAgent instead of 
 
 ## How it works
 
-The LLM Proxy exposes OpenAI- and Anthropic-compatible endpoints at stable MeshAgent URLs:
+The LLM Proxy exposes stable MeshAgent endpoints for both OpenAI-compatible and Anthropic-compatible clients:
 
-```
-# OpenAI-compatible (Codex CLI, etc.)
-https://api.meshagent.com/openai/v1
-
-# Anthropic-compatible (Claude Code, etc.)
-https://api.meshagent.com/anthropic
-```
+- OpenAI-compatible clients such as Codex CLI: `https://api.meshagent.com/openai/v1`
+- Anthropic-compatible clients such as Claude Code: `https://api.meshagent.com/anthropic`
 
 Instead of authenticating directly with the provider, the CLI authenticates to MeshAgent using a participant token. The proxy takes the target room from the token, validates the token, injects the real provider key server-side, forwards the request, and reports token usage for the traffic sent through it. The coding agent itself is unchanged: it still drives the task, decides when to call the model, and interprets responses. MeshAgent acts as the LLM gateway.
 
@@ -67,7 +63,9 @@ meshagent token --input token-spec.yaml
 
 This prints a `eyJ...` JWT. Store it somewhere secure — you will use it as the API key value in your CLI agent's configuration.
 
-> **Token expiration:** Tokens do not expire by default. Regenerate at any time by re-running this command with the same spec file.
+<Note>
+Tokens do not expire by default. Regenerate at any time by re-running this command with the same spec file.
+</Note>
 
 ---
 
@@ -75,7 +73,7 @@ This prints a `eyJ...` JWT. Store it somewhere secure — you will use it as the
 
 [Codex CLI](https://developers.openai.com/codex/cli) supports custom model providers in `~/.codex/config.toml`, including custom base URLs and API key env vars — making it a natural fit for the MeshAgent LLM Proxy.
 
-### Install Codex
+### Step 1: Install Codex
 
 <CodeGroup>
 ```bash macOS
@@ -86,7 +84,7 @@ npm install -g @openai/codex
 ```
 </CodeGroup>
 
-### Store the JWT as an environment variable
+### Step 2: Store the JWT as an environment variable
 
 Add the JWT from the shared setup to your shell environment:
 
@@ -94,11 +92,19 @@ Add the JWT from the shared setup to your shell environment:
 export MESHAGENT_ROOM_TOKEN="eyJ..."   # your full JWT here
 ```
 
-For a persistent setup, add this to a `.env` file that is sourced in your shell profile.
+<Tip>
+For a persistent setup, add the same line to your shell profile such as `~/.zshrc` or `~/.bashrc`, then open a new terminal or reload your shell before starting Codex.
+</Tip>
 
-### Configure `~/.codex/config.toml`
+### Step 3: Configure `~/.codex/config.toml`
 
-Add a MeshAgent provider and profile:
+Open the config file:
+
+```bash
+nano ~/.codex/config.toml
+```
+
+Then add a MeshAgent provider and profile:
 
 ```toml ~/.codex/config.toml
 [model_providers.meshagent]
@@ -117,10 +123,24 @@ model = "gpt-5.4"
 | `env_key` | The env var name holding the JWT from the shared setup. |
 | `model` | Any model available through the OpenAI API. |
 
-### Run Codex with the MeshAgent profile
+### Step 4: Run Codex with the MeshAgent profile
 
 ```bash
-codex --profile meshagent "your task here"
+codex --profile meshagent
+```
+
+### Step 5: Verify Codex is using MeshAgent
+
+After Codex starts, run:
+
+```text
+/status
+```
+
+You should see Codex using the `meshagent` profile you configured in `~/.codex/config.toml`, including output like:
+
+```text
+Model provider:       MeshAgent - https://api.meshagent.com/openai/v1
 ```
 
 ---
@@ -129,7 +149,7 @@ codex --profile meshagent "your task here"
 
 [Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's CLI coding agent. It uses the Anthropic API and can be pointed at a custom base URL via environment variables.
 
-### Install Claude Code
+### Step 1: Install Claude Code
 
 <CodeGroup>
 ```bash macOS, Linux, WSL
@@ -143,22 +163,48 @@ winget install Anthropic.ClaudeCode
 ```
 </CodeGroup>
 
-### Configure environment variables
+### Step 2: Configure environment variables
 
-Set the following in your shell environment (or `.env` file):
+Add the following to your shell profile such as `~/.zshrc` or `~/.bashrc`:
+
+```bash
+nano ~/.zshrc   # or ~/.bashrc for Bash users
+```
 
 ```bash
 export ANTHROPIC_BASE_URL="https://api.meshagent.com/anthropic"
 export ANTHROPIC_AUTH_TOKEN="eyJ..."   # your JWT from the shared setup
+export ANTHROPIC_API_KEY=""            # Important: Must be explicitly empty
 ```
 
->**Note**: You may want to export the ANTHROPIC_MODEL you want to use as well for example claude-sonnet-4-6. You can also change the model when claude is running by running `/model claude-sonnet-4-6`.
+<Warning>
+Do not put these values in a project-level `.env` file. Configure them in your shell profile so Claude Code sees them in every session. `ANTHROPIC_API_KEY` must be explicitly set to an empty string.
+</Warning>
 
-### Run Claude Code
-If you have previously logged into Claude with another account be sure to run `claude /logout` before connecting through MeshAgent. 
+<Tip>
+After updating your shell profile, open a new terminal or reload your shell before starting Claude Code. You can also export `ANTHROPIC_MODEL`, for example `claude-sonnet-4-6`, or change the model while Claude Code is running with `/model claude-sonnet-4-6`.
+</Tip>
+
+### Step 3: Run Claude Code
+If you have previously logged into Claude with another account, run `claude /logout` before connecting through MeshAgent so cached credentials do not override this configuration.
 
 ```bash
 claude
+```
+
+### Step 4: Verify Claude Code is using MeshAgent
+
+After Claude Code starts, run:
+
+```text
+/status
+```
+
+You should see Claude Code using the environment variables you configured, including output like:
+
+```text
+Auth token:          ANTHROPIC_AUTH_TOKEN
+Anthropic base URL:  https://api.meshagent.com/anthropic
 ```
 
 ---

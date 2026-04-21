@@ -27,7 +27,7 @@ meshagent room storage show --room myroom room://artifacts/report.pdf
 
 ## How it works
 
-Paths are relative to the room storage root. Use `upload` or `uploadStream` to write files, `download` or `downloadStream` to read them back, and `download_url` / `downloadUrl` when you need a fetchable URL for another system. The API also emits `file.updated` and `file.deleted` events so other participants can react to changes.
+Paths are relative to the room storage root. Use `upload` or `uploadStream` to write files, `download` or `downloadStream` to read them back, and `download_url` / `downloadUrl` when you need a fetchable URL for another system. The API also emits `file.updated`, `file.deleted`, and `file.moved` events so other participants can react to changes.
 
 > Current implementation note: the repo includes both local filesystem and GCS-backed storage providers. Deployed services can also mount room storage into the filesystem. The Room Storage API is the stable contract; bucket-mount details belong to service/runtime docs rather than the core API contract.
 
@@ -39,7 +39,7 @@ Use [API Scopes](../rest_api/api_scopes) and [Packaging and Deploying Services](
 
 ## Events
 
-The storage system emits two types of events:
+The storage system emits three types of events:
 
 - **`file.updated`**  
   Triggered when a file is created or updated. Python and .NET handlers receive `path` and `participant_id`. JS/TS and Dart handlers receive a `FileUpdatedEvent` with `.path`.
@@ -143,6 +143,56 @@ room.Storage.On("file.deleted", OnFileDeleted);
 ```
 </CodeGroup>
 
+- **`file.moved`**
+  Triggered when a file or folder is moved. Python and .NET handlers receive `source_path`, `destination_path`, and `participant_id`. JS/TS and Dart handlers receive a `FileMovedEvent` with `.sourcePath` and `.destinationPath`.
+
+<CodeGroup>
+```python Python
+def on_file_moved(source_path: str, destination_path: str, participant_id: str):
+   print(f"File moved: {source_path} -> {destination_path} by {participant_id}")
+
+room.storage.on("file.moved", on_file_moved)
+
+```
+```javascript NodeJs
+function onFileMoved(event) {
+    console.log("File moved:", event.sourcePath, "->", event.destinationPath);
+}
+
+room.storage.on("file.moved", onFileMoved);
+
+```
+```typescript TypeScript
+function onFileMoved(event: FileMovedEvent) {
+    console.log("File moved:", event.sourcePath, "->", event.destinationPath);
+}
+
+room.storage.on("file.moved", onFileMoved);
+
+```
+```dart Dart
+void onFileMoved(String sourcePath, String destinationPath) {
+    print("File moved: $sourcePath -> $destinationPath");
+}
+
+room.listen((RoomEvent event) {
+    if (event is FileMovedEvent) {
+        onFileMoved(event.sourcePath, event.destinationPath);
+    }
+});
+
+```
+```dotnet C#
+void OnFileMoved(Dictionary<string, object?> data)
+{
+    Console.WriteLine($"File moved: {data["source_path"]} -> {data["destination_path"]} by {data["participant_id"]}");
+}
+
+room.Storage.On("file.moved", OnFileMoved);
+
+```
+</CodeGroup>
+
 
 You can remove an event handler with:
 
@@ -151,16 +201,19 @@ You can remove an event handler with:
 ```python Python
 room.storage.off("file.updated", on_file_updated)
 room.storage.off("file.deleted", on_file_deleted)
+room.storage.off("file.moved", on_file_moved)
 
 ```
 ```javascript NodeJs
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
+room.storage.off("file.moved", onFileMoved);
 
 ```
 ```typescript TypeScript
 room.storage.off("file.updated", onFileUpdated);
 room.storage.off("file.deleted", onFileDeleted);
+room.storage.off("file.moved", onFileMoved);
 
 ```
 ```dart Dart
@@ -178,6 +231,7 @@ room.listen((RoomEvent event) {
 ```dotnet C#
 room.Storage.Off("file.updated", OnFileUpdated);
 room.Storage.Off("file.deleted", OnFileDeleted);
+room.Storage.Off("file.moved", OnFileMoved);
 
 ```
 </CodeGroup>

@@ -9,9 +9,9 @@ async def main():
     async with RoomClient() as room:
         room.messaging.enable()
 
-        def on_message(event):
+        def on_message(*, message):
             print(
-                f"received a message from {event.from_participant_id} with type '{event.type}': {event.message}"
+                f"received a message from {message.from_participant_id} with type '{message.type}': {message.message}"
             )
 
         room.messaging.on("message", on_message)
