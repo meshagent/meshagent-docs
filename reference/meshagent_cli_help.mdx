@@ -20,7 +20,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 
 * `version`: Print the version
 * `setup`: Perform initial login and project/api key...
-* ``: Trigger agent/tool calls via URL
+* ``: Trigger agent/tool calls in a room
 * ``: Authenticate to meshagent
 * ``: Manage or activate your meshagent projects
 * ``: Manage or activate api-keys for your project
@@ -38,6 +38,8 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Manage mailboxes for your project
 * ``: Manage routes for your project
 * ``: Manage registries for your project
+* `build`: Build a container image inside a room.
+* `deploy`: Create or update a room service from an...
 * ``: Manage scheduled tasks for your project
 * ``: Join a meeting transcriber to a room
 * `forward`: Forward a container port to localhost
@@ -51,7 +53,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Join a taskrunner to a room
 * ``: Join a worker agent to a room
 * ``: Operate within a room
-* ``: Build and publish OCI images
 * ``: Local LLM proxy utilities
 
 ## `meshagent version`
@@ -85,7 +86,7 @@ $ meshagent setup [OPTIONS]
 
 ## `meshagent `
 
-Trigger agent/tool calls via URL
+Trigger agent/tool calls in a room
 
 **Usage**:
 
@@ -2009,6 +2010,70 @@ $ meshagent  delete [OPTIONS] [REPOSITORY]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Repository name to delete
+* `--help`: Show this message and exit.
+
+## `meshagent build`
+
+Build a container image inside a room.
+
+**Usage**:
+
+```console
+$ meshagent build [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Local directory to stream as the build context. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to build. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
+* `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the PATH mount path.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
+* `--builder-name TEXT`: Optional reusable builder name for streamed local builds.
+* `--private / --public`: Whether the build container is private to the participant  [default: public]
+* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz before publishing. Enabled by default.  [default: optimize]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+## `meshagent deploy`
+
+Create or update a room service from an image, optionally building it first.
+
+**Usage**:
+
+```console
+$ meshagent deploy [OPTIONS] [PATH]
+```
+
+**Arguments**:
+
+* `[PATH]`: Local directory to stream as the build context before deploy. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag. When used with PATH, shorthand &lt;repository&gt;:&lt;tag&gt; and &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; resolve against the configured MeshAgent registry.  [required]
+* `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with PATH.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with PATH.
+* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with PATH.  [default: optimize]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
+* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
+* `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
+* `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
+* `-e, --env TEXT`: Set environment variable as KEY=VALUE
+* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
+* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
+* `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
+* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -5206,6 +5271,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 
 * `invoke-tool`: Invoke a specific tool from a toolkit
 * `list-toolkits`: List toolkits (and tools) available in the...
+* ``: Trigger agent/tool calls in a room
 
 #### `meshagent   invoke-tool`
 
@@ -5246,6 +5312,121 @@ $ meshagent   list-toolkits [OPTIONS]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
+
+#### `meshagent   `
+
+Trigger agent/tool calls in a room
+
+**Usage**:
+
+```console
+$ meshagent    [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `tool`: Send a call request to a tool webhook URL
+* `agent`: Send a call request to an agent webhook URL
+* `toolkit`: Send a call request to a toolkit webhook URL
+* `schema`: Send a call request to a schema webhook URL
+
+##### `meshagent    tool`
+
+Send a call request to a tool webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    tool [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    agent`
+
+Send a call request to an agent webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    agent [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    toolkit`
+
+Send a call request to a toolkit webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    toolkit [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    schema`
+
+Send a call request to a schema webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    schema [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
 ### `meshagent  `
@@ -5268,6 +5449,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 
 * `invoke-tool`: Invoke a specific tool from a toolkit
 * `list-toolkits`: List toolkits (and tools) available in the...
+* ``: Trigger agent/tool calls in a room
 
 #### `meshagent   invoke-tool`
 
@@ -5308,6 +5490,121 @@ $ meshagent   list-toolkits [OPTIONS]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
+
+#### `meshagent   `
+
+Trigger agent/tool calls in a room
+
+**Usage**:
+
+```console
+$ meshagent    [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `tool`: Send a call request to a tool webhook URL
+* `agent`: Send a call request to an agent webhook URL
+* `toolkit`: Send a call request to a toolkit webhook URL
+* `schema`: Send a call request to a schema webhook URL
+
+##### `meshagent    tool`
+
+Send a call request to a tool webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    tool [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    agent`
+
+Send a call request to an agent webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    agent [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    toolkit`
+
+Send a call request to a toolkit webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    toolkit [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    schema`
+
+Send a call request to a schema webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    schema [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
 ### `meshagent  `
@@ -7702,108 +7999,6 @@ $ meshagent  connect [OPTIONS] [COMMAND]...
 * `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
 * `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --meshagent-token and --env-secret. When set, room connect mints a participant token locally.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
-* `--help`: Show this message and exit.
-
-## `meshagent `
-
-Build and publish OCI images
-
-**Usage**:
-
-```console
-$ meshagent  [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `build`: Build a container image inside a room.
-* `deploy`: Create or update a room service from an...
-* `pack`: Publish a local directory as an image...
-
-### `meshagent  build`
-
-Build a container image inside a room.
-
-**Usage**:
-
-```console
-$ meshagent  build [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to build. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
-* `--pack TEXT`: Local directory to stream as the build context. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.  [required]
-* `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the pack mount path.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
-* `--builder-name TEXT`: Optional reusable builder name for streamed local builds.
-* `--private / --public`: Whether the build container is private to the participant  [default: public]
-* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz before publishing. Enabled by default.  [default: optimize]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--help`: Show this message and exit.
-
-### `meshagent  deploy`
-
-Create or update a room service from an image, optionally building it first.
-
-**Usage**:
-
-```console
-$ meshagent  deploy [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag. When used with --pack, shorthand &lt;repository&gt;:&lt;tag&gt; and &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; resolve against the configured MeshAgent registry.  [required]
-* `--pack TEXT`: Stream a local directory as the build context, build the image, and then deploy it. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
-* `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with --pack.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with --pack.
-* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with --pack.  [default: optimize]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
-* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
-* `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
-* `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `-e, --env TEXT`: Set environment variable as KEY=VALUE
-* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
-* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
-* `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
-* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
-* `--help`: Show this message and exit.
-
-### `meshagent  pack`
-
-Publish a local directory as an image inside a room using a generated Dockerfile.
-
-**Usage**:
-
-```console
-$ meshagent  pack [OPTIONS] PATH
-```
-
-**Arguments**:
-
-* `PATH`: Local directory to publish  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image reference to publish. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
-* `--base TEXT`: Optional base image reference for the generated Dockerfile.
 * `--help`: Show this message and exit.
 
 ## `meshagent `
