@@ -20,7 +20,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 
 * `version`: Print the version
 * `setup`: Perform initial login and project/api key...
-* ``: Trigger agent/tool calls via URL
+* ``: Trigger agent/tool calls in a room
 * ``: Authenticate to meshagent
 * ``: Manage or activate your meshagent projects
 * ``: Manage or activate api-keys for your project
@@ -38,6 +38,8 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Manage mailboxes for your project
 * ``: Manage routes for your project
 * ``: Manage registries for your project
+* `build`: Build a container image inside a room.
+* `deploy`: Create or update a room service from an...
 * ``: Manage scheduled tasks for your project
 * ``: Join a meeting transcriber to a room
 * `forward`: Forward a container port to localhost
@@ -51,7 +53,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Join a taskrunner to a room
 * ``: Join a worker agent to a room
 * ``: Operate within a room
-* ``: Build and publish OCI images
 * ``: Local LLM proxy utilities
 
 ## `meshagent version`
@@ -80,11 +81,12 @@ $ meshagent setup [OPTIONS]
 
 **Options**:
 
+* `--api-url TEXT`: Persist this API URL on the saved profile and use it for setup login.
 * `--help`: Show this message and exit.
 
 ## `meshagent `
 
-Trigger agent/tool calls via URL
+Trigger agent/tool calls in a room
 
 **Usage**:
 
@@ -117,8 +119,8 @@ $ meshagent  tool [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--local / --no-local`
 * `--participant-name TEXT`: the participant name to be used by the callee
@@ -140,8 +142,8 @@ $ meshagent  agent [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--local / --no-local`
 * `--participant-name TEXT`: the participant name to be used by the callee
@@ -163,8 +165,8 @@ $ meshagent  toolkit [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--local / --no-local`
 * `--participant-name TEXT`: the participant name to be used by the callee
@@ -186,8 +188,8 @@ $ meshagent  schema [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--local / --no-local`
 * `--participant-name TEXT`: the participant name to be used by the callee
@@ -217,6 +219,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 * `login`
 * `logout`
+* `switch`
 * `whoami`
 
 ### `meshagent  login`
@@ -229,6 +232,7 @@ $ meshagent  login [OPTIONS]
 
 **Options**:
 
+* `--api-url TEXT`: Persist this API URL on the saved profile and use it for this login.
 * `--help`: Show this message and exit.
 
 ### `meshagent  logout`
@@ -238,6 +242,22 @@ $ meshagent  login [OPTIONS]
 ```console
 $ meshagent  logout [OPTIONS]
 ```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `meshagent  switch`
+
+**Usage**:
+
+```console
+$ meshagent  switch [OPTIONS] [PROFILE]
+```
+
+**Arguments**:
+
+* `[PROFILE]`: Saved profile user id or email. If omitted, saved profiles are listed.
 
 **Options**:
 
@@ -366,7 +386,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -386,7 +406,7 @@ $ meshagent  create [OPTIONS] NAME
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--description TEXT`: a description for the api key
 * `--activate / --no-activate`: use this key by default for commands that accept an API key  [default: no-activate]
 * `--silent / --no-silent`: do not print api key  [default: no-silent]
@@ -404,7 +424,7 @@ $ meshagent  show [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  env`
@@ -419,7 +439,7 @@ $ meshagent  env [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  activate`
@@ -438,7 +458,7 @@ $ meshagent  activate [OPTIONS] KEY
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
@@ -457,7 +477,7 @@ $ meshagent  delete [OPTIONS] ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -493,7 +513,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--limit INTEGER RANGE`: Maximum sessions to return (server max 1000)  [default: 25; x&gt;=1]
 * `--room TEXT`: Only include sessions for the given room name
 * `--help`: Show this message and exit.
@@ -514,7 +534,7 @@ $ meshagent  show [OPTIONS] SESSION_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent ask`
@@ -529,7 +549,7 @@ $ meshagent ask [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-m, --message TEXT`: Prompt to send to the LLM
 * `--format TEXT`: Output format for non-interactive responses.  [default: text]
 * `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
@@ -549,7 +569,7 @@ $ meshagent generate [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: File path to a file
 * `-i, --input TEXT`: File path to a token spec  [required]
 * `--key TEXT`: an api key to sign the token with
@@ -591,7 +611,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Friendly name for the webhook  [required]
 * `--url TEXT`: Target URL that will receive POSTs  [required]
 * `-e, --event TEXT`: Event to subscribe to (repeat for multiple).  [required]
@@ -612,7 +632,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
@@ -631,7 +651,7 @@ $ meshagent  delete [OPTIONS] WEBHOOK_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -696,7 +716,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
 * `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and creates an external MCP service configured for dynamic client registration.
@@ -719,7 +739,7 @@ $ meshagent  update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--id TEXT`
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
@@ -759,7 +779,7 @@ $ meshagent  create-template [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-f, --file TEXT`: File path to a service template
 * `--url TEXT`: URL to a service template
 * `--values-file TEXT`: File path to template values
@@ -782,7 +802,7 @@ $ meshagent  update-template [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--id TEXT`
 * `-f, --file TEXT`: File path to a service template
 * `--url TEXT`: URL to a service template
@@ -847,7 +867,7 @@ $ meshagent  run [OPTIONS] COMMAND
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
 * `--room TEXT`: Room name
 * `--key TEXT`: an api key to sign the token with
@@ -869,7 +889,7 @@ $ meshagent  show [OPTIONS] SERVICE_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
@@ -885,7 +905,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--room TEXT`: Room name
 * `--help`: Show this message and exit.
@@ -906,7 +926,7 @@ $ meshagent  delete [OPTIONS] SERVICE_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
 * `--help`: Show this message and exit.
 
@@ -947,8 +967,8 @@ $ meshagent  deploy [OPTIONS] MODULE
 
 **Options**:
 
-* `--room TEXT`: Room name  [required]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Export name in the Python module  [default: main]
 * `--builder-name TEXT`: Optional reusable builder name for package image builds.
 * `--verbose`: Print all files that will be added to the package.
@@ -970,8 +990,8 @@ $ meshagent  run [OPTIONS] MODULE
 
 **Options**:
 
-* `--room TEXT`: Room name  [required]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Export name in the Python module  [default: main]
 * `--builder-name TEXT`: Optional reusable builder name for package image builds.
 * `--verbose`: Print all files that will be added to the package.
@@ -1014,8 +1034,8 @@ $ meshagent  sse [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--name TEXT`: Participant name  [default: cli]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: SSE URL for the MCP server  [required]
@@ -1037,8 +1057,8 @@ $ meshagent  http [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--name TEXT`: Participant name  [default: cli]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: Streamable HTTP URL for the MCP server  [required]
@@ -1060,8 +1080,8 @@ $ meshagent  stdio [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--name TEXT`: Participant name  [default: cli]
 * `--role TEXT`: [default: tool]
 * `--command TEXT`: Command to start an MCP server over stdio (quoted string)  [required]
@@ -1169,7 +1189,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
@@ -1188,7 +1208,7 @@ $ meshagent  delete [OPTIONS] SECRET_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  `
@@ -1224,7 +1244,7 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Secret name  [required]
 * `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
 * `--help`: Show this message and exit.
@@ -1241,7 +1261,7 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--secret-id TEXT`: Existing secret ID  [required]
 * `--name TEXT`: Secret name  [required]
 * `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
@@ -1280,7 +1300,7 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Secret name  [required]
 * `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
 * `--help`: Show this message and exit.
@@ -1297,7 +1317,7 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--secret-id TEXT`: Existing secret ID  [required]
 * `--name TEXT`: Secret name  [required]
 * `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
@@ -1336,7 +1356,7 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: Docker registry server, e.g. index.docker.io  [required]
 * `--username TEXT`: Registry user name  [required]
@@ -1356,7 +1376,7 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--secret-id TEXT`: Existing secret ID  [required]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: Docker registry server  [required]
@@ -1398,7 +1418,7 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
 * `--username TEXT`: Service principal ID  [required]
@@ -1417,7 +1437,7 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--secret-id TEXT`: Existing secret ID  [required]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
@@ -1460,7 +1480,7 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
 * `--json-key TEXT`: Entire GCP service account JSON as string  [required]
@@ -1478,7 +1498,7 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--secret-id TEXT`: Existing secret ID  [required]
 * `--name TEXT`: Secret name  [required]
 * `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
@@ -1553,7 +1573,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Room name  [required]
 * `--if-not-exists / --no-if-not-exists`: Do not error if the room already exists  [default: no-if-not-exists]
 * `--metadata TEXT`: Optional JSON object for room metadata
@@ -1572,7 +1592,7 @@ $ meshagent  delete [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--id TEXT`: Room ID (preferred)
 * `--name TEXT`
 * `--help`: Show this message and exit.
@@ -1589,7 +1609,7 @@ $ meshagent  update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--id TEXT`: Room ID (preferred)
 * `--name TEXT`
 * `--new-name TEXT`: New room name  [required]
@@ -1608,7 +1628,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--limit INTEGER RANGE`: Max rooms to return  [default: 50; 1&lt;=x&lt;=500]
 * `--offset INTEGER RANGE`: Offset for pagination  [default: 0; x&gt;=0]
@@ -1627,7 +1647,7 @@ $ meshagent  get [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`
 * `--help`: Show this message and exit.
 
@@ -1667,7 +1687,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-a, --address TEXT`: Mailbox email address (unique per project)  [required]
 * `--room TEXT`: Room name
 * `-q, --queue TEXT`: Queue name to deliver inbound messages to  [required]
@@ -1691,7 +1711,7 @@ $ meshagent  update [OPTIONS] ADDRESS
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name to route inbound mail into
 * `-q, --queue TEXT`: Queue name to deliver inbound messages to
 * `--public`: Queue name to deliver inbound messages to
@@ -1714,7 +1734,7 @@ $ meshagent  show [OPTIONS] ADDRESS
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  list`
@@ -1729,7 +1749,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
@@ -1750,7 +1770,7 @@ $ meshagent  delete [OPTIONS] ADDRESS
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -1789,7 +1809,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-d, --domain TEXT`: Domain name to route (unique per project)  [required]
 * `--room TEXT`: Room name
 * `-p, --port TEXT`: Published port to route to  [required]
@@ -1812,7 +1832,7 @@ $ meshagent  update [OPTIONS] DOMAIN
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name to route traffic into
 * `-p, --port TEXT`: Published port to route to
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
@@ -1834,7 +1854,7 @@ $ meshagent  show [OPTIONS] DOMAIN
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  list`
@@ -1849,7 +1869,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
@@ -1870,7 +1890,7 @@ $ meshagent  delete [OPTIONS] DOMAIN
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -1895,7 +1915,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 * `update`: Update a project registry repository.
 * `show`: Show registry details.
 * `list`: List registries for the project.
-* `delete`: Delete a project registry repository.
+* `delete`: Delete a project registry repository by id...
 
 ### `meshagent  create`
 
@@ -1909,7 +1929,7 @@ $ meshagent  create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-n, --name TEXT`: Repository path in the public registry, for example &#x27;apps/demo&#x27;  [required]
 * `-d, --description TEXT`: Human-readable description
 * `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
@@ -1931,7 +1951,7 @@ $ meshagent  update [OPTIONS] REPOSITORY_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-n, --name TEXT`: Updated repository path
 * `-d, --description TEXT`: Updated description
 * `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
@@ -1953,7 +1973,7 @@ $ meshagent  show [OPTIONS] REPOSITORY_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ### `meshagent  list`
@@ -1968,27 +1988,92 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
 
-Delete a project registry repository.
+Delete a project registry repository by id or name.
 
 **Usage**:
 
 ```console
-$ meshagent  delete [OPTIONS] REPOSITORY_ID
+$ meshagent  delete [OPTIONS] [REPOSITORY]
 ```
 
 **Arguments**:
 
-* `REPOSITORY_ID`: Repository id to delete  [required]
+* `[REPOSITORY]`: Repository id or name to delete
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--name TEXT`: Repository name to delete
+* `--help`: Show this message and exit.
+
+## `meshagent build`
+
+Build a container image inside a room.
+
+**Usage**:
+
+```console
+$ meshagent build [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Local directory to stream as the build context. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to build. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
+* `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the PATH mount path.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
+* `--builder-name TEXT`: Optional reusable builder name for streamed local builds.
+* `--private / --public`: Whether the build container is private to the participant  [default: public]
+* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz before publishing. Enabled by default.  [default: optimize]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--help`: Show this message and exit.
+
+## `meshagent deploy`
+
+Create or update a room service from an image, optionally building it first.
+
+**Usage**:
+
+```console
+$ meshagent deploy [OPTIONS] [PATH]
+```
+
+**Arguments**:
+
+* `[PATH]`: Local directory to stream as the build context before deploy. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
+* `--room TEXT`: Room name
+* `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag. When used with PATH, shorthand &lt;repository&gt;:&lt;tag&gt; and &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; resolve against the configured MeshAgent registry.  [required]
+* `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with PATH.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with PATH.
+* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with PATH.  [default: optimize]
+* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
+* `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
+* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
+* `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
+* `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
+* `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
+* `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
+* `-e, --env TEXT`: Set environment variable as KEY=VALUE
+* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
+* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
+* `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
+* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -2026,7 +2111,7 @@ $ meshagent  add [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name
 * `-q, --queue TEXT`: Queue name to dispatch the task to  [required]
 * `-s, --schedule TEXT`: Cron schedule for task execution  [required]
@@ -2050,7 +2135,7 @@ $ meshagent  list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Filter by room name
 * `--id, --task-id TEXT`: Filter by scheduled task id
 * `--active`: Filter to active tasks only
@@ -2076,7 +2161,7 @@ $ meshagent  update [OPTIONS] TASK_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Updated room name
 * `-q, --queue TEXT`: Updated queue name
 * `-s, --schedule TEXT`: Updated cron schedule
@@ -2103,7 +2188,7 @@ $ meshagent  delete [OPTIONS] TASK_ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -2139,8 +2224,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
@@ -2173,7 +2258,7 @@ $ meshagent forward [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name containing the target container  [required]
 * `-n, --name TEXT`: Container name to port-forward into
 * `-c, --container-id TEXT`: Container ID to port-forward into
@@ -2332,8 +2417,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -2388,7 +2473,7 @@ $ meshagent  deploy [OPTIONS]
 * `--app-dir TEXT`: Python import root for route handlers (similar to uvicorn --app-dir). Defaults to the routes file directory.
 * `--web-host TEXT`: Host to bind the webserver  [default: 0.0.0.0]
 * `--web-port INTEGER`: Port to bind the webserver  [default: 8000]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--domain TEXT`: Domain to create/update route for this deploy (must already target this room if it exists)
 * `--website-path TEXT`: Required room storage subpath to upload route-referenced files (under the routes file directory) and the routes config file into and mount at runtime (example: /website)  [required]
@@ -2453,8 +2538,8 @@ $ meshagent   join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: Role to use for the agent token  [default: agent]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -2583,7 +2668,7 @@ $ meshagent   deploy [OPTIONS]
 * `--service-name TEXT`: Service name  [required]
 * `--service-description TEXT`: Service description
 * `--service-title TEXT`: A display name for service
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--agent-name TEXT`: Name of the agent to run  [required]
 * `--title TEXT`: A friendly title for the chatbot
@@ -2627,8 +2712,8 @@ $ meshagent   run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: Role to use for the agent token  [default: agent]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -2676,8 +2761,8 @@ $ meshagent   use [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
 * `--thread-path TEXT`: Thread path to use for chat history
 * `--message TEXT`: Optional one-shot message
@@ -2722,8 +2807,8 @@ $ meshagent   join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: Role to use for the agent token  [default: agent]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -2768,8 +2853,8 @@ $ meshagent   run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: Role to use for the agent token  [default: agent]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -2908,7 +2993,7 @@ $ meshagent   deploy [OPTIONS]
 * `--service-name TEXT`: Service name  [required]
 * `--service-description TEXT`: Service description
 * `--service-title TEXT`: A display name for service
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--agent-name TEXT`: Name of the agent to run  [required]
 * `--title TEXT`: A friendly title for the task runner
@@ -2977,8 +3062,8 @@ $ meshagent   join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: Role to use for the agent token  [default: agent]
 * `--agent-name TEXT`: Name of the agent to run
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -3121,7 +3206,7 @@ $ meshagent   deploy [OPTIONS]
 * `--service-name TEXT`: Service name  [required]
 * `--service-description TEXT`: Service description
 * `--service-title TEXT`: A display name for service
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--agent-name TEXT`: Name of the agent to run  [required]
 * `--queue TEXT`: The queue to consume  [required]
@@ -3222,7 +3307,7 @@ $ meshagent  deploy [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-c TEXT`: a list of sub commands to run, seperated by semicolons
 
 available sub commands:
@@ -3280,7 +3365,7 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-c TEXT`: a list of sub commands to run, seperated by semicolons
 
 available sub commands:
@@ -3294,7 +3379,7 @@ python path-to-python-file.py --name=NameOfModule;
 
 chatbot, worker, mailbot, voicebot, and webserver command arguments mirror those of the respective meshagent chatbot service, meshagent worker service, meshagent mailbot service, meshagent voicebot service, and meshagent webserver service commands.
 * `-p, --port INTEGER`: a port number to run the agent on (will set MESHAGENT_PORT environment variable when launching the service)
-* `--room TEXT`: Room name  [required]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--key TEXT`: an api key to sign the token with
 * `--agent-name TEXT`: Name of the agent to call
 * `--help`: Show this message and exit.
@@ -3334,8 +3419,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
 * `-r, --rule TEXT`: a system rule
@@ -3423,7 +3508,7 @@ $ meshagent  deploy [OPTIONS]
 * `--auto-greet-prompt TEXT`: Prompt to generate an auto-greet message
 * `--voice TEXT`: OpenAI Realtime voice preset to use
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
@@ -3464,8 +3549,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -3723,7 +3808,7 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
 * `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
@@ -3739,8 +3824,8 @@ $ meshagent  run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
@@ -3813,8 +3898,8 @@ $ meshagent  use [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
 * `--thread-path TEXT`: log all requests to the llm
 * `--message TEXT`: the input message to use
@@ -3857,8 +3942,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -4118,7 +4203,7 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
 * `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
@@ -4134,8 +4219,8 @@ $ meshagent  run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
@@ -4208,8 +4293,8 @@ $ meshagent  use [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
 * `--thread-path TEXT`: log all requests to the llm
 * `--message TEXT`: the input message to use
@@ -4250,8 +4335,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -4480,7 +4565,7 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-copy-env TEXT`: Copy local env vars into shell tool env. Accepts comma-separated names and can be repeated.
 * `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
@@ -4520,8 +4605,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -4589,8 +4674,8 @@ $ meshagent  run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the agent to call
 * `-r, --rule TEXT`: a system rule
@@ -4842,7 +4927,7 @@ $ meshagent  deploy [OPTIONS]
 * `--threading-mode [auto|manual|none]`: Threading mode: none (no persistence), manual (input path), or auto (LLM-selected thread path)  [default: none]
 * `--thread-dir TEXT`: Thread directory for auto mode; thread path is &lt;thread_dir&gt;/&lt;name&gt;.thread  [default: .threads]
 * `--thread-name-rule TEXT`: Rule for generating auto thread names (repeatable)
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--help`: Show this message and exit.
@@ -4882,8 +4967,8 @@ $ meshagent  join [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: agent]
 * `--agent-name TEXT`: Name of the worker agent
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
@@ -5128,7 +5213,7 @@ $ meshagent  deploy [OPTIONS]
 * `--shell-set-env TEXT`: Set env vars in shell tool env as NAME=VALUE. Can be repeated.
 * `--log-llm-requests / --no-log-llm-requests`: log all requests to the llm  [default: no-log-llm-requests]
 * `--prompt TEXT`: a prompt to use for the worker
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: The name of a room to create the service for
 * `--help`: Show this message and exit.
 
@@ -5186,6 +5271,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 
 * `invoke-tool`: Invoke a specific tool from a toolkit
 * `list-toolkits`: List toolkits (and tools) available in the...
+* ``: Trigger agent/tool calls in a room
 
 #### `meshagent   invoke-tool`
 
@@ -5199,8 +5285,8 @@ $ meshagent   invoke-tool [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--toolkit TEXT`: Toolkit name  [required]
 * `--tool TEXT`: Tool name  [required]
 * `--arguments TEXT`: JSON string with arguments for the tool  [required]
@@ -5222,10 +5308,125 @@ $ meshagent   list-toolkits [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
+
+#### `meshagent   `
+
+Trigger agent/tool calls in a room
+
+**Usage**:
+
+```console
+$ meshagent    [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `tool`: Send a call request to a tool webhook URL
+* `agent`: Send a call request to an agent webhook URL
+* `toolkit`: Send a call request to a toolkit webhook URL
+* `schema`: Send a call request to a schema webhook URL
+
+##### `meshagent    tool`
+
+Send a call request to a tool webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    tool [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    agent`
+
+Send a call request to an agent webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    agent [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    toolkit`
+
+Send a call request to a toolkit webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    toolkit [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    schema`
+
+Send a call request to a schema webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    schema [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
 ### `meshagent  `
@@ -5248,6 +5449,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 
 * `invoke-tool`: Invoke a specific tool from a toolkit
 * `list-toolkits`: List toolkits (and tools) available in the...
+* ``: Trigger agent/tool calls in a room
 
 #### `meshagent   invoke-tool`
 
@@ -5261,8 +5463,8 @@ $ meshagent   invoke-tool [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--toolkit TEXT`: Toolkit name  [required]
 * `--tool TEXT`: Tool name  [required]
 * `--arguments TEXT`: JSON string with arguments for the tool  [required]
@@ -5284,10 +5486,125 @@ $ meshagent   list-toolkits [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
+* `--help`: Show this message and exit.
+
+#### `meshagent   `
+
+Trigger agent/tool calls in a room
+
+**Usage**:
+
+```console
+$ meshagent    [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `tool`: Send a call request to a tool webhook URL
+* `agent`: Send a call request to an agent webhook URL
+* `toolkit`: Send a call request to a toolkit webhook URL
+* `schema`: Send a call request to a schema webhook URL
+
+##### `meshagent    tool`
+
+Send a call request to a tool webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    tool [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    agent`
+
+Send a call request to an agent webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    agent [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    toolkit`
+
+Send a call request to a toolkit webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    toolkit [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
+* `--help`: Show this message and exit.
+
+##### `meshagent    schema`
+
+Send a call request to a schema webhook URL
+
+**Usage**:
+
+```console
+$ meshagent    schema [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--local / --no-local`
+* `--participant-name TEXT`: the participant name to be used by the callee
+* `--url TEXT`: URL the agent should call  [required]
+* `--arguments TEXT`: JSON string with arguments for the call  [default: &#123;&#125;]
+* `-p, --permissions TEXT`: File path to a token definition, if not specified default agent permissions will be used
+* `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
 ### `meshagent  `
@@ -5328,8 +5645,8 @@ $ meshagent   oauth [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--from-participant-id TEXT`: Participant ID to request the token from  [required]
 * `--client-id TEXT`: OAuth client ID  [required]
 * `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
@@ -5352,8 +5669,8 @@ $ meshagent   request [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
 * `--url TEXT`: Secret URL identifier  [required]
 * `--type TEXT`: Secret type  [default: application/octet-stream]
@@ -5374,8 +5691,8 @@ $ meshagent   get [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Fetch a secret delegated to this participant name
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
@@ -5393,8 +5710,8 @@ $ meshagent   exists [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Check a secret delegated to this participant name
 * `--for-identity TEXT`: Check a secret for a specific identity
@@ -5412,8 +5729,8 @@ $ meshagent   set [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--type TEXT`: Secret type
 * `--name TEXT`: Optional secret name
@@ -5436,8 +5753,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 #### `meshagent   delete`
@@ -5456,8 +5773,8 @@ $ meshagent   delete [OPTIONS] ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
@@ -5499,8 +5816,8 @@ $ meshagent   oauth [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--from-participant-id TEXT`: Participant ID to request the token from  [required]
 * `--client-id TEXT`: OAuth client ID  [required]
 * `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
@@ -5523,8 +5840,8 @@ $ meshagent   request [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
 * `--url TEXT`: Secret URL identifier  [required]
 * `--type TEXT`: Secret type  [default: application/octet-stream]
@@ -5545,8 +5862,8 @@ $ meshagent   get [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Fetch a secret delegated to this participant name
 * `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
@@ -5564,8 +5881,8 @@ $ meshagent   exists [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--delegated-to TEXT`: Check a secret delegated to this participant name
 * `--for-identity TEXT`: Check a secret for a specific identity
@@ -5583,8 +5900,8 @@ $ meshagent   set [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Secret ID  [required]
 * `--type TEXT`: Secret type
 * `--name TEXT`: Optional secret name
@@ -5607,8 +5924,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 #### `meshagent   delete`
@@ -5627,8 +5944,8 @@ $ meshagent   delete [OPTIONS] ID
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
@@ -5668,8 +5985,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -5685,8 +6002,8 @@ $ meshagent   send [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--queue TEXT`: Queue name  [required]
 * `--json TEXT`: a JSON message to send to the queue  [required]
 * `-f, --file TEXT`: File path to a JSON file
@@ -5704,8 +6021,8 @@ $ meshagent   send-mail [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--queue TEXT`: Queue name  [required]
 * `--subject TEXT`: Email subject  [required]
 * `--body TEXT`: Email body
@@ -5725,8 +6042,8 @@ $ meshagent   receive [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--queue TEXT`: Queue name  [required]
 * `--help`: Show this message and exit.
 
@@ -5742,8 +6059,8 @@ $ meshagent   size [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--queue TEXT`: Queue name  [required]
 * `--help`: Show this message and exit.
 
@@ -5781,8 +6098,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 #### `meshagent   send`
@@ -5797,8 +6114,8 @@ $ meshagent   send [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--to-participant-id TEXT`: Participant ID to send a message to  [required]
 * `--type TEXT`: type of the message to send  [required]
 * `--data TEXT`: JSON message to send  [required]
@@ -5816,8 +6133,8 @@ $ meshagent   broadcast [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--data TEXT`: JSON message to broadcast  [required]
 * `--help`: Show this message and exit.
 
@@ -5861,8 +6178,8 @@ $ meshagent   exists [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 #### `meshagent   cp`
@@ -5882,8 +6199,8 @@ $ meshagent   cp [OPTIONS] SOURCE_PATH DEST_PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 #### `meshagent   show`
@@ -5902,8 +6219,8 @@ $ meshagent   show [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--encoding TEXT`: Text encoding  [default: utf-8]
 * `--help`: Show this message and exit.
 
@@ -5923,8 +6240,8 @@ $ meshagent   rm [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-r`: Remove directories/folders recursively
 * `--help`: Show this message and exit.
 
@@ -5944,8 +6261,8 @@ $ meshagent   ls [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-r`: List subfolders/files recursively
 * `--help`: Show this message and exit.
 
@@ -5982,8 +6299,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -5999,8 +6316,8 @@ $ meshagent   restart [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Service ID to restart
 * `--name TEXT`: Service name to restart
 * `--help`: Show this message and exit.
@@ -6038,8 +6355,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -6055,8 +6372,8 @@ $ meshagent   restart [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Service ID to restart
 * `--name TEXT`: Service name to restart
 * `--help`: Show this message and exit.
@@ -6073,8 +6390,8 @@ $ meshagent  watch [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--format [plain|json]`: Output format  [default: plain]
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
@@ -6134,8 +6451,8 @@ $ meshagent   table [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
@@ -6152,8 +6469,8 @@ $ meshagent   tables [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
 * `--help`: Show this message and exit.
@@ -6170,8 +6487,8 @@ $ meshagent   inspect [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6191,8 +6508,8 @@ $ meshagent   install [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--file TEXT`: Path to requirements JSON file
 * `--help`: Show this message and exit.
 
@@ -6208,8 +6525,8 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6233,8 +6550,8 @@ $ meshagent   drop [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6253,8 +6570,8 @@ $ meshagent   add-columns [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6274,8 +6591,8 @@ $ meshagent   drop-columns [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6294,8 +6611,8 @@ $ meshagent   insert [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6315,8 +6632,8 @@ $ meshagent   merge [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `--on TEXT`: Column to match for upsert  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6337,8 +6654,8 @@ $ meshagent   update [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `--where TEXT`: SQL WHERE clause, e.g. &quot;id = 1&quot;  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6358,8 +6675,8 @@ $ meshagent   delete [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `--where TEXT`: SQL WHERE clause  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6378,8 +6695,8 @@ $ meshagent   search [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6406,8 +6723,8 @@ $ meshagent   sql [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-q, --query TEXT`: SQL query to execute  [required]
 * `-t, --table TEXT`: Table name to register in SQL context (repeatable)
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6432,8 +6749,8 @@ $ meshagent   optimize [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6451,8 +6768,8 @@ $ meshagent   version [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6471,8 +6788,8 @@ $ meshagent   versions [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6491,8 +6808,8 @@ $ meshagent   restore [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-v, --version INTEGER`: Table version  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6511,8 +6828,8 @@ $ meshagent   index [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6532,8 +6849,8 @@ $ meshagent   indexes [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Database branch name (defaults to main)
@@ -6553,8 +6870,8 @@ $ meshagent   index-create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `-c, --column TEXT`: Column name  [required]
 * `--kind TEXT`: vector | scalar | fts  [default: scalar]
@@ -6575,8 +6892,8 @@ $ meshagent   index-drop [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
 * `--name TEXT`: Index name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6615,8 +6932,8 @@ $ meshagent   branch list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
@@ -6633,8 +6950,8 @@ $ meshagent   branch create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--branch TEXT`: New branch name  [required]
 * `--from-branch TEXT`: Source branch to branch from
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6652,8 +6969,8 @@ $ meshagent   branch delete [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--branch TEXT`: Branch name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
@@ -6707,8 +7024,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
@@ -6725,8 +7042,8 @@ $ meshagent   create [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--overwrite`: Overwrite existing memory
@@ -6744,8 +7061,8 @@ $ meshagent   drop [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--ignore-missing`: Ignore missing memory
@@ -6763,8 +7080,8 @@ $ meshagent   inspect [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
@@ -6782,8 +7099,8 @@ $ meshagent   query [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-s, --statement TEXT`: Statement, e.g. &quot;MATCH (e:Entity) RETURN e.name LIMIT 10&quot;  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -6802,8 +7119,8 @@ $ meshagent   upsert-table [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-t, --table TEXT`: Table name  [required]
 * `--records-json TEXT`: JSON array of records
@@ -6824,8 +7141,8 @@ $ meshagent   upsert-nodes [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `--records-json TEXT`: JSON array of MemoryEntityRecord objects
 * `--records-file TEXT`: Path to JSON file with entity records
@@ -6845,8 +7162,8 @@ $ meshagent   upsert-relationships [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `--records-json TEXT`: JSON array of MemoryRelationshipRecord objects
 * `--records-file TEXT`: Path to JSON file with relationship records
@@ -6866,8 +7183,8 @@ $ meshagent   import [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-f, --rdb-file PATH`: Path to FalkorDB dump.rdb file  [required]
 * `--graph-name TEXT`: FalkorDB graph key name. Auto-detected when unambiguous.
@@ -6891,8 +7208,8 @@ $ meshagent   ingest-text [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `--text TEXT`: Text content to ingest
 * `-f, --file TEXT`: Path to UTF-8 text file
@@ -6915,8 +7232,8 @@ $ meshagent   ingest-image [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-f, --file TEXT`: Path to image file
 * `--caption TEXT`: Optional image caption
@@ -6942,8 +7259,8 @@ $ meshagent   ingest-file [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `--path TEXT`: File path available to the room server
 * `--text TEXT`: Inline text content
@@ -6968,8 +7285,8 @@ $ meshagent   ingest-from-table [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-t, --table TEXT`: Source table name  [required]
 * `--text-column TEXT`: Source text columns (repeatable)
@@ -6994,8 +7311,8 @@ $ meshagent   ingest-from-storage [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-p, --path TEXT`: Room storage path to ingest (repeatable)  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -7017,8 +7334,8 @@ $ meshagent   recall [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-q, --query TEXT`: Recall query text  [required]
 * `--limit INTEGER`: Max entities to return  [default: 5]
@@ -7039,8 +7356,8 @@ $ meshagent   delete-entities [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-e, --entity-id TEXT`: Entity ID to delete (repeatable)  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
@@ -7059,8 +7376,8 @@ $ meshagent   delete-relationships [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `--records-json TEXT`: JSON array of MemoryRelationshipSelector objects
 * `--records-file TEXT`: Path to JSON file with relationship selectors
@@ -7080,8 +7397,8 @@ $ meshagent   optimize [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-m, --name TEXT`: Memory name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--compact / --no-compact`: Compact dataset fragments  [default: compact]
@@ -7128,8 +7445,8 @@ $ meshagent   list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-a, --all`: Include exited containers in the listing.
 * `--output TEXT`: json | table  [default: json]
 * `--help`: Show this message and exit.
@@ -7146,8 +7463,8 @@ $ meshagent   stop [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Container ID  [required]
 * `--help`: Show this message and exit.
 
@@ -7163,8 +7480,8 @@ $ meshagent   log [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Container ID  [required]
 * `--follow / --no-follow`: Stream logs  [default: no-follow]
 * `--help`: Show this message and exit.
@@ -7181,8 +7498,8 @@ $ meshagent   logs [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--id TEXT`: Container ID  [required]
 * `--follow / --no-follow`: Stream logs  [default: no-follow]
 * `--help`: Show this message and exit.
@@ -7199,8 +7516,8 @@ $ meshagent   exec [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--container-id TEXT`: container id  [required]
 * `--command TEXT`: Command to execute in the container (quoted string)
 * `--help`: Show this message and exit.
@@ -7217,8 +7534,8 @@ $ meshagent   run [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--image TEXT`: Image to run  [required]
 * `--command TEXT`: Command to execute in the container (quoted string)
 * `--working-dir TEXT`: Working directory inside the container (must be an absolute path)
@@ -7269,8 +7586,8 @@ $ meshagent    list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ##### `meshagent    delete`
@@ -7285,8 +7602,8 @@ $ meshagent    delete [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--image TEXT`: Image ref/tag to delete  [required]
 * `--help`: Show this message and exit.
 
@@ -7302,8 +7619,8 @@ $ meshagent    pull [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to pull  [required]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--help`: Show this message and exit.
@@ -7320,8 +7637,8 @@ $ meshagent    push [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to push  [required]
 * `--private / --public`: Whether the push container is private to the participant  [default: public]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
@@ -7339,8 +7656,8 @@ $ meshagent    load [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-i, --archive-path, --image TEXT`: Absolute room storage path to the OCI image archive file  [required]
 * `--help`: Show this message and exit.
 
@@ -7356,8 +7673,8 @@ $ meshagent    save [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to save  [required]
 * `--archive-path TEXT`: Path to write OCI archive inside one of the mounted paths (absolute path)  [required]
 * `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/images:/workspace&#x27;
@@ -7403,8 +7720,8 @@ $ meshagent    list [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ##### `meshagent    delete`
@@ -7419,8 +7736,8 @@ $ meshagent    delete [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--image TEXT`: Image ref/tag to delete  [required]
 * `--help`: Show this message and exit.
 
@@ -7436,8 +7753,8 @@ $ meshagent    pull [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to pull  [required]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--help`: Show this message and exit.
@@ -7454,8 +7771,8 @@ $ meshagent    push [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to push  [required]
 * `--private / --public`: Whether the push container is private to the participant  [default: public]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
@@ -7473,8 +7790,8 @@ $ meshagent    load [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-i, --archive-path, --image TEXT`: Absolute room storage path to the OCI image archive file  [required]
 * `--help`: Show this message and exit.
 
@@ -7490,8 +7807,8 @@ $ meshagent    save [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--tag TEXT`: Image tag/ref to save  [required]
 * `--archive-path TEXT`: Path to write OCI archive inside one of the mounted paths (absolute path)  [required]
 * `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/images:/workspace&#x27;
@@ -7541,8 +7858,8 @@ $ meshagent   show [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--include-ids`: Include $id attributes in output
 * `--pretty / --compact`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
@@ -7564,8 +7881,8 @@ $ meshagent   grep [OPTIONS] PATH PATTERN
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--ignore-case`: Ignore case
 * `--before INTEGER RANGE`: Include siblings before  [default: 0; x&gt;=0]
 * `--after INTEGER RANGE`: Include siblings after  [default: 0; x&gt;=0]
@@ -7589,8 +7906,8 @@ $ meshagent   inspect [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--pretty / --compact`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
 
@@ -7610,8 +7927,8 @@ $ meshagent   create [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--schema PATH`: Schema JSON file  [required]
 * `--json TEXT`: Initial JSON payload
 * `--json-file PATH`: Path to initial JSON payload
@@ -7633,8 +7950,8 @@ $ meshagent   update [OPTIONS] PATH
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `--patch TEXT`: JSON patch array
 * `--patch-file PATH`: Path to JSON patch array
 * `--help`: Show this message and exit.
@@ -7651,8 +7968,8 @@ $ meshagent   threads [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
-* `--room TEXT`: Room name  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
 * `-f, --file PATH`: Path to Claude GDPR conversations.json  [required]
 * `--thread-dir TEXT`: Directory where imported .thread files will be stored  [default: .threads/anthropic]
 * `--overwrite`: Overwrite existing imported thread files
@@ -7682,108 +7999,6 @@ $ meshagent  connect [OPTIONS] [COMMAND]...
 * `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
 * `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --meshagent-token and --env-secret. When set, room connect mints a participant token locally.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
-* `--help`: Show this message and exit.
-
-## `meshagent `
-
-Build and publish OCI images
-
-**Usage**:
-
-```console
-$ meshagent  [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `build`: Build a container image inside a room.
-* `deploy`: Create or update a room service from an...
-* `pack`: Publish a local directory as an image...
-
-### `meshagent  build`
-
-Build a container image inside a room.
-
-**Usage**:
-
-```console
-$ meshagent  build [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to build, e.g. repo/name:tag.  [required]
-* `--pack TEXT`: Local directory to stream as the build context. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.  [required]
-* `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the pack mount path.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
-* `--builder-name TEXT`: Optional reusable builder name for streamed local builds.
-* `--private / --public`: Whether the build container is private to the participant  [default: public]
-* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz before publishing. Enabled by default.  [default: optimize]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--help`: Show this message and exit.
-
-### `meshagent  deploy`
-
-Create or update a room service from an image, optionally building it first.
-
-**Usage**:
-
-```console
-$ meshagent  deploy [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag.  [required]
-* `--pack TEXT`: Stream a local directory as the build context, build the image, and then deploy it. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
-* `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with --pack.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with --pack.
-* `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with --pack.  [default: optimize]
-* `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
-* `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
-* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
-* `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
-* `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
-* `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
-* `-e, --env TEXT`: Set environment variable as KEY=VALUE
-* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
-* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
-* `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
-* `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
-* `--help`: Show this message and exit.
-
-### `meshagent  pack`
-
-Publish a local directory as an image inside a room using a generated Dockerfile.
-
-**Usage**:
-
-```console
-$ meshagent  pack [OPTIONS] PATH
-```
-
-**Arguments**:
-
-* `PATH`: Local directory to publish  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
-* `--tag TEXT`: Image reference to publish. Must use registry.meshagent.com/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;.  [required]
-* `--base TEXT`: Optional base image reference for the generated Dockerfile.
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -7818,7 +8033,7 @@ $ meshagent  proxy [OPTIONS]
 
 **Options**:
 
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--host TEXT`: Local host to bind the proxy to.  [default: 127.0.0.1]
 * `--port INTEGER`: Local port to bind the proxy to.  [default: 8766]
 * `--bearer TEXT`: Explicit local bearer token. If omitted, the stored token is reused or generated on first run.
