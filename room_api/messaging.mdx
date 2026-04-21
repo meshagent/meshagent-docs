@@ -4,6 +4,7 @@ The `MessagingClient` is the Room API for participant-to-participant messages in
 Use it for direct JSON messages, room-wide broadcasts, and participant presence.
 
 If you need incremental or long-lived streaming, use **streaming toolkits** instead. Messaging stream APIs have been removed.
+If you need process-backed agent turn lifecycle such as `turn.start`, `turn.started`, `turn.ended`, steering, or interruption, see [Agent Turns](../agents/process/agent_turns).
 
 ## Why use the Messaging API?
 
@@ -29,6 +30,41 @@ Messages may include an attachment for cases where you need to send bytes along 
 ### Streaming toolkits for streaming work
 
 Messaging no longer exposes stream open/accept/chunk/close APIs. If your use case needs incremental results or chunked transfer, use a streaming toolkit instead of `room.messaging`.
+
+### Agent turns are a separate layer
+
+Process-backed agents use room messaging as transport, but the turn protocol is a separate runtime concept.
+
+Use `MessagingClient` when you want:
+
+- participant-to-participant messages
+- broadcasts
+- attachments
+- participant discovery
+
+Use [Agent Turns](../agents/process/agent_turns) when you want:
+
+- process-backed agent execution
+- turn lifecycle events
+- steering or interruption
+- thread-aware runtime control
+
+## CLI commands
+
+Use `meshagent room messaging` when you want to inspect messaging-enabled participants or send one-off messages from the terminal:
+
+```bash bash
+meshagent room messaging --help
+meshagent room messaging list --room myroom
+meshagent room messaging send \
+  --room myroom \
+  --to-participant-id PARTICIPANT_ID \
+  --type chat \
+  --data '{"text":"Hello from the CLI"}'
+meshagent room messaging broadcast \
+  --room myroom \
+  --data '{"content":"Hello everyone"}'
+```
 
 ## Getting Started
 
@@ -238,6 +274,7 @@ Looks up a known remote participant by id or by the `name` attribute.
 ## Notes
 
 - Messaging is intended for discrete participant messages, not incremental response streams.
+- For process-backed agent turn lifecycle, see [Agent Turns](../agents/process/agent_turns).
 - For streaming responses, chunked transfer, or bidirectional streaming, use a streaming toolkit.
 - Participant presence is only available after `enable()` completes.
 

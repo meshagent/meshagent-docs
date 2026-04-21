@@ -1,0 +1,83 @@
+---
+title: "Ask MeshAgent from the CLI"
+description: Send direct prompts through MeshAgent from the terminal without starting a room agent.
+---
+
+`meshagent ask` is the direct terminal prompt path for MeshAgent.
+
+Use it when you want to:
+
+- ask one question through the active MeshAgent project
+- get a streamed terminal answer without starting a room agent
+- open a lightweight interactive terminal UI
+
+If you want another tool such as Codex CLI or Claude Code to talk through MeshAgent, use [Using CLI Coding Agents with the MeshAgent LLM Proxy](./cli_agents) instead.
+
+## Before you start
+
+If you have not set up MeshAgent yet, start with:
+
+```bash bash
+meshagent setup
+```
+
+`meshagent ask` uses:
+
+- the active MeshAgent project
+- either a MeshAgent token in `MESHAGENT_TOKEN` or a logged-in CLI session from `meshagent auth login`
+
+<Tip>
+If `meshagent ask` cannot find a MeshAgent token or logged-in CLI session, run `meshagent setup` first, then retry.
+</Tip>
+
+## One-shot prompt
+
+```bash bash
+meshagent ask --message "Summarize the differences between queue channels and messaging channels."
+```
+
+You can also choose the output format:
+
+```bash bash
+meshagent ask \
+  --message "Write release notes for this diff." \
+  --format markdown
+```
+
+And override the model for the request:
+
+```bash bash
+meshagent ask \
+  --message "Explain this API at a beginner level." \
+  --model gpt-5.4
+```
+
+## Interactive terminal UI
+
+Run `meshagent ask` with no `--message` in a TTY to open the interactive prompt UI:
+
+```bash bash
+meshagent ask
+```
+
+This is useful when you want a quick back-and-forth in the terminal but do not need a persistent room agent.
+
+## When to use `meshagent ask` vs `meshagent process`
+
+Use `meshagent ask` when:
+
+- you want direct terminal prompting
+- you do not need a room-connected agent identity
+- you do not need chat, queue, mail, or toolkit channels
+
+Use `meshagent process` when:
+
+- the agent should stay available in a room
+- the agent should accept chat, queue, mail, or toolkit work
+- the workflow needs persisted room and thread behavior
+
+## Related docs
+
+- [Using CLI Coding Agents with the MeshAgent LLM Proxy](./cli_agents)
+- [Making Requests](./llm_proxy)
+- [Process Agents](../process/overview)

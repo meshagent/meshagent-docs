@@ -1,0 +1,144 @@
+---
+title: "Agent Turns"
+description: Understand how process-backed agents start, run, steer, and end turns across threads and channels.
+---
+
+An **agent turn** is one unit of work handled by a process-backed agent.
+
+If a user sends one chat message, a queue consumer submits one job, or another participant invokes the agent as a toolkit, that input becomes a turn.
+
+Turns exist so MeshAgent can keep a few concerns separate:
+
+- the **room messaging fabric** that carries messages between participants
+- the **thread** that defines continuity and persistence
+- the **turn lifecycle** that tells clients what one active run is doing right now
+
+## Why turns are separate from plain messages
+
+Plain room messages are good for discrete participant-to-participant communication.
+
+Process-backed agents need more than that. They need to:
+
+- accept work from several channels
+- assign that work to a specific thread
+- report that the work was accepted before it actually starts
+- stream progress while the turn is still running
+- allow steering or interruption of the active turn
+- mark the point where the turn started and ended
+
+That is why MeshAgent uses a turn protocol instead of treating every agent interaction as a plain chat message.
+
+## Turn lifecycle
+
+At a high level, the flow looks like this:
+
+1. A client sends `meshagent.agent.turn.start`.
+2. The runtime replies with `meshagent.agent.turn.start.accepted`.
+3. When execution actually begins, the runtime emits `meshagent.agent.turn.started`.
+4. While the turn runs, the runtime can emit text deltas, tool call events, approval requests, and other live updates.
+5. When the turn finishes or fails, the runtime emits `meshagent.agent.turn.ended`.
+
+The important distinction is:
+
+- `turn.start.accepted` means the runtime accepted the request
+- `turn.started` means that specific turn is now active
+- `turn.ended` means that active turn is finished
+
+## Core turn messages
+
+| Message or event | What it means |
+| --- | --- |
+| `meshagent.agent.turn.start` | Start a new turn for a given `thread_id` with typed input content. |
+| `meshagent.agent.turn.start.accepted` | The runtime accepted the request and tied it to the source message. |
+| `meshagent.agent.turn.started` | The turn is now active and has a `turn_id`. |
+| `meshagent.agent.turn.steer` | Add more input to the active turn without starting a separate turn. |
+| `meshagent.agent.turn.interrupt` | Interrupt the active turn. |
+| `meshagent.agent.turn.ended` | The turn completed or failed. |
+
+## What a turn start carries
+
+A turn start request includes:
+
+- `thread_id`: which persisted thread this work belongs to
+- `message_id`: the client-side message id for correlation
+- `content`: typed input items such as text or files
+- optional `model`: override the model for this turn
+- optional `instructions`: extra instructions for this turn
+- optional toolkit configuration
+- optional tool choice
+
+That allows one process-backed agent to accept work from different sources while still keeping continuity and per-turn behavior explicit.
+
+Example shape:
+
+```json
+{
+  "type": "meshagent.agent.turn.start",
+  "thread_id": ".threads/support/123.thread",
+  "message_id": "client-msg-1",
+  "content": [
+    {
+      "type": "text",
+      "text": "Summarize the latest queue activity."
+    }
+  ]
+}
+```
+
+## Steering and interruption
+
+Steering and interruption are part of the same turn model.
+
+Use steering when the turn should continue but needs more input. For example:
+
+- a user clarifies what they meant
+- a UI wants to append more instructions
+- a workflow injects follow-up context while the turn is still live
+
+Use interruption when the active turn should stop. For example:
+
+- the user cancelled the request
+- the UI is starting a different turn instead
+- a tool flow became irrelevant or stale
+
+These are control messages, not new conversations. They apply to the active `turn_id`.
+
+## How turns relate to threads
+
+A thread can contain many turns over time.
+
+The thread gives the runtime a persisted continuity boundary. The turn gives the runtime a live execution boundary.
+
+That means:
+
+- **thread** answers "what history does this work belong to?"
+- **turn** answers "what active run is happening right now?"
+
+One process runtime can serve many threads. Each thread can have many turns.
+
+For the persistence model, see [Threads Overview](../threads_overview).
+
+## How turns relate to messaging
+
+Turn messages are carried over the same room messaging fabric used by other participant messages, but they are not the same thing as the general-purpose Messaging API.
+
+Use the [Messaging API](../../room_api/messaging) when you want:
+
+- direct participant messages
+- broadcasts
+- attachments
+- participant discovery
+
+Use the turn protocol when you want:
+
+- process-backed agent execution
+- active-turn lifecycle updates
+- steering or interruption
+- thread-aware runtime control
+
+## Related docs
+
+- [Process Agents](./overview)
+- [Process Agent Architecture](./architecture)
+- [Threads Overview](../threads_overview)
+- [Messaging API](../../room_api/messaging)

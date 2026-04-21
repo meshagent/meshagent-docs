@@ -1,79 +1,76 @@
 ---
-title: "Using CLI Coding Agents with the MeshAgent LLM Proxy"
-description: Use Codex CLI and Claude Code with MeshAgent's OpenAI- and Anthropic-compatible LLM proxy endpoints.
+title: "CLI Coding Agents"
+description: Use Codex CLI and Claude Code with MeshAgent's local LLM proxy command.
 ---
 
 Terminal-based coding agents such as [OpenAI Codex CLI](https://github.com/openai/codex) and [Claude Code](https://claude.ai/code) use LLMs to reason about code, generate changes, and complete development tasks from the terminal. By default, these tools send model requests directly to a provider such as OpenAI or Anthropic.
 
-The MeshAgent LLM Proxy gives those CLIs a MeshAgent endpoint instead. MeshAgent forwards each request to the provider configured for the target room and includes the traffic in MeshAgent token usage reporting.
-
-Use this when you want people to run coding agents through MeshAgent instead of authenticating directly with OpenAI or Anthropic.
+This guide shows how to run those tools through MeshAgent with `meshagent llm proxy`. That command exposes local OpenAI-compatible and Anthropic-compatible endpoints on your machine, forwards requests through MeshAgent, and prints the values your coding agent should use.
 
 ## Why use the LLM Proxy
 
-- Let someone use Codex CLI or Claude Code through MeshAgent even if they do not already have their own OpenAI or Anthropic account set up for that CLI.
+- Let someone use Codex CLI or Claude Code through MeshAgent even if they do not already have their own provider account configured for that CLI.
 - Centralize provider access in MeshAgent instead of configuring raw provider credentials on each developer machine or CI job.
-- Route Codex CLI, Claude Code, and similar tools through the same MeshAgent endpoint pattern.
-- Keep token usage reporting inside MeshAgent while the CLI continues to work like a normal OpenAI- or Anthropic-compatible client.
+- Route Codex CLI, Claude Code, and similar tools through the same local setup pattern.
+- Keep MeshAgent authentication and usage reporting inside the proxy layer while the coding agent continues to work like a normal OpenAI- or Anthropic-compatible client.
 
 ## How it works
 
-The LLM Proxy exposes stable MeshAgent endpoints for both OpenAI-compatible and Anthropic-compatible clients:
+`meshagent llm proxy` starts a local server, then prints the environment variables your coding agent should use.
 
-- OpenAI-compatible clients such as Codex CLI: `https://api.meshagent.com/openai/v1`
-- Anthropic-compatible clients such as Claude Code: `https://api.meshagent.com/anthropic`
+By default that local proxy listens on:
 
-Instead of authenticating directly with the provider, the CLI authenticates to MeshAgent using a participant token. The proxy takes the target room from the token, validates the token, injects the real provider key server-side, forwards the request, and reports token usage for the traffic sent through it. The coding agent itself is unchanged: it still drives the task, decides when to call the model, and interprets responses. MeshAgent acts as the LLM gateway.
+- OpenAI-compatible clients such as Codex CLI: `http://127.0.0.1:8766/openai/v1`
+- Anthropic-compatible clients such as Claude Code: `http://127.0.0.1:8766/anthropic`
 
----
+The coding agent talks to that local proxy. The proxy then authenticates upstream with MeshAgent, forwards the request, and reports usage through MeshAgent. The coding agent itself is unchanged.
 
 ## Setup: Shared first steps
 
 These steps apply regardless of which CLI agent you are using.
 
-### 1. Authenticate to MeshAgent and create an API key
+### 1. Connect the CLI to MeshAgent
 
-If you haven't set up MeshAgent yet, start with `meshagent setup`. Then create an API key. **Copy the printed value — it is shown only once.**
+If you have not set up MeshAgent yet, start with:
 
-```bash
-meshagent api-key create cli-agent-key --activate
+```bash bash
+meshagent setup
 ```
 
-### 2. Create a token spec and generate a participant token JWT
+This signs you in, connects the CLI to MeshAgent, and selects the active project.
 
-The MeshAgent LLM Proxy requires a **participant token** (JWT) as the bearer credential. The API key from Step 1 is used to sign it. The JWT is scoped to a specific room, and it must include the `api.llm` grant or the proxy will reject requests.
+### 2. Start the local proxy
 
-Create a token spec file (contains no secrets — safe to commit):
+Run:
 
-```yaml token-spec.yaml
-version: v1
-kind: ParticipantToken
-room: my-room
-identity: cli-agent
-role: agent
-api:
-  llm: {}
+```bash bash
+meshagent llm proxy
 ```
 
-Replace `my-room` with your room name, then generate the JWT:
+The command prints a setup block like:
 
-```bash
-meshagent token --input token-spec.yaml
+```bash bash
+export OPENAI_BASE_URL=http://127.0.0.1:8766/openai/v1
+export OPENAI_API_KEY=...
+export ANTHROPIC_BASE_URL=http://127.0.0.1:8766/anthropic
+export ANTHROPIC_API_KEY=...
 ```
 
-This prints a `eyJ...` JWT. Store it somewhere secure — you will use it as the API key value in your CLI agent's configuration.
+<Tip>
+Use the exact values printed by your running `meshagent llm proxy` session. If you changed the host, port, or bearer token behavior, those values may differ from the defaults shown here. You will use those printed values in the Codex CLI and Claude Code setup below.
+</Tip>
 
-<Note>
-Tokens do not expire by default. Regenerate at any time by re-running this command with the same spec file.
-</Note>
+### 3. Open a new terminal window and keep the proxy running
 
----
+Open a new terminal window for Codex CLI or Claude Code, and leave the original `meshagent llm proxy` window running while either tool is using it.
+
+That proxy process is also where you can see usage across Codex and Claude Code sessions while it stays open.
 
 ## Codex CLI
 
-[Codex CLI](https://developers.openai.com/codex/cli) supports custom model providers in `~/.codex/config.toml`, including custom base URLs and API key env vars — making it a natural fit for the MeshAgent LLM Proxy.
+[Codex CLI](https://developers.openai.com/codex/cli) supports custom model providers in `~/.codex/config.toml`, including custom base URLs and API key env vars which can be used with the MeshAgent LLM Proxy.
 
-### Step 1: Install Codex
+### 1. Install Codex
 
 <CodeGroup>
 ```bash macOS
@@ -84,19 +81,7 @@ npm install -g @openai/codex
 ```
 </CodeGroup>
 
-### Step 2: Store the JWT as an environment variable
-
-Add the JWT from the shared setup to your shell environment:
-
-```bash
-export MESHAGENT_ROOM_TOKEN="eyJ..."   # your full JWT here
-```
-
-<Tip>
-For a persistent setup, add the same line to your shell profile such as `~/.zshrc` or `~/.bashrc`, then open a new terminal or reload your shell before starting Codex.
-</Tip>
-
-### Step 3: Configure `~/.codex/config.toml`
+### 2. Configure `~/.codex/config.toml`
 
 Open the config file:
 
@@ -109,8 +94,8 @@ Then add a MeshAgent provider and profile:
 ```toml ~/.codex/config.toml
 [model_providers.meshagent]
 name = "MeshAgent"
-base_url = "https://api.meshagent.com/openai/v1"
-env_key = "MESHAGENT_ROOM_TOKEN"
+base_url = "http://127.0.0.1:8766/openai/v1"
+http_headers = {"Authorization"="Bearer OPENAI_API_KEY_FROM_PROXY"}
 
 [profiles.meshagent]
 model_provider = "meshagent"
@@ -119,17 +104,28 @@ model = "gpt-5.4"
 
 | Key | Description |
 |-----|-------------|
-| `base_url` | The MeshAgent OpenAI-compatible LLM proxy endpoint. |
-| `env_key` | The env var name holding the JWT from the shared setup. |
+| `base_url` | The local OpenAI-compatible endpoint exposed by `meshagent llm proxy`. |
+| `http_headers` | Send the exact `OPENAI_API_KEY` value printed by `meshagent llm proxy` as the local proxy bearer token. |
 | `model` | Any model available through the OpenAI API. |
 
-### Step 4: Run Codex with the MeshAgent profile
+<Tip>
+Use the exact `OPENAI_API_KEY` value printed by the running `meshagent llm proxy` window. That terminal must stay open while Codex is using the proxy.
+</Tip>
 
-```bash
+### 3. Run Codex with the MeshAgent profile
+
+In the new terminal window, run:
+
+```bash bash
+meshagent setup
 codex --profile meshagent
 ```
 
-### Step 5: Verify Codex is using MeshAgent
+<Note>
+If you previously logged into Codex with a different account, you may need to start `codex`, run `/logout`, exit, then restart with `codex --profile meshagent`.
+</Note>
+
+### 4. Verify Codex is using MeshAgent
 
 After Codex starts, run:
 
@@ -140,16 +136,22 @@ After Codex starts, run:
 You should see Codex using the `meshagent` profile you configured in `~/.codex/config.toml`, including output like:
 
 ```text
-Model provider:       MeshAgent - https://api.meshagent.com/openai/v1
+Model provider:       MeshAgent - http://127.0.0.1:8766/openai/v1
 ```
 
----
+### 5. Check usage in the proxy terminal
+
+Look at the terminal window where `meshagent llm proxy` is still running. That window shows request activity and usage totals while Codex is using the proxy.
+
+<Note>
+Keep that `meshagent llm proxy` window open. Codex depends on that local proxy process and the printed proxy values while this setup is in use.
+</Note>
 
 ## Claude Code
 
-[Claude Code](https://code.claude.com/docs/en/overview) is Anthropic's CLI coding agent. It uses the Anthropic API and can be pointed at a custom base URL via environment variables.
+[Claude Code](https://code.claude.com/docs/en/overview) speaks Anthropic-compatible APIs, so it should use the local `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` printed by `meshagent llm proxy`.
 
-### Step 1: Install Claude Code
+### 1. Install Claude Code
 
 <CodeGroup>
 ```bash macOS, Linux, WSL
@@ -163,36 +165,31 @@ winget install Anthropic.ClaudeCode
 ```
 </CodeGroup>
 
-### Step 2: Configure environment variables
+### 2. Export the proxy values into this terminal session
 
-Add the following to your shell profile such as `~/.zshrc` or `~/.bashrc`:
+In the new terminal window from the shared setup above, copy the export lines printed by `meshagent llm proxy` into the current shell session:
 
-```bash
-nano ~/.zshrc   # or ~/.bashrc for Bash users
+```bash bash
+export ANTHROPIC_BASE_URL=http://127.0.0.1:8766/anthropic
+export ANTHROPIC_API_KEY=...
 ```
-
-```bash
-export ANTHROPIC_BASE_URL="https://api.meshagent.com/anthropic"
-export ANTHROPIC_AUTH_TOKEN="eyJ..."   # your JWT from the shared setup
-export ANTHROPIC_API_KEY=""            # Important: Must be explicitly empty
-```
-
-<Warning>
-Do not put these values in a project-level `.env` file. Configure them in your shell profile so Claude Code sees them in every session. `ANTHROPIC_API_KEY` must be explicitly set to an empty string.
-</Warning>
 
 <Tip>
-After updating your shell profile, open a new terminal or reload your shell before starting Claude Code. You can also export `ANTHROPIC_MODEL`, for example `claude-sonnet-4-6`, or change the model while Claude Code is running with `/model claude-sonnet-4-6`.
+Use the exact values printed by the running `meshagent llm proxy` window.
 </Tip>
 
-### Step 3: Run Claude Code
-If you have previously logged into Claude with another account, run `claude /logout` before connecting through MeshAgent so cached credentials do not override this configuration.
+### 3. Start Claude Code
 
-```bash
+```bash bash
+meshagent setup
 claude
 ```
 
-### Step 4: Verify Claude Code is using MeshAgent
+<Note>
+If you previously logged Claude Code into a different account, run `claude /logout`, then start `claude` again so it uses the environment variables you set in this terminal.
+</Note>
+
+### 4. Verify Claude Code is using MeshAgent
 
 After Claude Code starts, run:
 
@@ -203,13 +200,20 @@ After Claude Code starts, run:
 You should see Claude Code using the environment variables you configured, including output like:
 
 ```text
-Auth token:          ANTHROPIC_AUTH_TOKEN
-Anthropic base URL:  https://api.meshagent.com/anthropic
+API Key:             ANTHROPIC_API_KEY
+Anthropic base URL:  http://127.0.0.1:8766/anthropic
 ```
 
----
+### 5. Check usage in the proxy terminal
+
+Look at the terminal window where `meshagent llm proxy` is still running. That window shows request activity and usage totals while Claude Code is using the proxy.
+
+<Note>
+Keep that `meshagent llm proxy` window open. Claude Code depends on that local proxy process and the printed proxy values while this setup is in use.
+</Note>
 
 ## Related topics
+- [meshagent ask](./meshagent_ask)
 - [Making Requests](./llm_proxy)
 - [MeshAgent Quickstart](../../introduction/cli_quickstart)
 - [Observability](../../observability/overview)

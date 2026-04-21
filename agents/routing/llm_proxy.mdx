@@ -4,7 +4,11 @@ title: "Making Requests"
 
 The MeshAgent LLM proxy is an HTTP proxy that lets services and external clients call OpenAI and Anthropic without shipping provider API keys in your code. The proxy can authenticate with either MeshAgent room participant tokens or OAuth access tokens issued by a registered [OAuth client](../../project_admin/oauth). Usage is attributed to the room or project context established by that credential.
 
-## Proxied endpoints
+This page covers both the hosted proxy endpoints on `api.meshagent.com` and the local `meshagent llm proxy` command, which starts a localhost proxy that forwards requests through MeshAgent using your local auth session or `MESHAGENT_TOKEN`.
+
+For local terminal workflows such as `meshagent ask`, `meshagent llm proxy`, Codex CLI, or Claude Code, see [meshagent ask](./meshagent_ask) and [Using CLI Coding Agents with the MeshAgent LLM Proxy](./cli_agents).
+
+## Hosted proxy endpoints
 ### OpenAI
 Base URL: `https://api.meshagent.com/openai/v1` (also accepts `https://api.meshagent.com/v1` for OpenAI compatible clients).
 
@@ -57,7 +61,7 @@ If you are calling the proxy from your own application instead of from a room pa
 
 ## Local CLI proxy
 
-If you want to point local SDKs and tools at MeshAgent without exposing your OAuth access token directly, run:
+If you want to point local SDKs and tools at MeshAgent through a localhost proxy instead of calling the hosted endpoints directly, run:
 
 ```bash
 meshagent llm proxy --project-id <project_id>
@@ -102,6 +106,8 @@ LLM proxy billing also adds a separate `llm_proxy_surcharge` line item on top of
 - **SDK defaults:** When you construct the client/adapter (for example `OpenAIResponsesAdapter(model=...)`) you can override the model or base URL explicitly, or set defaults with `OPENAI_MODEL`, `OPENAI_BASE_URL`, `ANTHROPIC_MODEL`, and `ANTHROPIC_BASE_URL`.
 
 ## Related topics
+- [meshagent ask](./meshagent_ask)
+- [Using CLI Coding Agents with the MeshAgent LLM Proxy](./cli_agents)
 - [Adapters Overview](../adapters/index)
 - [OpenAI Responses Adapter](../adapters/openai_responses_adapter)
 - [Anthropic Messages Adapter](../adapters/anthropic_messages_adapter)
