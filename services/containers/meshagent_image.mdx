@@ -59,7 +59,11 @@ FROM <base or scratch>
 COPY . /
 ```
 
-The tag must use `registry.meshagent.com/<project-key>/<repository>:<tag>`.
+The tag can be a full configured registry reference like
+`registry.meshagent.com/<project-key>/<repository>:<tag>`, or shorthand like
+`<repository>:<tag>` and `<project-key>/<repository>:<tag>`. The CLI fills in
+the configured registry from `/config`, and if you omit the project key it uses
+the selected project's key.
 
 ### `meshagent image build`
 
@@ -98,6 +102,7 @@ Key things to know:
 - `--tag` is required
 - `--room` is required unless `MESHAGENT_ROOM` is already set
 - `--pack` uploads a local directory to room storage and mounts it for the build
+- packed builds accept the same shorthand tag forms as `pack`
 - build logs stream back through the CLI while the build runs
 - this is a good fit for agent-driven build workflows inside a room because the build happens in MeshAgent, not on the local machine
 
