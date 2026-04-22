@@ -43,7 +43,7 @@ Use the methods below to manage room images, start and inspect containers, and c
 
 - **Description**: List images currently available to the room (built or pulled previously).
 - **Parameters**: None.
-- **Returns**: `list[Image]` including tags, size, labels, and manifest metadata.
+- **Returns**: `list[Image]` summary records including `id`, `preferred_ref`, `references`, `labels`, `created_at`, `updated_at`, and `target_media_type`.
 
 <CodeGroup>
 ```bash CLI
@@ -54,7 +54,30 @@ meshagent room container image list \
 ```python Python
 images = await room.containers.list_images()
 for image in images:
-    print(image.tags, image.size)
+    print(image.preferred_ref, image.id)
+
+```
+</CodeGroup>
+
+### `inspect_image(image_id)`
+
+- **Description**: Inspect a room image by ID and return detailed content metadata from the container runtime.
+- **Parameters**:
+  - `image_id`: Image ID from `list_images()`.
+- **Returns**: `ImageInspection` including the image summary, target descriptor, selected manifest, manifests, config descriptor, layers, and `content_size`.
+
+<CodeGroup>
+```bash CLI
+meshagent room container image inspect \
+  --room myroom \
+  --image-id sha256:abc123
+
+```
+```python Python
+inspection = await room.containers.inspect_image(image_id="sha256:abc123")
+print(inspection.image.preferred_ref, inspection.content_size)
+for layer in inspection.layers:
+    print(layer.digest, layer.size)
 
 ```
 </CodeGroup>
