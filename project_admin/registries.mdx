@@ -1,0 +1,94 @@
+---
+title: Registries
+description: Create and manage project-owned image repositories for MeshAgent build and deploy workflows.
+---
+
+Registries are the project-owned repositories where MeshAgent stores OCI images for your services.
+
+Use them when you want to build, publish, and deploy containerized services inside MeshAgent without depending on a separate registry such as Docker Hub, Azure Container Registry, or Google Artifact Registry.
+
+MeshAgent can still work with other registry paths, but project registries give you the MeshAgent-native path when you want image storage and deployment in one place.
+
+## How registries work
+
+Each repository belongs to a project and holds the image tags for one service or image family.
+
+Tags in the project registry use this shape:
+
+```text
+registry.meshagent.com/<project-key>/<repository>:<tag>
+```
+
+A build may run from your local files or inside one room, but when you publish it to a `registry.meshagent.com/...` tag, the resulting image lives in the project registry.
+
+That means other rooms in the same project can deploy from the same published image tag. The repository namespace belongs to the project, not to one room.
+
+## Create a repository
+
+Create a repository when you want a stable image name that you plan to build and publish more than once, such as a service, worker, or app.
+
+In most projects, you keep one repository per service or image family, then publish new tags into it over time.
+
+Create the repository before pushing tags into it:
+
+```bash bash
+meshagent registry create \
+  --name apps/support-agent \
+  --description "Images for the support agent service"
+```
+
+The repository name is an OCI-style repository path inside the active project.
+
+## Inspect and manage repositories
+
+List repositories in the active project:
+
+```bash bash
+meshagent registry list
+```
+
+Show one repository:
+
+```bash bash
+meshagent registry show REPOSITORY_ID
+```
+
+Update the name or description:
+
+```bash bash
+meshagent registry update REPOSITORY_ID \
+  --name apps/support-agent \
+  --description "Room service images for support workflows"
+```
+
+Delete a repository:
+
+```bash bash
+meshagent registry delete REPOSITORY_ID
+```
+
+## Use the repository with `meshagent image`
+
+Once the repository exists, publish images into it with `meshagent image`:
+
+```bash bash
+meshagent image build \
+  --room quickstart \
+  --tag registry.meshagent.com/myproject/apps/support-agent:dev \
+  --pack ./support-agent
+```
+
+`meshagent image` validates that:
+
+- the project key in the tag matches the selected project
+- the target repository exists in that project
+
+The build can run from your local files or inside a room, but the published image tag points at the project registry repository.
+
+If the repository does not exist yet, create it with `meshagent registry create` first.
+
+## Related docs
+
+- [Build and Deploy Images](../services/containers/meshagent_image)
+- [Deploy Services with MeshAgent](../services/deployment/deploy_services)
+- [Projects](./projects)
