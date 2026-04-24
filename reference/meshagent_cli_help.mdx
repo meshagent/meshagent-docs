@@ -37,6 +37,8 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `service`: Run local helper HTTP services
 * ``: Create, list, and manage rooms in a project
 * ``: Manage mailboxes for your project
+* ``: Manage feeds for your project
+* ``: Manage feed subscriptions for your project
 * ``: Manage routes for your project
 * ``: Manage registries for your project
 * `build`: Build a container image inside a room.
@@ -1840,6 +1842,298 @@ $ meshagent  delete [OPTIONS] ADDRESS
 
 ## `meshagent `
 
+Manage feeds for your project
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a feed.
+* `update`: Update a feed.
+* `show`: Show feed details.
+* `list`: List feeds for the project.
+* `delete`: Delete a feed.
+* `send`: Publish a single JSON message to a feed.
+* `send-batch`: Publish a JSONL file to a feed.
+
+### `meshagent  create`
+
+Create a feed.
+
+**Usage**:
+
+```console
+$ meshagent  create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-n, --name TEXT`: Feed name  [required]
+* `-d, --description TEXT`: Feed description
+* `--visibility TEXT`: Feed visibility   [default: private]
+* `--paused`: Create the feed in a paused state
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--message-schema TEXT`: JSON schema as inline JSON
+* `--message-schema-file PATH`: Path to a JSON schema file
+* `--help`: Show this message and exit.
+
+### `meshagent  update`
+
+Update a feed.
+
+**Usage**:
+
+```console
+$ meshagent  update [OPTIONS] FEED_ID
+```
+
+**Arguments**:
+
+* `FEED_ID`: Feed id to update  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-n, --name TEXT`: Feed name
+* `-d, --description TEXT`: Feed description
+* `--paused`: Pause the feed
+* `--resume`: Resume a paused feed
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--message-schema TEXT`: JSON schema as inline JSON
+* `--message-schema-file PATH`: Path to a JSON schema file
+* `--clear-message-schema`: Remove the existing message schema
+* `--help`: Show this message and exit.
+
+### `meshagent  show`
+
+Show feed details.
+
+**Usage**:
+
+```console
+$ meshagent  show [OPTIONS] FEED_ID
+```
+
+**Arguments**:
+
+* `FEED_ID`: Feed id to show  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent  list`
+
+List feeds for the project.
+
+**Usage**:
+
+```console
+$ meshagent  list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name to filter feeds by
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent  delete`
+
+Delete a feed.
+
+**Usage**:
+
+```console
+$ meshagent  delete [OPTIONS] FEED_ID
+```
+
+**Arguments**:
+
+* `FEED_ID`: Feed id to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent  send`
+
+Publish a single JSON message to a feed.
+
+**Usage**:
+
+```console
+$ meshagent  send [OPTIONS] FEED_ID
+```
+
+**Arguments**:
+
+* `FEED_ID`: Feed id to publish to  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--message TEXT`: Inline JSON message
+* `--message-file PATH`: Path to a JSON file
+* `--help`: Show this message and exit.
+
+### `meshagent  send-batch`
+
+Publish a JSONL file to a feed.
+
+**Usage**:
+
+```console
+$ meshagent  send-batch [OPTIONS] FEED_ID
+```
+
+**Arguments**:
+
+* `FEED_ID`: Feed id to publish to  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--jsonl-file PATH`: Path to a JSONL file  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
+Manage feed subscriptions for your project
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create a feed subscription.
+* `update`: Update a feed subscription.
+* `show`: Show feed subscription details.
+* `list`: List subscriptions for a feed.
+* `delete`: Delete a feed subscription.
+
+### `meshagent  create`
+
+Create a feed subscription.
+
+**Usage**:
+
+```console
+$ meshagent  create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--feed-id TEXT`: Feed id  [required]
+* `--room TEXT`: Room name  [required]
+* `--path TEXT`: Storage path prefix  [required]
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent  update`
+
+Update a feed subscription.
+
+**Usage**:
+
+```console
+$ meshagent  update [OPTIONS] SUBSCRIPTION_ID
+```
+
+**Arguments**:
+
+* `SUBSCRIPTION_ID`: Subscription id to update  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--feed-id TEXT`: Feed id  [required]
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+### `meshagent  show`
+
+Show feed subscription details.
+
+**Usage**:
+
+```console
+$ meshagent  show [OPTIONS] SUBSCRIPTION_ID
+```
+
+**Arguments**:
+
+* `SUBSCRIPTION_ID`: Subscription id to show  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--feed-id TEXT`: Feed id  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent  list`
+
+List subscriptions for a feed.
+
+**Usage**:
+
+```console
+$ meshagent  list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--feed-id TEXT`: Feed id  [required]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent  delete`
+
+Delete a feed subscription.
+
+**Usage**:
+
+```console
+$ meshagent  delete [OPTIONS] SUBSCRIPTION_ID
+```
+
+**Arguments**:
+
+* `SUBSCRIPTION_ID`: Subscription id to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--feed-id TEXT`: Feed id  [required]
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
 Manage routes for your project
 
 **Usage**:
@@ -2187,6 +2481,7 @@ $ meshagent  add [OPTIONS]
 * `--once`: Run once and then deactivate
 * `--active / --inactive`: Initial active state  [default: active]
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
 * `--help`: Show this message and exit.
 
 ### `meshagent  list`
@@ -2236,6 +2531,8 @@ $ meshagent  update [OPTIONS] TASK_ID
 * `--active`: Mark the task active
 * `--inactive`: Mark the task inactive
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
+* `--clear-storage-write-path`: Clear the stored room storage folder for this task
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
