@@ -1,0 +1,630 @@
+---
+title: Deploy a Web App
+description: Deploy a Node.js web app to a MeshAgent room with a private or public meshagent.app domain.
+---
+
+Use `meshagent deploy` to build a local web app, deploy it as a room service, and attach a stable domain such as `YOUR_SITE.meshagent.app`.
+
+This guide starts from an empty directory. By the end, the app is running in a MeshAgent room, protected by MeshAgent sign-in, writing files to room storage, and calling the MeshAgent LLM router.
+
+`meshagent deploy` reads the Dockerfile, builds the container image in MeshAgent, creates or updates the room service, and creates or updates the route when you pass `--domain`.
+
+MeshAgent rooms run agents and services in containers. That means the same deployment pattern works for apps written in Node.js, Python, Go, .NET, Rust, or any other language that can run in a container. This guide uses Node.js because it keeps the example small.
+
+## Create a Node.js web server
+
+Create a `package.json` file:
+
+```json package.json
+{
+  "name": "meshagent-web-hello",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+```
+
+`package.json` tells Node.js that this project uses JavaScript modules and that `npm start` should run `server.js`.
+
+Create the dependency lockfile:
+
+```bash
+npm install
+```
+
+This app does not have external dependencies yet, but `npm install` creates `package-lock.json`. The lockfile records the exact dependency versions for the project. The Dockerfile below uses `npm ci`, which expects a lockfile and installs from it reproducibly.
+
+Create `server.js`:
+
+```js server.js
+import http from "node:http";
+
+const port = Number(process.env.PORT || 8080);
+
+const server = http.createServer((req, res) => {
+  if (req.url === "/healthz") {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("ok\n");
+    return;
+  }
+
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>MeshAgent Web App</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+        <h1>Hello from MeshAgent</h1>
+        <p>This app is running inside a MeshAgent room.</p>
+      </body>
+    </html>
+  `);
+});
+
+server.listen(port, "0.0.0.0", () => {
+  console.log(`listening on ${port}`);
+});
+```
+
+This server listens on the port from `PORT`, or `8080` when `PORT` is not set. The `/healthz` path is a simple health check. MeshAgent can call it to confirm the app is ready before sending browser traffic to the service.
+
+Add a Dockerfile:
+
+```dockerfile Dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY server.js ./
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+CMD ["node", "server.js"]
+```
+
+A Dockerfile is the build recipe for the app. It tells Docker and MeshAgent which runtime to start from, which files to copy into the image, which install commands to run, and which command starts the app.
+
+The Dockerfile above does the following:
+
+- `FROM node:22-alpine` starts from a small Linux image with Node.js installed.
+- `WORKDIR /app` sets the working directory inside the image.
+- `COPY package*.json ./` copies `package.json` and `package-lock.json`.
+- `RUN npm ci --omit=dev` installs production dependencies from the lockfile.
+- `COPY server.js ./` copies the application code.
+- `ENV PORT=8080` gives the app the HTTP port used by this guide.
+- `EXPOSE 8080` marks the container port that serves HTTP traffic.
+- `CMD ["node", "server.js"]` starts the server when the container runs.
+
+A container image is a packaged version of the app and its runtime. A container is a running instance of that image. `meshagent deploy` builds the image and runs it as a service in the room.
+
+## Deploy it
+
+Deploy the current directory to a room and attach a `meshagent.app` domain:
+
+```bash
+meshagent deploy . \
+  --room my-room \
+  --tag web-hello:v1 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz
+```
+
+The command uses:
+
+- `.` as the source directory to build.
+- `--room my-room` as the room where the service will run.
+- `--tag web-hello:v1` as the image tag for this version of the app.
+- `--domain YOUR_SITE.meshagent.app` as the browser URL for the service.
+- `--liveness /healthz` as the readiness check path.
+
+Replace `my-room` and `YOUR_SITE` with your room name and site name.
+
+Use a new tag each time you deploy a meaningful update, such as `web-hello:v1`, `web-hello:v2`, and `web-hello:v3`. The tag is the deployable version of the app. If a later deploy has a problem, point the service back at an earlier tag while you fix the new version:
+
+```bash
+meshagent deploy \
+  --room my-room \
+  --tag web-hello:v1 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz
+```
+
+That command redeploys the already-built `web-hello:v1` image. It does not include `.` because it is not building the current directory again.
+
+Open:
+
+```text
+https://YOUR_SITE.meshagent.app
+```
+
+A route connects the domain to the room service. By default, `meshagent deploy` creates a private route. A private route is protected by MeshAgent IAP. IAP stands for Identity-Aware Proxy: MeshAgent authenticates the browser user, checks that the user has access to the room, and then forwards the request to the web app.
+
+This gives you a private web app without adding login code to the app. The app can focus on the UI and application behavior, while MeshAgent handles sign-in and room access at the route.
+
+## Show the signed-in user
+
+For private browser routes, MeshAgent provides the signed-in room identity to the app in the `X-MESHAGENT-USER` request header.
+
+Update `server.js` to display that user:
+
+```js server.js
+import http from "node:http";
+
+const port = Number(process.env.PORT || 8080);
+
+const server = http.createServer((req, res) => {
+  if (req.url === "/healthz") {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("ok\n");
+    return;
+  }
+
+  const user = req.headers["x-meshagent-user"] || "anonymous";
+
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>MeshAgent Web App</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+        <h1>Hello from MeshAgent</h1>
+        <p>Signed in as <strong>${escapeHtml(String(user))}</strong>.</p>
+      </body>
+    </html>
+  `);
+});
+
+server.listen(port, "0.0.0.0", () => {
+  console.log(`listening on ${port}`);
+});
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+```
+
+Deploy the updated app with a new tag:
+
+```bash
+meshagent deploy . \
+  --room my-room \
+  --tag web-hello:v2 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz
+```
+
+Refresh the page. After sign-in, the app displays the authenticated room identity from the IAP header. The route still uses `YOUR_SITE.meshagent.app`; the service now runs the image tagged `web-hello:v2`.
+
+## Write files to room storage
+
+Containers have their own filesystem. When you run the app locally, writes go to your local disk. When you deploy the app into a room, writes go to the container filesystem unless you mount room storage into the container.
+
+A mount connects a path inside the container to storage managed outside the container. The app still reads and writes normal files, but the files are stored in the room instead of only inside that one running container.
+
+Update `server.js` to append each request to a log file:
+
+```js server.js
+import { mkdir, readFile, appendFile } from "node:fs/promises";
+import http from "node:http";
+import path from "node:path";
+
+const port = Number(process.env.PORT || 8080);
+const dataDir = process.env.APP_DATA_DIR || path.join(process.cwd(), "data");
+const visitLogPath = path.join(dataDir, "visits.log");
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/healthz") {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("ok\n");
+    return;
+  }
+
+  const user = req.headers["x-meshagent-user"] || "anonymous";
+  await recordVisit(String(user));
+  const visits = await readVisits();
+
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>MeshAgent Web App</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+        <h1>Hello from MeshAgent</h1>
+        <p>Signed in as <strong>${escapeHtml(String(user))}</strong>.</p>
+        <h2>Recent visits</h2>
+        <pre>${escapeHtml(visits)}</pre>
+      </body>
+    </html>
+  `);
+});
+
+server.listen(port, "0.0.0.0", () => {
+  console.log(`listening on ${port}`);
+  console.log(`writing visits to ${visitLogPath}`);
+});
+
+async function recordVisit(user) {
+  await mkdir(dataDir, { recursive: true });
+  await appendFile(visitLogPath, `${new Date().toISOString()} ${user}\n`);
+}
+
+async function readVisits() {
+  try {
+    return await readFile(visitLogPath, "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return "";
+    }
+    throw error;
+  }
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+```
+
+Test it locally:
+
+```bash
+npm start
+```
+
+Open `http://localhost:8080`, then check the file on your machine:
+
+```bash
+cat data/visits.log
+```
+
+The file is created locally because the app is running on your machine. The local request displays `anonymous` for the user because the browser is connecting directly to `localhost`, not through the private MeshAgent route.
+
+Update the Dockerfile so the container writes app data to `/data`:
+
+```dockerfile Dockerfile
+FROM node:22-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY server.js ./
+
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV APP_DATA_DIR=/data
+
+VOLUME /data
+EXPOSE 8080
+CMD ["node", "server.js"]
+```
+
+`APP_DATA_DIR=/data` tells the app to write `visits.log` under `/data` after it is deployed. `VOLUME /data` marks `/data` as the writable data directory for the container.
+
+Deploy again with a room mount:
+
+```bash
+meshagent deploy . \
+  --room my-room \
+  --tag web-hello:v3 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz \
+  --room-mount /web-hello:/data:rw
+```
+
+The room mount format is:
+
+```text
+--room-mount <room-storage-path>:<container-path>:<mode>
+```
+
+In this example, `/web-hello` is the path in room storage, `/data` is the path inside the container, and `rw` means the service can read and write the mounted files.
+
+Refresh `https://YOUR_SITE.meshagent.app` a few times, then open [MeshAgent Studio](https://studio.meshagent.com), go to the room, and inspect room storage. The file is written at:
+
+```text
+/web-hello/visits.log
+```
+
+Your local `data/visits.log` file is no longer updated by the deployed app. The app is running in the room, and `/data` now points at room storage.
+
+## Call the LLM router
+
+Add the OpenAI SDK:
+
+```bash
+npm install openai
+```
+
+Update `server.js` to call the MeshAgent LLM router through the OpenAI SDK:
+
+```js server.js
+import { mkdir, readFile, appendFile } from "node:fs/promises";
+import http from "node:http";
+import path from "node:path";
+import OpenAI from "openai";
+
+const port = Number(process.env.PORT || 8080);
+const dataDir = process.env.APP_DATA_DIR || path.join(process.cwd(), "data");
+const visitLogPath = path.join(dataDir, "visits.log");
+
+const openai = new OpenAI({
+  baseURL: process.env.OPENAI_BASE_URL,
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/healthz") {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("ok\n");
+    return;
+  }
+
+  const user = req.headers["x-meshagent-user"] || "anonymous";
+  await recordVisit(String(user));
+  const visits = await readVisits();
+  const message = await generateMessage(String(user));
+
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>MeshAgent Web App</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body>
+        <h1>Hello from MeshAgent</h1>
+        <p>Signed in as <strong>${escapeHtml(String(user))}</strong>.</p>
+        <p>${escapeHtml(message)}</p>
+        <h2>Recent visits</h2>
+        <pre>${escapeHtml(visits)}</pre>
+      </body>
+    </html>
+  `);
+});
+
+server.listen(port, "0.0.0.0", () => {
+  console.log(`listening on ${port}`);
+  console.log(`writing visits to ${visitLogPath}`);
+});
+
+async function recordVisit(user) {
+  await mkdir(dataDir, { recursive: true });
+  await appendFile(visitLogPath, `${new Date().toISOString()} ${user}\n`);
+}
+
+async function readVisits() {
+  try {
+    return await readFile(visitLogPath, "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return "";
+    }
+    throw error;
+  }
+}
+
+async function generateMessage(user) {
+  const response = await openai.responses.create({
+    model: "gpt-5.4",
+    input: `Write one short welcome sentence for ${user}.`,
+  });
+
+  return response.output_text;
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+```
+
+The OpenAI SDK normally sends requests to OpenAI. In this example, `OPENAI_BASE_URL` points the SDK at the room LLM router instead. `OPENAI_API_KEY` is a MeshAgent credential for the room, not a provider key. That lets the app use the standard OpenAI SDK while MeshAgent handles project routing, usage tracking, and access control.
+
+Test the app locally through the room:
+
+```bash
+meshagent room connect --room=my-room --identity=web-hello -- npm start
+```
+
+Open:
+
+```text
+http://localhost:8080
+```
+
+`meshagent room connect` runs the command on your machine and provides the same MeshAgent environment variables that the app receives in the room. That is why the local app can call the LLM router without hardcoding a proxy URL or token.
+
+The local request still does not include `X-MESHAGENT-USER` because your browser is connecting directly to `localhost`; the request is not passing through the MeshAgent IAP route.
+
+Deploy the LLM-enabled app with a new tag and the same room mount:
+
+```bash
+meshagent deploy . \
+  --room my-room \
+  --tag web-hello:v4 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz \
+  --meshagent-token agentDefault \
+  --room-mount /web-hello:/data:rw
+```
+
+`--meshagent-token agentDefault` injects `MESHAGENT_TOKEN`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` for the deployed service. The token identity defaults to the service name derived from the image repository, so `web-hello:v4` uses the `web-hello` identity.
+
+Refresh `https://YOUR_SITE.meshagent.app`. The page shows the signed-in user, recent visits from room storage, and a sentence generated through the MeshAgent LLM router.
+
+## Deploy a public site
+
+A site can also be public. Use `--public` when anyone on the internet should be able to load the site without a MeshAgent room sign-in:
+
+```bash
+meshagent deploy . \
+  --room my-room \
+  --tag web-hello:v5 \
+  --domain YOUR_SITE.meshagent.app \
+  --liveness /healthz \
+  --meshagent-token agentDefault \
+  --room-mount /web-hello:/data:rw \
+  --public
+```
+
+Public sites are useful for demos, static marketing pages, public webhook targets, and other endpoints that are intentionally open. A public route still points at the same room service, but browser requests are not checked against room membership.
+
+Do not depend on IAP headers in a public route because public requests are not authenticated by MeshAgent room access.
+
+If the public site calls the LLM router, anyone who can reach the site can trigger those requests.
+
+## Optimizing Cold Start Latency
+
+Rooms have a lifecycle. When a room is active, MeshAgent starts the services needed by that room. When the room goes idle, those services can be stopped. The next request to a routed web app can start the room again before the app responds.
+
+Cold start latency is the extra time before the first response while the service starts. For a web app, the important work is:
+
+- preparing the container image
+- starting the Node.js process
+- loading application files and dependencies
+- waiting for the app to listen on its HTTP port
+
+The optimizations below reduce the amount of content that must be prepared and the amount of work Node has to do before the first request succeeds.
+
+A small, cheap `/healthz` endpoint also helps. It gives MeshAgent a quick readiness check so traffic is sent to the app after the server is listening.
+
+### Use a multistage build
+
+A Docker image is built in layers. A normal Dockerfile can leave build tools, source files, package-manager cache, and development dependencies in the final image even though the running app does not need them.
+
+A multistage Dockerfile separates the build environment from the runtime environment. The first stage installs dependencies and prepares the app. The final stage copies only the files needed to run the server:
+
+```dockerfile Dockerfile
+FROM node:22-alpine AS build
+
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY server.js ./
+
+FROM node:22-alpine
+
+WORKDIR /app
+COPY --from=build /src/package.json /src/package-lock.json ./
+RUN npm ci --omit=dev
+COPY --from=build /src/server.js ./
+
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV APP_DATA_DIR=/data
+
+VOLUME /data
+EXPOSE 8080
+CMD ["node", "server.js"]
+```
+
+This final image still uses Node, but it does not include the first stage's build cache or temporary files. Smaller runtime images are faster to prepare during room startup and have fewer files for the app to scan at runtime.
+
+### Bundle with ncc
+
+Node.js usually loads code by resolving imports from your app and from `node_modules`. That is flexible during development, but it can mean the runtime container has thousands of small files and Node has to resolve many paths during startup.
+
+`ncc` is a Node.js bundler. It starts from an entry file, follows the imports used by that file, and writes the application plus its dependencies into a small output directory. For this app, the entry file is `server.js` and the output is `dist/index.js`.
+
+Install `ncc` as a development dependency and build the bundle:
+
+```bash
+npm install --save-dev @vercel/ncc
+npx ncc build server.js --target es2022 --out dist
+```
+
+Update the Dockerfile to run the bundled output:
+
+```dockerfile Dockerfile
+FROM node:22-alpine AS build
+
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY server.js ./
+RUN npx ncc build server.js --target es2022 --out dist
+
+FROM node:22-alpine
+
+WORKDIR /app
+COPY --from=build /src/dist/index.js ./index.js
+
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV APP_DATA_DIR=/data
+
+VOLUME /data
+EXPOSE 8080
+CMD ["node", "index.js"]
+```
+
+This helps cold starts because the runtime container starts Node with one application file instead of a source tree plus `node_modules`. The final image also does not need `ncc` itself, because bundling happened in the build stage.
+
+### Use a scratch runtime image with `meshagent.runtime=node`
+
+The previous Dockerfile still ships a full Node base image as part of your app image. For the smallest deployable artifact, use a final `scratch` stage.
+
+`scratch` is Docker's empty base image. It contains only the files you copy into it. On its own, a `scratch` image cannot run Node, so add `LABEL meshagent.runtime=node` to tell `meshagent deploy` that this artifact should run on MeshAgent's Node runtime:
+
+```dockerfile Dockerfile
+FROM node:22-alpine AS build
+
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY server.js ./
+RUN npx ncc build server.js --target es2022 --out dist
+
+FROM scratch
+
+LABEL meshagent.runtime=node
+
+WORKDIR /app
+COPY --from=build /src/dist/index.js ./index.js
+
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV APP_DATA_DIR=/data
+
+VOLUME /data
+EXPOSE 8080
+CMD ["/app/index.js"]
+```
+
+The final image now contains only the bundled application file and metadata. The `meshagent.runtime=node` label tells `meshagent deploy` to run that application content on MeshAgent's prewarmed Node runtime image.
+
+This helps because the app artifact stays small while the Node runtime comes from an optimized image MeshAgent can prepare ahead of time. Room services are started as part of the room lifecycle, so reducing the app image size and reusing the optimized runtime layer both reduce the amount of work needed before the first request can complete.
+
+## Related docs
+
+- [Routes](../../project_admin/routes): understand private and public routed domains.
+- [Build and Deploy Images](../containers/meshagent_image): use MeshAgent image workflows from the CLI.
+- [Optimizing Containers](../containers/optimizing_containers): optimize custom containers for faster startup.
