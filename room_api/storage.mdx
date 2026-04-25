@@ -29,8 +29,6 @@ meshagent room storage show --room myroom room://artifacts/report.pdf
 
 Paths are relative to the room storage root. Use `upload` or `uploadStream` to write files, `download` or `downloadStream` to read them back, and `download_url` / `downloadUrl` when you need a fetchable URL for another system. The API also emits `file.updated`, `file.deleted`, and `file.moved` events so other participants can react to changes.
 
-> Current implementation note: the repo includes both local filesystem and GCS-backed storage providers. Deployed services can also mount room storage into the filesystem. The Room Storage API is the stable contract; bucket-mount details belong to service/runtime docs rather than the core API contract.
-
 ## Permissions and grants
 
 `upload` / `uploadStream` and `download` / `downloadStream` / `download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
