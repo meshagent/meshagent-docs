@@ -1,0 +1,28 @@
+```typescript TypeScript
+import OpenAI from "openai";
+
+async function main() {
+  const defaultHeaders: Record<string, string> = {};
+  if (process.env.MESHAGENT_PROJECT_ID) {
+    defaultHeaders["Meshagent-Project-Id"] = process.env.MESHAGENT_PROJECT_ID;
+  }
+
+  const client = new OpenAI({
+    baseURL:
+      process.env.MESHAGENT_OPENAI_BASE_URL ??
+      "https://api.meshagent.com/openai/v1",
+    apiKey: process.env.MESHAGENT_ACCESS_TOKEN,
+    defaultHeaders,
+  });
+
+  const response = await client.responses.create({
+    model: "gpt-5.4",
+    input: "Tell me a fun fact about AI.",
+  });
+
+  console.log(response.output_text);
+}
+
+void main();
+
+```

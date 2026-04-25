@@ -1,0 +1,132 @@
+---
+title: "Local CLI Proxy"
+description: Run meshagent llm proxy when a local SDK, framework, or tool expects localhost base URLs and temporary local keys.
+---
+
+import LocalCliProxyOpenAIPython from "/snippets/examples/python/snippets/local-cli-proxy-openai.mdx"
+import LocalCliProxyAnthropicPython from "/snippets/examples/python/snippets/local-cli-proxy-anthropic.mdx"
+import LocalCliProxyLangChainPython from "/snippets/examples/python/snippets/local-cli-proxy-langchain.mdx"
+import LocalCliProxyOpenAITypeScript from "/snippets/examples/typescript/local-cli-proxy-openai.mdx"
+import LocalCliProxyAnthropicTypeScript from "/snippets/examples/typescript/local-cli-proxy-anthropic.mdx"
+
+`meshagent llm proxy` starts a local proxy server on your machine. It exposes temporary OpenAI-compatible and Anthropic-compatible localhost endpoints that forward requests to the hosted [MeshAgent LLM Proxy](./llm_proxy), so usage is still routed through your MeshAgent project and user. 
+
+The local endpoints and keys only work while the command is running, and by default the terminal shows live usage as requests come through. Use it for local tools that are easiest to configure as if they were talking to OpenAI or Anthropic directly or can't send custom headers like `Meshagent-Project-Id`. 
+
+For Codex or Claude, use [Use Codex and Claude with MeshAgent](./use_codex_claude). `meshagent setup` can configure those tools directly against the hosted MeshAgent endpoints.
+
+## Start the local proxy
+
+Run `meshagent setup` once to authenticate with MeshAgent and select a project, then start the local proxy:
+
+```bash
+meshagent llm proxy
+```
+
+By default the local proxy listens on:
+
+- `http://127.0.0.1:8766/openai/v1` for OpenAI-compatible clients
+- `http://127.0.0.1:8766/anthropic` for Anthropic-compatible clients
+
+When it starts, it prints the local settings your tool should use:
+
+```bash
+export OPENAI_BASE_URL=http://127.0.0.1:8766/openai/v1
+export OPENAI_API_KEY=...
+export ANTHROPIC_BASE_URL=http://127.0.0.1:8766/anthropic
+export ANTHROPIC_API_KEY=...
+```
+
+The printed API keys authenticate requests to the local proxy only. The proxy separately uses your MeshAgent CLI session to forward requests upstream through MeshAgent. By default, the terminal running `meshagent llm proxy` shows live usage by model and recent request activity as traffic passes through the proxy.
+
+Keep the proxy process running while your local tool uses it. If you stop the process, those local keys stop working until you start it again.
+
+## How It Works
+
+- Your tool sends requests to the localhost OpenAI-compatible or Anthropic-compatible URL printed by `meshagent llm proxy`.
+- The local proxy authenticates that request with the temporary local proxy key it printed for the session.
+- The local proxy then forwards the request to the hosted MeshAgent LLM Proxy using your active MeshAgent project and an upstream MeshAgent token from your CLI session or `MESHAGENT_TOKEN`.
+- MeshAgent handles the real project-level routing, usage attribution, billing, and provider credentials.
+
+## Use the Local Proxy
+### OpenAI-compatible `curl` request
+
+```bash
+curl "$OPENAI_BASE_URL/responses" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.4",
+    "input": "Tell me a fun fact about AI."
+  }'
+```
+
+### Anthropic-compatible `curl` request
+
+```bash
+curl "$ANTHROPIC_BASE_URL/v1/messages" \
+  -H "x-api-key: $ANTHROPIC_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "content-type: application/json" \
+  -d '{
+    "model": "claude-sonnet-4-6",
+    "max_tokens": 512,
+    "messages": [
+      {"role": "user", "content": "Tell me a fun fact about AI."}
+    ]
+  }'
+```
+
+### OpenAI SDK examples
+
+<CodeGroup>
+  <LocalCliProxyOpenAIPython />
+  <LocalCliProxyOpenAITypeScript />
+</CodeGroup>
+
+### Anthropic SDK examples
+
+<CodeGroup>
+  <LocalCliProxyAnthropicPython />
+  <LocalCliProxyAnthropicTypeScript />
+</CodeGroup>
+
+### Using Agent Frameworks with the local proxy
+
+Any framework that lets you override an OpenAI or Anthropic compatible base URL and API key can use the local proxy. For example, with LangChain:
+
+<CodeGroup>
+  <LocalCliProxyLangChainPython />
+</CodeGroup>
+
+<Note> If your framework can send MeshAgent authentication and project headers directly, you can also use the hosted [MeshAgent LLM Proxy](./llm_proxy). Use the local proxy when you want the framework to talk to a local provider-compatible endpoint during development. </Note>
+
+## When to use the local proxy vs the hosted proxy
+The local proxy is a local adapter on top of the hosted MeshAgent LLM Proxy. Requests still route through MeshAgent and use the active MeshAgent project.
+
+Use the hosted proxy when your app, service, SDK, or framework can call MeshAgent directly with a MeshAgent OAuth token and `Meshagent-Project-Id`.
+
+Use the local proxy when you're working with a tool on your machine that's easiest to configure with provider-style base URLs and API keys. It's especially useful when the tool can't reliably send custom headers like `Meshagent-Project-Id`, when you'd rather use local proxy keys than a MeshAgent OAuth token, or when you want live usage visible in your terminal as requests come through.
+
+## Advanced options
+
+The local proxy signs upstream MeshAgent requests with:
+
+- `MESHAGENT_TOKEN`, if it is set
+- otherwise your current MeshAgent CLI auth session
+
+You can override that behavior:
+
+- `--project-id <project_id>` to bypass the active project
+- `--token-from-env <ENV_NAME>` to forward a different MeshAgent token env var upstream
+- `--bearer <token>` to set the local bearer token explicitly
+- `--insecure` to disable local bearer-token enforcement
+- `--no-tui` to skip the live usage dashboard
+
+If you do not pass `--bearer` or `--insecure`, MeshAgent reuses a stored local bearer token or generates one on first run. That local bearer token protects the localhost proxy only. It is separate from the upstream MeshAgent credential used to talk to the hosted proxy.
+
+## Related docs
+
+- [MeshAgent LLM Proxy](./llm_proxy)
+- [Use Codex and Claude with MeshAgent](./use_codex_claude)
+- [Ask MeshAgent from the CLI](./ask_meshagent_cli)
