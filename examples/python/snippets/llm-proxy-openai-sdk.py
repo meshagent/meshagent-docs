@@ -1,0 +1,23 @@
+import os
+from openai import OpenAI
+
+default_headers = {}
+project_id = os.environ.get("MESHAGENT_PROJECT_ID")
+if project_id:
+    default_headers["Meshagent-Project-Id"] = project_id
+
+client = OpenAI(
+    base_url=os.environ.get(
+        "MESHAGENT_OPENAI_BASE_URL",
+        "https://api.meshagent.com/openai/v1",
+    ),
+    api_key=os.environ["MESHAGENT_ACCESS_TOKEN"],
+    default_headers=default_headers,
+)
+
+response = client.responses.create(
+    model="gpt-5.4",
+    input="Tell me a fun fact about AI.",
+)
+
+print(response.output_text)

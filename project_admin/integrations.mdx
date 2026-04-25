@@ -7,9 +7,11 @@ Integrations are shared project settings that rooms and services in the project 
 
 Use them when you want to set provider credentials and base URLs once at the project level, export telemetry from MeshAgent, or configure advanced project-level routing and admission behavior.
 
+If you plan to use [MeshAgent LLM Proxy](../agents/routing/llm_proxy), you do not need to start here. By default MeshAgent provides OpenAI and Anthropic access through MeshAgent-managed routing. Open **Integrations** when you want to switch the project to your own OpenAI or Anthropic credentials or override the upstream base URLs.
+
 ## What you can configure
 
-- **LLM router**: project-level OpenAI and Anthropic API keys and optional base URLs used by [Making Requests](../agents/routing/llm_proxy)
+- **LLM provider settings**: project-level OpenAI and Anthropic API keys and optional base URLs used by [MeshAgent LLM Proxy](../agents/routing/llm_proxy), coding agents, and other compatible clients
 - **Telemetry**: OTEL export settings and an optional OTEL filter endpoint used for observability export
 - **Room admission controller**: an advanced external endpoint, when your deployment supports it, that can intercept room connection attempts and customize how admission is handled
 
@@ -18,7 +20,12 @@ Use them when you want to set provider credentials and base URLs once at the pro
 - Use [MeshAgent Studio](../interfaces/meshagent_studio) for the main UI flow.
 - Use the [REST API](../rest_api/overview) if you want to automate project settings with `PUT /accounts/projects/{project_id}/settings`.
 
-Most projects only need the LLM router or telemetry settings. The room admission controller is an advanced deployment feature.
+Most projects only need the LLM provider settings or telemetry settings. The room admission controller is an advanced deployment feature.
+
+For LLM usage, there are two common cases:
+
+- stay on MeshAgent-managed routing, which is the default and easiest path
+- add your own OpenAI or Anthropic credentials here if you want the project to route through your own provider accounts instead
 
 ## Example project settings
 
@@ -49,7 +56,7 @@ Only add the sections you need. For example, you can set just the provider keys,
 ## Related docs
 
 - [Projects](./projects)
-- [Making Requests](../agents/routing/llm_proxy)
+- [MeshAgent LLM Proxy](../agents/routing/llm_proxy)
 - [Observability](../observability/overview)
 - [Custom Logs, Traces, and Metrics](../observability/custom_telemetry)
 - [REST API](../rest_api/overview)
