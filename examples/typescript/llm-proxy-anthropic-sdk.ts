@@ -1,19 +1,11 @@
+// meshagent room connect --room=my-room --identity=sample-participant -- npx tsx llm-proxy-anthropic-sdk.ts
+
 import Anthropic from "@anthropic-ai/sdk";
 
 async function main() {
-  const defaultHeaders: Record<string, string> = {
-    Authorization: `Bearer ${process.env.MESHAGENT_ACCESS_TOKEN!}`,
-  };
-  if (process.env.MESHAGENT_PROJECT_ID) {
-    defaultHeaders["Meshagent-Project-Id"] = process.env.MESHAGENT_PROJECT_ID;
-  }
-
   const client = new Anthropic({
-    baseURL:
-      process.env.MESHAGENT_ANTHROPIC_BASE_URL ??
-      "https://api.meshagent.com/anthropic",
-    apiKey: "meshagent",
-    defaultHeaders,
+    baseURL: process.env.ANTHROPIC_BASE_URL!,
+    apiKey: process.env.ANTHROPIC_API_KEY!,
   });
 
   const message = await client.messages.create({
