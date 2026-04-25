@@ -123,7 +123,7 @@ _FORM_HTML = """<!doctype html>
     <main class="card">
       <header>
         <h1>Contact Us</h1>
-        <p>Send a note and we will route it into your MeshAgent room database.</p>
+        <p>Send a note and we will route it into your MeshAgent room dataset.</p>
       </header>
       <form method="post">
         <label>
@@ -154,7 +154,7 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
         return web.Response(text=_FORM_HTML, content_type="text/html")
 
     form = await req.post()
-    await room.database.create_table_with_schema(
+    await room.datasets.create_table_with_schema(
         name="contacts",
         schema={
             "name": TextDataType(),
@@ -164,7 +164,7 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
         mode="create_if_not_exists",
         data=None,
     )
-    await room.database.insert(
+    await room.datasets.insert(
         table="contacts",
         records=[
             {

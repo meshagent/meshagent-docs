@@ -86,7 +86,7 @@ class ProcessResume(LocalRoomTool):
             )
 
         # Invoke the TaskRunner to process the resume
-        DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You must also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information in the candidates table in the database."
+        DEFAULT_RESUME_PROMPT = f"Process the candidate resume located at: {target_path}. You must extract the candidate's name and contact information from their resume and generate a succinct summary of their skills and experience. You must also use the web search tool to look for additional information about the candidate. Beware that some candidates may have common names and so it may be more difficult for you to find information about them. Once you have collected sufficient information about the candidate, store their information in the candidates table in the dataset."
 
         resume_processing_prompt = (
             os.getenv("RESUME_PROCESSING_PROMPT") or DEFAULT_RESUME_PROMPT
@@ -104,7 +104,7 @@ class ProcessResume(LocalRoomTool):
                     {"name": "storage"},
                     {"name": "web_search"},
                     {
-                        "name": "database",
+                        "name": "dataset",
                         "tables": ["candidates"],
                         "read_only": False,
                     },
@@ -115,9 +115,9 @@ class ProcessResume(LocalRoomTool):
         log.info(f"TaskRunner Processed Resume: {resume_response}")
 
         # Invoke the TaskRunner to score the resume against each open role
-        log.info("Loading open roles from the database for scoring")
+        log.info("Loading open roles from the dataset for scoring")
         try:
-            open_roles = await room.database.search(table="open_roles")
+            open_roles = await room.datasets.search(table="open_roles")
         except Exception as e:
             log.exception("Failed to fetch open roles for scoring: %s", e)
             return JsonContent(
@@ -132,7 +132,7 @@ class ProcessResume(LocalRoomTool):
         else:
             candidate_record = None
             try:
-                candidates = await room.database.search(
+                candidates = await room.datasets.search(
                     table="candidates", where={"resume_path": target_path}, limit=1
                 )
                 if candidates:
@@ -186,7 +186,7 @@ class ProcessResume(LocalRoomTool):
                             "tools": [
                                 {"name": "storage"},
                                 {
-                                    "name": "database",
+                                    "name": "dataset",
                                     "tables": ["candidate_role_scores"],
                                     "read_only": False,
                                 },

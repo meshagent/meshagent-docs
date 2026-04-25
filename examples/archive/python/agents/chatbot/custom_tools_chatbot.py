@@ -30,7 +30,7 @@ class WriteTask(LocalRoomTool):
             room=room,
             name="WriteTask",
             title="Add a task",
-            description="A tool to add tasks to the database",
+            description="A tool to add tasks to the dataset",
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
@@ -41,7 +41,7 @@ class WriteTask(LocalRoomTool):
 
     async def execute(self, context: ToolContext, taskdescription: str):
         del context
-        await self.room.database.insert(
+        await self.room.datasets.insert(
             table="tasks",
             records=[
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
@@ -68,7 +68,7 @@ class GetTasks(LocalRoomTool):
     async def execute(self, context: ToolContext):
         del context
         return JsonContent(
-            json={"values": await self.room.database.search(table="tasks")}
+            json={"values": await self.room.datasets.search(table="tasks")}
         )
 
 
@@ -117,7 +117,7 @@ class SimpleChatbot(ChatBot):
         ]
         await super().start(room=room)
         # One tiny table:
-        await room.database.create_table_with_schema(
+        await room.datasets.create_table_with_schema(
             name="tasks",
             schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
             mode="create_if_not_exists",

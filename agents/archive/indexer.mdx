@@ -8,7 +8,7 @@ import IndexerYaml from "/snippets/examples/archive/python/deployable/storage_ra
 
 > **Archived:** This page documents an older indexing pattern that is still useful as reference for existing implementations. It is not part of the main `meshagent process` runtime path for new agent docs.
 
-Indexers keep a room’s vector database fresh so other agents can run retrieval-augmented generation (RAG) queries. They watch for new content, chunk and embed it, then store both the raw text and embeddings in a table that `RagToolkit` powered agents can search.
+Indexers keep a room’s vector dataset fresh so other agents can run retrieval-augmented generation (RAG) queries. They watch for new content, chunk and embed it, then store both the raw text and embeddings in a table that `RagToolkit` powered agents can search.
 
 ## When to Use
 - Automate RAG over room storage without manually rebuilding embeddings
@@ -21,7 +21,7 @@ Indexers keep a room’s vector database fresh so other agents can run retrieval
 2. **Transform**: convert the source into plain text (customizable via `read_file`).
 3. **Chunk**: split text with a `Chunker` (defaults use `chonkie.SemanticChunker`).
 4. **Embed**: call the configured `Embedder` (defaults use OpenAI embedding models).
-5. **Persist**: upsert rows into a room database table and build full-text / vector indexes.
+5. **Persist**: upsert rows into a room dataset table and build full-text / vector indexes.
 
 Once data is in the table, add `RagToolkit(table="…")` to any conversational agent and the results become searchable.
 
@@ -32,7 +32,7 @@ Once data is in the table, add `RagToolkit(table="…")` to any conversational a
 
 - calls `read_file(path=…)` to obtain text (you override this to run MarkitDown, OCR, etc.)
 - chunks and embeds the content
-- writes rows into the configured database table (defaults to `storage_index`)
+- writes rows into the configured dataset table (defaults to `storage_index`)
 - maintains vector and full-text indexes so downstream searches stay fast
 
 **Constructor Parameters**
@@ -45,7 +45,7 @@ Once data is in the table, add `RagToolkit(table="…")` to any conversational a
 | `labels` | `list[str] \| None` | Tag for discovery/filtering. |
 | `chunker` | `Chunker \| None` | Splits text into chunks; defaults to `ChonkieChunker`. |
 | `embedder` | `Embedder \| None` | Produces embeddings; defaults to `OpenAIEmbedding3Large`. |
-| `table` | `str` | Database table used to store rows and embeddings. |
+| `table` | `str` | Dataset table used to store rows and embeddings. |
 
 > **Tip:** Implement `async read_file(self, *, path: str) -> str | None` to pull text from storage. Returning `None` skips indexing that file.
 

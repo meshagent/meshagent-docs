@@ -27,7 +27,7 @@ meshagent room secret --help
 meshagent room queue --help
 meshagent room messaging --help
 meshagent room storage --help
-meshagent room database --help
+meshagent room dataset --help
 meshagent room memory --help
 meshagent room developer --help
 meshagent room container --help
@@ -51,7 +51,7 @@ Rooms expose a set of room-scoped APIs through the `RoomClient`:
 
 - **[Agents API](./agents) `AgentsClient`:** Call agents, invoke toolkits, and work with agent participants in the room.
 - **[Containers API](./containers) `ContainersClient`:** Run containers and inspect container activity in the room runtime.
-- **[Database API](./database) `DatabaseClient`:** Store and query structured room data in tables.
+- **[Datasets API](./datasets) `DatasetsClient`:** Store and query structured room data in tables.
 - **[Memory API](./memory) `MemoryClient`:** Store and recall room-scoped memories for agents and workflows.
 - **[Developer API](./developer) `DeveloperClient`:** Send logs and inspect developer events for the room.
 - **[Messaging API](./messaging) `MessagingClient`:** Send and receive real-time messages between room participants.
@@ -67,13 +67,13 @@ Rooms are durable named workspaces, but runtime activity happens in **sessions**
 
 - A room session starts when the room becomes active.
 - During that session, participants connect, services run, and room activity is recorded.
-- When activity stops, the room shuts down automatically so compute is not kept running unnecessarily. Persisted data written through storage, database, or sync remains available according to that API's behavior.
+- When activity stops, the room shuts down automatically so compute is not kept running unnecessarily. Persisted data written through storage, dataset, or sync remains available according to that API's behavior.
 
 See [Sessions](./sessions) for the runtime implications.
 
 ## Using Room APIs in Deployed Services
 
-If you deploy a MeshAgent service and want that service to use the Room APIs, you must grant that access through the participant token `api` scope. Deployment alone does not automatically give a service access to storage, database, secrets, containers, or the other Room APIs.
+If you deploy a MeshAgent service and want that service to use the Room APIs, you must grant that access through the participant token `api` scope. Deployment alone does not automatically give a service access to storage, dataset, secrets, containers, or the other Room APIs.
 
 In practice, that means:
 
@@ -88,7 +88,7 @@ Useful defaults:
 Many Room APIs can also be narrowed further inside the scope:
 
 - **Storage / Sync**: path-based grants
-- **Database**: table-level grants
+- **Dataset**: table-level grants
 - **Queues**: send/receive/list controls
 - **Messaging**: broadcast/list/send controls
 - **Containers**: pull/run/log controls
@@ -108,7 +108,7 @@ All of the main SDKs expose a `RoomClient` with the same overall shape:
 
 - connect to a room
 - wait for readiness
-- use sub-clients such as agents, messaging, storage, database, queues, secrets, and sync
+- use sub-clients such as agents, messaging, storage, dataset, queues, secrets, and sync
 - dispose the client when you are done
 
 The exact method names and property casing vary by language, but the underlying room model is the same. Use the SDK and language guides for the concrete examples:

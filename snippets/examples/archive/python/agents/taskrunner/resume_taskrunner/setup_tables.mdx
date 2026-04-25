@@ -15,11 +15,11 @@ async def create_resume_tables(room_name):
     # Run with:
     # meshagent room connect --room=resume --identity=participant -- python3 setup_tables.py
     async with RoomClient() as room:
-        tables = await room.database.list_tables()
+        tables = await room.datasets.list_tables()
         log.info("Existing tables: %s", tables)
-        # await room.database.drop_table(name="candidates") #remove later
+        # await room.datasets.drop_table(name="candidates") #remove later
         try:
-            await room.database.create_table_with_schema(
+            await room.datasets.create_table_with_schema(
                 name="candidates",
                 schema={
                     "resume_path": TextDataType(),
@@ -36,9 +36,9 @@ async def create_resume_tables(room_name):
         except Exception as e:
             log.exception(f"Failed to create candidates table: {e}")
 
-        # await room.database.drop_table(name="open_roles") #remove later
+        # await room.datasets.drop_table(name="open_roles") #remove later
         try:
-            await room.database.create_table_with_schema(
+            await room.datasets.create_table_with_schema(
                 name="open_roles",
                 schema={
                     "hiring_manager_first_name": TextDataType(),
@@ -54,9 +54,9 @@ async def create_resume_tables(room_name):
         except Exception as e:
             log.exception(f"Failed to create open_roles table: {e}")
 
-        # await room.database.drop_table(name="candidate_role_scores") #remove later
+        # await room.datasets.drop_table(name="candidate_role_scores") #remove later
         try:
-            await room.database.create_table_with_schema(
+            await room.datasets.create_table_with_schema(
                 name="candidate_role_scores",
                 schema={
                     "candidate_first_name": TextDataType(),
