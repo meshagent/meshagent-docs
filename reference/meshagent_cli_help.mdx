@@ -8421,6 +8421,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `proxy`: Expose a local MeshAgent-authenticated LLM...
+* `logger`: Manage project LLM loggers
 
 ### `meshagent  proxy`
 
@@ -8441,4 +8442,123 @@ $ meshagent  proxy [OPTIONS]
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token to forward upstream.
 * `--insecure`: Disable local bearer-token enforcement.
 * `--tui / --no-tui`: Show the live usage dashboard when attached to a TTY.  [default: tui]
+* `--help`: Show this message and exit.
+
+### `meshagent  logger`
+
+Manage project LLM loggers
+
+**Usage**:
+
+```console
+$ meshagent  logger [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create an LLM logger.
+* `update`: Update an LLM logger.
+* `show`: Show an LLM logger.
+* `list`: List LLM loggers for the project.
+* `delete`: Delete an LLM logger.
+
+#### `meshagent  logger create`
+
+Create an LLM logger.
+
+**Usage**:
+
+```console
+$ meshagent  logger create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--destination-feed-id, --feed-id TEXT`: Destination feed id  [required]
+* `-f, --filter-expression TEXT`: JMESPath metadata filter  [required]
+* `--paused`: Create the logger in a paused state
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+#### `meshagent  logger update`
+
+Update an LLM logger.
+
+**Usage**:
+
+```console
+$ meshagent  logger update [OPTIONS] LOGGER_ID
+```
+
+**Arguments**:
+
+* `LOGGER_ID`: LLM logger id to update  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--destination-feed-id, --feed-id TEXT`: Destination feed id
+* `-f, --filter-expression TEXT`: JMESPath metadata filter
+* `--paused`: Pause the logger
+* `--resume`: Resume a paused logger
+* `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--help`: Show this message and exit.
+
+#### `meshagent  logger show`
+
+Show an LLM logger.
+
+**Usage**:
+
+```console
+$ meshagent  logger show [OPTIONS] LOGGER_ID
+```
+
+**Arguments**:
+
+* `LOGGER_ID`: LLM logger id to show  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+#### `meshagent  logger list`
+
+List LLM loggers for the project.
+
+**Usage**:
+
+```console
+$ meshagent  logger list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent  logger delete`
+
+Delete an LLM logger.
+
+**Usage**:
+
+```console
+$ meshagent  logger delete [OPTIONS] LOGGER_ID
+```
+
+**Arguments**:
+
+* `LOGGER_ID`: LLM logger id to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
