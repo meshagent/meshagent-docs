@@ -11,31 +11,34 @@ import LlmProxyAnthropicTypeScript from "/snippets/examples/typescript/llm-proxy
 
 The MeshAgent LLM Proxy is an HTTP proxy that lets OpenAI- and Anthropic-compatible clients send requests through MeshAgent without needing an active room. Instead of pointing your app, SDK, or framework directly at OpenAI or Anthropic, you point it at MeshAgent. MeshAgent authenticates the request, applies project-level routing, forwards it upstream, and records usage against the right project and user.
 
-## Why Use It
+With the LLM Proxy you can: 
 - Manage provider configuration centrally at the project level in MeshAgent.
 - Track usage, billing, and budget controls across tools and team members in one place.
 - Use the same integration pattern for raw HTTP requests, official SDKs, and higher-level frameworks.
 
-For most direct integrations, use the hosted project route:
-- OpenAI-compatible base URL: https://api.meshagent.com/openai/v1
-- Anthropic raw HTTP base URL: https://api.meshagent.com/anthropic/v1
-- Anthropic SDK base URL: https://api.meshagent.com/anthropic
-
-You authenticate with a MeshAgent OAuth access token and include `Meshagent-Project-Id` on each request so MeshAgent can route and attribute usage to the right project and user. 
-
 ## Before you start
-MeshAgent provides managed OpenAI and Anthropic access by default. MeshAgent project settings also support storing OpenAI or Anthropic credentials and base URLs in [Integrations](../../project_admin/integrations). This page focuses on the hosted client request flow rather than upstream provider-setting resolution internals.
+MeshAgent provides managed OpenAI and Anthropic access by default. To use your own provider credentials, configure them per project in [MeshAgent Studio](https://studio.meshagent.com) under [Integrations](../../project_admin/integrations). 
 
-Use the hosted MeshAgent proxy when your app, SDK, or framework can call MeshAgent directly. If you need localhost URLs and temporary local credentials for a tool running on your machine, use [Local CLI Proxy](./local_cli_proxy) instead.
+If you need localhost URLs and temporary local credentials for a tool on your machine, use the [Local CLI Proxy](./local_cli_proxy) instead. For [Codex or Claude](./use_codex_claude), `meshagent setup` can configure them to use MeshAgent directly.
 
-For tools such as [Codex and Claude](./use_codex_claude), `meshagent setup` can configure them to use MeshAgent directly.
+To inspect your own hosted proxy usage for the current project, open the **LLM Proxy** page in [MeshAgent Studio](../../interfaces/meshagent_studio) and check the **My Usage** tab. To manage billing, usage, and project budgets, use [MeshAgent Accounts](../../interfaces/accounts).
 
-To inspect your own hosted proxy usage for the current project, open **LLM Proxy** in [MeshAgent Studio](../../interfaces/meshagent_studio) and use the **My Usage** tab. To manage billing, usage, and project budgets, use [MeshAgent Accounts](../../interfaces/accounts).
+## How it works
+1. Your client sends a normal OpenAI-compatible or Anthropic-compatible request to MeshAgent.
+2. Your client authenticates with a MeshAgent OAuth access token and sends `Meshagent-Project-Id` to choose the project.
+3. MeshAgent checks that the user has the `llm_proxy` OAuth scope and permission to use the proxy for that project.
+4. MeshAgent validates the provider path and model, strips client-side provider auth, applies MeshAgent-managed upstream routing, and forwards the request.
+5. MeshAgent returns the provider-compatible response and records usage for the project and user.
 
-## Use the LLM Proxy
-To call the hosted project route directly, send a normal OpenAI- or Anthropic-compatible request to MeshAgent with:
-- A MeshAgent OAuth access token
-- A MeshAgent project ID
+This is the same route used by `meshagent ask` and the [MeshAgent Codex and Claude](./use_codex_claude) integrations.
+
+## How to use the LLM Proxy
+The proxy exposes three base URLs:
+- OpenAI-compatible: https://api.meshagent.com/openai/v1
+- Anthropic raw HTTP: https://api.meshagent.com/anthropic/v1
+- Anthropic SDK: https://api.meshagent.com/anthropic
+
+You authenticate with a MeshAgent OAuth acsess token and include `Meshagent-Project-Id` on each request so MeshAgent can route and attribute usage to the right project and user. 
 
 ### Get an access token and project ID
 ```bash
@@ -44,7 +47,7 @@ meshagent project list
 meshagent project activate PROJECT_ID # optional: switch the active project
 ```
 
-`meshagent setup` signs you in and stores an OAuth session locally. `meshagent project list` shows the projects you can use and their IDs. The current project is marked with `*`. Use that project ID, or run `meshagent project activate PROJECT_ID` first if you want to switch projects.
+`meshagent setup` signs you in and stores an OAuth session locally. `meshagent project list` shows the projects you can use and their IDs. The current project is marked with `*`. Use that project ID, or run `meshagent project activate PROJECT_ID` to switch projects first.
 
 Then export your token and project ID:
 ```bash
@@ -52,7 +55,7 @@ export MESHAGENT_ACCESS_TOKEN="$(meshagent auth token)"
 export MESHAGENT_PROJECT_ID=<project_id from meshagent project list>
 ```
 
-The signed-in user must have permission to use the LLM proxy for the selected project.
+<Note> The signed-in user must have permission to use the LLM proxy for the selected project. </Note>
 
 ### Make a Raw HTTP Request
 #### Send an OpenAI-compatible request
@@ -139,16 +142,7 @@ Older integrations may use room-scoped proxy routes such as `{room_url}/openai/v
 
 For new direct integrations, use the hosted project route instead. The hosted route does not require an active room and uses project-level OAuth authentication. Use room-scoped routes only when requests must be tied to a specific active room session.
 
-## How the Hosted Project Route Works
-- Your client sends a normal OpenAI-compatible or Anthropic-compatible request to MeshAgent.
-- Your client authenticates with a MeshAgent OAuth access token and sends `Meshagent-Project-Id` to choose the project.
-- MeshAgent checks that the user has the `llm_proxy` OAuth scope and permission to use the proxy for that project.
-- MeshAgent validates the provider path and model, strips client-side provider auth, applies MeshAgent-managed upstream routing, and forwards the request.
-- MeshAgent returns the provider-compatible response and records usage for the project and user.
-
-This is also the direct route used by `meshagent ask` and the [MeshAgent Codex and Claude](./use_codex_claude) integrations.
-
-## Authentication Details
+## Authentication Notes
 - The default CLI login flow requests the full MeshAgent OAuth scope set, which includes `llm_proxy`.
 - If you are using your own OAuth client instead of the CLI login flow, request the `llm_proxy` scope.
 - The hosted project route requires `Meshagent-Project-Id` when you authenticate with OAuth.
