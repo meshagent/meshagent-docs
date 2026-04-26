@@ -116,12 +116,14 @@ meshagent room dataset create \
 
 ```
 ```python Python
+import pyarrow as pa
+
 await room.datasets.create_table_with_schema(
   name="users",
   schema={
-    "id": IntDataType(),
-    "username": TextDataType(),
-    "email": TextDataType(),
+    "id": pa.int64(),
+    "username": pa.string(),
+    "email": pa.string(),
   },
   data=[
     {"id": 1, "username": "alice", "email": "alice@example.com" },
@@ -132,49 +134,37 @@ await room.datasets.create_table_with_schema(
 
 ```
 ```javascript NodeJs
+import { Field, Int64, Schema, Utf8 } from "apache-arrow";
+
 await room.datasets.createTableWithSchema({
   name: "users",
-  schema: {
-    id: new IntDataType(),
-    username: new TextDataType(),
-    email: new TextDataType(),
-  },
-  data: [
-    { id: 1, username: "alice", email: "alice@example.com" },
-    { id: 2, username: "bob", email: "bob@example.com" }
-  ],
+  schema: new Schema([
+    new Field("id", new Int64()),
+    new Field("username", new Utf8()),
+    new Field("email", new Utf8()),
+  ]),
   mode: "create",
 });
 
 ```
 ```typescript TypeScript
+import { Field, Int64, Schema, Utf8 } from "apache-arrow";
+
 await room.datasets.createTableWithSchema({
   name: "users",
-  schema: {
-    id: new IntDataType(),
-    username: new TextDataType(),
-    email: new TextDataType(),
-  },
-  data: [
-    { id: 1, username: "alice", email: "alice@example.com" },
-    { id: 2, username: "bob", email: "bob@example.com" }
-  ],
+  schema: new Schema([
+    new Field("id", new Int64()),
+    new Field("username", new Utf8()),
+    new Field("email", new Utf8()),
+  ]),
   mode: "create",
 });
 
 ```
 ```dart Dart
-await room.datasets.createTableWithSchema(
+await room.datasets.createTableWithArrowSchema(
   name: "users",
-  schema: {
-    "id": IntDataType(),
-    "username": TextDataType(),
-    "email": TextDataType(),
-  },
-  data: [
-    {"id": 1, "username": "alice", "email": "alice@example.com" },
-    {"id": 2, "username": "bob", "email": "bob@example.com" }
-  ],
+  schema: arrowIpcSchema,
   mode: "create",
 );
 
@@ -182,17 +172,12 @@ await room.datasets.createTableWithSchema(
 ```dotnet C#
 await room.Datasets.CreateTableWithSchema(
   "users",
-  new Dictionary<string, DataType>
+  new ArrowSchema(new[]
   {
-    ["id"] = new IntDataType(),
-    ["username"] = new TextDataType(),
-    ["email"] = new TextDataType(),
-  },
-  new List<Dictionary<string, object?>>
-  {
-    new() { ["id"] = 1, ["username"] = "alice", ["email"] = "alice@example.com" },
-    new() { ["id"] = 2, ["username"] = "bob", ["email"] = "bob@example.com" },
-  },
+    new ArrowField("id", Int64Type.Default, true),
+    new ArrowField("username", StringType.Default, true),
+    new ArrowField("email", StringType.Default, true),
+  }, null),
   CreateMode.create
 );
 
@@ -334,7 +319,7 @@ await room.Datasets.DropTable("temp_table", ignoreMissing: true);
   - **newColumns**: A record mapping column names to default value expressions (SQL or literal).
 - **Returns**: A promise that resolves once the columns are added.
 
-For Dart, the expression-based helper is `addColumnWithExpression(...)`. If you want to add columns by explicit type instead, use `addColumnsOfType(...)`.
+For Dart, the expression-based helper is `addColumnWithExpression(...)`. If you want to add columns by explicit Arrow schema instead, use `addColumnsWithSchema(...)`.
 
 **Example**:
 

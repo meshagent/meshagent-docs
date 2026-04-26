@@ -12,6 +12,7 @@ if not api_key:
 if not project_id:
     raise RuntimeError("MESHAGENT_PROJECT_ID is not set")
 
+
 async def main():
     client = Meshagent(token=api_key)
     try:
@@ -19,5 +20,6 @@ async def main():
         print(rooms)
     finally:
         await client.close()
+
 
 asyncio.run(main())

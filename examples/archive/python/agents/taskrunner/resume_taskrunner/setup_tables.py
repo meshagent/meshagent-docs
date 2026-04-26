@@ -3,7 +3,7 @@ import asyncio
 import logging
 import argparse
 from meshagent.api import RoomClient
-from meshagent.api.room_server_client import TextDataType, FloatDataType
+import pyarrow as pa
 from meshagent.otel import otel_config
 
 otel_config(service_name="resume-runner")
@@ -21,13 +21,13 @@ async def create_resume_tables(room_name):
             await room.datasets.create_table_with_schema(
                 name="candidates",
                 schema={
-                    "resume_path": TextDataType(),
-                    "candidate_first_name": TextDataType(),
-                    "candidate_last_name": TextDataType(),
-                    "candidate_email": TextDataType(),
-                    "candidate_phone_number": TextDataType(),
-                    "resume_summary": TextDataType(),
-                    "web_search_notes": TextDataType(),
+                    "resume_path": pa.string(),
+                    "candidate_first_name": pa.string(),
+                    "candidate_last_name": pa.string(),
+                    "candidate_email": pa.string(),
+                    "candidate_phone_number": pa.string(),
+                    "resume_summary": pa.string(),
+                    "web_search_notes": pa.string(),
                 },
                 mode="create_if_not_exists",
             )
@@ -40,12 +40,12 @@ async def create_resume_tables(room_name):
             await room.datasets.create_table_with_schema(
                 name="open_roles",
                 schema={
-                    "hiring_manager_first_name": TextDataType(),
-                    "hiring_manager_last_name": TextDataType(),
-                    "job_title": TextDataType(),
-                    "job_description": TextDataType(),
-                    "required_skills": TextDataType(),
-                    # "post_date": TextDataType()
+                    "hiring_manager_first_name": pa.string(),
+                    "hiring_manager_last_name": pa.string(),
+                    "job_title": pa.string(),
+                    "job_description": pa.string(),
+                    "required_skills": pa.string(),
+                    # "post_date": pa.string()
                 },
                 mode="create_if_not_exists",
             )
@@ -58,13 +58,13 @@ async def create_resume_tables(room_name):
             await room.datasets.create_table_with_schema(
                 name="candidate_role_scores",
                 schema={
-                    "candidate_first_name": TextDataType(),
-                    "candidate_last_name": TextDataType(),
-                    "candidate_email": TextDataType(),
-                    "hiring_manager": TextDataType(),
-                    "job_title": TextDataType(),
-                    "score": FloatDataType(),
-                    "reasoning": TextDataType(),
+                    "candidate_first_name": pa.string(),
+                    "candidate_last_name": pa.string(),
+                    "candidate_email": pa.string(),
+                    "hiring_manager": pa.string(),
+                    "job_title": pa.string(),
+                    "score": pa.float64(),
+                    "reasoning": pa.string(),
                 },
                 mode="create_if_not_exists",
             )

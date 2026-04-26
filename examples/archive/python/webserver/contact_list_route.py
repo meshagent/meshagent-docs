@@ -4,7 +4,7 @@ from html import escape
 
 from aiohttp import web
 
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 
 METHODS = ["GET"]
 
@@ -169,9 +169,9 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
     await room.datasets.create_table_with_schema(
         name="contacts",
         schema={
-            "name": TextDataType(),
-            "email": TextDataType(),
-            "message": TextDataType(),
+            "name": pa.string(),
+            "email": pa.string(),
+            "message": pa.string(),
         },
         mode="create_if_not_exists",
         data=None,

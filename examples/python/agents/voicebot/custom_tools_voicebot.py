@@ -13,7 +13,7 @@ from meshagent.tools.document_tools import (
     DocumentTypeAuthoringToolkit,
 )
 from meshagent.agents.schemas.document import document_schema
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.tools import LocalRoomTool, Toolkit, ToolContext
@@ -119,7 +119,7 @@ class SimpleVoicebot(VoiceBot):
         # One tiny table:
         await room.datasets.create_table_with_schema(
             name="tasks",
-            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
+            schema={"task_id": pa.string(), "taskdescription": pa.string()},
             mode="overwrite",
             data=None,
         )
