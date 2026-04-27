@@ -24,6 +24,7 @@ final schema = MeshSchema(
     ),
     ElementType(
       tagName: 'p',
+      description: 'A paragraph element.',
       properties: [
         // A ValueProperty describes an attribute that
         // contains a single value.
