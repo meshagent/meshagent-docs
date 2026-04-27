@@ -24,6 +24,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * ``: Authenticate to meshagent
 * ``: Manage or activate your meshagent projects
 * ``: Manage or activate api-keys for your project
+* ``: Read MeshAgent deployment configuration
 * ``: Inspect recent sessions and events
 * `ask`: Send a one-shot LLM prompt.
 * `launch`: Launch supported CLI apps through MeshAgent.
@@ -494,6 +495,44 @@ $ meshagent  delete [OPTIONS] ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+## `meshagent `
+
+Read MeshAgent deployment configuration
+
+**Usage**:
+
+```console
+$ meshagent  [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `get`: Print one deployment config value.
+
+### `meshagent  get`
+
+Print one deployment config value.
+
+**Usage**:
+
+```console
+$ meshagent  get [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Config path to read, for example domains.pages  [required]
+
+**Options**:
+
 * `--help`: Show this message and exit.
 
 ## `meshagent `
@@ -1636,7 +1675,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 ### `meshagent  create`
 
-Create a room in the project. Use this before meshagent deploy --room when the room does not already exist, then deploy with &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27;.
+Create a room in the project.
 
 **Usage**:
 
@@ -2398,7 +2437,7 @@ $ meshagent build [OPTIONS] PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Existing room name. meshagent deploy does not create rooms; create the room first with &#x27;meshagent rooms create --name &lt;room&gt;&#x27;.
+* `--room TEXT`: Existing room name.
 * `--tag TEXT`: Image tag to build. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
 * `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the PATH mount path.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
@@ -2410,7 +2449,7 @@ $ meshagent build [OPTIONS] PATH
 
 ## `meshagent deploy`
 
-Create or update a room service from an image, optionally building it first. The target room must already exist. Create it first with &#x27;meshagent rooms create --name &lt;room&gt; --if-not-exists&#x27;. Happy path for a Dockerfile app: create the room with &#x27;meshagent rooms create --name &lt;room&gt; --if-not-exists&#x27;, then run &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27; so deploy creates the service and the public route together. If PATH does not include a Dockerfile yet, create a minimal Dockerfile in the app directory first or create one elsewhere in PATH and pass it with --dockerfile-path.
+Create or update a room service from an image, optionally building it first. The target room must already exist. Happy path for a Dockerfile app: run &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27;. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. If PATH does not include a Dockerfile yet, create a minimal Dockerfile in the app directory first or create one elsewhere in PATH and pass it with --dockerfile-path.
 
 **Usage**:
 
@@ -2425,14 +2464,14 @@ $ meshagent deploy [OPTIONS] [PATH]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Existing room name. meshagent deploy does not create rooms; create the room first with &#x27;meshagent rooms create --name &lt;room&gt;&#x27;.
+* `--room TEXT`: Existing room name.
 * `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag. When used with PATH, shorthand &lt;repository&gt;:&lt;tag&gt; and &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; resolve against the configured MeshAgent registry.  [required]
 * `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with PATH.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with PATH. Use this when the app directory has no top-level Dockerfile or when you create the Dockerfile under a different path.
 * `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with PATH.  [default: optimize]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
-* `--domain TEXT`: Create or update a room route for the deployed service and return a public URL. Use this with --public when you need an external URL from deploy. In MeshAgent dev/.life, domains must end with .meshagent.dev; in prod they must end with .meshagent.app. Requires exactly one published service port.
+* `--domain TEXT`: Create or update a room route for the deployed service and return a public URL. Use this with --public when you need an external URL from deploy. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. Requires exactly one published service port.
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
