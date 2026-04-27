@@ -1,0 +1,110 @@
+---
+title: "Use Codex and Claude with MeshAgent"
+description: Configure Codex and Claude to use MeshAgent-managed routing.
+---
+
+MeshAgent can configure Codex CLI, Codex Desktop, and Claude Code to route through the hosted [MeshAgent LLM Proxy](./llm_proxy) automatically, giving you project-level routing, usage tracking, billing, and budget controls instead of sending model traffic directly to OpenAI or Anthropic. Claude Desktop support is coming soon.
+By default, MeshAgent provides managed OpenAI and Anthropic access. To use your own provider credentials, configure them per project in [Integrations](../../project_admin/integrations).
+
+MeshAgent supports two workflows: 
+-  `meshagent setup`: Can be used to configure Codex or Claude to use MeshAgent by default, best when you want persistent local configuration changes.
+
+- `meshagent launch codex` or `meshagent launch claude`: For when you want a one-off session through MeshAgent without changing your normal default configuration.
+
+## `meshagent setup`
+
+Start with:
+
+```bash
+meshagent setup
+```
+
+`meshagent setup` is the guided, persistent setup flow. It can:
+
+- Sign you in or reuse your existing session.
+- Let you choose or create a project and activate it.
+- Create and activate a project API key if needed.
+- Check whether your account can use the LLM Proxy for that project.
+- Offer to configure supported Codex or Claude installations found on your machine.
+
+If your account does not have LLM Proxy access for the selected project, setup tells you and stops before trying to configure the local tool integrations.
+
+### What `meshagent setup` changes for Codex
+
+For Codex, setup can create, update, or remove a MeshAgent profile in `~/.codex/config.toml`, and optionally make that profile the default.
+
+After setup:
+
+- If the MeshAgent profile is the default, run `codex`.
+- If the MeshAgent profile exists but is not the default, run `codex -p meshagent`
+
+### What `meshagent setup` changes for Claude
+
+For Claude, setup can create, update, or remove MeshAgent-managed settings in `~/.claude/settings.json`.
+
+After that, run `claude` normally and it uses the configured MeshAgent project.
+
+## `meshagent launch` commands
+
+Use these commands for a one-off Codex or Claude session through MeshAgent. They work whether or not MeshAgent is configured as your default.
+
+```bash
+meshagent launch codex
+meshagent launch claude
+```
+
+These commands do not make MeshAgent your permanent default.
+
+- `meshagent launch codex` builds a temporary Codex profile for that process and launches `codex` with it.
+- `meshagent launch claude` launches `claude` with temporary MeshAgent settings and environment for that process.
+
+Both commands use the active MeshAgent project by default. To target a different project for that launch, pass `--project-id` before any forwarded tool arguments.
+
+### Forwarding tool arguments
+
+`meshagent launch codex` and `meshagent launch claude` have their own MeshAgent options:
+
+- `--project-id`
+- `--api-url`
+
+If you want to pass options through to Codex or Claude, put them after `--`.
+
+For example:
+
+```bash
+meshagent launch codex -- app
+meshagent launch codex --project-id PROJECT_ID -- --search "how do agents work?"
+```
+
+For Codex, `app` is a forwarded Codex subcommand that can be used to launch the Codex Desktop app. 
+### Desktop apps
+
+Codex Desktop is supported today through the same Codex configuration that `meshagent setup` manages.
+
+To launch Codex Desktop through MeshAgent for a one-off session, use:
+
+```bash
+meshagent launch codex -- app
+```
+
+If you want Codex Desktop to use MeshAgent automatically when you open it normally, make the MeshAgent profile the default during `meshagent setup`.
+
+Claude Desktop automatic support is coming soon, so this page does not document a Claude Desktop launch command yet.
+
+## Switch Back To Your Regular Provider Setup
+
+If you only used `meshagent launch codex` or `meshagent launch claude`, there is nothing to undo. Those commands only affect that launch.
+
+If you changed persistent local configuration:
+
+- For Codex, use your normal Codex profile with `codex -p <your-profile>`, or rerun `meshagent setup` and stop using the MeshAgent profile as default or remove it entirely.
+- For Claude, rerun `meshagent setup` and choose the option to remove the MeshAgent Claude configuration.
+
+If you install Codex or Claude after running setup, rerun `meshagent setup` so MeshAgent can detect and configure them.
+
+## Related docs
+
+- [MeshAgent LLM Proxy](./llm_proxy)
+- [Local CLI Proxy](./local_cli_proxy)
+- [Ask MeshAgent from the CLI](./ask_meshagent_cli)
+- [MeshAgent CLI Commands](../../reference/meshagent_cli_help)

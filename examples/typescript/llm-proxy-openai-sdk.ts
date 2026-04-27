@@ -1,0 +1,19 @@
+// meshagent room connect --room=my-room --identity=sample-participant -- npx tsx llm-proxy-openai-sdk.ts
+
+import OpenAI from "openai";
+
+async function main() {
+  const client = new OpenAI({
+    baseURL: process.env.OPENAI_BASE_URL!,
+    apiKey: process.env.OPENAI_API_KEY!,
+  });
+
+  const response = await client.responses.create({
+    model: "gpt-5.4",
+    input: "Tell me a fun fact about AI.",
+  });
+
+  console.log(response.output_text);
+}
+
+void main();

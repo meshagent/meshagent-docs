@@ -1,74 +1,16 @@
 ---
-title: Deploy Services with MeshAgent
-description: Choose the right deployment path, deploy services from the CLI, and use a service manifest when you need more control.
+title: Service YAML
+description: Write, validate, deploy, update, and delete MeshAgent services from a service manifest.
 ---
 import ServiceSpecChatbot from "/snippets/examples/cli/concepts/use-service/meshagent.mdx"
 import ServiceTemplateSpecChatbot from "/snippets/examples/cli/concepts/use-service-template/meshagent.mdx"
 import McpDeepWikiExample from "/snippets/examples/cli/deepwiki-mcp-service/meshagent.mdx"
 
-Deploy services in MeshAgent so they are available to the projects or rooms that need them.
+Write a service manifest when you want to review, customize, validate, deploy, update, or delete the service configuration yourself.
 
-This page covers the two main CLI paths for deployment:
-
-- [`meshagent process`](../../reference/meshagent_cli_help#meshagent-process) for process-backed agents
-- [`meshagent service`](../../reference/meshagent_cli_help#meshagent-service) for service manifests
+Use [`meshagent service`](../../reference/meshagent_cli_help#meshagent-service) with service manifests. Use [Deploy a built in Agent](./deploy_builtin_agent) when you want to deploy a process-backed agent from CLI flags instead.
 
 In MeshAgent, you can deploy fixed or templated services project-wide or to specific rooms, either as MeshAgent-managed `container` services or as `external` services that MeshAgent routes to; for more detail, see [Intro to Services](../intro).
-
-## Deploy a process-based agent with `meshagent process`
-
-Use [`meshagent process`](../../reference/meshagent_cli_help#meshagent-process) when you are deploying a process-backed agent. On this page, the two commands that matter are `meshagent process deploy` and `meshagent process spec`.
-
-### Deploy directly with `meshagent process deploy`
-
-```bash bash
-meshagent process deploy \
-  --service-name my-chatbot \
-  --agent-name my-chatbot \
-  --channel chat \
-  --web-search \
-  --storage \
-  --room myroom
-```
-
-`meshagent process deploy` is the fastest path when the CLI flags already describe the agent you want. MeshAgent generates the starting service manifest for you and deploys it immediately, so you do not need to write the manifest yourself first.
-
-Use this when:
-
-- the built-in CLI flags already describe the agent you want
-- you do not need to inspect the manifest first
-- you want the shortest path to a room or project service
-
-With `meshagent process deploy`, pass `--room myroom` for a room service. Omit `--room` to deploy the service project-wide.
-
-### Generate a starting manifest with `meshagent process spec`
-
-`meshagent process spec` generates the starting service manifest for a process-based service but stops before deployment.
-
-```bash bash
-meshagent process spec \
-  --service-name my-chatbot \
-  --agent-name my-chatbot \
-  --channel chat \
-  --web-search \
-  --storage > meshagent.yaml
-
-# Deploy into one room
-meshagent service create --file meshagent.yaml --room myroom
-
-# Deploy across the whole project
-meshagent service create --file meshagent.yaml --global
-```
-
-Use this when:
-
-- you want MeshAgent to generate the starting service manifest for you
-- you want to review or customize it before deployment
-- you need fields that are easier to manage in the file than in CLI flags
-
-## Deploy from a manifest with `meshagent service`
-
-Use [`meshagent service`](../../reference/meshagent_cli_help#meshagent-service) when you want to review, customize, validate, deploy, update, or delete the service manifest yourself.
 
 The examples below show three common cases:
 
@@ -517,7 +459,7 @@ Set in `agents[].annotations`.
 | `meshagent.agent.widget` | UI widget to display for this agent. |
 | `meshagent.agent.schedule` | JSON string defining a scheduled task and its payload. |
 | `meshagent.agent.shell.command` | Shell command for `Shell`-type agents. |
-| `meshagent.agent.database.schema` | Database schema metadata for the agent. |
+| `meshagent.agent.dataset.schema` | Dataset schema metadata for the agent. |
 
 #### Variable annotations
 

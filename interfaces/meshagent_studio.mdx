@@ -2,16 +2,16 @@
 title: MeshAgent Studio
 ---
 
-[MeshAgent Studio](https://studio.meshagent.com) is the browser-based developer workspace for MeshAgent. Use it to test, share, and deploy your agents and tools as you build the front end for your agentic application.
+[MeshAgent Studio](https://studio.meshagent.com) is the browser-based workspace for building, testing, and operating MeshAgent projects.
 
 With [MeshAgent Studio](https://studio.meshagent.com) you can:
 - Create projects and rooms and jump between them.
-- Inspect sessions (logs, traces, metrics) for live debugging.
-- Create and rotate API keys.
-- Manage room-scoped and project-scoped services.
-- Manage project registries, secrets, image pull secrets, webhooks, routes, scheduled tasks, mailboxes, integrations, and OAuth clients.
-- Inspect files, messages, databases, memory, images, containers, services, and terminals inside a room.
-- Open billing when a project needs more credits.
+- Inspect [sessions](../room_api/sessions) (logs, traces, metrics) for live debugging.
+- Create and rotate [API keys](../project_admin/api_keys).
+- Manage room-scoped and project-scoped [services](../services/deployment/deploy_services).
+- Manage project registries, [secrets](../secrets/overview), image pull secrets, [webhooks](../project_admin/webhooks), [routes](../project_admin/routes), [scheduled tasks](../project_admin/scheduled_tasks), [mailboxes](../project_admin/mailboxes), [integrations](../project_admin/integrations), and [OAuth clients](../project_admin/oauth).
+- Inspect files, messages, datasets, memory, images, containers, services, and terminals inside a room.
+- Open [billing](../project_admin/billing) when a project needs more credits.
 
 ## Project selector and account menu
 
@@ -20,9 +20,9 @@ MeshAgent Studio opens to an active project. Use the dropdown in the upper-left 
 ## Project navigation
 
 The main project sidebar depends on your project role:
-- **Everyone**: **Rooms**
-- **Developers and Admins**: **Sessions**, **Registries**, **Routes**, **Scheduled Tasks**, **Mailboxes**, **System Services**, **Project Secrets**, **Webhooks**, **OAuth Clients**
-- **Admins only**: **API Keys**, **Integrations**
+- **Everyone**: **Rooms**, [**LLM Proxy**](../agents/routing/llm_proxy)
+- **Developers and Admins**: [**Sessions**](../room_api/sessions), **Registries**, [**Routes**](../project_admin/routes), [**Scheduled Tasks**](../project_admin/scheduled_tasks), [**Mailboxes**](../project_admin/mailboxes), [**System Services**](../services/deployment/deploy_services), [**Project Secrets**](../secrets/project_secrets), [**Webhooks**](../project_admin/webhooks), [**OAuth Clients**](../project_admin/oauth)
+- **Admins only**: [**API Keys**](../project_admin/api_keys), [**Integrations**](../project_admin/integrations)
 
 Some project pages are opened contextually instead of living in the permanent sidebar. For example, Studio links to **Billing** when a project is out of credits or after checkout flows.
 
@@ -36,7 +36,7 @@ From the MeshAgent Studio UI you can:
 - Use the room menu to open **Edit**, **Services**, **Scheduled Tasks**, **Mailboxes**, **Routes**, **Permissions**, or **Delete**.
 
 ## Sessions
-Monitor and debug live and recent room sessions. A session starts when a room starts and stops when the room stops.
+Monitor and debug live and recent room sessions. A session starts when a room starts and stops when the room stops. For the API and data model behind what you see here, see [Sessions](../room_api/sessions).
 
 From the **Sessions** page you can:
 - Create a session with **New Session**
@@ -62,7 +62,7 @@ The container-related tabs serve different jobs:
 - **Call Agent**: Invoke a room-connected agent directly
 - **Toolkits**: View available tools and toolkits in the room and invoke them directly
 - **Queues**: View room queues and the number of messages in each queue
-- **Database**: Open the room database and work with tables
+- **Dataset**: Open the room dataset and work with tables
 - **Memory**: Open room memory viewers
 - **Room Services**: View, add, remove, and update services tied to this room
 - **Scheduled Tasks**: Manage tasks that enqueue work on a schedule
@@ -72,12 +72,12 @@ The container-related tabs serve different jobs:
 - **View Toggles**: Show/hide File Browser, File Previews, Messaging, and Developer Console
 
 ## API Keys
-Issue and rotate project-scoped credentials used by automations, CI, and services that call MeshAgent APIs. You can:
+Issue and rotate project-scoped credentials used by automations, CI, and services that call MeshAgent APIs. See [API Keys](../project_admin/api_keys) for the full reference. You can:
 - Create, relabel, and revoke keys
 - Track when a key was created for audit and rotation
 
 ## System Services
-Services turn your agents, toolkits, or connectors into reusable building blocks. Project-wide services are managed from the **System Services** page. Room-scoped services are managed on the room itself, either from the room list or from inside the **Room Workspace**.
+Services turn your agents, toolkits, or connectors into reusable building blocks. Project-wide services are managed from the **System Services** page. Room-scoped services are managed on the room itself, either from the room list or from inside the **Room Workspace**. For deployment flows and service packaging, see [Service YAML](../services/deployment/deploy_services).
 
 From **System Services** you can:
 - Inspect what’s deployed to the project
@@ -85,40 +85,48 @@ From **System Services** you can:
 - Change the **Room Server Version** if you need to pin a project to a specific version of MeshAgent or return to `latest`
 
 ## Project Secrets
-Store configuration securely. Use **Secret Keys** for app/runtime config and **Image Pull Secrets** for private registries.
+Store configuration securely. Use **Secret Keys** for app/runtime config and **Image Pull Secrets** for private registries. See [Secrets Overview](../secrets/overview) for how these secret types fit together.
 - Create a secret with key/value pairs
 - Add image pull secrets to fetch private images
 - Remove secrets that are no longer needed.
 
 ## Webhooks
-Webhooks notify your systems when something interesting happens inside MeshAgent:
+Webhooks notify your systems when something interesting happens inside MeshAgent. See [Webhooks](../project_admin/webhooks) for setup details and signature verification guidance.
 - Subscribe to events such as `room.started` and `room.ended`
 - Configure the name, URL, and select event triggers.
 
 ## Integrations
-Bring your own model routing and observability settings:
+Bring your own model routing and observability settings. See [Integrations](../project_admin/integrations) for the full configuration reference:
 
-**LLM Router**
-- Configure provider credentials and base URLs at the project level for providers such as OpenAI and Anthropic.
-- Services running in rooms can use an [LLM proxy](../agents/routing/llm_proxy) to route requests through the room router.
+**LLM provider settings**
+- Use MeshAgent-managed routing by default, or configure your own provider credentials and base URLs for providers such as OpenAI and Anthropic.
+- Services, coding agents, and compatible SDK clients can use [MeshAgent LLM Proxy](../agents/routing/llm_proxy) to route requests through those project settings.
 
 **Telemetry (OTEL)**
 - Export room/runtime metrics and traces by providing an OTEL endpoint and optional bearer token.
 - Optionally configure an OTEL filter endpoint before MeshAgent processes and forwards telemetry.
 
+## LLM Proxy
+Open [**LLM Proxy**](../agents/routing/llm_proxy) from the project navigation when you want the project's provider-compatible base URLs or want to inspect routed usage for your own account.
+
+From this page you can:
+- open the **About** tab to copy the OpenAI-compatible and Anthropic-compatible base URLs
+- open the **My Usage** tab to inspect your routed LLM usage for the current project
+- open the main LLM Proxy docs from the built-in **Read docs** link
+
 ## OAuth
-Create OAuth2/OIDC clients to enable MeshAgent to sign in for your apps. A client is used to identify a single app to MeshAgent's OAuth servers.  
+Create OAuth2/OIDC clients to enable MeshAgent to sign in for your apps. A client is used to identify a single app to MeshAgent's OAuth servers. See [OAuth Clients](../project_admin/oauth) for the full setup flow.  
 - Register a client with redirect URIs, scopes, grant types, and response types.
 - Create, edit, and delete clients from the project.
 
 ## Routes
-Use **Routes** to map project or room traffic to the right room. From this page you can create, edit, refresh, and delete routes, including the domain and port that should route into a room.
+Use **Routes** to map project or room traffic to the right room. See [Routes](../project_admin/routes) for the full route model and setup details. From this page you can create, edit, refresh, and delete routes, including the domain and port that should route into a room.
 
 ## Scheduled Tasks
-Use **Scheduled Tasks** to enqueue work on a schedule. You can create tasks at the project or room level, edit schedules, toggle tasks on or off, and delete tasks that are no longer needed.
+Use **Scheduled Tasks** to enqueue work on a schedule. See [Scheduled Tasks](../project_admin/scheduled_tasks) for the full behavior and examples. You can create tasks at the project or room level, edit schedules, toggle tasks on or off, and delete tasks that are no longer needed.
 
 ## Mailboxes
-Provision room-scoped mailboxes that agents can read from or send through:
+Provision room-scoped mailboxes that agents can read from or send through. See [Mailboxes](../project_admin/mailboxes) for the full setup flow:
 - Create mailboxes and assign them to rooms
 - Map incoming mail to queues so worker agents can process it asynchronously
 - Edit or delete mailboxes when your routing changes
@@ -127,8 +135,8 @@ Provision room-scoped mailboxes that agents can read from or send through:
 Billing is available through direct Studio flows when a project needs attention, but the underlying billing surface lives in [MeshAgent Accounts](./accounts). From the billing page you can:
 - View current credit balance and spend
 - Purchase credits
-- Configure automatic recharge and an optional monthly auto-recharge budget
+- Configure automatic recharge
 
 ## Next Steps
 - Follow the [Quickstart](../introduction/cli_quickstart) to create your first project, room, and agent from the CLI.
-- When you are ready for production, read [Packaging and Deploying Services](../services/deployment/deploy_services) to package and deploy agents and tools as MeshAgent services.
+- When you are ready for production, read [Service YAML](../services/deployment/deploy_services) to write and deploy service manifests.

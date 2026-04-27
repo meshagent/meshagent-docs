@@ -7,7 +7,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-// Example of user "database"
+// Example of user "dataset"
 const users = [
   {
     id: 1,
@@ -37,7 +37,7 @@ app.post('/authorize-user', (req, res) => {
       participantName,
   } = req.body;
 
-  // Find a matching user in our "database"
+  // Find a matching user in our "dataset"
   const user = users.find((u) => u.username === username && u.password === password);
 
   if (!user) {

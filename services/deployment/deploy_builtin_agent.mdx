@@ -1,0 +1,61 @@
+---
+title: Deploy a built in Agent
+description: Deploy a process-backed agent from MeshAgent CLI flags, or generate a starting service manifest from those flags.
+---
+
+Deploy a process-backed agent with [`meshagent process`](../../reference/meshagent_cli_help#meshagent-process).
+
+Use `meshagent process deploy` when the CLI flags describe the agent you want to run. Use `meshagent process spec` when you want MeshAgent to generate a starting service manifest that you can review, edit, and deploy with `meshagent service`.
+
+## Deploy directly with `meshagent process deploy`
+
+```bash bash
+meshagent process deploy \
+  --service-name my-chatbot \
+  --agent-name my-chatbot \
+  --channel chat \
+  --web-search \
+  --storage \
+  --room myroom
+```
+
+`meshagent process deploy` generates the starting service manifest and deploys it immediately.
+
+Use this when:
+
+- the built-in CLI flags describe the agent
+- the manifest does not need changes before deployment
+- you want to deploy the agent to a room or project from one command
+
+Pass `--room myroom` for a room service. Omit `--room` to deploy the service project-wide.
+
+## Generate a service manifest with `meshagent process spec`
+
+`meshagent process spec` generates the starting service manifest for a process-backed service and writes it to stdout.
+
+```bash bash
+meshagent process spec \
+  --service-name my-chatbot \
+  --agent-name my-chatbot \
+  --channel chat \
+  --web-search \
+  --storage > meshagent.yaml
+
+# Deploy into one room
+meshagent service create --file meshagent.yaml --room myroom
+
+# Deploy across the whole project
+meshagent service create --file meshagent.yaml --global
+```
+
+Use this when:
+
+- you want to review the service manifest before deployment
+- you need to customize fields that are not exposed as `meshagent process` flags
+- you want to keep the service definition in source control
+
+## Read next
+
+- [Service YAML](./deploy_services): write, validate, deploy, update, and delete services from a manifest.
+- [Process Agents Overview](../../agents/process/overview): understand how process agents run.
+- [Deploy a Process Agent](./process_agent_service): deploy a process-backed agent with chat, email, and scheduled queue entry points.

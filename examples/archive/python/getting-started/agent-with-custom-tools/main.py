@@ -16,7 +16,7 @@ from meshagent.tools.document_tools import (
 )
 from meshagent.markitdown.tools import MarkItDownToolkit
 from meshagent.agents.schemas.document import document_schema
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 from meshagent.api.messaging import TextContent, JsonContent
 from meshagent.tools import LocalRoomTool, Toolkit, ToolContext
 
@@ -31,7 +31,7 @@ class WriteTask(LocalRoomTool):
             room=room,
             name="WriteTask",
             title="Add a task",
-            description="A tool to add tasks to the database",
+            description="A tool to add tasks to the dataset",
             input_schema={
                 "type": "object",
                 "additionalProperties": False,
@@ -42,7 +42,7 @@ class WriteTask(LocalRoomTool):
 
     async def execute(self, context: ToolContext, taskdescription: str):
         del context
-        await self.room.database.insert(
+        await self.room.datasets.insert(
             table="tasks",
             records=[
                 {"task_id": str(uuid.uuid4()), "taskdescription": taskdescription}
@@ -69,7 +69,7 @@ class GetTasks(LocalRoomTool):
     async def execute(self, context: ToolContext):
         del context
         return JsonContent(
-            json={"values": await self.room.database.search(table="tasks")}
+            json={"values": await self.room.datasets.search(table="tasks")}
         )
 
 
@@ -116,9 +116,9 @@ class SimpleChatbot(ChatBot):
         ]
         await super().start(room=room)
 
-        await room.database.create_table_with_schema(
+        await room.datasets.create_table_with_schema(
             name="tasks",
-            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
+            schema={"task_id": pa.string(), "taskdescription": pa.string()},
             mode="create_if_not_exists",
             data=None,
         )
@@ -160,9 +160,9 @@ class SimpleVoicebot(VoiceBot):
         ]
         await super().start(room=room)
 
-        await room.database.create_table_with_schema(
+        await room.datasets.create_table_with_schema(
             name="tasks",
-            schema={"task_id": TextDataType(), "taskdescription": TextDataType()},
+            schema={"task_id": pa.string(), "taskdescription": pa.string()},
             mode="create_if_not_exists",
             data=None,
         )

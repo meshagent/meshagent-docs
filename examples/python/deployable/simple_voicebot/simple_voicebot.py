@@ -7,6 +7,7 @@ service = ServiceHost()
 
 otel_config(service_name="simple-voicebot")  # enable telemetry for this service
 
+
 @service.path(path="/agent", identity="simple-voicebot")
 class SimpleVoiceBot(VoiceBot):
     def __init__(self):
@@ -19,5 +20,6 @@ class SimpleVoiceBot(VoiceBot):
             ],
             auto_greet_message="Hi! I'm your voice assistant—ask me anything.",
         )
+
 
 asyncio.run(service.run())

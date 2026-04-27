@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 
 METHODS = ["GET", "POST"]
 
@@ -123,7 +123,7 @@ _FORM_HTML = """<!doctype html>
     <main class="card">
       <header>
         <h1>Contact Us</h1>
-        <p>Send a note and we will route it into your MeshAgent room database.</p>
+        <p>Send a note and we will route it into your MeshAgent room dataset.</p>
       </header>
       <form method="post">
         <label>
@@ -154,17 +154,17 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
         return web.Response(text=_FORM_HTML, content_type="text/html")
 
     form = await req.post()
-    await room.database.create_table_with_schema(
+    await room.datasets.create_table_with_schema(
         name="contacts",
         schema={
-            "name": TextDataType(),
-            "email": TextDataType(),
-            "message": TextDataType(),
+            "name": pa.string(),
+            "email": pa.string(),
+            "message": pa.string(),
         },
         mode="create_if_not_exists",
         data=None,
     )
-    await room.database.insert(
+    await room.datasets.insert(
         table="contacts",
         records=[
             {
