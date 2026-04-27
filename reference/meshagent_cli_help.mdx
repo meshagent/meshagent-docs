@@ -764,7 +764,7 @@ $ meshagent  spec [OPTIONS]
 
 **Options**:
 
-* `-f, --file TEXT`: File path to a service definition
+* `-f, --file TEXT`: File path to a service definition. Beginner fallback: point this at a meshagent.yaml when the app has no Dockerfile. For a public HTTP route, set container.private: false and metadata.annotations.meshagent.service.id in the file.
 * `--url TEXT`: URL to a service definition
 * `--mcp TEXT`: MCP server URL. Auto-discovers metadata and generates a service spec without creating it.
 * `--format [service|template]`: Output format. &#x27;service&#x27; emits Service YAML. &#x27;template&#x27; emits ServiceTemplate YAML.  [default: service]
@@ -774,6 +774,12 @@ $ meshagent  spec [OPTIONS]
 ### `meshagent  create`
 
 Create a service attached to the project.
+
+Beginner fallback when an app does not have a Dockerfile: write a minimal
+meshagent.yaml, set the HTTP port to published/public, set
+container.private: false for a public route, and include
+metadata.annotations.meshagent.service.id so a route can target the created
+service.
 
 **Usage**:
 
@@ -1630,7 +1636,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 ### `meshagent  create`
 
-Create a room in the project.
+Create a room in the project. Use this before meshagent deploy --room when the room does not already exist, then deploy with &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27;.
 
 **Usage**:
 
@@ -2160,6 +2166,10 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 
 Create a route attached to the project.
 
+Use a short, DNS-safe domain name that matches the suffix accepted by your
+environment. When routing to a room service, include the
+meshagent.service.id annotation so the route targets the created service.
+
 **Usage**:
 
 ```console
@@ -2169,10 +2179,10 @@ $ meshagent  create [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `-d, --domain TEXT`: Domain name to route (unique per project)  [required]
+* `-d, --domain TEXT`: Domain name to route (unique per project). Keep it short and DNS-safe; long room-name-derived domains may be rejected.  [required]
 * `--room TEXT`: Room name
 * `-p, --port TEXT`: Published port to route to  [required]
-* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;. When routing to a room service, include meshagent.service.id.
 * `--help`: Show this message and exit.
 
 ### `meshagent  update`
@@ -2388,7 +2398,7 @@ $ meshagent build [OPTIONS] PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
+* `--room TEXT`: Existing room name. meshagent deploy does not create rooms; create the room first with &#x27;meshagent rooms create --name &lt;room&gt;&#x27;.
 * `--tag TEXT`: Image tag to build. Supports &lt;repository&gt;:&lt;tag&gt;, &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;, or &lt;registry&gt;/&lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt;. Shorthand forms resolve against the configured MeshAgent registry.  [required]
 * `--context-path TEXT`: Build context path inside the streamed build context (absolute path). Defaults to the PATH mount path.
 * `--dockerfile-path TEXT`: Optional Dockerfile path inside the streamed build context (absolute path).
@@ -2400,7 +2410,7 @@ $ meshagent build [OPTIONS] PATH
 
 ## `meshagent deploy`
 
-Create or update a room service from an image, optionally building it first.
+Create or update a room service from an image, optionally building it first. The target room must already exist. Create it first with &#x27;meshagent rooms create --name &lt;room&gt; --if-not-exists&#x27;. Happy path for a Dockerfile app: create the room with &#x27;meshagent rooms create --name &lt;room&gt; --if-not-exists&#x27;, then run &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27; so deploy creates the service and the public route together. If PATH does not include a Dockerfile yet, create a minimal Dockerfile in the app directory first or create one elsewhere in PATH and pass it with --dockerfile-path.
 
 **Usage**:
 
@@ -2410,19 +2420,19 @@ $ meshagent deploy [OPTIONS] [PATH]
 
 **Arguments**:
 
-* `[PATH]`: Local directory to stream as the build context before deploy. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context.
+* `[PATH]`: Local directory to stream as the build context before deploy. Format &#x27;&lt;path&gt;[:&lt;mount&gt;]&#x27;. Defaults mount to /context. PATH is typically the app directory you want to deploy.
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
-* `--room TEXT`: Room name
+* `--room TEXT`: Existing room name. meshagent deploy does not create rooms; create the room first with &#x27;meshagent rooms create --name &lt;room&gt;&#x27;.
 * `--tag TEXT`: Image tag to deploy, e.g. repo/name:tag. When used with PATH, shorthand &lt;repository&gt;:&lt;tag&gt; and &lt;project-key&gt;/&lt;repository&gt;:&lt;tag&gt; resolve against the configured MeshAgent registry.  [required]
 * `--context-path TEXT`: Build context path inside the packed build context (absolute path). Only used with PATH.
-* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with PATH.
+* `--dockerfile-path TEXT`: Optional Dockerfile path inside the packed build context (absolute path). Only used with PATH. Use this when the app directory has no top-level Dockerfile or when you create the Dockerfile under a different path.
 * `--optimize / --no-optimize`: Whether to optimize room image outputs to eStargz during the build stage. Enabled by default. Only used with PATH.  [default: optimize]
 * `--cred TEXT`: Docker creds (username,password) or (registry,username,password)
 * `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
-* `--domain TEXT`: Create or update a room route for the deployed service. Requires exactly one published service port.
+* `--domain TEXT`: Create or update a room route for the deployed service and return a public URL. Use this with --public when you need an external URL from deploy. In MeshAgent dev/.life, domains must end with .meshagent.dev; in prod they must end with .meshagent.app. Requires exactly one published service port.
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
