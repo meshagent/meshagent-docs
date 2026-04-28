@@ -6844,6 +6844,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `sql`: Execute SQL against room dataset tables.
 * `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
+* `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
 * `versions`: List versions for a room dataset table.
 * `restore`: Restore a room dataset table to a specific...
@@ -7190,8 +7191,53 @@ $ meshagent   optimize [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
+* `--compact-files / --no-compact-files`
+* `--optimize-indices / --no-optimize-indices`
+* `--cleanup-old-versions / --no-cleanup-old-versions`
+* `--target-rows-per-fragment INTEGER`
+* `--max-rows-per-group INTEGER`
+* `--max-bytes-per-file INTEGER`
+* `--materialize-deletions / --no-materialize-deletions`
+* `--materialize-deletions-threshold FLOAT`
+* `--defer-index-remap / --no-defer-index-remap`
+* `--num-threads INTEGER`
+* `--batch-size INTEGER`
+* `--compaction-mode TEXT`: Compaction mode: reencode, try_binary_copy, or force_binary_copy
+* `--binary-copy-read-batch-bytes INTEGER`
+* `--num-indices-to-merge INTEGER`
+* `--index-name TEXT`: Index name to optimize. Repeatable.
+* `--retrain / --no-retrain`
+* `--older-than-seconds FLOAT`
+* `--retain-versions INTEGER`
+* `--delete-unverified / --keep-unverified`
+* `--error-if-tagged-old-versions / --ignore-tagged-old-versions`
+* `--delete-rate-limit INTEGER`
+* `--config-json TEXT`: JSON object with optimization fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent   stats`
+
+Show statistics for a room dataset table.
+
+**Usage**:
+
+```console
+$ meshagent   stats [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Dataset branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
+* `--max-rows-per-group INTEGER`
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 #### `meshagent   version`
@@ -7311,9 +7357,42 @@ $ meshagent   index-create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
-* `-c, --column TEXT`: Column name  [required]
-* `--kind TEXT`: vector | scalar | fts  [default: scalar]
+* `-c, --column TEXT`: Column name. Repeat this option to pass multiple columns.
+* `--index-type TEXT`: Lance index type, such as IVF_PQ, IVF_HNSW_PQ, IVF_HNSW_SQ, IVF_RQ, BTREE, BITMAP, LABEL_LIST, NGRAM, ZONEMAP, INVERTED, FTS, BLOOMFILTER, or RTREE.
+* `--name TEXT`: Index name
+* `--metric TEXT`: Vector distance metric, such as L2, cosine, or dot
 * `--replace / --no-replace`: Replace existing index if it already exists
+* `--train / --no-train`: Train the index on existing data
+* `--num-partitions INTEGER`
+* `--target-partition-size INTEGER`
+* `--num-sub-vectors INTEGER`
+* `--num-bits INTEGER`
+* `--accelerator TEXT`
+* `--index-cache-size INTEGER`
+* `--shuffle-partition-batches INTEGER`
+* `--shuffle-partition-concurrency INTEGER`
+* `--ivf-centroids-file TEXT`
+* `--precomputed-partition-dataset TEXT`
+* `--filter-nan / --no-filter-nan`: Filter null or NaN vector values
+* `--index-uuid TEXT`
+* `--skip-transpose / --no-skip-transpose`: Skip vector index transposition
+* `--index-file-version TEXT`
+* `--max-level INTEGER`
+* `--m INTEGER`
+* `--ef-construction INTEGER`
+* `--with-position / --no-with-position`: Store token positions for text indexes
+* `--memory-limit INTEGER`
+* `--num-workers INTEGER`
+* `--skip-merge / --no-skip-merge`: Skip text index partition merge
+* `--base-tokenizer TEXT`
+* `--language TEXT`
+* `--max-token-length INTEGER`
+* `--lower-case / --no-lower-case`: Lowercase text index tokens
+* `--stem / --no-stem`: Stem text index tokens
+* `--remove-stop-words / --keep-stop-words`: Remove text index stop words
+* `--custom-stop-word TEXT`: Custom stop word. Repeat to pass multiple words.
+* `--ascii-folding / --no-ascii-folding`: Fold text index tokens to ASCII
+* `--config-json TEXT`: JSON object with Lance index configuration fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.
@@ -7447,6 +7526,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `sql`: Execute SQL against room dataset tables.
 * `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
+* `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
 * `versions`: List versions for a room dataset table.
 * `restore`: Restore a room dataset table to a specific...
@@ -7793,8 +7873,53 @@ $ meshagent   optimize [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
+* `--compact-files / --no-compact-files`
+* `--optimize-indices / --no-optimize-indices`
+* `--cleanup-old-versions / --no-cleanup-old-versions`
+* `--target-rows-per-fragment INTEGER`
+* `--max-rows-per-group INTEGER`
+* `--max-bytes-per-file INTEGER`
+* `--materialize-deletions / --no-materialize-deletions`
+* `--materialize-deletions-threshold FLOAT`
+* `--defer-index-remap / --no-defer-index-remap`
+* `--num-threads INTEGER`
+* `--batch-size INTEGER`
+* `--compaction-mode TEXT`: Compaction mode: reencode, try_binary_copy, or force_binary_copy
+* `--binary-copy-read-batch-bytes INTEGER`
+* `--num-indices-to-merge INTEGER`
+* `--index-name TEXT`: Index name to optimize. Repeatable.
+* `--retrain / --no-retrain`
+* `--older-than-seconds FLOAT`
+* `--retain-versions INTEGER`
+* `--delete-unverified / --keep-unverified`
+* `--error-if-tagged-old-versions / --ignore-tagged-old-versions`
+* `--delete-rate-limit INTEGER`
+* `--config-json TEXT`: JSON object with optimization fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent   stats`
+
+Show statistics for a room dataset table.
+
+**Usage**:
+
+```console
+$ meshagent   stats [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Dataset branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
+* `--max-rows-per-group INTEGER`
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 #### `meshagent   version`
@@ -7914,9 +8039,42 @@ $ meshagent   index-create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
-* `-c, --column TEXT`: Column name  [required]
-* `--kind TEXT`: vector | scalar | fts  [default: scalar]
+* `-c, --column TEXT`: Column name. Repeat this option to pass multiple columns.
+* `--index-type TEXT`: Lance index type, such as IVF_PQ, IVF_HNSW_PQ, IVF_HNSW_SQ, IVF_RQ, BTREE, BITMAP, LABEL_LIST, NGRAM, ZONEMAP, INVERTED, FTS, BLOOMFILTER, or RTREE.
+* `--name TEXT`: Index name
+* `--metric TEXT`: Vector distance metric, such as L2, cosine, or dot
 * `--replace / --no-replace`: Replace existing index if it already exists
+* `--train / --no-train`: Train the index on existing data
+* `--num-partitions INTEGER`
+* `--target-partition-size INTEGER`
+* `--num-sub-vectors INTEGER`
+* `--num-bits INTEGER`
+* `--accelerator TEXT`
+* `--index-cache-size INTEGER`
+* `--shuffle-partition-batches INTEGER`
+* `--shuffle-partition-concurrency INTEGER`
+* `--ivf-centroids-file TEXT`
+* `--precomputed-partition-dataset TEXT`
+* `--filter-nan / --no-filter-nan`: Filter null or NaN vector values
+* `--index-uuid TEXT`
+* `--skip-transpose / --no-skip-transpose`: Skip vector index transposition
+* `--index-file-version TEXT`
+* `--max-level INTEGER`
+* `--m INTEGER`
+* `--ef-construction INTEGER`
+* `--with-position / --no-with-position`: Store token positions for text indexes
+* `--memory-limit INTEGER`
+* `--num-workers INTEGER`
+* `--skip-merge / --no-skip-merge`: Skip text index partition merge
+* `--base-tokenizer TEXT`
+* `--language TEXT`
+* `--max-token-length INTEGER`
+* `--lower-case / --no-lower-case`: Lowercase text index tokens
+* `--stem / --no-stem`: Stem text index tokens
+* `--remove-stop-words / --keep-stop-words`: Remove text index stop words
+* `--custom-stop-word TEXT`: Custom stop word. Repeat to pass multiple words.
+* `--ascii-folding / --no-ascii-folding`: Fold text index tokens to ASCII
+* `--config-json TEXT`: JSON object with Lance index configuration fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.
