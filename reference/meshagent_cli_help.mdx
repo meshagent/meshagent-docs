@@ -2516,6 +2516,7 @@ $ meshagent  [OPTIONS] COMMAND [ARGS]...
 * `add`: Add a scheduled task.
 * `list`: List scheduled tasks.
 * `update`: Update a scheduled task.
+* `runs`: List runs for a scheduled task.
 * `delete`: Delete a scheduled task.
 
 ### `meshagent  add`
@@ -2532,15 +2533,7 @@ $ meshagent  add [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name
-* `-q, --queue TEXT`: Queue name to dispatch the task to  [required]
-* `-s, --schedule TEXT`: Cron schedule for task execution  [required]
-* `--payload TEXT`: JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
-* `--payload-file TEXT`: Path to a file containing JSON payload
-* `--id TEXT`: Optional task id
-* `--once`: Run once and then deactivate
-* `--active / --inactive`: Initial active state  [default: active]
-* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
-* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
+* `-f, --file TEXT`: Path to a ScheduledTaskSpec YAML file  [required]
 * `--help`: Show this message and exit.
 
 ### `meshagent  list`
@@ -2583,16 +2576,29 @@ $ meshagent  update [OPTIONS] TASK_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `-r, --room TEXT`: Updated room name
-* `-q, --queue TEXT`: Updated queue name
-* `-s, --schedule TEXT`: Updated cron schedule
-* `--payload TEXT`: Updated JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
-* `--payload-file TEXT`: Path to a file containing updated JSON payload
-* `--active`: Mark the task active
-* `--inactive`: Mark the task inactive
-* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
-* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
-* `--clear-storage-write-path`: Clear the stored room storage folder for this task
+* `-f, --file TEXT`: Path to a replacement ScheduledTaskSpec YAML file  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent  runs`
+
+List runs for a scheduled task.
+
+**Usage**:
+
+```console
+$ meshagent  runs [OPTIONS] TASK_ID
+```
+
+**Arguments**:
+
+* `TASK_ID`: Scheduled task id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--count INTEGER`: Maximum number of runs to return  [default: 100]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ### `meshagent  delete`
@@ -6853,7 +6859,6 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `delete`: Delete rows from a room dataset table.
 * `search`: Search rows in a room dataset table.
 * `sql`: Execute SQL against room dataset tables.
-* `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
 * `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
@@ -7155,32 +7160,6 @@ $ meshagent   sql [OPTIONS]
 * `--tables-json TEXT`: JSON array of table refs (e.g. &#x27;[&#123;&quot;name&quot;:&quot;users&quot;,&quot;alias&quot;:&quot;u&quot;,&quot;namespace&quot;:[&quot;prod&quot;]&#125;]&#x27;)
 * `--tables-file TEXT`: Path/URL to JSON array of table refs (same format as --tables-json)
 * `--params-json TEXT`: JSON object of SQL parameters for DataFusion param binding
-* `--params-file TEXT`: Path/URL to JSON object of SQL parameters
-* `--branch TEXT`: Dataset branch name (defaults to main)
-* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
-* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
-* `--help`: Show this message and exit.
-
-#### `meshagent   sql-exec`
-
-Execute a SQL statement that does not return rows.
-
-**Usage**:
-
-```console
-$ meshagent   sql-exec [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `-q, --query TEXT`: SQL statement to execute  [required]
-* `-t, --table TEXT`: Table name to register in SQL context (repeatable)
-* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
-* `--tables-json TEXT`: JSON array of table refs
-* `--tables-file TEXT`: Path/URL to JSON array of table refs
-* `--params-json TEXT`: JSON object of SQL parameters, sent as one Arrow parameter row
 * `--params-file TEXT`: Path/URL to JSON object of SQL parameters
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
@@ -7535,7 +7514,6 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `delete`: Delete rows from a room dataset table.
 * `search`: Search rows in a room dataset table.
 * `sql`: Execute SQL against room dataset tables.
-* `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
 * `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
@@ -7837,32 +7815,6 @@ $ meshagent   sql [OPTIONS]
 * `--tables-json TEXT`: JSON array of table refs (e.g. &#x27;[&#123;&quot;name&quot;:&quot;users&quot;,&quot;alias&quot;:&quot;u&quot;,&quot;namespace&quot;:[&quot;prod&quot;]&#125;]&#x27;)
 * `--tables-file TEXT`: Path/URL to JSON array of table refs (same format as --tables-json)
 * `--params-json TEXT`: JSON object of SQL parameters for DataFusion param binding
-* `--params-file TEXT`: Path/URL to JSON object of SQL parameters
-* `--branch TEXT`: Dataset branch name (defaults to main)
-* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
-* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
-* `--help`: Show this message and exit.
-
-#### `meshagent   sql-exec`
-
-Execute a SQL statement that does not return rows.
-
-**Usage**:
-
-```console
-$ meshagent   sql-exec [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `-q, --query TEXT`: SQL statement to execute  [required]
-* `-t, --table TEXT`: Table name to register in SQL context (repeatable)
-* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
-* `--tables-json TEXT`: JSON array of table refs
-* `--tables-file TEXT`: Path/URL to JSON array of table refs
-* `--params-json TEXT`: JSON object of SQL parameters, sent as one Arrow parameter row
 * `--params-file TEXT`: Path/URL to JSON object of SQL parameters
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
