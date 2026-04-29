@@ -481,7 +481,7 @@ $ meshagent ask [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-m, --message TEXT`: Prompt to send to the LLM
 * `--format TEXT`: Output format for non-interactive responses.  [default: text]
-* `--model TEXT`: Name of the LLM model to use  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use  [default: gpt-5.5]
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
@@ -1460,9 +1460,10 @@ $ meshagent rooms list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-o, --output TEXT`: output format   [default: table]
-* `--limit INTEGER RANGE`: Max rooms to return  [default: 50; 1&lt;=x&lt;=500]
+* `--count INTEGER RANGE`: Max rooms to return  [default: 100; 1&lt;=x&lt;=500]
 * `--offset INTEGER RANGE`: Offset for pagination  [default: 0; x&gt;=0]
 * `--order-by TEXT`: Order by column (e.g. &quot;room_name&quot;, &quot;created_at&quot;)  [default: room_name]
+* `--filter TEXT`: Lowercase contains filter for room names
 * `--help`: Show this message and exit.
 
 ### `meshagent rooms get`
@@ -1581,6 +1582,9 @@ $ meshagent mailbox list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
+* `--filter TEXT`: Lowercase contains filter
+* `--count INTEGER`: Maximum number of mailboxes to return  [default: 100]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -1711,6 +1715,9 @@ $ meshagent feed list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name to filter feeds by
+* `--filter TEXT`: Lowercase contains filter
+* `--count INTEGER`: Maximum number of feeds to return  [default: 100]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -1997,6 +2004,9 @@ $ meshagent route list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name
+* `--filter TEXT`: Lowercase contains filter
+* `--count INTEGER`: Maximum number of routes to return  [default: 100]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -2268,7 +2278,8 @@ $ meshagent scheduled-task list [OPTIONS]
 * `--id, --task-id TEXT`: Filter by scheduled task id
 * `--active`: Filter to active tasks only
 * `--inactive`: Filter to inactive tasks only
-* `--limit INTEGER`: Maximum number of tasks to return  [default: 200]
+* `--filter TEXT`: Lowercase contains filter
+* `--count INTEGER`: Maximum number of tasks to return  [default: 100]
 * `--offset INTEGER`: Row offset for pagination  [default: 0]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
@@ -2573,7 +2584,7 @@ $ meshagent process join [OPTIONS]
 * `--instructions TEXT`: a path in the configured storage toolkit to a rules file that will be loaded at runtime
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
-* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.5]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
@@ -2642,7 +2653,7 @@ $ meshagent process service [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
-* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.5]
 * `--image-generation TEXT`: Name of an image gen model
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
@@ -2713,7 +2724,7 @@ $ meshagent process spec [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
-* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.5]
 * `--image-generation TEXT`: Name of an image gen model
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
@@ -2780,7 +2791,7 @@ $ meshagent process deploy [OPTIONS]
 * `-rr, --room-rules TEXT`: a path to a rules file within the room that can be used to customize the agent&#x27;s behavior
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
-* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.5]
 * `--image-generation TEXT`: Name of an image gen model
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
 * `--apply-patch / --no-apply-patch`: Enable apply patch tool  [default: no-apply-patch]
@@ -2849,7 +2860,7 @@ $ meshagent process run [OPTIONS]
 * `--instructions TEXT`: a path in the configured storage toolkit to a rules file that will be loaded at runtime
 * `-rt, --require-toolkit TEXT`: the name or url of a required toolkit
 * `-s, --schema TEXT`: the name or url of a required schema
-* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.4]
+* `--model TEXT`: Name of the LLM model to use for the chatbot  [default: gpt-5.5]
 * `--image-generation TEXT`: Name of an image gen model
 * `--computer-use / --no-computer-use`: Enable computer use  [default: no-computer-use]
 * `--shell / --no-shell`: Enable function shell tool calling  [default: no-shell]
@@ -3726,6 +3737,7 @@ $ meshagent room dataset [OPTIONS] COMMAND [ARGS]...
 * `sql`: Execute SQL against room dataset tables.
 * `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
+* `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
 * `restore`: Restore a room dataset table to a specific...
 * `index`: List indexes on a room dataset table.
@@ -4126,8 +4138,53 @@ $ meshagent room dataset optimize [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
+* `--compact-files / --no-compact-files`
+* `--optimize-indices / --no-optimize-indices`
+* `--cleanup-old-versions / --no-cleanup-old-versions`
+* `--target-rows-per-fragment INTEGER`
+* `--max-rows-per-group INTEGER`
+* `--max-bytes-per-file INTEGER`
+* `--materialize-deletions / --no-materialize-deletions`
+* `--materialize-deletions-threshold FLOAT`
+* `--defer-index-remap / --no-defer-index-remap`
+* `--num-threads INTEGER`
+* `--batch-size INTEGER`
+* `--compaction-mode TEXT`: Compaction mode: reencode, try_binary_copy, or force_binary_copy
+* `--binary-copy-read-batch-bytes INTEGER`
+* `--num-indices-to-merge INTEGER`
+* `--index-name TEXT`: Index name to optimize. Repeatable.
+* `--retrain / --no-retrain`
+* `--older-than-seconds FLOAT`
+* `--retain-versions INTEGER`
+* `--delete-unverified / --keep-unverified`
+* `--error-if-tagged-old-versions / --ignore-tagged-old-versions`
+* `--delete-rate-limit INTEGER`
+* `--config-json TEXT`: JSON object with optimization fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent room dataset stats`
+
+Show statistics for a room dataset table.
+
+**Usage**:
+
+```console
+$ meshagent room dataset stats [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Dataset branch name (defaults to main)
+* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
+* `--max-rows-per-group INTEGER`
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 #### `meshagent room dataset version`
@@ -4206,9 +4263,42 @@ $ meshagent room dataset index-create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-t, --table TEXT`: Table name  [required]
-* `-c, --column TEXT`: Column name  [required]
-* `--kind TEXT`: vector | scalar | fts  [default: scalar]
+* `-c, --column TEXT`: Column name. Repeat this option to pass multiple columns.
+* `--index-type TEXT`: Lance index type, such as IVF_PQ, IVF_HNSW_PQ, IVF_HNSW_SQ, IVF_RQ, BTREE, BITMAP, LABEL_LIST, NGRAM, ZONEMAP, INVERTED, FTS, BLOOMFILTER, or RTREE.
+* `--name TEXT`: Index name
+* `--metric TEXT`: Vector distance metric, such as L2, cosine, or dot
 * `--replace / --no-replace`: Replace existing index if it already exists
+* `--train / --no-train`: Train the index on existing data
+* `--num-partitions INTEGER`
+* `--target-partition-size INTEGER`
+* `--num-sub-vectors INTEGER`
+* `--num-bits INTEGER`
+* `--accelerator TEXT`
+* `--index-cache-size INTEGER`
+* `--shuffle-partition-batches INTEGER`
+* `--shuffle-partition-concurrency INTEGER`
+* `--ivf-centroids-file TEXT`
+* `--precomputed-partition-dataset TEXT`
+* `--filter-nan / --no-filter-nan`: Filter null or NaN vector values
+* `--index-uuid TEXT`
+* `--skip-transpose / --no-skip-transpose`: Skip vector index transposition
+* `--index-file-version TEXT`
+* `--max-level INTEGER`
+* `--m INTEGER`
+* `--ef-construction INTEGER`
+* `--with-position / --no-with-position`: Store token positions for text indexes
+* `--memory-limit INTEGER`
+* `--num-workers INTEGER`
+* `--skip-merge / --no-skip-merge`: Skip text index partition merge
+* `--base-tokenizer TEXT`
+* `--language TEXT`
+* `--max-token-length INTEGER`
+* `--lower-case / --no-lower-case`: Lowercase text index tokens
+* `--stem / --no-stem`: Stem text index tokens
+* `--remove-stop-words / --keep-stop-words`: Remove text index stop words
+* `--custom-stop-word TEXT`: Custom stop word. Repeat to pass multiple words.
+* `--ascii-folding / --no-ascii-folding`: Fold text index tokens to ASCII
+* `--config-json TEXT`: JSON object with Lance index configuration fields.
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.

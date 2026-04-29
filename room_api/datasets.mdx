@@ -793,7 +793,8 @@ Console.WriteLine(results); // [{ "id": 1, "username": "alice", "email": "alice@
 - **Description**: Optimizes a table (e.g., compacts its storage or rebuilds indexes if required).
 - **Parameters**:
   - **table**: Name of the table to optimize.
-- **Returns**: A promise that resolves once the operation is complete.
+  - **config**: Optional optimization configuration using Lance option names, including `compact_files`, `optimize_indices`, `cleanup_old_versions`, `target_rows_per_fragment`, `max_rows_per_group`, `max_bytes_per_file`, `materialize_deletions`, `materialize_deletions_threshold`, `defer_index_remap`, `num_threads`, `batch_size`, `compaction_mode`, `binary_copy_read_batch_bytes`, `num_indices_to_merge`, `index_names`, `retrain`, `older_than_seconds`, `retain_versions`, `delete_unverified`, `error_if_tagged_old_versions`, and `delete_rate_limit`.
+- **Returns**: Optimization result details for compaction, index optimization, and cleanup.
 
 **Example**:
 <CodeGroup>
@@ -825,12 +826,48 @@ await room.Datasets.Optimize("users");
 ```
 </CodeGroup>
 
-### `create_vector_index(...)`
-- **Description**: Creates a vector index on a specified column for vector similarity searches.
+### `stats(table, ...)`
+- **Description**: Returns Lance dataset and data statistics for a table.
+- **Parameters**:
+  - **table**: Name of the table.
+  - **max_rows_per_group**: Optional row-group threshold used by Lance dataset stats.
+- **Returns**: Parsed `dataset` and `data` statistics.
+
+**Example**:
+<CodeGroup>
+```bash CLI
+meshagent room dataset stats \
+  --room myroom \
+  --table users
+
+meshagent room dataset stats \
+  --room myroom \
+  --table users \
+  --output json
+
+```
+```python Python
+stats = await room.datasets.stats(table="users")
+
+```
+```typescript TypeScript
+const stats = await room.datasets.stats({ table: "users" });
+
+```
+```dart Dart
+final stats = await room.datasets.stats("users");
+
+```
+</CodeGroup>
+
+### `create_index(...)`
+- **Description**: Creates a Lance index on a dataset table.
 - **Parameters**:
   - **table**: The target table name.
-  - **column**: The column that holds vector data.
+  - **config**: Index configuration. Uses Lance option names such as `column`, `index_type`, `name`, `replace`, `metric`, `num_partitions`, `num_sub_vectors`, `target_partition_size`, `filter_nan`, `train`, `fragment_ids`, `index_uuid`, `skip_transpose`, `num_bits`, `index_file_version`, `max_level`, `m`, `ef_construction`, `with_position`, `memory_limit`, `num_workers`, `skip_merge`, `base_tokenizer`, `language`, `max_token_length`, `lower_case`, `stem`, `remove_stop_words`, `custom_stop_words`, and `ascii_folding`.
 - **Returns**: A promise that resolves once the index is created.
+
+Supported `index_type` values include vector indexes (`IVF_PQ`, `IVF_HNSW_PQ`, `IVF_HNSW_SQ`, `IVF_RQ`) and scalar/text indexes (`BTREE`, `BITMAP`, `LABEL_LIST`, `NGRAM`, `ZONEMAP`, `INVERTED`, `FTS`, `BLOOMFILTER`, `RTREE`).
 
 **Example**:
 <CodeGroup>
@@ -839,149 +876,71 @@ meshagent room dataset index-create \
   --room myroom \
   --table documents \
   --column embedding \
-  --kind vector
+  --index-type IVF_PQ \
+  --num-partitions 32 \
+  --num-sub-vectors 8
 
 ```
 ```python Python
-await room.datasets.create_vector_index(
+from meshagent.api import DatasetIndexConfig
+
+await room.datasets.create_index(
   table="documents",
-  column="embedding",
+  config=DatasetIndexConfig(
+    column="embedding",
+    index_type="IVF_PQ",
+    num_partitions=32,
+    num_sub_vectors=8,
+  ),
 )
 
 ```
 ```javascript NodeJs
-await room.datasets.createVectorIndex({
+await room.datasets.createIndex({
   table: "documents",
-  column: "embedding",
+  config: {
+    column: "embedding",
+    index_type: "IVF_PQ",
+    num_partitions: 32,
+    num_sub_vectors: 8,
+  },
 });
 
 ```
 ```typescript TypeScript
-await room.datasets.createVectorIndex({
+await room.datasets.createIndex({
   table: "documents",
-  column: "embedding",
+  config: {
+    column: "embedding",
+    index_type: "IVF_PQ",
+    num_partitions: 32,
+    num_sub_vectors: 8,
+  },
 });
 
 ```
 ```dart Dart
-await room.datasets.createVectorIndex(
+await room.datasets.createIndex(
   table: "documents",
-  column: "embedding",
+  config: const DatasetIndexConfig(
+    column: "embedding",
+    indexType: "IVF_PQ",
+    numPartitions: 32,
+    numSubVectors: 8,
+  ),
 );
 
 ```
 ```dotnet C#
-await room.Datasets.CreateVectorIndex(
+await room.Datasets.CreateIndex(
   "documents",
-  "embedding"
-);
-
-```
-</CodeGroup>
-
-### `create_scalar_index(...)`
-- **Description**: Creates a scalar index (typical dataset index) on a specified column.
-- **Parameters**:
-  - **table**: The target table name.
-  - **column**: The column for which to create the scalar index.
-- **Returns**: A promise that resolves once the scalar index is created.
-
-**Example**:
-<CodeGroup>
-```bash CLI
-meshagent room dataset index-create \
-  --room myroom \
-  --table users \
-  --column email \
-  --kind scalar
-
-```
-```python Python
-await room.datasets.create_scalar_index(
-  table="users",
-  column="email",
-)
-
-```
-```javascript NodeJs
-await room.datasets.createScalarIndex({
-  table: "users",
-  column: "email",
-});
-
-```
-```typescript TypeScript
-await room.datasets.createScalarIndex({
-  table: "users",
-  column: "email",
-});
-
-```
-```dart Dart
-await room.datasets.createScalarIndex(
-  table: "users",
-  column: "email",
-);
-
-```
-```dotnet C#
-await room.Datasets.CreateScalarIndex(
-  "users",
-  "email"
-);
-
-```
-</CodeGroup>
-
-### `create_full_text_index(...)`
-- **Description**: Creates a full-text search index on a text column, useful for text-based queries.
-- **Parameters**:
-  - **table**: The table name.
-  - **column**: The text column to index.
-- **Returns**: A promise that resolves once the index is created.
-
-**Example**:
-<CodeGroup>
-```bash CLI
-meshagent room dataset index-create \
-  --room myroom \
-  --table articles \
-  --column content \
-  --kind fts
-
-```
-```python Python
-await room.datasets.create_full_text_search_index(
-  table="articles",
-  column="content",
-)
-
-```
-```javascript NodeJs
-await room.datasets.createFullTextSearchIndex({
-  table: "articles",
-  column: "content",
-});
-
-```
-```typescript TypeScript
-await room.datasets.createFullTextSearchIndex({
-  table: "articles",
-  column: "content",
-});
-
-```
-```dart Dart
-await room.datasets.createFullTextSearchIndex(
-  table: "articles",
-  column: "content",
-);
-
-```
-```dotnet C#
-await room.Datasets.CreateFullTextSearchIndex(
-  "articles",
-  "content"
+  new DatasetIndexConfig
+  {
+    Column = "embedding",
+    IndexType = "IVF_PQ",
+    NumPartitions = 32,
+    NumSubVectors = 8,
+  }
 );
 
 ```
@@ -1021,7 +980,7 @@ await room.datasets.dropIndex(
 - **Description**: Lists the indexes currently defined on a table.
 - **Parameters**:
   - **table**: The name of the table for which to list indexes.
-- **Returns**: A list of index entries. Python and Dart return typed `TableIndex` objects; JS/TS and .NET return plain objects with the same `name`, `columns`, and `type` fields.
+- **Returns**: A list of index entries. Entries include `name`, `columns`, `type`, `fields`, `type_url`, `num_rows_indexed`, `num_segments`, `total_size_bytes`, `details`, and `statistics`.
 
 **Example**:
 <CodeGroup>
