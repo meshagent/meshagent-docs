@@ -429,6 +429,7 @@ $ meshagent session [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List recent sessions
 * `show`: Show events for a session
+* `traces`: List trace spans for a session as a tree
 
 ### `meshagent session list`
 
@@ -464,6 +465,30 @@ $ meshagent session show [OPTIONS] SESSION_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent session traces`
+
+List trace spans for a session as a tree
+
+**Usage**:
+
+```console
+$ meshagent session traces [OPTIONS] [SESSION_ID]
+```
+
+**Arguments**:
+
+* `[SESSION_ID]`: Session id to inspect
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Use the most recent session for this room
+* `--trace-id TEXT`: Only include spans from this trace
+* `--name TEXT`: Only include spans whose name contains this text
+* `--min-duration TEXT`: Only include spans at or above this duration, e.g. 500ms or 2s
+* `--attrs`: Include span attributes
 * `--help`: Show this message and exit.
 
 ## `meshagent ask`
@@ -2234,6 +2259,7 @@ $ meshagent scheduled-task [OPTIONS] COMMAND [ARGS]...
 * `add`: Add a scheduled task.
 * `list`: List scheduled tasks.
 * `update`: Update a scheduled task.
+* `runs`: List runs for a scheduled task.
 * `delete`: Delete a scheduled task.
 
 ### `meshagent scheduled-task add`
@@ -2250,15 +2276,7 @@ $ meshagent scheduled-task add [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name
-* `-q, --queue TEXT`: Queue name to dispatch the task to  [required]
-* `-s, --schedule TEXT`: Cron schedule for task execution  [required]
-* `--payload TEXT`: JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
-* `--payload-file TEXT`: Path to a file containing JSON payload
-* `--id TEXT`: Optional task id
-* `--once`: Run once and then deactivate
-* `--active / --inactive`: Initial active state  [default: active]
-* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
-* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
+* `-f, --file TEXT`: Path to a ScheduledTaskSpec YAML file  [required]
 * `--help`: Show this message and exit.
 
 ### `meshagent scheduled-task list`
@@ -2301,16 +2319,29 @@ $ meshagent scheduled-task update [OPTIONS] TASK_ID
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `-r, --room TEXT`: Updated room name
-* `-q, --queue TEXT`: Updated queue name
-* `-s, --schedule TEXT`: Updated cron schedule
-* `--payload TEXT`: Updated JSON payload to enqueue (for example &#x27;&#123;&quot;action&quot;:&quot;sync&quot;&#125;&#x27;)
-* `--payload-file TEXT`: Path to a file containing updated JSON payload
-* `--active`: Mark the task active
-* `--inactive`: Mark the task inactive
-* `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
-* `--storage-write-path TEXT`: Optional room storage folder to write scheduled payloads into
-* `--clear-storage-write-path`: Clear the stored room storage folder for this task
+* `-f, --file TEXT`: Path to a replacement ScheduledTaskSpec YAML file  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent scheduled-task runs`
+
+List runs for a scheduled task.
+
+**Usage**:
+
+```console
+$ meshagent scheduled-task runs [OPTIONS] TASK_ID
+```
+
+**Arguments**:
+
+* `TASK_ID`: Scheduled task id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--count INTEGER`: Maximum number of runs to return  [default: 100]
+* `--offset INTEGER`: Row offset for pagination  [default: 0]
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ### `meshagent scheduled-task delete`
@@ -3735,7 +3766,6 @@ $ meshagent room dataset [OPTIONS] COMMAND [ARGS]...
 * `delete`: Delete rows from a room dataset table.
 * `search`: Search rows in a room dataset table.
 * `sql`: Execute SQL against room dataset tables.
-* `sql-exec`: Execute a SQL statement that does not...
 * `optimize`: Optimize a room dataset table.
 * `stats`: Show statistics for a room dataset table.
 * `version`: List versions for a room dataset table.
@@ -4091,32 +4121,6 @@ $ meshagent room dataset sql [OPTIONS]
 * `--tables-json TEXT`: JSON array of table refs (e.g. &#x27;[&#123;&quot;name&quot;:&quot;users&quot;,&quot;alias&quot;:&quot;u&quot;,&quot;namespace&quot;:[&quot;prod&quot;]&#125;]&#x27;)
 * `--tables-file TEXT`: Path/URL to JSON array of table refs (same format as --tables-json)
 * `--params-json TEXT`: JSON object of SQL parameters for DataFusion param binding
-* `--params-file TEXT`: Path/URL to JSON object of SQL parameters
-* `--branch TEXT`: Dataset branch name (defaults to main)
-* `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
-* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
-* `--help`: Show this message and exit.
-
-#### `meshagent room dataset sql-exec`
-
-Execute a SQL statement that does not return rows.
-
-**Usage**:
-
-```console
-$ meshagent room dataset sql-exec [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `-q, --query TEXT`: SQL statement to execute  [required]
-* `-t, --table TEXT`: Table name to register in SQL context (repeatable)
-* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
-* `--tables-json TEXT`: JSON array of table refs
-* `--tables-file TEXT`: Path/URL to JSON array of table refs
-* `--params-json TEXT`: JSON object of SQL parameters, sent as one Arrow parameter row
 * `--params-file TEXT`: Path/URL to JSON object of SQL parameters
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
@@ -5210,7 +5214,8 @@ $ meshagent room connect [OPTIONS] [COMMAND]...
 * `--room TEXT`: Room name
 * `-e, --env TEXT`: Set environment variable as KEY=VALUE
 * `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
-* `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --meshagent-token and --env-secret. When set, room connect mints a participant token locally.
+* `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --role, --meshagent-token, and --env-secret. When set, room connect mints a participant token locally.
+* `--role TEXT`: Participant role for locally minted tokens. Requires --identity and defaults to agent.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
 * `--help`: Show this message and exit.
 

@@ -54,21 +54,46 @@ Use `prompt` when you want room prompt files such as `room:///prompts/support-su
 
 ## Schedule recurring work
 
-Scheduled tasks enqueue work on a cron schedule.
+Scheduled tasks run on a cron schedule. Schedules must be at least 15 minutes apart.
 
 Add a task that sends one job into the same queue every day:
 
 ```bash
+cat > support-summary-task.yaml <<'YAML'
+version: v1
+kind: ScheduledTask
+schedule: 30 17 * * *
+queue:
+  name: support-jobs
+  payload:
+    prompt: Generate the daily support summary and save it to storage.
+YAML
+
 meshagent scheduled-task add \
   --room myroom \
-  --queue support-jobs \
-  --schedule "30 17 * * *" \
-  --payload '{"prompt":"Generate the daily support summary and save it to storage."}'
+  --file support-summary-task.yaml
 ```
 
 This creates a project-level scheduled task that targets the `support-jobs` queue in `myroom`.
 
 Scheduled-task payloads use the same queue message format, so you can also send structured `prompt` or `content` payloads and thread templates when the target consumer is a MeshAgent queue channel.
+
+Scheduled tasks can also start a container directly by using the `container` target in the same `ScheduledTaskSpec` file:
+
+```bash
+cat > hourly-container-task.yaml <<'YAML'
+version: v1
+kind: ScheduledTask
+schedule: 0 * * * *
+container:
+  image: alpine:latest
+  command: echo scheduled
+YAML
+
+meshagent scheduled-task add \
+  --room myroom \
+  --file hourly-container-task.yaml
+```
 
 List scheduled tasks:
 
@@ -80,8 +105,13 @@ Update a scheduled task:
 
 ```bash
 meshagent scheduled-task update TASK_ID \
-  --schedule "0 18 * * *" \
-  --active
+  --file support-summary-task.yaml
+```
+
+View recent task runs:
+
+```bash
+meshagent scheduled-task runs TASK_ID
 ```
 
 Delete a scheduled task:
