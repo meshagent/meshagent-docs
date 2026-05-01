@@ -6875,6 +6875,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `inspect`: Inspect a table schema in a room dataset.
 * `install`: Install required tables from a...
 * `create`: Create a room dataset table with optional...
+* `import`: Import a local Arrow, CSV, TSV, Parquet,...
 * `drop`: Drop a room dataset table.
 * `add-columns`: Add columns to a room dataset table.
 * `drop-columns`: Drop columns from a room dataset table.
@@ -6990,6 +6991,31 @@ $ meshagent   create [OPTIONS]
 * `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. CLI shorthand types: int, bool, date, timestamp, float, text, json, uuid, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
 * `--data-json TEXT`: Initial rows (JSON list)
 * `--data-file TEXT`: Path to JSON file with initial rows
+* `--help`: Show this message and exit.
+
+#### `meshagent   import`
+
+Import a local Arrow, CSV, TSV, Parquet, JSON, or Excel file into a table.
+
+**Usage**:
+
+```console
+$ meshagent   import [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-t, --table TEXT`: Table name  [required]
+* `-f, --file TEXT`: Local file to import  [required]
+* `--mode TEXT`: Import mode: create, replace, merge  [default: create]
+* `--format TEXT`: Input format: auto, json, arrow, csv, tsv, parquet, excel  [default: auto]
+* `--on TEXT`: Column to match when --mode merge
+* `--sheet TEXT`: Excel worksheet name for --format excel
+* `--batch-size INTEGER`: Rows per imported batch for Parquet, JSON, and Excel  [default: 8192]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   drop`
@@ -7189,6 +7215,8 @@ $ meshagent   sql [OPTIONS]
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--format TEXT`: Output format: table, json, arrow, csv, tsv, parquet, excel  [default: table]
+* `-o, --output TEXT`: Write output to this file path instead of stdout
 * `--help`: Show this message and exit.
 
 #### `meshagent   optimize`
@@ -7530,6 +7558,7 @@ $ meshagent   [OPTIONS] COMMAND [ARGS]...
 * `inspect`: Inspect a table schema in a room dataset.
 * `install`: Install required tables from a...
 * `create`: Create a room dataset table with optional...
+* `import`: Import a local Arrow, CSV, TSV, Parquet,...
 * `drop`: Drop a room dataset table.
 * `add-columns`: Add columns to a room dataset table.
 * `drop-columns`: Drop columns from a room dataset table.
@@ -7645,6 +7674,31 @@ $ meshagent   create [OPTIONS]
 * `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. CLI shorthand types: int, bool, date, timestamp, float, text, json, uuid, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
 * `--data-json TEXT`: Initial rows (JSON list)
 * `--data-file TEXT`: Path to JSON file with initial rows
+* `--help`: Show this message and exit.
+
+#### `meshagent   import`
+
+Import a local Arrow, CSV, TSV, Parquet, JSON, or Excel file into a table.
+
+**Usage**:
+
+```console
+$ meshagent   import [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-t, --table TEXT`: Table name  [required]
+* `-f, --file TEXT`: Local file to import  [required]
+* `--mode TEXT`: Import mode: create, replace, merge  [default: create]
+* `--format TEXT`: Input format: auto, json, arrow, csv, tsv, parquet, excel  [default: auto]
+* `--on TEXT`: Column to match when --mode merge
+* `--sheet TEXT`: Excel worksheet name for --format excel
+* `--batch-size INTEGER`: Rows per imported batch for Parquet, JSON, and Excel  [default: 8192]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch TEXT`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent   drop`
@@ -7844,6 +7898,8 @@ $ meshagent   sql [OPTIONS]
 * `--branch TEXT`: Dataset branch name (defaults to main)
 * `-v, --version INTEGER`: Historical table version to read (defaults to latest on the branch)
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--format TEXT`: Output format: table, json, arrow, csv, tsv, parquet, excel  [default: table]
+* `-o, --output TEXT`: Write output to this file path instead of stdout
 * `--help`: Show this message and exit.
 
 #### `meshagent   optimize`
