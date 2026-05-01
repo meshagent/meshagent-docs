@@ -1,20 +1,28 @@
 ---
 title: Scheduled Tasks
-description: Create project-level scheduled tasks that enqueue work into room queues.
+description: Create project-level scheduled tasks that enqueue work into room queues or start containers.
 ---
 
-Scheduled tasks are project-level triggers that enqueue work into room queues on a schedule.
+Scheduled tasks are project-level triggers that either enqueue work into room queues or start containers on a schedule.
 
-A scheduled task sends a message into a queue on a schedule. An agent or service in that room reads from the queue and does the work. The task lives at the project level even when it targets one room. For the queue and worker side of that workflow, see [Queues and Scheduled Tasks](../agents/queues_and_scheduled_tasks).
+A scheduled task uses a `ScheduledTaskSpec` file. The spec chooses exactly one target: `queue` or `container`. The room is selected when the task is created or updated, not inside the spec.
 
 ## Create a scheduled task
 
 ```bash
+cat > support-summary-task.yaml <<'YAML'
+version: v1
+kind: ScheduledTask
+schedule: 30 17 * * *
+queue:
+  name: support-jobs
+  payload:
+    prompt: Generate the daily support summary.
+YAML
+
 meshagent scheduled-task add \
   --room support \
-  --queue support-jobs \
-  --schedule "30 17 * * *" \
-  --payload '{"prompt":"Generate the daily support summary."}'
+  --file support-summary-task.yaml
 ```
 
 This creates a scheduled task in the active project that enqueues work into the `support-jobs` queue in the `support` room.
@@ -24,11 +32,41 @@ The payload can be any JSON value. For MeshAgent queue consumers, that includes 
 Example:
 
 ```bash
+cat > hourly-support-task.yaml <<'YAML'
+version: v1
+kind: ScheduledTask
+schedule: 0 * * * *
+queue:
+  name: support-jobs
+  payload:
+    thread_id: /threads/support/{YYYY}/{MM}/{DD}/{HH}/summary.thread
+    prompt:
+      - type: file
+        url: room:///prompts/hourly-summary.md
+      - type: text
+        text: Generate the hourly support summary.
+YAML
+
 meshagent scheduled-task add \
   --room support \
-  --queue support-jobs \
-  --schedule "0 * * * *" \
-  --payload '{"thread_id":"/threads/support/{YYYY}/{MM}/{DD}/{HH}/summary.thread","prompt":[{"type":"file","url":"room:///prompts/hourly-summary.md"},{"type":"text","text":"Generate the hourly support summary."}]}'
+  --file hourly-support-task.yaml
+```
+
+To start a container instead of writing to a queue, use `container`:
+
+```bash
+cat > container-task.yaml <<'YAML'
+version: v1
+kind: ScheduledTask
+schedule: 0 * * * *
+container:
+  image: alpine:latest
+  command: echo scheduled
+YAML
+
+meshagent scheduled-task add \
+  --room support \
+  --file container-task.yaml
 ```
 
 ## Inspect and manage scheduled tasks
@@ -44,8 +82,14 @@ Update a task:
 
 ```bash
 meshagent scheduled-task update TASK_ID \
-  --schedule "0 18 * * *" \
-  --active
+  --room support \
+  --file support-summary-task.yaml
+```
+
+List runs for a task:
+
+```bash
+meshagent scheduled-task runs TASK_ID
 ```
 
 Delete a task:
@@ -59,6 +103,8 @@ meshagent scheduled-task delete TASK_ID
 - Use [MeshAgent Studio](../interfaces/meshagent_studio) when you want the main UI flow.
 - Use the CLI when you want quick setup or automation.
 - Use the [REST API](../rest_api/overview) when you need programmatic provisioning.
+
+Schedules must be at least 15 minutes apart.
 
 If you want a recurring turn owned by one agent inside a service manifest, use `agents[].heartbeat` instead of a separate scheduled task.
 
