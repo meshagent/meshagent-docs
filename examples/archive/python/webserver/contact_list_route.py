@@ -4,7 +4,7 @@ from html import escape
 
 from aiohttp import web
 
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 
 METHODS = ["GET"]
 
@@ -121,7 +121,7 @@ _PAGE_HTML = """<!doctype html>
       <header>
         <h1>Saved contacts</h1>
         <div class="meta">
-          <p>Recent form submissions stored in the MeshAgent room database.</p>
+          <p>Recent form submissions stored in the MeshAgent room dataset.</p>
           <span class="badge">{total_count} total</span>
         </div>
       </header>
@@ -166,17 +166,17 @@ async def handler(*, room, req: web.Request) -> web.StreamResponse:
     if req.method != "GET":
         return web.Response(status=405)
 
-    await room.database.create_table_with_schema(
+    await room.datasets.create_table_with_schema(
         name="contacts",
         schema={
-            "name": TextDataType(),
-            "email": TextDataType(),
-            "message": TextDataType(),
+            "name": pa.string(),
+            "email": pa.string(),
+            "message": pa.string(),
         },
         mode="create_if_not_exists",
         data=None,
     )
-    contacts = await room.database.search(table="contacts")
+    contacts = await room.datasets.search(table="contacts")
     html = _PAGE_HTML.format(
         total_count=len(contacts),
         list_html=_render_contacts(contacts),

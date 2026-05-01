@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import logging
 from meshagent.api import RoomClient
-from meshagent.api.room_server_client import TextDataType
+import pyarrow as pa
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--room", required=True, help="Room name (creates if missing)")
@@ -21,11 +21,11 @@ async def main():
             log.info(f"Connected to room: {room.room_name}")
             # 2. ensure the tasks table exists
             try:
-                await room.database.create_table_with_schema(
+                await room.datasets.create_table_with_schema(
                     name="tasks",
                     schema={
-                        "task_id": TextDataType(),
-                        "task_description": TextDataType(),
+                        "task_id": pa.string(),
+                        "task_description": pa.string(),
                     },
                     mode="overwrite",  # change to "overwrite" if you want a clean slate each run
                     data=None,

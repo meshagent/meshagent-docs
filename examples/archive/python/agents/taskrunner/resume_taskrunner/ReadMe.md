@@ -1,6 +1,6 @@
 # Resume Processing Example
 
-This sample wires up a resume-processing workflow inside a MeshAgent room. It creates tables in the room database to track candidates, open roles, and candidate role scores. It also uses a MailBot agent for resume processing. Candidates email the MailBot who stores their resume and candidate details in the room. 
+This sample wires up a resume-processing workflow inside a MeshAgent room. It creates tables in the room dataset to track candidates, open roles, and candidate role scores. It also uses a MailBot agent for resume processing. Candidates email the MailBot who stores their resume and candidate details in the room. 
 
 Once the candidate information is stored, another agent compares the candidates background to open roles and suggests matches. 
 
@@ -17,7 +17,7 @@ Once the candidate information is stored, another agent compares the candidates 
 
 Now we can test the agent out locally before deploying: 
 
-1. Run the hosted toolkit in the resume_runner file. We will give this toolkit to the mail agent so it can update the `candidates` table in the database with information about each candidate.
+1. Run the hosted toolkit in the resume_runner file. We will give this toolkit to the mail agent so it can update the `candidates` table in the dataset with information about each candidate.
 
     `meshagent service run mailbot_toolkit.py --room resume`
 
@@ -29,7 +29,7 @@ Now we can test the agent out locally before deploying:
 3. Now let's email the agent a resume!
 
 4. Ask about the candidates who we've recieved resume's from. For example: 
-`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates"], "read_only": false}]}'`
+`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"Do we have any applications from Parsa","model":"gpt-5.2","tools":[{"name":"datasets", "tables":["candidates"], "read_only": false}]}'`
 
 From UI: 
 ```json
@@ -40,7 +40,7 @@ From UI:
       "name": "storage"
     },
     {
-      "name": "database",
+      "name": "datasets",
       "tables": ["open_roles"],
       "read_only": false
     }
@@ -57,7 +57,7 @@ From UI:
       "name": "storage"
     },
     {
-      "name": "database",
+      "name": "datasets",
       "tables": ["open_roles", "candidates", "candidate_role_scores"],
       "read_only": false
     }
@@ -66,11 +66,11 @@ From UI:
 }
 ```
 
-`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"datasets", "tables":["open_roles"], "read_only": false}]}'`
 
-`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"database", "tables":["open_roles"], "read_only": false}]}'`
+`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"What roles do we have open?","model":"gpt-5.2","tools":[{"name":"datasets", "tables":["open_roles"], "read_only": false}]}'`
 
-`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"Rate Tula Masterman on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"database", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}`
+`meshagent room agents invoke-tool --room=resume --toolkit=meshagent.runner --tool=run_meshagent.runner_task --arguments '{"prompt":"Rate Tula Masterman on a scale from 1-10 where 1 is a poor fit and 10 is a perfect fit","model":"gpt-5.2","tools":[{"name":"datasets", "tables":["candidates", "open_roles", "candidate_role_scores"], "read_only": false}]}`
 
 
 ## Notes / to do 
@@ -82,7 +82,7 @@ From UI:
 2. Used assistant to research and create job descriptions
 3. Used a process-backed mail channel and gave it a custom process resume tool which :
     a. Moves file to resumes folder
-    b. Invokes meshagent.runner with the storage, web search, and database toolkit
+    b. Invokes meshagent.runner with the storage, web search, and dataset toolkit
     c. Has custom prompt in the room for modifying
-4. Used in room taskrunner with database toolkits to update other tables like open_roles table and candidates table 
+4. Used in room taskrunner with dataset toolkits to update other tables like open_roles table and candidates table 
 5. Used in room assistant to ask about the resumes / open roles and how well they match 
