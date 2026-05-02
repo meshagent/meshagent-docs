@@ -9,7 +9,7 @@ With [MeshAgent Studio](https://studio.meshagent.com) you can:
 - Inspect [sessions](../room_api/sessions) (logs, traces, metrics) for live debugging.
 - Create and rotate [API keys](../project_admin/api_keys).
 - Manage room-scoped and project-scoped [services](../services/deployment/deploy_services).
-- Manage project registries, [secrets](../secrets/overview), image pull secrets, [webhooks](../project_admin/webhooks), [routes](../project_admin/routes), [scheduled tasks](../project_admin/scheduled_tasks), [mailboxes](../project_admin/mailboxes), [integrations](../project_admin/integrations), and [OAuth clients](../project_admin/oauth).
+- Manage project registries, [secrets](../secrets/overview), image pull secrets, [webhooks](../project_admin/webhooks), [routes](../project_admin/routes), [scheduled tasks](../project_admin/scheduled_tasks), [mailboxes](../project_admin/mailboxes), [feeds](../project_admin/feeds), [integrations](../project_admin/integrations), and [OAuth clients](../project_admin/oauth).
 - Inspect files, messages, datasets, memory, images, containers, services, and terminals inside a room.
 - Open [billing](../project_admin/billing) when a project needs more credits.
 
@@ -20,20 +20,20 @@ MeshAgent Studio opens to an active project. Use the dropdown in the upper-left 
 ## Project navigation
 
 The main project sidebar depends on your project role:
-- **Everyone**: **Rooms**, [**LLM Proxy**](../agents/routing/llm_proxy)
+- **Everyone**: **Rooms**, [**Feeds**](../project_admin/feeds), [**LLM Proxy**](../agents/routing/llm_proxy)
 - **Developers and Admins**: [**Sessions**](../room_api/sessions), **Registries**, [**Routes**](../project_admin/routes), [**Scheduled Tasks**](../project_admin/scheduled_tasks), [**Mailboxes**](../project_admin/mailboxes), [**System Services**](../services/deployment/deploy_services), [**Project Secrets**](../secrets/project_secrets), [**Webhooks**](../project_admin/webhooks), [**OAuth Clients**](../project_admin/oauth)
 - **Admins only**: [**API Keys**](../project_admin/api_keys), [**Integrations**](../project_admin/integrations)
 
 Some project pages are opened contextually instead of living in the permanent sidebar. For example, Studio links to **Billing** when a project is out of credits or after checkout flows.
 
 ## Rooms
-Use rooms to isolate agent runtime environments. Rooms are secure environments where humans and agents can collaborate and share context. Rooms can have their own services, scheduled tasks, routes, and mailboxes.
+Use rooms to isolate agent runtime environments. Rooms are secure environments where humans and agents can collaborate and share context. Rooms can have their own services, scheduled tasks, routes, mailboxes, and feed subscriptions.
 
 From the MeshAgent Studio UI you can:
 - **Create** a room with **New Room**
 - Toggle between **My Rooms** and **All Rooms**. **All Rooms** is available to developers and admins.
 - Open a room from the list to enter its workspace.
-- Use the room menu to open **Edit**, **Services**, **Scheduled Tasks**, **Mailboxes**, **Routes**, **Permissions**, or **Delete**.
+- Use the room menu to open **Edit**, **Services**, **Scheduled Tasks**, **Mailboxes**, **Feeds**, **Routes**, **Permissions**, or **Delete**.
 
 ## Sessions
 Monitor and debug live and recent room sessions. A session starts when a room starts and stops when the room stops. For the API and data model behind what you see here, see [Sessions](../room_api/sessions).
@@ -67,6 +67,7 @@ The container-related tabs serve different jobs:
 - **Room Services**: View, add, remove, and update services tied to this room
 - **Scheduled Tasks**: Manage tasks that enqueue work on a schedule
 - **Mailboxes**: Manage mailboxes that route into this room
+- **Feeds**: Manage visible feeds and storage subscriptions for this room
 - **Routes**: Manage domains and ports that route into this room
 - **Keychain**: Review and manage room keychain entries
 - **View Toggles**: Show/hide File Browser, File Previews, Messaging, and Developer Console
@@ -130,6 +131,13 @@ Provision room-scoped mailboxes that agents can read from or send through. See [
 - Create mailboxes and assign them to rooms
 - Map incoming mail to queues so worker agents can process it asynchronously
 - Edit or delete mailboxes when your routing changes
+
+## Feeds
+Use **Feeds** to manage project feeds and room storage subscriptions. See [Feeds](../project_admin/feeds) for the full model and examples:
+- Create feeds and choose visibility, schema validation, and paused state
+- Publish a single JSON message or import a JSONL file into a feed
+- Open a room-scoped **Feeds...** view to manage which feed subscriptions deliver into that room
+- Inspect subscriptions that write feed batches into room storage paths
 
 ## Billing
 Billing is available through direct Studio flows when a project needs attention, but the underlying billing surface lives in [MeshAgent Accounts](./accounts). From the billing page you can:

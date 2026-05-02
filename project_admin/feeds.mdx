@@ -1,0 +1,186 @@
+---
+title: Feeds
+description: Create project feeds that validate JSON and fan out structured data into room storage.
+---
+
+Feeds are project-level JSON distribution channels. Use them when you want to publish structured data once and have MeshAgent deliver it into room storage in one or more rooms.
+
+A feed is not a queue and it does not execute work inside a room. In MeshAgent, the feed is the project-side source of messages, and feed subscriptions define which rooms and storage paths receive those messages.
+
+## How feeds work
+
+- Create a feed at the project level with a name, visibility, and optional message schema.
+- Add one or more subscriptions. Each subscription points to one room and one storage path prefix such as `feeds/orders/`.
+- Publish JSON messages to the feed one at a time or as a batch.
+- MeshAgent fans those messages out to every subscription and writes them into room storage as `.jsonl` files.
+- Delivery is batched for performance. A message can take up to about a minute to appear in room storage.
+
+The key distinction is that a feed does not deliver directly into room chat or a room queue. It writes structured files into room storage so agents, services, or operators in that room can consume them there.
+
+## What a subscription does
+
+A feed subscription is the delivery rule for one room.
+
+- It connects one feed to one room.
+- It writes into one storage path prefix inside that room.
+- One feed can have multiple subscriptions, which lets you publish once and land the same data in multiple rooms.
+- The room and path are fixed after creation. If you want a different destination, recreate the subscription.
+
+Use `/` if you want the room root. For normal usage, pick a dedicated prefix such as `feeds/orders/` or `imports/events/` so feed output stays easy to inspect.
+
+## When to use feeds
+
+Use feeds when you want to:
+
+- distribute structured JSON events into room storage
+- import external datasets or event streams into a room
+- fan the same data out to multiple rooms without writing your own delivery code
+- keep project-managed ingestion separate from room-local consumption
+
+Typical examples include syncing business events into ops rooms, importing records for an agent to process later, or delivering the same event stream into multiple rooms that each run their own analysis.
+
+## When not to use feeds
+
+Use the nearby MeshAgent feature that matches the kind of delivery you need:
+
+| Need | Use |
+| --- | --- |
+| Land structured JSON files in room storage | **Feeds** |
+| Enqueue work for agents or workers to process immediately | [Queues](../room_api/queue) or [Scheduled Tasks](./scheduled_tasks) |
+| Route inbound email into a room | [Mailboxes](./mailboxes) |
+| Accept HTTP traffic or external webhooks into a room | [Routes](./routes) |
+| Send MeshAgent events out to your own systems | [Webhooks](./webhooks) |
+
+If the consumer expects a queue message, use a queue. If the consumer expects files in room storage, use a feed.
+
+## Create a feed
+
+You can manage feeds from [MeshAgent Studio](../interfaces/meshagent_studio), the CLI, or the SDKs.
+
+In Studio:
+
+- Open the project's **Feeds** page to create and manage feeds for the project.
+- Open **Feeds...** from a room menu when you want to see visible feeds for that room and manage that room's subscriptions.
+
+From the CLI, create the feed first:
+
+```bash
+meshagent feed create \
+  --name orders \
+  --description "Order events for room imports" \
+  --visibility project \
+  --message-schema-file order-event.schema.json
+```
+
+Then attach a room subscription:
+
+```bash
+meshagent subscription create \
+  --feed-id FEED_ID \
+  --room ops-room \
+  --path feeds/orders/
+```
+
+Choose visibility carefully when you create the feed:
+
+- `public`: anyone who can see the feed can subscribe a room to it
+- `project`: any project member can read it and attach room subscriptions
+- `private`: only project developers can read it or manage subscriptions
+
+Visibility is a creation-time choice. In Studio and the public SDK surface, you do not change it later.
+
+## Validate messages with a schema
+
+A feed can define an optional JSON schema for the messages it accepts.
+
+- If you leave the schema empty, the feed accepts any valid JSON value.
+- If you add a schema, MeshAgent validates every published message before delivery.
+- If a message does not match, the publish call fails and nothing is delivered for that message.
+
+This is useful when multiple tools or services publish into the same feed and you want a single contract for what is allowed to enter room storage.
+
+## Publish messages
+
+Publish one JSON message:
+
+```bash
+meshagent feed send FEED_ID \
+  --message '{"id":123,"status":"paid"}'
+```
+
+Publish a batch from a JSONL file:
+
+```bash
+meshagent feed send-batch FEED_ID \
+  --jsonl-file orders.jsonl
+```
+
+Each line in the JSONL file is treated as one message. MeshAgent then batches feed delivery into `.jsonl` files in room storage.
+
+Paused feeds reject publishes and subscription changes. This gives you a clean way to stop new data from landing while you review or reconfigure downstream consumers.
+
+## Use feeds from the SDKs
+
+The SDKs mirror the same lifecycle as Studio and the CLI: create the feed, add subscriptions, then publish messages.
+
+<CodeGroup>
+```python Python
+feed = await client.create_feed(
+    project_id=project_id,
+    name="orders",
+    description="Order events for room imports",
+    visibility="project",
+)
+
+await client.create_feed_subscription(
+    project_id=project_id,
+    feed_id=feed.id,
+    room="ops-room",
+    path="feeds/orders/",
+)
+
+await client.publish_feed_message(
+    project_id=project_id,
+    feed_id=feed.id,
+    message={"id": 123, "status": "paid"},
+)
+```
+
+```typescript TypeScript
+const feed = await client.createFeed({
+  projectId,
+  name: "orders",
+  description: "Order events for room imports",
+  visibility: "project",
+});
+
+await client.createFeedSubscription({
+  projectId,
+  feedId: feed.id,
+  room: "ops-room",
+  path: "feeds/orders/",
+});
+
+await client.publishFeedMessage({
+  projectId,
+  feedId: feed.id,
+  message: { id: 123, status: "paid" },
+});
+```
+</CodeGroup>
+
+## Permissions
+
+- Developers create, update, delete, pause, resume, and publish feeds.
+- Feed visibility controls who can read a feed and who can attach room subscriptions to it.
+- Creating or changing a subscription still requires room-level permission on the target room.
+- Project members only see `public` and `project` feeds in shared feed listings.
+
+## Related pages
+
+- [Projects](./projects)
+- [MeshAgent Studio](../interfaces/meshagent_studio)
+- [Queue API](../room_api/queue)
+- [Mailboxes](./mailboxes)
+- [Routes](./routes)
+- [Webhooks](./webhooks)
