@@ -10,7 +10,7 @@ The OpenAI Responses adapter is our reference `LLMAdapter` implementation. It en
 - **Tool bundling:** Converts the supplied toolkits into OpenAI tool definitions (both standard JSON function tools and OpenAI-native tools like `computer_use_preview`, `web_search_preview`, `image_generation`).
 - **Streaming support:** Consumes the streaming response API, emitting events such as reasoning summaries, partial content, and tool call updates.
 - **Parallel tool calls:** Optionally enables OpenAI’s `parallel_tool_calls` setting (disabled automatically for models that do not support it).
-- **Structured output:** If `output_schema` is provided to `next()`, requests JSON schema output and validates the result.
+- **Structured output:** If `output_schema` is provided to `create_response()`, requests JSON schema output and validates the result.
 - **Automatic compaction:** Uses OpenAI Responses auto-compaction (`context_management`) by default.
 
 ## Constructor parameters
@@ -56,7 +56,7 @@ The adapter includes several OpenAI native tool wrappers. Agents can use them di
 - **Reasoning** - `ReasoningTool`
 
 ## Handling a turn
-When `next()` is called it:
+When `create_response()` is called it:
 1. **Bundles tools** - Collects the tools from your toolkits and packages them for OpenAI's API
 2. **Calls the model** - Sends messages and tools to OpenAI's API
 3. **Handles responses** - Processes text, tool calls, or structured output

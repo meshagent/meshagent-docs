@@ -45,16 +45,16 @@ The ``LLMAdapter`` supplies the methods your implementation uses to run a full c
 - `validate(response, output_schema)`: Validate structured output using JSON Schema.
 
 ### Context compaction
-LLM adapters can optionally compact a session context before a new request when the context is too large for the model. The base class provides `needs_compaction()` and `compact()` as hooks; the default implementations do nothing. If your adapter supports compaction, check `needs_compaction()` early in `next()` and mutate the `AgentSessionContext` in-place (for example, by summarizing older messages or using a provider's compaction API). The built-in [OpenAI Responses Adapter](./openai_responses_adapter) performs this automatically.
+LLM adapters can optionally compact a session context before a new request when the context is too large for the model. The base class provides `needs_compaction()` and `compact()` as hooks; the default implementations do nothing. If your adapter supports compaction, check `needs_compaction()` early in `create_response()` and mutate the `AgentSessionContext` in-place (for example, by summarizing older messages or using a provider's compaction API). The built-in [OpenAI Responses Adapter](./openai_responses_adapter) performs this automatically.
 
 ### How agents use adapters (conversation turn flow)
 1. The agent resolves toolkits for this turn
-2. The agent calls `llm_adapter.next(...)` with the messages and toolkits
+2. The agent calls `llm_adapter.create_response(...)` with the messages and toolkits
 3. The adapter streams events, executes tool calls, and returns the final result
 
 ### Implementing your own LLM Adapter
 1. **Subclass `LLMAdapter`.** Provide defaults for the model name and optionally a custom `create_session()`. 
-2. **Implement `next()`.** Use your provider’s SDK or API to send the session context, include tool definitions derived from the supplied toolkits, stream result, execute any tool calls, and append tool outputs back to the session context. 
+2. **Implement `create_response()`.** Use your provider’s SDK or API to send the session context, include tool definitions derived from the supplied toolkits, stream result, execute any tool calls, and append tool outputs back to the session context. 
 3. **Bundle native tools (optional).** If your provider works best with provider-native tools, expose them as ordinary `Toolkit` instances and let the caller include those toolkits for the turn.
 4. **Be mindful of cancellation and telemetry.** Make appropriate operations async, apply appropriate timeouts/retries, and emit tracing data if you integrate with OpenTelemetry (the base adapters do).
 

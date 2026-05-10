@@ -5,7 +5,7 @@ title: "Anthropic Messages Adapter"
 The Anthropic Messages adapter is an `LLMAdapter` implementation for Anthropic's Messages API. It enables MeshAgent agents to use Claude models, handle tool calls, and stream responses while preserving MeshAgent toolkit behavior.
 
 ## Key features
-- **Model defaults:** Reads the model name from the constructor (`model=`) or the `ANTHROPIC_MODEL` environment variable. Override per call by passing `model` to `next()`.
+- **Model defaults:** Reads the model name from the constructor (`model=`) or the `ANTHROPIC_MODEL` environment variable. Override per call by passing `model` to `create_response()`.
 - **Max token defaults:** Reads `max_tokens` from the constructor or `ANTHROPIC_MAX_TOKENS`.
 - **Session context defaults:** Creates `AgentSessionContext(system_role=None)` so system/developer prompts come from the caller.
 - **Tool calling:** Converts the supplied toolkits into Anthropic `tools` definitions and executes `tool_use` requests.
@@ -48,7 +48,7 @@ When `context_management="auto"` is enabled, the adapter uses Anthropic's `compa
 Anthropic's official MCP connector can be enabled by adding an MCP toolkit to your toolkits list. The adapter applies MCP middleware to the request, which injects `mcp_servers` and an MCP toolset into the top-level `tools` array (and ensures the required `betas` flag is present).
 
 ## Handling a turn
-When `next()` is called it:
+When `create_response()` is called it:
 1. **Bundles tools** - Converts toolkits into Anthropic tool definitions.
 2. **Builds the request** - Converts the chat context into Anthropic blocks and constructs the request payload.
 3. **Calls the model** - Sends the request (streaming if `event_handler` is provided).
