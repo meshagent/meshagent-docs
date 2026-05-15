@@ -33,6 +33,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `mcp`: Bridge MCP servers into MeshAgent rooms
 * `secret`: Manage secrets for your project.
 * `rooms`: Create, list, and manage rooms in a project
+* `agent`: Create, list, and manage managed agents in...
 * `mailbox`: Manage mailboxes for your project
 * `feed`: Manage feeds for your project
 * `subscription`: Manage feed subscriptions for your project
@@ -1506,6 +1507,232 @@ $ meshagent rooms get [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`
+* `--help`: Show this message and exit.
+
+## `meshagent agent`
+
+Create, list, and manage managed agents in a project
+
+**Usage**:
+
+```console
+$ meshagent agent [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `secret`: Manage secrets for a managed agent
+* `create`: Create a managed agent in the project.
+* `delete`
+* `update`
+* `list`
+* `get`
+* `use`: Use a managed agent over its websocket...
+
+### `meshagent agent secret`
+
+Manage secrets for a managed agent
+
+**Usage**:
+
+```console
+$ meshagent agent secret [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`
+* `get`
+* `set`
+* `delete`
+
+#### `meshagent agent secret list`
+
+**Usage**:
+
+```console
+$ meshagent agent secret list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Agent name
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent agent secret get`
+
+**Usage**:
+
+```console
+$ meshagent agent secret get [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: Secret ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Agent name
+* `-o, --output TEXT`: output format   [default: json]
+* `--help`: Show this message and exit.
+
+#### `meshagent agent secret set`
+
+**Usage**:
+
+```console
+$ meshagent agent secret set [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: Secret ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Agent name
+* `--secret-name TEXT`: Display name
+* `--type TEXT`: Secret content type  [default: keys]
+* `--data TEXT`: Secret data as a JSON object, for example &#x27;&#123;&quot;OPENAI_API_KEY&quot;:&quot;...&quot;&#125;&#x27;  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent agent secret delete`
+
+**Usage**:
+
+```console
+$ meshagent agent secret delete [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: Secret ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Agent name
+* `--help`: Show this message and exit.
+
+### `meshagent agent create`
+
+Create a managed agent in the project.
+
+**Usage**:
+
+```console
+$ meshagent agent create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-c, --configuration TEXT`: ManagedAgentSpec JSON  [required]
+* `--if-not-exists / --no-if-not-exists`: Do not error if the agent already exists  [default: no-if-not-exists]
+* `--help`: Show this message and exit.
+
+### `meshagent agent delete`
+
+**Usage**:
+
+```console
+$ meshagent agent delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Agent name
+* `--help`: Show this message and exit.
+
+### `meshagent agent update`
+
+**Usage**:
+
+```console
+$ meshagent agent update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--id TEXT`: Agent ID (preferred)
+* `--name TEXT`: Current agent name
+* `-c, --configuration TEXT`: ManagedAgentSpec JSON  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent agent list`
+
+**Usage**:
+
+```console
+$ meshagent agent list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--count INTEGER RANGE`: Max agents to return  [default: 100; 1&lt;=x&lt;=500]
+* `--offset INTEGER RANGE`: Offset for pagination  [default: 0; x&gt;=0]
+* `--order-by TEXT`: Order by column (e.g. &quot;agent_name&quot;, &quot;created_at&quot;)  [default: agent_name]
+* `--filter TEXT`: Lowercase contains filter for agent names
+* `--help`: Show this message and exit.
+
+### `meshagent agent get`
+
+**Usage**:
+
+```console
+$ meshagent agent get [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--name TEXT`: Agent name  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent agent use`
+
+Use a managed agent over its websocket connection.
+
+**Usage**:
+
+```console
+$ meshagent agent use [OPTIONS] [AGENT]
+```
+
+**Arguments**:
+
+* `[AGENT]`: Agent name
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--name TEXT`: Agent name
+* `--thread-path TEXT`: Thread path to open
+* `-m, --message TEXT`: Send one message without opening the TUI
 * `--help`: Show this message and exit.
 
 ## `meshagent mailbox`
