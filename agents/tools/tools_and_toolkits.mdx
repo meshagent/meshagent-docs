@@ -27,7 +27,6 @@ A `Tool` defines one action that an agent or person can perform. The tool declar
 | `title` | `Optional[str]` | `name` | Human-readable display name. |
 | `description` | `Optional[str]` | `""` | Short description of the tool. |
 | `rules` | `Optional[list[str]]` | `None` | Behavioral guidance for LLMs. |
-| `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail shown in UIs. |
 | `defs` | `Optional[dict[str, dict]]` | `None` | Reusable JSON Schema definitions merged into the schema via `$defs`. |
 
 **Method**
@@ -51,13 +50,12 @@ Tools commonly return subclasses of `Content` declared in `meshagent.api.messagi
 
 ### `ToolContext`
 
-`ToolContext` carries the runtime information a tool needs.
+`ToolContext` carries the runtime information a tool needs. If a tool needs room access, use `RoomToolContext` or a room-bound toolkit.
 
 | Property | Description |
 | --- | --- |
 | `caller` | The participant who called the tool. |
 | `on_behalf_of` | The participant a calling agent is acting for, if any. |
-| `caller_context` | Optional caller-specific context data. Useful for chat context, handoffs, or custom workflow state. |
 
 If a tool needs room access, inherit `LocalRoomTool` and use `self.room` inside `execute(...)`. Toolkits and hosting helpers bind the active `RoomClient` before the tool runs.
 
@@ -84,7 +82,6 @@ A `Toolkit` bundles related tools under a single name so callers can discover, i
 | `rules` | `list[str]` | `list[str]` | Optional global guidance that applies to the toolkit. |
 | `title` | `Optional[str]` | `name` | Human-readable toolkit name. |
 | `description` | `Optional[str]` | `""` | Description used for discovery and display in MeshAgent Studio. |
-| `thumbnail_url` | `Optional[str]` | `None` | Icon or thumbnail for the toolkit. |
 | `validation_mode` | `ValidationMode` | `"full"` | Validation policy used when the toolkit is invoked. |
 | `public` | `bool` | `True` | Whether the toolkit should be publicly discoverable when it is hosted in a room. |
 
