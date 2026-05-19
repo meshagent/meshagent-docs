@@ -1,9 +1,9 @@
 ---
 title: Routes
-description: Manage project routes that map domains and published ports into rooms.
+description: Manage project routes that map domains and paths to rooms or managed agents.
 ---
 
-Routes map a domain and published port into a room.
+Routes map a domain to either room HTTP paths or a managed agent websocket.
 
 Use them when you want a stable URL for something running inside a room, such as a web app, webhook endpoint, or HTTP integration.
 
@@ -17,8 +17,8 @@ For deployment basics, see [Service YAML](../services/deployment/deploy_services
 
 - A service in the room listens on an HTTP port.
 - That port is marked as `published` in the service config.
-- The route maps a domain to that room and published port.
-- When a request arrives, MeshAgent resolves the room and port, applies the port's security rules, and then proxies the request to the service.
+- The route maps a domain and one or more paths to that room and published port.
+- When a request arrives, MeshAgent matches the route path, resolves the room and port, applies the port's security rules, and then proxies the request to the service.
 
 ## Create a route
 
@@ -32,6 +32,43 @@ meshagent route create --room my-room --port 5002 --domain my-app.meshagent.app
 ```
 
 3. The route is ready as soon as it is created.
+
+You can also create or update a route from a RouteSpec file:
+
+```yaml
+kind: Route
+version: v1
+metadata:
+  name: my-app
+  annotations: {}
+domain: my-app.meshagent.app
+backend:
+  room:
+    name: my-room
+paths:
+  - path: /
+    pathType: prefix
+    targetPort: 5002
+```
+
+```console
+meshagent route create -f route.yaml
+meshagent route update my-app.meshagent.app -f route.yaml
+```
+
+Managed agent routes use an agent backend and expose the agent websocket on the route domain:
+
+```yaml
+kind: Route
+version: v1
+metadata:
+  name: my-agent
+  annotations: {}
+domain: my-agent.meshagent.app
+backend:
+  agent:
+    name: my-agent
+```
 
 ## Mark the port as published
 
