@@ -2509,6 +2509,7 @@ $ meshagent deploy [OPTIONS] [PATH]
 * `--domain TEXT`: Create or update a room route for the deployed service and return a public URL. Use this with --public when you need an external URL from deploy. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. Requires exactly one published service port.
 * `--extra-port TEXT`: Add an extra route path to DOMAIN as PORT:/path. Can be passed multiple times. The port must already be published by a room service.
 * `--validation-mode TEXT`: Request validation annotation mode for private published service ports: default, cookie, or none.  [default: default]
+* `--template TEXT`: Allowed values: agent, none. agent: MeshAgent mounts room storage at /data, sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a container-scoped MeshAgent token. agent also sets SMTP_PASSWORD to that token, SMTP_USERNAME to the container name, SMTP_PORT to 587, SMTP_HOSTNAME from MESHAGENT_MAIL_DOMAIN when available, plus OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_ROOM_URL, MESHAGENT_ROOM, MESHAGENT_PROJECT_ID, MESHAGENT_SESSION_ID, OTEL_ENDPOINT, OTEL_PYTHON_LOG_LEVEL, and MESHAGENT_MAIL_DOMAIN from the room runtime when available. Manual env values win. none: MeshAgent applies no template defaults.  [default: agent]
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
@@ -5459,6 +5460,7 @@ $ meshagent room container run [OPTIONS]
 * `--participant-name TEXT`: Participant name to associate with the run
 * `--role TEXT`: Role to run the container as  [default: user]
 * `--container-name TEXT`: Optional container name
+* `--template TEXT`: Allowed values: agent, none. agent: MeshAgent mounts room storage at /data, sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a container-scoped MeshAgent token. agent also sets SMTP_PASSWORD to that token, SMTP_USERNAME to the container name, SMTP_PORT to 587, SMTP_HOSTNAME from MESHAGENT_MAIL_DOMAIN when available, plus OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_ROOM_URL, MESHAGENT_ROOM, MESHAGENT_PROJECT_ID, MESHAGENT_SESSION_ID, OTEL_ENDPOINT, OTEL_PYTHON_LOG_LEVEL, and MESHAGENT_MAIL_DOMAIN from the room runtime when available. Manual env values win. none: MeshAgent applies no template defaults.  [default: none]
 * `--help`: Show this message and exit.
 
 ### `meshagent room sync`
@@ -5627,7 +5629,7 @@ $ meshagent room sync update [OPTIONS] PATH
 
 ### `meshagent room connect`
 
-Connect to a room and run a local command with MESHAGENT_API_URL, MESHAGENT_PROJECT_ID, MESHAGENT_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY, and MESHAGENT_ROOM set. Use -- before the local command.
+Connect to a room and run a local command with MESHAGENT_API_URL, MESHAGENT_PROJECT_ID, MESHAGENT_TOKEN, OPENAI_API_KEY, ANTHROPIC_API_KEY, and MESHAGENT_ROOM set by the default agent template. Use -- before the local command.
 
 **Usage**:
 
@@ -5644,6 +5646,7 @@ $ meshagent room connect [OPTIONS] [COMMAND]...
 * `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --role, --meshagent-token, and --env-secret. When set, room connect mints a participant token locally.
 * `--role TEXT`: Participant role for locally minted tokens. Requires --identity and defaults to agent.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
+* `--template TEXT`: Allowed values: agent, none. agent: MeshAgent sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a room-scoped MeshAgent token, and sets OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_PROJECT_ID, and MESHAGENT_ROOM from the connected room unless manually set. none: MeshAgent applies no template defaults.
 * `--help`: Show this message and exit.
 
 ## `meshagent llm`

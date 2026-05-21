@@ -243,6 +243,7 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `image` | string | Yes | Container image (for example `meshagent/cli:default`). |
+| `template` | `"agent"` or `"none"` | No | Runtime defaults to apply when the container starts. Defaults to `"agent"`. |
 | `command` | string | No | Command to execute when the container starts. |
 | `working_dir` | string | No | Absolute working directory used when starting the container command. |
 | `environment` | list | No | Environment variables to set in the container. |
@@ -252,6 +253,37 @@ Defines a container for MeshAgent to run. Fields marked **†** are only availab
 | `on_demand` | boolean | No | When true, the container runs only when explicitly invoked. |
 | `writable_root_fs` | boolean | No | Allow writes to the container's root filesystem for the life of that container instance. Default: read-only. |
 | `private` | boolean | No | Advanced setting that keeps interactive container access private to the owning service. Default: true. |
+
+#### container.template
+
+`container.template` controls the MeshAgent runtime defaults added when the container starts:
+
+- `"agent"` (default): mount room storage at `/data`, create a participant token for the container name with role `agent` and default agent API permissions, and inject MeshAgent/OpenAI/Anthropic runtime environment variables.
+- `"none"`: do not add those defaults. Only values explicitly configured in the manifest or container start request are passed through.
+
+The `"agent"` template sets defaults only when the environment variable is not already configured. Values in `container.environment` override template defaults.
+
+The `"agent"` template may set:
+
+| Variable | Description |
+|----------|-------------|
+| `MESHAGENT_TOKEN` | Room participant token for the container name, with role `agent` and default agent API permissions. |
+| `OPENAI_API_KEY` | Same participant token, for OpenAI-compatible clients using MeshAgent's proxy. |
+| `ANTHROPIC_API_KEY` | Same participant token, for Anthropic-compatible clients using MeshAgent's proxy. |
+| `SMTP_PASSWORD` | Same participant token, for SMTP authentication. |
+| `SMTP_USERNAME` | Container name, for SMTP authentication. |
+| `SMTP_HOSTNAME` | MeshAgent SMTP hostname, set from `MESHAGENT_MAIL_DOMAIN` when available. |
+| `SMTP_PORT` | SMTP port. Defaults to `587`. |
+| `OPENAI_BASE_URL` | OpenAI-compatible MeshAgent proxy URL for the room runtime. |
+| `ANTHROPIC_BASE_URL` | Anthropic-compatible MeshAgent proxy URL for the room runtime. |
+| `MESHAGENT_API_URL` | MeshAgent API URL reachable from the container. |
+| `MESHAGENT_ROOM_URL` | MeshAgent room API base URL reachable from the container. |
+| `MESHAGENT_ROOM` | Current room name. |
+| `MESHAGENT_PROJECT_ID` | Current project ID, when available. |
+| `MESHAGENT_SESSION_ID` | Current session ID, when available. |
+| `OTEL_ENDPOINT` | OpenTelemetry collector endpoint reachable from the container. |
+| `OTEL_PYTHON_LOG_LEVEL` | Python OpenTelemetry log level forwarded from the room runtime, when available. |
+| `MESHAGENT_MAIL_DOMAIN` | MeshAgent mail domain forwarded from the room runtime, when available. |
 
 <a id="container-environment"></a>
 #### container.environment
