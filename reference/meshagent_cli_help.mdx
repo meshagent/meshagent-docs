@@ -2483,7 +2483,7 @@ $ meshagent build [OPTIONS] PATH
 
 ## `meshagent deploy`
 
-Create or update a room service from an image, optionally building it first. The target room must already exist. Happy path for a Dockerfile app: run &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27;. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. If PATH does not include a Dockerfile yet, create a minimal Dockerfile in the app directory first or create one elsewhere in PATH and pass it with --dockerfile-path.
+Create or update a room service from an image, optionally building it first. The target room must already exist. If .meshagent/deploy.yaml exists, deploy prompts for template values in TUI mode and saves them to .meshagent/values.yaml. Use `meshagent deploy describe` to inspect the local deploy spec. Happy path for a Dockerfile app: run &#x27;meshagent deploy PATH --room &lt;room&gt; --tag &lt;tag&gt; --public --domain &lt;domain&gt;&#x27;. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. If PATH does not include a Dockerfile yet, create a minimal Dockerfile in the app directory first or create one elsewhere in PATH and pass it with --dockerfile-path.
 
 **Usage**:
 
@@ -2507,6 +2507,9 @@ $ meshagent deploy [OPTIONS] [PATH]
 * `--builder-name TEXT`: Optional reusable builder name for streamed local pack builds.
 * `--latest`: Also publish the built PATH image as :latest in the same repository. Only used with PATH.
 * `--domain TEXT`: Create or update a room route for the deployed service and return a public URL. Use this with --public when you need an external URL from deploy. Use &#x27;meshagent config get domains.pages&#x27; to find the pages domain for --domain. Requires exactly one published service port.
+* `--email TEXT`: Create or update a public mailbox for the deployed service. When a local deploy template has an email variable, that value is used unless --email is passed.
+* `-f, --values TEXT`: YAML file containing deploy template values. Can be passed multiple times; later files override earlier files.
+* `--set TEXT`: Set a deploy template value as KEY=VALUE. Can be passed multiple times.
 * `--extra-port TEXT`: Add an extra route path to DOMAIN as PORT:/path. Can be passed multiple times. The port must already be published by a room service.
 * `--validation-mode TEXT`: Request validation annotation mode for private published service ports: default, cookie, or none.  [default: default]
 * `--template TEXT`: Allowed values: agent, none. agent: MeshAgent mounts room storage at /data, sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a container-scoped MeshAgent token. agent also sets SMTP_PASSWORD to that token, SMTP_USERNAME to the container name, SMTP_PORT to 587, SMTP_HOSTNAME from MESHAGENT_MAIL_DOMAIN when available, plus OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_ROOM_URL, MESHAGENT_ROOM, MESHAGENT_PROJECT_ID, MESHAGENT_SESSION_ID, OTEL_ENDPOINT, OTEL_PYTHON_LOG_LEVEL, and MESHAGENT_MAIL_DOMAIN from the room runtime when available. Manual env values win. none: MeshAgent applies no template defaults.  [default: agent]
