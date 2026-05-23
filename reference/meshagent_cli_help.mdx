@@ -189,6 +189,7 @@ $ meshagent project [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a new MeshAgent project.
 * `list`: List projects and mark the currently...
+* `get`: Get a MeshAgent project.
 * `activate`: Set the active project for subsequent CLI...
 
 ### `meshagent project create`
@@ -218,6 +219,25 @@ List projects and mark the currently active one.
 ```console
 $ meshagent project list [OPTIONS]
 ```
+
+**Options**:
+
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent project get`
+
+Get a MeshAgent project.
+
+**Usage**:
+
+```console
+$ meshagent project get [OPTIONS] PROJECT_ID
+```
+
+**Arguments**:
+
+* `PROJECT_ID`: Project id to get  [required]
 
 **Options**:
 
@@ -263,7 +283,7 @@ $ meshagent api-key [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List API keys for a project.
 * `create`: Create a new API key for a project.
-* `show`: Show the activated API key for a project.
+* `get`: Get the activated API key for a project.
 * `env`: Print the activated API key as a shell...
 * `activate`: Set the default API key for a project in...
 * `delete`: Delete an API key from a project.
@@ -306,14 +326,14 @@ $ meshagent api-key create [OPTIONS] NAME
 * `--silent / --no-silent`: do not print api key  [default: no-silent]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key show`
+### `meshagent api-key get`
 
-Show the activated API key for a project.
+Get the activated API key for a project.
 
 **Usage**:
 
 ```console
-$ meshagent api-key show [OPTIONS]
+$ meshagent api-key get [OPTIONS]
 ```
 
 **Options**:
@@ -463,7 +483,7 @@ $ meshagent session [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `list`: List recent sessions
-* `show`: Show events for a session
+* `get`: Get events for a session
 * `traces`: List trace spans for a session as a tree
 
 ### `meshagent session list`
@@ -483,14 +503,14 @@ $ meshagent session list [OPTIONS]
 * `--room TEXT`: Only include sessions for the given room name
 * `--help`: Show this message and exit.
 
-### `meshagent session show`
+### `meshagent session get`
 
-Show events for a session
+Get events for a session
 
 **Usage**:
 
 ```console
-$ meshagent session show [OPTIONS] SESSION_ID
+$ meshagent session get [OPTIONS] SESSION_ID
 ```
 
 **Arguments**:
@@ -638,6 +658,7 @@ $ meshagent webhook [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a webhook
 * `list`: List webhooks
+* `get`: Get a webhook
 * `delete`: Delete a webhook
 
 ### `meshagent webhook create`
@@ -670,6 +691,25 @@ List webhooks
 ```console
 $ meshagent webhook list [OPTIONS]
 ```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent webhook get`
+
+Get a webhook
+
+**Usage**:
+
+```console
+$ meshagent webhook get [OPTIONS] WEBHOOK_ID
+```
+
+**Arguments**:
+
+* `WEBHOOK_ID`: ID of the webhook to get  [required]
 
 **Options**:
 
@@ -722,7 +762,7 @@ $ meshagent service [OPTIONS] COMMAND [ARGS]...
 * `validate-template`: Validate a service template from a YAML file.
 * `render-template`: Render a service template with variables...
 * `run`: Run a local command and register it as a...
-* `show`: Show a service for the project.
+* `get`: Get a service for the project.
 * `list`: List all services for the project.
 * `delete`: Delete a service.
 
@@ -920,19 +960,19 @@ $ meshagent service run [OPTIONS] COMMAND
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
 
-### `meshagent service show`
+### `meshagent service get`
 
-Show a service for the project.
+Get a service for the project.
 
 **Usage**:
 
 ```console
-$ meshagent service show [OPTIONS] SERVICE_ID
+$ meshagent service get [OPTIONS] SERVICE_ID
 ```
 
 **Arguments**:
 
-* `SERVICE_ID`: Service UUID or metadata name to show  [required]
+* `SERVICE_ID`: Service UUID or metadata name to get  [required]
 
 **Options**:
 
@@ -1567,7 +1607,7 @@ $ meshagent agent [OPTIONS] COMMAND [ARGS]...
 * `delete`: Delete a managed agent from the project.
 * `update`: Update a managed agent configuration.
 * `list`: List managed agents in the project.
-* `get`: Show a managed agent configuration.
+* `get`: Get a managed agent configuration.
 * `use`: Use a managed agent over its websocket...
 
 ### `meshagent agent secret`
@@ -1744,7 +1784,7 @@ $ meshagent agent list [OPTIONS]
 
 ### `meshagent agent get`
 
-Show a managed agent configuration.
+Get a managed agent configuration.
 
 **Usage**:
 
@@ -1803,7 +1843,7 @@ $ meshagent mailbox [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a mailbox attached to the project.
 * `update`: Update a mailbox routing configuration.
-* `show`: Show mailbox details.
+* `get`: Get mailbox details.
 * `list`: List mailboxes for the project.
 * `delete`: Delete a mailbox.
 
@@ -1850,19 +1890,19 @@ $ meshagent mailbox update [OPTIONS] ADDRESS
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
-### `meshagent mailbox show`
+### `meshagent mailbox get`
 
-Show mailbox details.
+Get mailbox details.
 
 **Usage**:
 
 ```console
-$ meshagent mailbox show [OPTIONS] ADDRESS
+$ meshagent mailbox get [OPTIONS] ADDRESS
 ```
 
 **Arguments**:
 
-* `ADDRESS`: Mailbox address to show  [required]
+* `ADDRESS`: Mailbox address to get  [required]
 
 **Options**:
 
@@ -1928,7 +1968,7 @@ $ meshagent feed [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a feed.
 * `update`: Update a feed.
-* `show`: Show feed details.
+* `get`: Get feed details.
 * `list`: List feeds for the project.
 * `delete`: Delete a feed.
 * `send`: Publish a single JSON message to a feed.
@@ -1983,19 +2023,19 @@ $ meshagent feed update [OPTIONS] FEED_ID
 * `--clear-message-schema`: Remove the existing message schema
 * `--help`: Show this message and exit.
 
-### `meshagent feed show`
+### `meshagent feed get`
 
-Show feed details.
+Get feed details.
 
 **Usage**:
 
 ```console
-$ meshagent feed show [OPTIONS] FEED_ID
+$ meshagent feed get [OPTIONS] FEED_ID
 ```
 
 **Arguments**:
 
-* `FEED_ID`: Feed id to show  [required]
+* `FEED_ID`: Feed id to get  [required]
 
 **Options**:
 
@@ -2102,7 +2142,7 @@ $ meshagent subscription [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a feed subscription.
 * `update`: Update a feed subscription.
-* `show`: Show feed subscription details.
+* `get`: Get feed subscription details.
 * `list`: List subscriptions for a feed.
 * `delete`: Delete a feed subscription.
 
@@ -2148,19 +2188,19 @@ $ meshagent subscription update [OPTIONS] SUBSCRIPTION_ID
 * `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
-### `meshagent subscription show`
+### `meshagent subscription get`
 
-Show feed subscription details.
+Get feed subscription details.
 
 **Usage**:
 
 ```console
-$ meshagent subscription show [OPTIONS] SUBSCRIPTION_ID
+$ meshagent subscription get [OPTIONS] SUBSCRIPTION_ID
 ```
 
 **Arguments**:
 
-* `SUBSCRIPTION_ID`: Subscription id to show  [required]
+* `SUBSCRIPTION_ID`: Subscription id to get  [required]
 
 **Options**:
 
@@ -2225,7 +2265,7 @@ $ meshagent route [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a route attached to the project.
 * `update`: Update a route configuration.
-* `show`: Show route details.
+* `get`: Get route details.
 * `list`: List routes for the project.
 * `delete`: Delete a route.
 
@@ -2276,19 +2316,19 @@ $ meshagent route update [OPTIONS] DOMAIN
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
-### `meshagent route show`
+### `meshagent route get`
 
-Show route details.
+Get route details.
 
 **Usage**:
 
 ```console
-$ meshagent route show [OPTIONS] DOMAIN
+$ meshagent route get [OPTIONS] DOMAIN
 ```
 
 **Arguments**:
 
-* `DOMAIN`: Domain name to show  [required]
+* `DOMAIN`: Domain name to get  [required]
 
 **Options**:
 
@@ -2354,7 +2394,7 @@ $ meshagent registry [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a project registry repository.
 * `update`: Update a project registry repository.
-* `show`: Show registry details.
+* `get`: Get registry details.
 * `list`: List registries for the project.
 * `delete`: Delete a project registry repository by id...
 
@@ -2398,19 +2438,19 @@ $ meshagent registry update [OPTIONS] REPOSITORY_ID
 * `-a, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
-### `meshagent registry show`
+### `meshagent registry get`
 
-Show registry details.
+Get registry details.
 
 **Usage**:
 
 ```console
-$ meshagent registry show [OPTIONS] REPOSITORY_ID
+$ meshagent registry get [OPTIONS] REPOSITORY_ID
 ```
 
 **Arguments**:
 
-* `REPOSITORY_ID`: Repository id to show  [required]
+* `REPOSITORY_ID`: Repository id to get  [required]
 
 **Options**:
 
@@ -3954,7 +3994,7 @@ $ meshagent room storage [OPTIONS] COMMAND [ARGS]...
 
 * `exists`: Check whether a path exists in room storage.
 * `cp`: Copy files between local paths and room...
-* `show`: Print file contents from local disk or...
+* `get`: Print file contents from local disk or...
 * `rm`: Remove files or directories from local...
 * `ls`: List files and directories locally or in...
 
@@ -3999,14 +4039,14 @@ $ meshagent room storage cp [OPTIONS] SOURCE_PATH DEST_PATH
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
-#### `meshagent room storage show`
+#### `meshagent room storage get`
 
 Print file contents from local disk or room storage.
 
 **Usage**:
 
 ```console
-$ meshagent room storage show [OPTIONS] PATH
+$ meshagent room storage get [OPTIONS] PATH
 ```
 
 **Arguments**:
@@ -4195,6 +4235,7 @@ $ meshagent room dataset branch [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `list`: List dataset branches in a room namespace.
+* `get`: Get a dataset branch.
 * `create`: Create a dataset branch.
 * `delete`: Delete a dataset branch.
 
@@ -4212,6 +4253,25 @@ $ meshagent room dataset branch list [OPTIONS]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+##### `meshagent room dataset branch get`
+
+Get a dataset branch.
+
+**Usage**:
+
+```console
+$ meshagent room dataset branch get [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--branch TEXT`: Branch name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
 * `--help`: Show this message and exit.
@@ -4780,6 +4840,7 @@ $ meshagent room memory [OPTIONS] COMMAND [ARGS]...
 * `create`: Create a room memory store.
 * `drop`: Drop a room memory store.
 * `inspect`: Inspect metadata and datasets for a memory.
+* `get`: Get metadata and datasets for a memory.
 * `query`: Run a SQL-like query against memory datasets.
 * `upsert-table`: Upsert records from JSON into memory tables.
 * `upsert-nodes`: Upsert entity nodes into memory.
@@ -4859,6 +4920,25 @@ Inspect metadata and datasets for a memory.
 
 ```console
 $ meshagent room memory inspect [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-m, --name TEXT`: Memory name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--help`: Show this message and exit.
+
+#### `meshagent room memory get`
+
+Get metadata and datasets for a memory.
+
+**Usage**:
+
+```console
+$ meshagent room memory get [OPTIONS]
 ```
 
 **Options**:
@@ -5485,7 +5565,7 @@ $ meshagent room sync [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `import`: Import Anthropic Claude GDPR conversations...
-* `show`: Print the full document JSON
+* `get`: Print the full document JSON
 * `grep`: Search the document for matching content
 * `inspect`: Print the document schema JSON
 * `create`: Create a new document at a path
@@ -5516,14 +5596,14 @@ $ meshagent room sync import [OPTIONS]
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
 * `--help`: Show this message and exit.
 
-#### `meshagent room sync show`
+#### `meshagent room sync get`
 
 Print the full document JSON
 
 **Usage**:
 
 ```console
-$ meshagent room sync show [OPTIONS] PATH
+$ meshagent room sync get [OPTIONS] PATH
 ```
 
 **Arguments**:
@@ -5691,7 +5771,7 @@ $ meshagent llm logger [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create an LLM logger.
 * `update`: Update an LLM logger.
-* `show`: Show an LLM logger.
+* `get`: Get an LLM logger.
 * `list`: List LLM loggers for the project.
 * `delete`: Delete an LLM logger.
 
@@ -5738,19 +5818,19 @@ $ meshagent llm logger update [OPTIONS] LOGGER_ID
 * `--annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
-#### `meshagent llm logger show`
+#### `meshagent llm logger get`
 
-Show an LLM logger.
+Get an LLM logger.
 
 **Usage**:
 
 ```console
-$ meshagent llm logger show [OPTIONS] LOGGER_ID
+$ meshagent llm logger get [OPTIONS] LOGGER_ID
 ```
 
 **Arguments**:
 
-* `LOGGER_ID`: LLM logger id to show  [required]
+* `LOGGER_ID`: LLM logger id to get  [required]
 
 **Options**:
 
