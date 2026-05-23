@@ -232,12 +232,12 @@ Get a MeshAgent project.
 **Usage**:
 
 ```console
-$ meshagent project get [OPTIONS] PROJECT_ID
+$ meshagent project get [OPTIONS] PROJECT
 ```
 
 **Arguments**:
 
-* `PROJECT_ID`: Project id to get  [required]
+* `PROJECT`: Project id or key to get  [required]
 
 **Options**:
 
@@ -256,7 +256,7 @@ $ meshagent project activate [OPTIONS] [PROJECT_ID]
 
 **Arguments**:
 
-* `[PROJECT_ID]`: Project id. If omitted, an interactive picker is shown in a TTY.
+* `[PROJECT_ID]`: Project id or key. If omitted, an interactive picker is shown in a TTY.
 
 **Options**:
 
@@ -1490,7 +1490,7 @@ $ meshagent rooms [OPTIONS] COMMAND [ARGS]...
 * `delete`: Delete a room by ID (or by name if --name...
 * `update`: Update a room's name (ID is preferred;...
 * `list`: List rooms in the project.
-* `get`: Get a single room by name (handy for...
+* `get`: Get a single room by name or ID.
 
 ### `meshagent rooms create`
 
@@ -1499,13 +1499,17 @@ Create a room in the project.
 **Usage**:
 
 ```console
-$ meshagent rooms create [OPTIONS]
+$ meshagent rooms create [OPTIONS] [NAME]
 ```
+
+**Arguments**:
+
+* `[NAME]`: Room name
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Room name  [required]
+* `--owner / --no-owner`: Add the active user as the room owner.  [default: owner]
 * `--if-not-exists / --no-if-not-exists`: Do not error if the room already exists  [default: no-if-not-exists]
 * `--metadata TEXT`: Optional JSON object for room metadata
 * `--annotations TEXT`: Optional JSON object for room annotations, e.g. &#123;&quot;meshagent.storage.class&quot;:&quot;ephemeral&quot;&#125;
@@ -1570,18 +1574,21 @@ $ meshagent rooms list [OPTIONS]
 
 ### `meshagent rooms get`
 
-Get a single room by name (handy for resolving the ID).
+Get a single room by name or ID.
 
 **Usage**:
 
 ```console
-$ meshagent rooms get [OPTIONS]
+$ meshagent rooms get [OPTIONS] [ROOM]
 ```
+
+**Arguments**:
+
+* `[ROOM]`: Room name or ID
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`
 * `--help`: Show this message and exit.
 
 ## `meshagent agent`
