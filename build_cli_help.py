@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 from typing import Final
 
-import click
 import typer
+from typer import _click as typer_click
 from typer.cli import get_docs_for_click
 from typer.core import MARKUP_MODE_KEY
 
@@ -28,7 +28,7 @@ def _is_deprecated(value: object) -> bool:
     return value is True
 
 
-def _load_command_if_needed(command: click.Command) -> click.Command:
+def _load_command_if_needed(command: typer_click.Command) -> typer_click.Command:
     if isinstance(command, LazyLoadedCommand):
         return command._load_command()
     return command
@@ -46,22 +46,24 @@ def _resolve_child_source_app(target: object) -> typer.Typer | None:
 
 
 def _iter_visible_commands(
-    click_command: click.Command,
+    click_command: typer_click.Command,
     *,
     source_app: typer.Typer | None = None,
-) -> list[tuple[str, click.Command, typer.Typer | None]]:
+) -> list[tuple[str, typer_click.Command, typer.Typer | None]]:
     click_command = _load_command_if_needed(click_command)
     if not hasattr(click_command, "commands"):
         return []
 
-    commands: list[tuple[str, click.Command, typer.Typer | None]] = []
+    commands: list[tuple[str, typer_click.Command, typer.Typer | None]] = []
     seen_names: set[str] = set()
 
     if isinstance(source_app, LazyTyper):
         for registration in source_app.registered_lazy_commands:
             if registration.name in seen_names:
                 continue
-            if _is_hidden(registration.hidden) or _is_deprecated(registration.deprecated):
+            if _is_hidden(registration.hidden) or _is_deprecated(
+                registration.deprecated
+            ):
                 continue
             child_click = click_command.commands.get(registration.name)
             if child_click is None:
@@ -91,7 +93,9 @@ def _iter_visible_commands(
         for command_info in source_app.registered_commands:
             if command_info.name is None or command_info.name in seen_names:
                 continue
-            if _is_hidden(command_info.hidden) or _is_deprecated(command_info.deprecated):
+            if _is_hidden(command_info.hidden) or _is_deprecated(
+                command_info.deprecated
+            ):
                 continue
             child_click = click_command.commands.get(command_info.name)
             if child_click is None:
@@ -110,7 +114,7 @@ def _iter_visible_commands(
 
 
 def _build_commands_block(
-    commands: list[tuple[str, click.Command, typer.Typer | None]],
+    commands: list[tuple[str, typer_click.Command, typer.Typer | None]],
 ) -> list[str]:
     lines = ["**Commands**:", ""]
     for name, command, _source_app in commands:
@@ -122,9 +126,9 @@ def _build_commands_block(
     return lines
 
 
-def _build_context(command: click.Command) -> click.Context:
+def _build_context(command: typer_click.Command) -> typer_click.Context:
     command = _load_command_if_needed(command)
-    ctx = click.Context(command)
+    ctx = typer_click.Context(command)
     if meshagent_app.rich_markup_mode is not None:
         ctx.obj = {MARKUP_MODE_KEY: meshagent_app.rich_markup_mode}
     return ctx
@@ -132,7 +136,7 @@ def _build_context(command: click.Command) -> click.Context:
 
 def _render_command_docs(
     *,
-    command: click.Command,
+    command: typer_click.Command,
     command_name: str,
 ) -> str:
     command = _load_command_if_needed(command)
@@ -142,7 +146,7 @@ def _render_command_docs(
 
 def _render_command_body(
     *,
-    command: click.Command,
+    command: typer_click.Command,
     command_name: str,
 ) -> list[str]:
     docs = _render_command_docs(command=command, command_name=command_name)
@@ -157,7 +161,7 @@ def _render_command_body(
 def _replace_commands_block(
     *,
     lines: list[str],
-    commands: list[tuple[str, click.Command, typer.Typer | None]],
+    commands: list[tuple[str, typer_click.Command, typer.Typer | None]],
 ) -> list[str]:
     replaced_lines: list[str] = []
     in_commands_block = False
@@ -193,7 +197,7 @@ def _set_heading_level(*, lines: list[str], depth: int) -> list[str]:
 
 def _render_recursive_sections(
     *,
-    command: click.Command,
+    command: typer_click.Command,
     command_name: str,
     depth: int,
     source_app: typer.Typer | None = None,
