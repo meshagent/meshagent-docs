@@ -5,7 +5,7 @@ description: Create project-level scheduled tasks that enqueue work into room qu
 
 Scheduled tasks are project-level triggers that either enqueue work into room queues or start containers on a schedule.
 
-A scheduled task uses a `ScheduledTaskSpec` file. The spec chooses exactly one target: `queue` or `container`. The room is selected when the task is created or updated, not inside the spec.
+A scheduled task uses a `ScheduledTaskSpec` file. The spec chooses exactly one target: `queue` or `container`. The room is selected when the task is created, not inside the spec.
 
 ## Create a scheduled task
 
@@ -27,7 +27,7 @@ meshagent scheduled-task add \
 
 This creates a scheduled task in the active project that enqueues work into the `support-jobs` queue in the `support` room.
 
-The payload can be any JSON value. For MeshAgent queue consumers, that includes the same structured `prompt`, `content`, and `thread_id` fields supported by `meshagent room queue send`.
+The payload is a JSON object. For MeshAgent queue consumers, that can include the same structured `prompt`, `content`, and `thread_id` fields supported by `meshagent room queue send`.
 
 Example:
 
@@ -82,7 +82,6 @@ Update a task:
 
 ```bash
 meshagent scheduled-task update TASK_ID \
-  --room support \
   --file support-summary-task.yaml
 ```
 

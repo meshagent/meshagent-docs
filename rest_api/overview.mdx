@@ -182,12 +182,60 @@ Create and manage project and room services. Project services are available to a
 ## Secrets
 Create and manage secrets. You can configure key based secrets as well as image pull secrets. 
 
-| SDK method                             | HTTP route                                                   | What it does                                    |
-| -------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
-| `create_secret(project_id, secret)`    | `POST /accounts/projects/{project_id}/secrets`               | Create a secret (`PullSecret` or `KeysSecret`). |
-| `list_secrets(project_id)`             | `GET /accounts/projects/{project_id}/secrets`                | List secrets.                                   |
-| `update_secret(project_id, secret)`    | `PUT /accounts/projects/{project_id}/secrets/{secret_id}`    | Update a secret.                                |
-| `delete_secret(project_id, secret_id)` | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a secret.                                |
+| SDK method                                            | HTTP route                                                   | What it does                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| `create_secret(project_id, secret)`                   | `POST /accounts/projects/{project_id}/secrets`               | Create a secret (`PullSecret` or `KeysSecret`). |
+| `create_project_secret(project_id, name, type, data)` | `POST /accounts/projects/{project_id}/secrets`               | Create a project secret from raw bytes.         |
+| `list_secrets(project_id)`                            | `GET /accounts/projects/{project_id}/secrets`                | List secrets and read values through the compatibility helper. |
+| `list_project_secrets(project_id)`                    | `GET /accounts/projects/{project_id}/secrets`                | List project secret metadata.                   |
+| `get_project_secret(project_id, secret_id)`           | `GET /accounts/projects/{project_id}/secrets/{secret_id}`    | Fetch one project secret.                       |
+| `update_secret(project_id, secret)`                   | `PUT /accounts/projects/{project_id}/secrets/{secret_id}`    | Update a secret.                                |
+| `update_project_secret(project_id, secret_id, name, type, data)` | `PUT /accounts/projects/{project_id}/secrets/{secret_id}` | Update a project secret from raw bytes. |
+| `delete_secret(project_id, secret_id)`                | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a secret.                                |
+| `delete_project_secret(project_id, secret_id)`        | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a project secret.                        |
+
+## Routes
+Create and manage project routes that map domains to rooms, ports, and route specs.
+
+| SDK method                                            | HTTP route                                                   | What it does                    |
+| ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------- |
+| `create_route(project_id, spec? or domain, room_name, port)` | `POST /accounts/projects/{project_id}/routes`           | Create a route.                 |
+| `update_route(project_id, domain, spec? or room_name, port)` | `PUT /accounts/projects/{project_id}/routes/{domain}`   | Update a route.                 |
+| `get_route(project_id, domain)`                       | `GET /accounts/projects/{project_id}/routes/{domain}`       | Fetch a route.                  |
+| `list_routes(project_id, count?, offset?, filter?)`   | `GET /accounts/projects/{project_id}/routes`                | List project routes.            |
+| `list_room_routes(project_id, room_name, count?, offset?, filter?)` | `GET /accounts/projects/{project_id}/rooms/{room_name}/routes` | List routes for a room. |
+| `delete_route(project_id, domain)`                    | `DELETE /accounts/projects/{project_id}/routes/{domain}`    | Delete a route.                 |
+
+## Feeds and subscriptions
+Create project feeds, publish messages, and fan them out into room storage through subscriptions.
+
+| SDK method                                            | HTTP route                                                   | What it does                    |
+| ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------- |
+| `create_feed(project_id, name, description?, visibility?, paused?, annotations?, message_schema?)` | `POST /accounts/projects/{project_id}/feeds` | Create a feed. |
+| `update_feed(project_id, feed_id, name, description?, paused?, annotations?, message_schema?)` | `PUT /accounts/projects/{project_id}/feeds/{feed_id}` | Update a feed. |
+| `get_feed(project_id, feed_id)`                       | `GET /accounts/projects/{project_id}/feeds/{feed_id}`       | Fetch a feed.                   |
+| `list_feeds(project_id, count?, offset?, filter?)`    | `GET /accounts/projects/{project_id}/feeds`                 | List project feeds.             |
+| `list_room_feeds(project_id, room_name, count?, offset?, filter?)` | `GET /accounts/projects/{project_id}/rooms/{room_name}/feeds` | List feeds visible to a room. |
+| `delete_feed(project_id, feed_id)`                    | `DELETE /accounts/projects/{project_id}/feeds/{feed_id}`    | Delete a feed.                  |
+| `publish_feed_message(project_id, feed_id, message)`  | `POST /accounts/projects/{project_id}/feeds/{feed_id}/messages` | Publish one message.         |
+| `publish_feed_batch(project_id, feed_id, messages)`   | `POST /accounts/projects/{project_id}/feeds/{feed_id}/messages/batch` | Publish a batch.       |
+| `create_feed_subscription(project_id, feed_id, room, path, filename_datetime_format?, annotations?)` | `POST /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions` | Create a subscription. |
+| `update_feed_subscription(project_id, feed_id, subscription_id, filename_datetime_format?, annotations?)` | `PUT /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions/{subscription_id}` | Update a subscription. |
+| `get_feed_subscription(project_id, feed_id, subscription_id)` | `GET /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions/{subscription_id}` | Fetch a subscription. |
+| `list_feed_subscriptions(project_id, feed_id)`        | `GET /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions` | List subscriptions.       |
+| `delete_feed_subscription(project_id, feed_id, subscription_id)` | `DELETE /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions/{subscription_id}` | Delete a subscription. |
+
+## Registries
+Create and manage project-owned image repositories.
+
+| SDK method                                            | HTTP route                                                   | What it does                    |
+| ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------- |
+| `create_repository(project_id, repository)`           | `POST /accounts/projects/{project_id}/repositories`          | Create a project repository.    |
+| `update_repository(project_id, repository_id, repository)` | `PUT /accounts/projects/{project_id}/repositories/{repository_id}` | Update a repository. |
+| `get_repository(project_id, repository_id)`           | `GET /accounts/projects/{project_id}/repositories/{repository_id}` | Fetch a repository.       |
+| `list_repositories(project_id)`                       | `GET /accounts/projects/{project_id}/repositories`           | List repositories.              |
+| `delete_repository(project_id, repository_id)`        | `DELETE /accounts/projects/{project_id}/repositories/{repository_id}` | Delete a repository.     |
+| `create_repository_token(project_id, repository_id, request)` | `POST /accounts/projects/{project_id}/repositories/{repository_id}/token` | Create a repository token. |
 
 ## Webhooks
 
@@ -253,6 +301,7 @@ Inspect active/recent sessions and fetch diagnostics, or terminate sessions.
 | `list_session_events(project_id, session_id)`  | `GET /accounts/projects/{project_id}/sessions/{session_id}/events`     | Session event stream.   |
 | `list_session_spans(project_id, session_id)`   | `GET /accounts/projects/{project_id}/sessions/{session_id}/spans`      | Trace spans.            |
 | `list_session_metrics(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/metrics`    | Metrics data.           |
+| `get_session_participant_counts(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/participant-counts` | Participant counts. |
 | `terminate(project_id, session_id)`            | `POST /accounts/projects/{project_id}/sessions/{session_id}/terminate` | Terminate a session.    |
 
 
@@ -265,6 +314,7 @@ Scheduled tasks let you automate room workflows by sending queued messages on a 
 | `update_scheduled_task(project_id, task_id, …)`                                    | `PUT /accounts/projects/{project_id}/scheduled-tasks/{task_id}`    | Update a task.           |
 | `delete_scheduled_task(project_id, task_id)`                                       | `DELETE /accounts/projects/{project_id}/scheduled-tasks/{task_id}` | Delete a task.           |
 | `list_scheduled_tasks(project_id, room_id?, task_id?, active?, limit?, offset?)`   | `GET /accounts/projects/{project_id}/scheduled-tasks`              | List tasks with filters. |
+| `list_scheduled_task_runs(project_id, task_id, limit?, offset?)`                   | `GET /accounts/projects/{project_id}/scheduled-tasks/{task_id}/runs` | List task runs.          |
 
 
 ## Billing & usage
