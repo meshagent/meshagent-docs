@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Final
 
 import typer
-import click as typer_click
+from typer import _click as typer_click
 from typer.cli import get_docs_for_click
 from typer.core import MARKUP_MODE_KEY
 
