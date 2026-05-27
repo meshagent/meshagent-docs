@@ -241,13 +241,13 @@ Use the methods below to inspect room storage, upload and download files, and cl
 
 ### `exists(path)`
 
-**Description**  
+**Description**
 Checks if a file or folder exists at the given path.
 
-**Parameters**  
+**Parameters**
 - `path` *(str)*: The path to check.
 
-**Returns**  
+**Returns**
 - *(bool)*: `True` if the file or folder exists; `False` otherwise.
 
 **Example**:
@@ -326,9 +326,30 @@ if entry:
     print(entry.name, entry.is_folder, entry.created_at, entry.updated_at)
 
 ```
+```javascript NodeJs
+const entry = await room.storage.stat("folder/data.json");
+if (entry) {
+    console.log(entry.name, entry.isFolder, entry.createdAt, entry.updatedAt);
+}
+
+```
+```typescript TypeScript
+const entry = await room.storage.stat("folder/data.json");
+if (entry) {
+    console.log(entry.name, entry.isFolder, entry.createdAt, entry.updatedAt);
+}
+
+```
+```dart Dart
+final entry = await room.storage.stat("folder/data.json");
+if (entry != null) {
+    print("${entry.name} ${entry.isFolder} ${entry.createdAt} ${entry.updatedAt}");
+}
+
+```
 </CodeGroup>
 
-- **Availability**: Python SDK exposes `stat`; other SDKs can call the same endpoint via a custom request until a helper is added.
+- **Availability**: Python, JavaScript/TypeScript, and Dart SDKs expose `stat`.
 
 
 ### `upload(path, data, overwrite=False)`
@@ -746,6 +767,52 @@ print("File deleted.");
 ```dotnet C#
 await room.Storage.Delete("folder/old_file.txt");
 Console.WriteLine("File deleted.");
+
+```
+</CodeGroup>
+
+
+### `move(source_path, destination_path, overwrite=False)`
+
+**Description**
+Moves or renames a file or folder. A `file.moved` event is typically emitted afterward.
+
+**Parameters**
+- `source_path` *(str)*: The current file or folder path.
+- `destination_path` *(str)*: The new file or folder path.
+- `overwrite` *(bool, optional)*: Whether to replace an existing destination.
+
+**Returns**
+- `None`
+
+**Example**:
+<CodeGroup>
+```python Python
+await room.storage.move(
+    source_path="folder/draft.json",
+    destination_path="folder/final.json",
+    overwrite=True,
+)
+
+```
+```javascript NodeJs
+await room.storage.move("folder/draft.json", "folder/final.json", {
+    overwrite: true,
+});
+
+```
+```typescript TypeScript
+await room.storage.move("folder/draft.json", "folder/final.json", {
+    overwrite: true,
+});
+
+```
+```dart Dart
+await room.storage.move(
+    "folder/draft.json",
+    "folder/final.json",
+    overwrite: true,
+);
 
 ```
 </CodeGroup>

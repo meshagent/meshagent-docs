@@ -19,10 +19,15 @@ Start with the CLI help, then use a few common commands:
 
 ```bash bash
 meshagent room sync --help
-meshagent room sync create --room myroom docs/briefing.mesh --schema ./briefing.schema.json
-meshagent room sync get --room myroom docs/briefing.mesh
-meshagent room sync inspect --room myroom docs/briefing.mesh
+meshagent room sync create --room myroom docs/briefing --schema ./briefing.schema.json
+meshagent room sync get --room myroom docs/briefing
+meshagent room sync grep --room myroom docs/briefing "priority"
+meshagent room sync update --room myroom docs/briefing --patch '[]'
+meshagent room sync inspect --room myroom docs/briefing
+meshagent room sync import --room myroom --file ./conversations.json
 ```
+
+These commands use the actual CLI command shapes. `create` expects `./briefing.schema.json` to be a MeshSchema JSON file, `update --patch '[]'` is a no-op JSON Patch example, and `import` expects a local Claude GDPR `conversations.json` export plus the optional MeshAgent agent and Anthropic packages installed.
 
 ## Why use the Sync API?
 
@@ -148,7 +153,7 @@ await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = 
 - **Parameters**:
   - `path`: Document path.
   - `json`: Optional initial JSON payload.
-- **Description**: Create a new `MeshDocument` at the given path. The server infers the schema from the document extension.
+- **Description**: Create a new `MeshDocument` at the given path. The CLI create command requires `--schema`; SDK callers can pass a `MeshSchema` when creating a document.
 
 ### `describe(path)`
 

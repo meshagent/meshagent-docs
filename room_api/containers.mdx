@@ -9,6 +9,7 @@ Start with the CLI help, then use a few common commands:
 ```bash bash
 meshagent room container --help
 meshagent room container image list --room myroom
+meshagent room container image pull --room myroom --tag meshagent/cli:default
 meshagent room container run --room myroom --image meshagent/cli:default
 meshagent room container list --room myroom
 ```
@@ -37,7 +38,7 @@ See [API Scopes](../rest_api/api_scopes) and [Service YAML](../services/deployme
 
 ## API reference
 
-Use the methods below to manage room images, start and inspect containers, and clean up container state.
+Use the methods below to manage room images, start and inspect containers, and clean up container state. The SDKs also expose image-transfer helpers such as `push_image`, `load` / `load_image`, `save_image`, build helpers such as `build`, `list_builds`, `cancel_build`, `delete_build`, and `get_build_logs`, and service helpers such as `run_service`.
 
 ### `list_images()`
 
@@ -184,7 +185,7 @@ session = await room.containers.exec(
     detach=False,
 )
 
-async for chunk in session.output():
+async for chunk in session.stdout():
     print(chunk.decode(), end="")
 
 # (Optional) Send input; for example, list files then exit the shell
@@ -198,6 +199,26 @@ print(f"Exec finished with status: {status}")
 </CodeGroup>
 
 The CLI streams a non-TTY exec session. Use the SDK directly when you need an explicit TTY session and terminal resize control.
+
+### Image transfer helpers
+
+In addition to pulling an image into a room, the CLI can push an image from the room to a registry, load an OCI archive from room storage, or save an image as an OCI archive:
+
+```bash bash
+meshagent room container image push \
+  --room myroom \
+  --tag registry.example.com/agents/chatbot:0.2
+
+meshagent room container image load \
+  --room myroom \
+  --archive-path /images/chatbot.tar
+
+meshagent room container image save \
+  --room myroom \
+  --tag registry.example.com/agents/chatbot:0.2 \
+  --archive-path /workspace/chatbot.tar \
+  --mount-room-path /images:/workspace
+```
 
 ### `logs(container_id, follow=False)`
 

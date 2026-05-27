@@ -725,7 +725,7 @@ await room.Datasets.Merge(
   - **offset**: Optional offset for pagination in Python and Dart.
   - **limit**: Maximum number of matching records to return.
   - **select**: An array of column names to be returned.
-- **Returns**: An array of matching records.
+- **Returns**: Python returns a `pyarrow.Table`. JavaScript, TypeScript, Dart, and .NET return arrays/lists of matching records.
 
 **Example**:
 <CodeGroup>
@@ -744,7 +744,7 @@ results = await room.datasets.search(
   limit=1
 )
 
-print(results)  # [{"id": 1, "username": "alice", "email": "alice@example.com"}]
+print(results.to_pylist())  # [{"id": 1, "username": "alice", "email": "alice@example.com"}]
 
 ```
 ```javascript NodeJs
@@ -953,7 +953,7 @@ await room.Datasets.CreateIndex(
   - **table**: Table name.
   - **name**: Index name to drop.
 - **Returns**: `None`.
-- **Availability**: Python and Dart expose helpers today. JS/TS/.NET may add a helper in a future release.
+- **Availability**: Python, JavaScript/TypeScript, Dart, and .NET expose helpers today.
 
 <CodeGroup>
 ```bash CLI
@@ -967,11 +967,22 @@ meshagent room dataset index-drop \
 await room.datasets.drop_index(table="users", name="email_idx")
 
 ```
+```typescript TypeScript
+await room.datasets.dropIndex({
+  table: "users",
+  name: "email_idx",
+});
+
+```
 ```dart Dart
 await room.datasets.dropIndex(
   table: "users",
   name: "email_idx",
 );
+
+```
+```dotnet C#
+await room.Datasets.DropIndex("users", "email_idx");
 
 ```
 </CodeGroup>
@@ -1039,7 +1050,7 @@ Console.WriteLine(indexes);
   - `list_versions(table, branch=None)` → list of versions (`version`, `timestamp`, `metadata`) for the selected branch.
   - `search(table, branch=None, version=None)` → read a branch head or a specific historical version without any checkout step.
   - `restore(table, version, branch=None)` → restore a table branch to a prior version by creating a new head commit.
-- **Availability**: Python exposes `list_versions`, `search(..., version=...)`, `restore`, and dataset branch operations. Dart currently exposes `listVersions`.
+- **Availability**: Python exposes `list_versions`, `search(..., version=...)`, `restore`, and dataset branch operations. TypeScript exposes `listVersions`, `restore`, and branch helpers. .NET exposes `ListVersions` and `Restore`. Dart currently exposes `listVersions`.
 
 <CodeGroup>
 ```bash CLI
@@ -1082,7 +1093,24 @@ rows = await room.datasets.search(table="users", branch="exp")
 branches = await room.datasets.list_branches()
 
 ```
+```typescript TypeScript
+await room.datasets.createBranch({ branch: "exp" });
+const rows = await room.datasets.search({ table: "users", branch: "exp" });
+const branches = await room.datasets.listBranches();
+
+```
 </CodeGroup>
+
+### Additional dataset operations
+
+The current SDKs and CLI include a few operations that are useful once tables move beyond basic CRUD:
+
+- `rename_table(...)` renames a table without copying its data.
+- `query(...)` / `query_stream(...)` run SQL against room datasets.
+- `watch_table(...)` streams table changes.
+- `count(...)` returns the matching row count for a table query.
+- `meshagent room dataset import` imports local data into a room table.
+- `meshagent room dataset sql` runs SQL from the CLI.
 
 
 ## Related guides
