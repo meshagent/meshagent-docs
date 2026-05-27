@@ -9,8 +9,10 @@ Start with the CLI help, then use a few common commands:
 ```bash bash
 meshagent room queue --help
 meshagent room queue list --room myroom
+meshagent room queue size --room myroom --queue my-queue
 meshagent room queue send --room myroom --queue my-queue --json '{"payload":"Hello World!"}'
 meshagent room queue receive --room myroom --queue my-queue
+meshagent room queue send-mail --room myroom --queue my-queue --from support@example.com --subject "Support request" --body "Please review this."
 ```
 
 ## Why use the Queues API?
@@ -142,6 +144,29 @@ await room.Queues.Send("my-queue", message, create: true);
   - `name`: Queue name.
   - `message`: JSON-serializable payload.
   - `create`: When `true`, create the queue if it does not already exist.
+
+### Queue size from the CLI
+
+Use `meshagent room queue size` when you only need the current queue length:
+
+```bash bash
+meshagent room queue size \
+  --room myroom \
+  --queue my-queue
+```
+
+### Send email-shaped work from the CLI
+
+Use `meshagent room queue send-mail` when a queue consumer expects an email payload instead of a generic JSON work item:
+
+```bash bash
+meshagent room queue send-mail \
+  --room myroom \
+  --queue my-queue \
+  --from support@example.com \
+  --subject "Support request" \
+  --body "Please review this."
+```
 
 When the queue consumer is a MeshAgent queue channel, the payload can include turn-oriented fields such as:
 

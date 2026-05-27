@@ -48,6 +48,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `port`: Forward a container port to localhost
 * `voicebot`: Join a voicebot to a room
 * `process`: Join a process-backed agent to a room
+* `codex`: Join a Codex-backed agent to a room
 * `room`: Operate within a room
 * `llm`: Local LLM proxy utilities
 
@@ -685,7 +686,7 @@ $ meshagent webhook create [OPTIONS]
 * `--name TEXT`: Friendly name for the webhook  [required]
 * `--url TEXT`: Target URL that will receive POSTs  [required]
 * `-e, --event TEXT`: Event to subscribe to (repeat for multiple).  [required]
-* ` TEXT`: Optional description
+* `-d, --description TEXT`: Optional description
 * `--action TEXT`: Optional action name delivered with each call
 * `--payload TEXT`: Optional JSON string sent as the body (merged with event payload).
 * `--help`: Show this message and exit.
@@ -3419,6 +3420,205 @@ $ meshagent process use [OPTIONS]
 * `--websocket-url TEXT`: Connect to a process websocket channel instead of room chat.
 * `--websocket-auth [iap|jwt|none]`: Authentication mode for --websocket-url: jwt, iap, or none.  [default: iap]
 * `--user TEXT`: User name for the websocket process use client.  [default: you]
+* `--help`: Show this message and exit.
+
+## `meshagent codex`
+
+Join a Codex-backed agent to a room
+
+**Usage**:
+
+```console
+$ meshagent codex [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `join`: Join a room and run a Codex-backed agent.
+* `service`: Add a Codex-backed agent service to the host.
+* `spec`: Generate a service spec for deploying Codex.
+* `deploy`: Deploy a Codex-backed agent service.
+* `run`: Join a room, run Codex, and wait for...
+* `threads`: List threads from the local Codex app-server.
+* `use`: Send a one-shot or interactive message to...
+
+### `meshagent codex join`
+
+Join a room and run a Codex-backed agent.
+
+**Usage**:
+
+```console
+$ meshagent codex join [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--agent-name TEXT`: Name of the agent to call
+* `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token
+* `-m, --model TEXT`: Default Codex model
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--key TEXT`: an api key to sign the token with
+* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
+* `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
+* `--help`: Show this message and exit.
+
+### `meshagent codex service`
+
+Add a Codex-backed agent service to the host.
+
+**Usage**:
+
+```console
+$ meshagent codex service [OPTIONS]
+```
+
+**Options**:
+
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-m, --model TEXT`: Default Codex model
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--host TEXT`: Host to bind the service on
+* `--port INTEGER`: Port to bind the service on
+* `--path TEXT`: HTTP path to mount the service at
+* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
+* `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
+* `--help`: Show this message and exit.
+
+### `meshagent codex spec`
+
+Generate a service spec for deploying Codex.
+
+**Usage**:
+
+```console
+$ meshagent codex spec [OPTIONS]
+```
+
+**Options**:
+
+* `--service-name TEXT`: service name
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-m, --model TEXT`: Default Codex model
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
+* `--help`: Show this message and exit.
+
+### `meshagent codex deploy`
+
+Deploy a Codex-backed agent service.
+
+**Usage**:
+
+```console
+$ meshagent codex deploy [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: The name of a room to create the service for
+* `--service-name TEXT`: service name
+* `--service-description TEXT`: service description
+* `--service-title TEXT`: a display name for the service
+* `--agent-name TEXT`: Name of the agent to call  [required]
+* `-m, --model TEXT`: Default Codex model
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
+* `--help`: Show this message and exit.
+
+### `meshagent codex run`
+
+Join a room, run Codex, and wait for messages.
+
+**Usage**:
+
+```console
+$ meshagent codex run [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--role TEXT`: [default: agent]
+* `--agent-name TEXT`: Name of the agent to call
+* `-m, --model TEXT`: Default Codex model
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--key TEXT`: an api key to sign the token with
+* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.  [default: .codex/threads]
+* `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
+* `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
+* `--verbose`: Enable verbose logging and disable default log suppression
+* `--user TEXT`: User name for the local websocket run client.  [default: you]
+* `--thread-path, --thread-id TEXT`: Codex thread id to open
+* `--message TEXT`: the input message to use
+* `--help`: Show this message and exit.
+
+### `meshagent codex threads`
+
+List threads from the local Codex app-server.
+
+**Usage**:
+
+```console
+$ meshagent codex threads [OPTIONS]
+```
+
+**Options**:
+
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--limit INTEGER`: Maximum threads to show  [default: 20]
+* `--offset INTEGER`: Thread list offset  [default: 0]
+* `--help`: Show this message and exit.
+
+### `meshagent codex use`
+
+Send a one-shot or interactive message to a running Codex-backed agent.
+
+**Usage**:
+
+```console
+$ meshagent codex use [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--agent-name TEXT`: Name of the agent to call
+* `--thread-path TEXT`: Codex thread id to open
+* `--message TEXT`: the input message to use
+* `--websocket-url TEXT`: Connect to a websocket channel instead of room chat.
+* `--websocket-auth [jwt|iap|none]`: Authentication mode for --websocket-url: jwt, iap, or none.  [default: iap]
+* `--user TEXT`: User name for the websocket use client.  [default: you]
 * `--help`: Show this message and exit.
 
 ## `meshagent room`
