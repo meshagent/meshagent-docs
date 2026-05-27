@@ -1832,7 +1832,7 @@ $ meshagent agent use [OPTIONS] [AGENT]
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--name TEXT`: Agent name
-* `--thread-path TEXT`: Thread path to open
+* `--thread-id TEXT`: Thread id to open
 * `--load`: Replay persisted thread messages when opening
 * `--since-turn TEXT`: Replay persisted thread messages starting with this turn id
 * `-m, --message TEXT`: Send one message without opening the TUI
@@ -2935,6 +2935,8 @@ $ meshagent process [OPTIONS] COMMAND [ARGS]...
 * `deploy`: Deploy a process-backed agent service.
 * `run`: Join a room, run a process-backed agent,...
 * `threads`: List threads for a process-backed agent.
+* `messages`: List messages in a process-backed agent...
+* `grep`: Search coalesced messages in a...
 * `use`: Send a one-shot or interactive message to...
 
 ### `meshagent process join`
@@ -3372,7 +3374,7 @@ $ meshagent process run [OPTIONS]
 * `--save-audio-input`: Persist realtime audio input chunks to dataset thread storage as binary attachments.
 * `--websocket-auth [iap|jwt|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
 * `--user TEXT`: User name for the local websocket process run client.  [default: you]
-* `--thread-path TEXT`: log all requests to the llm
+* `--thread-id TEXT`: Thread id to open
 * `--message TEXT`: the input message to use
 * `--use-web-search / --no-use-web-search`: request the web search tool
 * `--use-image-gen / --no-use-image-gen`: request the image gen tool
@@ -3398,6 +3400,47 @@ $ meshagent process threads [OPTIONS]
 * `--thread-storage [meshdocument|dataset|none]`: Thread storage backend for process agents.  [default: meshdocument]
 * `--limit INTEGER`: Maximum threads to show  [default: 20]
 * `--offset INTEGER`: Thread list offset  [default: 0]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
+* `--help`: Show this message and exit.
+
+### `meshagent process messages`
+
+List messages in a process-backed agent thread.
+
+**Usage**:
+
+```console
+$ meshagent process messages [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--thread-id TEXT`: Thread id to inspect  [required]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
+* `--help`: Show this message and exit.
+
+### `meshagent process grep`
+
+Search coalesced messages in a process-backed agent thread.
+
+**Usage**:
+
+```console
+$ meshagent process grep [OPTIONS] PATTERN
+```
+
+**Arguments**:
+
+* `PATTERN`: Regex pattern to search for  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--thread-id TEXT`: Thread id to inspect  [required]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
 * `--help`: Show this message and exit.
 
 ### `meshagent process use`
@@ -3415,7 +3458,7 @@ $ meshagent process use [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
-* `--thread-path TEXT`: log all requests to the llm
+* `--thread-id TEXT`: Thread id to open
 * `--message TEXT`: the input message to use
 * `--websocket-url TEXT`: Connect to a process websocket channel instead of room chat.
 * `--websocket-auth [iap|jwt|none]`: Authentication mode for --websocket-url: jwt, iap, or none.  [default: iap]
@@ -3446,6 +3489,8 @@ $ meshagent codex [OPTIONS] COMMAND [ARGS]...
 * `deploy`: Deploy a Codex-backed agent service.
 * `run`: Join a room, run Codex, and wait for...
 * `threads`: List threads from the local Codex app-server.
+* `messages`: List messages in a Codex-backed agent thread.
+* `grep`: Search coalesced messages in a...
 * `use`: Send a one-shot or interactive message to...
 
 ### `meshagent codex join`
@@ -3470,7 +3515,8 @@ $ meshagent codex join [OPTIONS]
 * `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
 * `--working-dir TEXT`: Working directory for Codex turns.
 * `--key TEXT`: an api key to sign the token with
-* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
 * `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
 * `--help`: Show this message and exit.
@@ -3495,7 +3541,8 @@ $ meshagent codex service [OPTIONS]
 * `--host TEXT`: Host to bind the service on
 * `--port INTEGER`: Port to bind the service on
 * `--path TEXT`: HTTP path to mount the service at
-* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
 * `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
 * `--help`: Show this message and exit.
@@ -3520,7 +3567,8 @@ $ meshagent codex spec [OPTIONS]
 * `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
 * `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
 * `--working-dir TEXT`: Working directory for Codex turns.
-* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
 * `--help`: Show this message and exit.
 
@@ -3546,7 +3594,8 @@ $ meshagent codex deploy [OPTIONS]
 * `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
 * `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
 * `--working-dir TEXT`: Working directory for Codex turns.
-* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
 * `--help`: Show this message and exit.
 
@@ -3571,12 +3620,13 @@ $ meshagent codex run [OPTIONS]
 * `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
 * `--working-dir TEXT`: Working directory for Codex turns.
 * `--key TEXT`: an api key to sign the token with
-* `--thread-dir TEXT`: Thread directory annotation for chat and websocket channels.  [default: .codex/threads]
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--channel TEXT`: Attach a channel to the Codex agent. Can be repeated. Currently supported: chat, websocket:PORT, websocket://HOST:PORT.
 * `--websocket-auth [jwt|iap|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
 * `--verbose`: Enable verbose logging and disable default log suppression
 * `--user TEXT`: User name for the local websocket run client.  [default: you]
-* `--thread-path, --thread-id TEXT`: Codex thread id to open
+* `--thread-id TEXT`: Codex thread id to open
 * `--message TEXT`: the input message to use
 * `--help`: Show this message and exit.
 
@@ -3592,11 +3642,65 @@ $ meshagent codex threads [OPTIONS]
 
 **Options**:
 
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--agent-name TEXT`: Name of the agent to list threads for
 * `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
 * `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
 * `--working-dir TEXT`: Working directory for Codex turns.
+* `--thread-dir TEXT`: Thread directory for dataset thread storage namespaces.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
 * `--limit INTEGER`: Maximum threads to show  [default: 20]
 * `--offset INTEGER`: Thread list offset  [default: 0]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
+* `--help`: Show this message and exit.
+
+### `meshagent codex messages`
+
+List messages in a Codex-backed agent thread.
+
+**Usage**:
+
+```console
+$ meshagent codex messages [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
+* `--thread-id TEXT`: Thread id to inspect  [required]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
+* `--help`: Show this message and exit.
+
+### `meshagent codex grep`
+
+Search coalesced messages in a Codex-backed agent thread.
+
+**Usage**:
+
+```console
+$ meshagent codex grep [OPTIONS] PATTERN
+```
+
+**Arguments**:
+
+* `PATTERN`: Regex pattern to search for  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--codex-bin TEXT`: Path to a Codex binary. Defaults to the bundled pinned runtime.
+* `--codex-config TEXT`: Pass a Codex config override as key=value. Can be repeated and is forwarded to codex app-server.
+* `--working-dir TEXT`: Working directory for Codex turns.
+* `--thread-storage [none|codex|dataset]`: Thread storage backend: none, codex, or dataset.  [default: codex]
+* `--thread-id TEXT`: Thread id to inspect  [required]
+* `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
 * `--help`: Show this message and exit.
 
 ### `meshagent codex use`
@@ -3614,7 +3718,7 @@ $ meshagent codex use [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to call
-* `--thread-path TEXT`: Codex thread id to open
+* `--thread-id TEXT`: Codex thread id to open
 * `--message TEXT`: the input message to use
 * `--websocket-url TEXT`: Connect to a websocket channel instead of room chat.
 * `--websocket-auth [jwt|iap|none]`: Authentication mode for --websocket-url: jwt, iap, or none.  [default: iap]
