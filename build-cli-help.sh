@@ -5,7 +5,11 @@ set -euo pipefail
 OUTPUT_LOCATION=reference/meshagent_cli_help.mdx
 PYTHON_BIN=python3
 
-if [ -x ../meshagent-cli/.venv/bin/python3 ]; then
+if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python3" ]; then
+  PYTHON_BIN="$VIRTUAL_ENV/bin/python3"
+elif [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
+  PYTHON_BIN="$VIRTUAL_ENV/bin/python"
+elif [ -x ../meshagent-cli/.venv/bin/python3 ]; then
   PYTHON_BIN=../meshagent-cli/.venv/bin/python3
 elif [ -x ../meshagent-cli/.venv/bin/python ]; then
   PYTHON_BIN=../meshagent-cli/.venv/bin/python
