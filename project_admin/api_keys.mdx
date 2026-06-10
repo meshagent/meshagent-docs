@@ -14,15 +14,17 @@ You can create API keys in [MeshAgent Studio](../interfaces/meshagent_studio) or
 ### MeshAgent Studio
 
 1. Open your project in MeshAgent Studio.
-2. Go to **API Keys**.
-3. Create a new key and save the secret value.
+2. Go to **Access Management**.
+3. Open a service account's **API Keys** menu.
+4. Create a new key and save the secret value.
 
 ### MeshAgent CLI
 
 If you want to create a key from the terminal and activate it for local CLI use at the same time:
 
 ```bash
-meshagent api-key create my-service-key \
+meshagent service-account api-key create my-service-key \
+  --service-account default \
   --description "Used by the deploy pipeline" \
   --activate
 ```
@@ -32,28 +34,28 @@ meshagent api-key create my-service-key \
 To activate an existing key later, use:
 
 ```bash
-meshagent api-key activate <key-id>
+meshagent service-account api-key activate <key-value>
 ```
 
 ## Rotate or remove keys
 
-List the keys in the active project:
+List the keys for a service account in the active project:
 
 ```bash
-meshagent api-key list
+meshagent service-account api-key list --service-account default
 ```
 
 Print the locally activated key id, or emit it as a shell export snippet:
 
 ```bash
-meshagent api-key get
-meshagent api-key env
+meshagent service-account api-key get
+meshagent service-account api-key env
 ```
 
 Delete a key you no longer need:
 
 ```bash
-meshagent api-key delete <key-id>
+meshagent service-account api-key delete <key-id> --service-account default
 ```
 
 ## Best practices

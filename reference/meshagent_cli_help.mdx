@@ -19,10 +19,11 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `version`: Print the version
-* `setup`: Perform initial login and project/api key...
+* `setup`: Perform initial login and project activation.
 * `auth`: Authenticate to meshagent
 * `project`: Manage or activate your meshagent projects
-* `api-key`: Manage or activate api-keys for your project
+* `service-account`: Manage service accounts for your project
+* `iam`: Manage IAM policies for project resources
 * `config`: Read MeshAgent deployment configuration
 * `doctor`: Inspect the current directory for...
 * `create`: Create a minimal deployable project.
@@ -30,7 +31,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `ask`: Send a one-shot LLM prompt.
 * `launch`: Launch supported CLI apps through MeshAgent.
 * `token`: Generate a participant token (JWT) from a...
-* `webhook`: Manage project webhooks
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
 * `secret`: Manage secrets for your project.
@@ -67,7 +67,7 @@ $ meshagent version [OPTIONS]
 
 ## `meshagent setup`
 
-Perform initial login and project/api key activation.
+Perform initial login and project activation.
 
 **Usage**:
 
@@ -263,14 +263,14 @@ $ meshagent project activate [OPTIONS] [PROJECT_ID]
 * `-i, --interactive`: Interactively select or create a project. Uses the TUI in a TTY.
 * `--help`: Show this message and exit.
 
-## `meshagent api-key`
+## `meshagent service-account`
 
-Manage or activate api-keys for your project
+Manage service accounts for your project
 
 **Usage**:
 
 ```console
-$ meshagent api-key [OPTIONS] COMMAND [ARGS]...
+$ meshagent service-account [OPTIONS] COMMAND [ARGS]...
 ```
 
 **Options**:
@@ -281,37 +281,61 @@ $ meshagent api-key [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `list`: List API keys for a project.
-* `create`: Create a new API key for a project.
-* `get`: Get the activated API key for a project.
-* `env`: Print the activated API key as a shell...
-* `activate`: Set the default API key for a project in...
-* `delete`: Delete an API key from a project.
+* `api-key`: Manage API keys
+* `list`: List service accounts for a project.
+* `get`: Get a service account.
+* `create`: Create a service account for a project.
+* `update`: Update a service account.
+* `delete`: Delete a service account.
 
-### `meshagent api-key list`
+### `meshagent service-account api-key`
 
-List API keys for a project.
+Manage API keys
 
 **Usage**:
 
 ```console
-$ meshagent api-key list [OPTIONS]
+$ meshagent service-account api-key [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List API keys for a service account.
+* `create`: Create an API key for a service account.
+* `delete`: Delete an API key.
+* `get`: Get the activated API key for a project.
+* `env`: Print the activated API key as a shell...
+* `activate`: Set the default API key for a project in...
+
+#### `meshagent service-account api-key list`
+
+List API keys for a service account.
+
+**Usage**:
+
+```console
+$ meshagent service-account api-key list [OPTIONS]
 ```
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--service-account TEXT`: service account id or name that owns the API keys  [required]
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key create`
+#### `meshagent service-account api-key create`
 
-Create a new API key for a project.
+Create an API key for a service account.
 
 **Usage**:
 
 ```console
-$ meshagent api-key create [OPTIONS] NAME
+$ meshagent service-account api-key create [OPTIONS] NAME
 ```
 
 **Arguments**:
@@ -321,19 +345,40 @@ $ meshagent api-key create [OPTIONS] NAME
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--description TEXT`: a description for the api key
+* `--service-account TEXT`: service account id or name that will own the API key  [required]
+* `--description TEXT`: a description for the API key
 * `--activate / --no-activate`: use this key by default for commands that accept an API key  [default: no-activate]
-* `--silent / --no-silent`: do not print api key  [default: no-silent]
+* `--silent / --no-silent`: do not print API key  [default: no-silent]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key get`
+#### `meshagent service-account api-key delete`
+
+Delete an API key.
+
+**Usage**:
+
+```console
+$ meshagent service-account api-key delete [OPTIONS] ID
+```
+
+**Arguments**:
+
+* `ID`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--service-account TEXT`: service account id or name that owns the API key  [required]
+* `--help`: Show this message and exit.
+
+#### `meshagent service-account api-key get`
 
 Get the activated API key for a project.
 
 **Usage**:
 
 ```console
-$ meshagent api-key get [OPTIONS]
+$ meshagent service-account api-key get [OPTIONS]
 ```
 
 **Options**:
@@ -341,14 +386,14 @@ $ meshagent api-key get [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key env`
+#### `meshagent service-account api-key env`
 
 Print the activated API key as a shell export snippet.
 
 **Usage**:
 
 ```console
-$ meshagent api-key env [OPTIONS]
+$ meshagent service-account api-key env [OPTIONS]
 ```
 
 **Options**:
@@ -356,14 +401,14 @@ $ meshagent api-key env [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key activate`
+#### `meshagent service-account api-key activate`
 
 Set the default API key for a project in local CLI settings.
 
 **Usage**:
 
 ```console
-$ meshagent api-key activate [OPTIONS] KEY
+$ meshagent service-account api-key activate [OPTIONS] KEY
 ```
 
 **Arguments**:
@@ -375,23 +420,188 @@ $ meshagent api-key activate [OPTIONS] KEY
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
-### `meshagent api-key delete`
+### `meshagent service-account list`
 
-Delete an API key from a project.
+List service accounts for a project.
 
 **Usage**:
 
 ```console
-$ meshagent api-key delete [OPTIONS] ID
+$ meshagent service-account list [OPTIONS]
 ```
-
-**Arguments**:
-
-* `ID`: [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent service-account get`
+
+Get a service account.
+
+**Usage**:
+
+```console
+$ meshagent service-account get [OPTIONS] SERVICE_ACCOUNT
+```
+
+**Arguments**:
+
+* `SERVICE_ACCOUNT`: service account id or name  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent service-account create`
+
+Create a service account for a project.
+
+**Usage**:
+
+```console
+$ meshagent service-account create [OPTIONS] NAME
+```
+
+**Arguments**:
+
+* `NAME`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--display-name TEXT`: display name for the service account
+* `--description TEXT`: description for the service account
+* `--metadata TEXT`: metadata JSON object
+* `--annotations TEXT`: annotations JSON object
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent service-account update`
+
+Update a service account.
+
+**Usage**:
+
+```console
+$ meshagent service-account update [OPTIONS] SERVICE_ACCOUNT
+```
+
+**Arguments**:
+
+* `SERVICE_ACCOUNT`: service account id or name  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--name TEXT`: new service account name
+* `--display-name TEXT`: display name for the service account
+* `--description TEXT`: description for the service account
+* `--metadata TEXT`: metadata JSON object
+* `--annotations TEXT`: annotations JSON object
+* `--help`: Show this message and exit.
+
+### `meshagent service-account delete`
+
+Delete a service account.
+
+**Usage**:
+
+```console
+$ meshagent service-account delete [OPTIONS] SERVICE_ACCOUNT
+```
+
+**Arguments**:
+
+* `SERVICE_ACCOUNT`: service account id or name  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+## `meshagent iam`
+
+Manage IAM policies for project resources
+
+**Usage**:
+
+```console
+$ meshagent iam [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `policy`: List a resource IAM policy.
+* `grant`: Grant roles on a resource.
+* `revoke`: Revoke all direct roles for a subject.
+
+### `meshagent iam policy`
+
+List a resource IAM policy.
+
+**Usage**:
+
+```console
+$ meshagent iam policy [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--resource-type TEXT`: resource type  [required]
+* `--resource-id TEXT`: resource id  [required]
+* `--page-size INTEGER`: OpenFGA read page size  [default: 50]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent iam grant`
+
+Grant roles on a resource.
+
+**Usage**:
+
+```console
+$ meshagent iam grant [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--resource-type TEXT`: resource type  [required]
+* `--resource-id TEXT`: resource id  [required]
+* `--subject-type TEXT`: subject type  [required]
+* `--subject-id TEXT`: subject id  [required]
+* `--role TEXT`: role to grant; repeat or comma-separate  [required]
+* `--invite-redirect-url TEXT`: invite redirect URL for users
+* `--help`: Show this message and exit.
+
+### `meshagent iam revoke`
+
+Revoke all direct roles for a subject.
+
+**Usage**:
+
+```console
+$ meshagent iam revoke [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--resource-type TEXT`: resource type  [required]
+* `--resource-id TEXT`: resource id  [required]
+* `--subject-type TEXT`: subject type  [required]
+* `--subject-id TEXT`: subject id  [required]
 * `--help`: Show this message and exit.
 
 ## `meshagent config`
@@ -644,103 +854,6 @@ $ meshagent token [OPTIONS]
 * `--key TEXT`: an api key to sign the token with
 * `--install-completion`: Install completion for the current shell.
 * `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-## `meshagent webhook`
-
-Manage project webhooks
-
-**Usage**:
-
-```console
-$ meshagent webhook [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a webhook
-* `list`: List webhooks
-* `get`: Get a webhook
-* `delete`: Delete a webhook
-
-### `meshagent webhook create`
-
-Create a webhook
-
-**Usage**:
-
-```console
-$ meshagent webhook create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Friendly name for the webhook  [required]
-* `--url TEXT`: Target URL that will receive POSTs  [required]
-* `-e, --event TEXT`: Event to subscribe to (repeat for multiple).  [required]
-* `-d, --description TEXT`: Optional description
-* `--action TEXT`: Optional action name delivered with each call
-* `--payload TEXT`: Optional JSON string sent as the body (merged with event payload).
-* `--help`: Show this message and exit.
-
-### `meshagent webhook list`
-
-List webhooks
-
-**Usage**:
-
-```console
-$ meshagent webhook list [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--help`: Show this message and exit.
-
-### `meshagent webhook get`
-
-Get a webhook
-
-**Usage**:
-
-```console
-$ meshagent webhook get [OPTIONS] WEBHOOK_ID
-```
-
-**Arguments**:
-
-* `WEBHOOK_ID`: ID of the webhook to get  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--help`: Show this message and exit.
-
-### `meshagent webhook delete`
-
-Delete a webhook
-
-**Usage**:
-
-```console
-$ meshagent webhook delete [OPTIONS] WEBHOOK_ID
-```
-
-**Arguments**:
-
-* `WEBHOOK_ID`: ID of the webhook to delete  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent service`

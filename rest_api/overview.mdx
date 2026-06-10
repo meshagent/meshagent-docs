@@ -11,7 +11,7 @@ The REST API can be used for:
 - **Project storage**: Upload/download project files by path  
 - **Services**: Manage project-wide and room-scoped services
 - **Secrets**: Manage key-based and image-pull secrets  
-- **Project settings & integrations**: Update project settings, model routing configuration, webhooks, API keys, and OAuth clients
+- **Project settings & integrations**: Update project settings, model routing configuration, API keys, and OAuth clients
 - **Shares**: Create share links for Rooms
 - **Mailboxes**: Manage mailboxes mapped to Rooms
 - **Operations**: Understand sessions (events/spans/metrics) and create/manage scheduled tasks  
@@ -77,8 +77,8 @@ meshagent setup # this will also print your project ID
 # Get your current project ID
 meshagent project list # the project with the * next to it is the current active project
 
-# Create an API Key
-meshagent api-key create my-key --activate
+# Create an API key for a service account
+meshagent service-account api-key create my-key --service-account default --activate
 ```
 
 Create a `.env` file in your project and paste the key value:
@@ -113,7 +113,6 @@ Create and manage projects and Rooms. Room connection returns a signed token and
 | `get_project(project_id)`                                                | `GET /accounts/projects/{project_id}`                            | Fetch one project.                                                |
 | `update_project_settings(project_id, settings)`                          | `PUT /accounts/projects/{project_id}/settings`                   | Update project settings.                                          |
 | `get_project_status(project_id)`                                         | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
-| `get_project_role(project_id)`                                           | `GET /accounts/projects/{project_id}/role`                       | Get your role in the project.                                     |
 | `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user (optionally admin/developer/can_create_rooms/can_use_llm_proxy).         |
 | `remove_user_from_project(project_id, user_id)`                          | `DELETE /accounts/projects/{project_id}/users/{user_id}`         | Remove a user from the project.                                   |
 | `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List users in the project.                                        |
@@ -126,21 +125,17 @@ Create and manage projects and Rooms. Room connection returns a signed token and
 | `delete_room(project_id, room_id)`                                       | `DELETE /accounts/projects/{project_id}/rooms/{room_id}`         | Delete a room.                                                    |
 | `connect_room(project_id, room_name)`                                    | `POST /accounts/projects/{project_id}/rooms/{room_name}/connect` | Return `RoomConnectionInfo` (`jwt`, `room_url`, etc.).            |
 
-## Room grants
-Room grants store per-user permissions (`ApiScope`s) for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and are used when minting room connection tokens (see [participant tokens](./participant_tokens)).
+## Resource IAM Policies
+Room, agent, repository, and feed direct access is managed through IAM-style resource policies backed by OpenFGA.
 
-| SDK method                                                                | HTTP route                                                               | What it does                               |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------ |
-| `create_room_grant(project_id, room_id, user_id, permissions)`            | `POST /accounts/projects/{project_id}/room-grants`                       | Create a grant for a user.                 |
-| `create_room_grant_by_email(project_id, room_id, email, permissions)`     | `POST /accounts/projects/{project_id}/room-grants`                       | Create a grant targeting a user by email.  |
-| `update_room_grant(project_id, room_id, user_id, permissions, grant_id?)` | `PUT /accounts/projects/{project_id}/room-grants/{grant_id}`             | Replace permissions for an existing grant. |
-| `delete_room_grant(project_id, room_id, user_id)`                         | `DELETE /accounts/projects/{project_id}/room-grants/{room_id}/{user_id}` | Delete a grant.                            |
-| `get_room_grant(project_id, room_id, user_id)`                            | `GET /accounts/projects/{project_id}/room-grants/{room_id}/{user_id}`    | Fetch a grant (`ProjectRoomGrant`).        |
-| `list_room_grants(project_id, limit?, offset?, order_by?)`                | `GET /accounts/projects/{project_id}/room-grants`                        | List all grants in a project.              |
-| `list_room_grants_by_user(project_id, user_id, …)`                        | `GET /accounts/projects/{project_id}/room-grants/by-user/{user_id}`      | List rooms a user can access.              |
-| `list_room_grants_by_room(project_id, room_name, …)`                      | `GET /accounts/projects/{project_id}/room-grants/by-room/{room_name}`    | List users with access to a room.          |
-| `list_unique_rooms_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-room`                | Count grants per room.                     |
-| `list_unique_users_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-user`                | Count grants per user.                     |
+| SDK method                                                     | HTTP route                                                                                  | What it does                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `get_resource_policy(project_id, resource_type, resource_id)`  | `GET /accounts/projects/{project_id}/iam/{resource_type}/{resource_id}/policy`              | List direct policy bindings for a resource.       |
+| `grant_resource_policy(project_id, resource_type, resource_id, subject, roles)` | `POST /accounts/projects/{project_id}/iam/{resource_type}/{resource_id}/policy:grant` | Add or replace direct roles for a subject.        |
+| `revoke_resource_policy(project_id, resource_type, resource_id, subject)` | `POST /accounts/projects/{project_id}/iam/{resource_type}/{resource_id}/policy:revoke` | Remove all direct roles for a subject/resource.   |
+| `list_access_bindings(project_id, subject)`                    | `POST /accounts/projects/{project_id}/access:bindings`                                      | List direct resource bindings for a subject.      |
+| `get_effective_access(project_id, subject, resource, relations?)` | `POST /accounts/projects/{project_id}/access:effective`                                  | Evaluate effective roles for a subject/resource.  |
+| `test_access(project_id, subject, resource, relation)`         | `POST /accounts/projects/{project_id}/access:test`                                          | Test a single effective relation.                 |
 
 
 ## Project Storage
@@ -237,22 +232,16 @@ Create and manage project-owned image repositories.
 | `delete_repository(project_id, repository_id)`        | `DELETE /accounts/projects/{project_id}/repositories/{repository_id}` | Delete a repository.     |
 | `create_repository_token(project_id, repository_id, request)` | `POST /accounts/projects/{project_id}/repositories/{repository_id}/token` | Create a repository token. |
 
-## Webhooks
-
-| SDK method                                  | HTTP route                                                     | What it does      |
-| ------------------------------------------- | -------------------------------------------------------------- | ----------------- |
-| `create_webhook(project_id, …)`             | `POST /accounts/projects/{project_id}/webhooks`                | Create a webhook. |
-| `list_webhooks(project_id)`                 | `GET /accounts/projects/{project_id}/webhooks`                 | List webhooks.    |
-| `update_webhook(project_id, webhook_id, …)` | `PUT /accounts/projects/{project_id}/webhooks/{webhook_id}`    | Update a webhook. |
-| `delete_webhook(project_id, webhook_id)`    | `DELETE /accounts/projects/{project_id}/webhooks/{webhook_id}` | Delete a webhook. |
-
 ## API Keys
 
-| SDK method                                      | HTTP route                                             | What it does                              |
-| ----------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
-| `create_api_key(project_id, name, description)` | `POST /accounts/projects/{project_id}/api-keys`        | Issue a new API key (returns value once). |
-| `list_api_keys(project_id)`                     | `GET /accounts/projects/{project_id}/api-keys`         | List keys (does not list key value).              |
-| `delete_api_key(project_id, id)`                | `DELETE /accounts/projects/{project_id}/api-keys/{id}` | Revoke a key.                             |
+API keys belong to service accounts and are managed under the owning service account.
+
+| SDK method                                                        | HTTP route                                                                                      | What it does                              |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `create_api_key(project_id, service_account_id, name, description)` | `POST /accounts/projects/{project_id}/service-accounts/{service_account_id}/api-keys`            | Issue a new API key (returns value once). |
+| `list_api_keys(project_id, service_account_id)`                   | `GET /accounts/projects/{project_id}/service-accounts/{service_account_id}/api-keys`             | List keys (does not list key value).      |
+| `delete_api_key(project_id, service_account_id, id)`              | `DELETE /accounts/projects/{project_id}/service-accounts/{service_account_id}/api-keys/{id}`     | Revoke a key.                             |
+| `revoke_api_keys_by_msid(project_id, service_account_id, msid)`   | `POST /accounts/projects/{project_id}/service-accounts/{service_account_id}/api-keys:revoke`     | Revoke OAuth-session-created keys.        |
 
 ## OAuth clients
 Manage OAuth Clients for connections with other services. 
@@ -264,18 +253,6 @@ Manage OAuth Clients for connections with other services.
 | `get_oauth_client(project_id, client_id)`       | `GET /accounts/projects/{project_id}/oauth/clients/{client_id}`    | Fetch one client.                         |
 | `update_oauth_client(project_id, client_id, …)` | `PUT /accounts/projects/{project_id}/oauth/clients/{client_id}`    | Update a client.                          |
 | `delete_oauth_client(project_id, client_id)`    | `DELETE /accounts/projects/{project_id}/oauth/clients/{client_id}` | Delete a client.                          |
-
-
-## Shares
-Manage share records for a project.
-
-| SDK method                                      | HTTP route                                                 | What it does                                                     |
-| ----------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| `create_share(project_id, settings?)`           | `POST /accounts/projects/{project_id}/shares`              | Create a share token.                                            |
-| `list_shares(project_id)`                       | `GET /accounts/projects/{project_id}/shares`               | List shares.                                                     |
-| `update_share(project_id, share_id, settings?)` | `PUT /accounts/projects/{project_id}/shares/{share_id}`    | Update share settings.                                           |
-| `delete_share(project_id, share_id)`            | `DELETE /accounts/projects/{project_id}/shares/{share_id}` | Delete a share.                                                  |
-
 
 ## Mailboxes
 Create and manage mailboxes that can be used by Agents or Rooms. 

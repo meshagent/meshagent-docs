@@ -5,7 +5,7 @@ description: Manage project routes that map domains and paths to rooms or manage
 
 Routes map a domain to either room HTTP paths or a managed agent websocket.
 
-Use them when you want a stable URL for something running inside a room, such as a web app, webhook endpoint, or HTTP integration.
+Use them when you want a stable URL for something running inside a room, such as a web app or HTTP integration.
 
 This is the normal way to publish an HTTP service from a room. A common pattern is: an agent or service creates a web app in the room, serves it on a published port, and then a route gives that app a stable URL.
 
@@ -141,14 +141,13 @@ These headers are intended for the destination app to consume.
 
 MeshAgent also strips any client-supplied `X-MESHAGENT-USER` or `X-MESHAGENT-API-SCOPE` headers before forwarding the request, so callers cannot spoof them without actually going through MeshAgent IAP.
 
-## Queue-backed routes and room-secret validation
+## Queue-backed routes
 
 Routes are not limited to proxying traffic into an HTTP app. They can also turn incoming HTTP requests into queue messages for agents or workers inside the room.
 
-This is useful for webhook ingestion patterns where you want:
+This is useful when you want:
 
 - a stable public URL
-- signature validation at the edge
 - no always-on HTTP app inside the room
 - an internal queue that workers can process asynchronously
 
@@ -161,19 +160,16 @@ ports:
     published: true
     public: false
     annotations:
-      meshagent.request.queue: inbound-webhooks
-      meshagent.request.processor: webhook-gateway
-      meshagent.request.validation.method: stripe
-      meshagent.request.validation.secret: stripe-webhook-secret
+      meshagent.request.queue: inbound-events
+      meshagent.request.validation.method: bearer
 ```
 
 With that configuration:
 
 1. A request arrives at the route.
-2. MeshAgent validates the request using the configured validation method.
-3. MeshAgent reads the validation secret from the room as the configured processor identity.
-4. If validation succeeds, MeshAgent publishes the request body to the queue.
-5. MeshAgent returns `202 Accepted`.
+2. MeshAgent validates the caller using the configured route auth method.
+3. If validation succeeds, MeshAgent publishes the request body to the queue.
+4. MeshAgent returns `202 Accepted`.
 
 Today the queued message payload is:
 
@@ -186,53 +182,11 @@ Today the queued message payload is:
 | Annotation | Purpose |
 |-----------|---------|
 | `meshagent.request.queue` | Queue name to publish into. |
-| `meshagent.request.processor` | In-room identity MeshAgent uses when reading the secret and publishing the work. |
-| `meshagent.request.validation.method` | Request validation method. |
-| `meshagent.request.validation.secret` | Room secret id used for signature verification. |
+| `meshagent.request.validation.method` | Optional request validation method. Supported values are `bearer`, `jwt`, and `cookie`. |
 
 You can place these annotations on the port or on a specific endpoint. Endpoint annotations override port annotations.
 
-### Secret-backed validation
-
-The validation secret is not copied into the route itself. Instead, MeshAgent reads it from room secrets at request time and uses it to verify the incoming webhook or signed request before anything is placed on the queue.
-
-This keeps the shared secret inside the room security boundary while still letting you publish an external URL.
-
-Supported validation methods currently include:
-
-- `github`
-- `salesforce`
-- `sentry`
-- `slack`
-- `shopify`
-- `stripe`
-- `twilio`
-- `zendesk`
-
-### What to store in the room secret
-
-Store the provider's original shared secret value in the room secret.
-
-Do not store:
-
-- the incoming signature header value
-- a computed HMAC or digest
-- a JSON wrapper object unless the provider explicitly gives you a plain secret inside it
-
-Use the raw secret string or key that the provider tells you to use for request verification.
-
-| Method | Secret value to store in the room | Provider docs |
-|-------|------------------------------------|---------------|
-| `github` | The webhook secret token you configured for that GitHub webhook. | [GitHub: Validating webhook deliveries](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) |
-| `slack` | Your Slack app's signing secret. | [Slack: Verifying requests from Slack](https://api.slack.com/docs/verifying-requests-from-slack) |
-| `stripe` | The webhook endpoint's signing secret. This is not a Stripe API key. | [Stripe: Receive events with an HTTPS server](https://docs.stripe.com/webhooks/test) |
-| `shopify` | For Shopify app webhooks, your app client secret. | [Shopify: Deliver webhooks through HTTPS](https://shopify.dev/docs/apps/build/webhooks/subscribe/https), [Shopify: About client credentials](https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets) |
-| `twilio` | Your Twilio Auth Token used for request validation. | [Twilio: Security](https://www.twilio.com/docs/usage/security), [Twilio: REST API Auth Token](https://www.twilio.com/docs/iam/api/authtoken) |
-| `zendesk` | The webhook signing secret key from the Zendesk webhook configuration. | [Zendesk: Verifying webhook authenticity](https://developer.zendesk.com/documentation/event-connectors/webhooks/verifying) |
-| `sentry` | The Sentry service hook `secret` value for that hook. | [Sentry: Register a New Service Hook](https://docs.sentry.io/api/projects/register-a-new-service-hook/), [Sentry: Retrieve a Service Hook](https://docs.sentry.io/api/projects/retrieve-a-service-hook/) |
-| `salesforce` | The signing key or shared secret for the Salesforce webhook product that is sending the request. Common cases are Marketing Cloud ENS callback signature keys and Data Cloud generated signing keys. | [Salesforce Marketing Cloud ENS: Notification Signing](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ens-notification-signing.html), [Salesforce Data Cloud: Generate a Secret Key for Signature Validation](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-generate-secret-key-for-signature-validation.htm), [Salesforce Data Cloud: Payload Signature](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-payload-signature.htm) |
-
-Queue-backed validated routes must remain non-public. They are intended for authenticated or signature-validated ingress handled by MeshAgent, not open anonymous forwarding.
+Queue-backed routes must remain non-public. They are intended for authenticated ingress handled by MeshAgent, not open anonymous forwarding.
 
 ## Liveness and startup behavior
 
