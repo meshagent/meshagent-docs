@@ -17,22 +17,43 @@ Choose the installation path that matches how you plan to work.
 ```bash macOS
 brew tap meshagent/homebrew-meshagent
 brew install meshagent
-meshagent --help
 
-# To install a specific version run:
+# To install a specific version:
 # brew install meshagent@[version]
+
+meshagent --help
 ```
 ```bash Windows
 choco install meshagent
-meshagent --help
 
-# To install a specific version run:
+# To install a specific version:
 # choco install meshagent --version=[version]
+
+meshagent --help
 ```
-```bash Other
+```bash Linux
 pipx install "meshagent[cli]" --include-deps
 pipx ensurepath
+
+# To install a specific version:
+# pipx install "meshagent[cli]==[version]" --include-deps
+
 meshagent --help
+```
+</CodeGroup>
+
+**To update:**
+
+<CodeGroup>
+```bash macOS
+brew update
+brew upgrade meshagent
+```
+```bash Windows
+choco upgrade meshagent
+```
+```bash Linux
+pipx upgrade meshagent
 ```
 </CodeGroup>
 
@@ -59,13 +80,50 @@ Authenticate in the browser and run the setup flow:
 meshagent setup
 ```
 
-`meshagent setup` signs you in, or if you are already signed in lets you continue with the current account or switch accounts, then lets you choose or create a project and activates the project for the CLI. If Codex or Claude are installed, setup can also configure them to use MeshAgent for the active project, reuse or update existing MeshAgent integrations, or remove them when you want to switch back. After this completes, the CLI is ready to create rooms, run agents, and deploy services in the active project.
+`meshagent setup` signs you in, or if you are already signed in lets you continue with the current account or switch accounts, then lets you choose or create a project and activates the project for the CLI. If Codex or Claude are installed, setup can also configure them to use MeshAgent for the active project, reuse or update existing MeshAgent integrations, or remove them when you want to switch back.
+
+At the end of setup, the TUI asks whether you want to create a sample MeshAgent application. Choose that option when you want the guided sample app wizard. It opens the same scaffolding flow as `meshagent create`.
 
 By default MeshAgent provides OpenAI and Anthropic access for the project through MeshAgent-managed routing. You do not need to add your own OpenAI or Anthropic keys first unless you want the project to use your own provider accounts.
 
-## Step 3: Create a room and mailbox
+If setup or later CLI commands behave unexpectedly, run:
 
-`meshagent setup` does not create a room, so create the room you will use for this guide now. If you already created a room in the MeshAgent Studio or Powerboards UI, you can reuse it here:
+```bash bash
+meshagent doctor
+meshagent doctor --fix
+```
+
+`meshagent doctor` checks common local configuration issues. `meshagent doctor --fix` applies the fixes the doctor can safely make for you.
+
+## Step 3: Choose a starting path
+
+You can start from a generated app or run a room-connected process directly.
+
+### Option A: Scaffold a sample app
+
+Use `meshagent create` when you want a deployable sample application that already includes MeshAgent wiring for one of the supported SDKs and app patterns:
+
+```bash bash
+meshagent create my-meshagent-app
+```
+
+The interactive wizard lets you choose the SDK language and app focus. For non-interactive use, pass both values:
+
+```bash bash
+meshagent create my-python-agent \
+  --language python \
+  --focus backend-agent
+```
+
+Use this path when you want to start from a sample app and then customize the generated project.
+
+### Option B: Run an agent with `meshagent process`
+
+Use `meshagent process` when you want to start a room-connected agent directly from the CLI. Continue below to create a room, connect an agent identity, and optionally deploy it.
+
+**Create a room and mailbox**
+
+If you chose the `meshagent process` path, create the room you will use for this guide now. If you already created a room in the MeshAgent Studio or Powerboards UI, you can reuse it here:
 
 ```bash bash
 meshagent rooms create gettingstarted --if-not-exists
@@ -81,7 +139,7 @@ meshagent mailbox create \
   --queue my-first-agent@mail.meshagent.com
 ```
 
-## Step 4: Start your first agent
+**Start your first agent**
 
 `meshagent process` is the main CLI path for running a room-connected agent. This example starts one agent identity with all four primary channels:
 
@@ -108,7 +166,7 @@ meshagent process join \
 
 This keeps the agent running from your terminal. Press `Ctrl+C` when you want to stop it.
 
-## Step 5: Talk to the agent in MeshAgent Studio
+**Talk to the agent in MeshAgent Studio**
 
 1. Open [MeshAgent Studio](https://studio.meshagent.com/).
 2. Join the `gettingstarted` room.
@@ -119,7 +177,7 @@ At this point you have a live room-connected agent running through the CLI.
 
 You can also open the same room in [Powerboards](https://powerboards.com) if you want to use an end-user-facing UI instead of Studio. Studio and Powerboards both connect to the same underlying room.
 
-## Step 6: Try the other channels
+**Try the other channels**
 
 You can now reach the same agent through queue, mail, and toolkit entry points.
 
@@ -144,7 +202,7 @@ meshagent room agents invoke-tool \
 
 You can also email the agent at `my-first-agent@mail.meshagent.com`.
 
-## Step 7: Deploy the agent as a managed service
+**Deploy the agent as a managed service**
 
 Running the agent locally is the fastest way to test it. When you want it to stay available without keeping your terminal open, deploy it as a service.
 
@@ -185,7 +243,7 @@ meshagent service create --file meshagent.yaml --room gettingstarted
 meshagent service create --file meshagent.yaml --global
 ```
 
-## Step 8: Inspect and manage what you deployed
+**Inspect and manage what you deployed**
 
 Use these commands to inspect the project and the services you now have running:
 

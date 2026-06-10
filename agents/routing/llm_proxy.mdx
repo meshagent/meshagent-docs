@@ -152,6 +152,18 @@ curl "https://api.meshagent.com/openai/v1/responses" \
   }'
 ```
 
+### Log proxy traffic to a feed
+
+Use `meshagent llm logger` to manage project loggers that copy matching LLM proxy events into a destination feed. Create the destination feed first, then create a logger with a JMESPath metadata filter:
+
+```bash bash
+meshagent llm logger create \
+  --feed-id FEED_ID \
+  --filter-expression '`true`'
+```
+
+Use `meshagent llm logger list`, `meshagent llm logger get LOGGER_ID`, `meshagent llm logger update LOGGER_ID`, and `meshagent llm logger delete LOGGER_ID` to manage existing loggers.
+
 ## Authentication Notes
 - `meshagent room connect` sets `MESHAGENT_TOKEN`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` to a participant token with access to the room.
 - The participant token must carry the room grant and LLM API grant.
