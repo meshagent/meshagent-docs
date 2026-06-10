@@ -157,6 +157,11 @@ curl "https://api.meshagent.com/openai/v1/responses" \
 Use `meshagent llm logger` to manage project loggers that copy matching LLM proxy events into a destination feed. Create the destination feed first, then create a logger with a JMESPath metadata filter:
 
 ```bash bash
+meshagent feed create \
+  --name llm-proxy-logs \
+  --description "LLM proxy request and response events"
+
+# Use the returned feed id as FEED_ID.
 meshagent llm logger create \
   --feed-id FEED_ID \
   --filter-expression '`true`'
