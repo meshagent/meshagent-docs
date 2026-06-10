@@ -103,8 +103,8 @@ The `Meshagent()` client accepts a `base_url` and `token`.
 
 REST calls raise `meshagent.api.RoomException` on non-2xx responses. Many methods also validate responses with typed models, while others still return plain JSON dicts or lists directly.
 
-## Projects & Rooms
-Create and manage projects and Rooms. Room connection returns a signed token and a room URL to join the room. 
+## Projects, Rooms, and managed agents
+Create and manage projects, Rooms, and managed agent identities. Room and agent connection methods return signed connection information for the target runtime.
 
 | SDK method                                                               | HTTP route                                                       | What it does                                                      |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -125,6 +125,11 @@ Create and manage projects and Rooms. Room connection returns a signed token and
 | `update_room(project_id, room_id, name, metadata?)`                      | `PUT /accounts/projects/{project_id}/rooms/{room_id}`            | Rename/update a room.                                             |
 | `delete_room(project_id, room_id)`                                       | `DELETE /accounts/projects/{project_id}/rooms/{room_id}`         | Delete a room.                                                    |
 | `connect_room(project_id, room_name)`                                    | `POST /accounts/projects/{project_id}/rooms/{room_name}/connect` | Return `RoomConnectionInfo` (`jwt`, `room_url`, etc.).            |
+| `create_agent(project_id, configuration, if_not_exists?, permissions?)`  | `POST /accounts/projects/{project_id}/agents`                    | Create a managed agent identity.                                  |
+| `get_agent(project_id, name)`                                            | `GET /accounts/projects/{project_id}/agents/{agent_name}`        | Fetch a managed agent by name.                                    |
+| `update_agent(project_id, agent_id, configuration)`                      | `PUT /accounts/projects/{project_id}/agents/{agent_id}`          | Update a managed agent.                                           |
+| `delete_agent(project_id, agent_id)`                                     | `DELETE /accounts/projects/{project_id}/agents/{agent_id}`       | Delete a managed agent.                                           |
+| `connect_agent(project_id, agent)`                                       | `POST /accounts/projects/{project_id}/agents/{agent_name}/connect` | Return `AgentConnectionInfo`.                                   |
 
 ## Room grants
 Room grants store per-user permissions (`ApiScope`s) for a specific room. They are persisted as `ProjectRoomGrant { room, user_id, permissions }` records and are used when minting room connection tokens (see [participant tokens](./participant_tokens)).
@@ -141,6 +146,23 @@ Room grants store per-user permissions (`ApiScope`s) for a specific room. They a
 | `list_room_grants_by_room(project_id, room_name, …)`                      | `GET /accounts/projects/{project_id}/room-grants/by-room/{room_name}`    | List users with access to a room.          |
 | `list_unique_rooms_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-room`                | Count grants per room.                     |
 | `list_unique_users_with_grants(project_id, …)`                            | `GET /accounts/projects/{project_id}/room-grants/by-user`                | Count grants per user.                     |
+
+## Agent grants
+Agent grants store per-user permissions for managed agents. Agent-room grants store the rooms a managed agent can access.
+
+| SDK method                                                                | HTTP route                                                                  | What it does                                  |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------- |
+| `create_agent_grant(project_id, agent_id, user_id, permissions?)`         | `POST /accounts/projects/{project_id}/agent-grants`                         | Create a user grant for an agent.             |
+| `create_agent_grant_by_email(project_id, agent_id, email, permissions?)`  | `POST /accounts/projects/{project_id}/agent-grants`                         | Create an agent grant targeting an email.     |
+| `update_agent_grant(project_id, agent_id, user_id, permissions?, grant_id?)` | `PUT /accounts/projects/{project_id}/agent-grants/{grant_id}`            | Replace permissions for an agent grant.       |
+| `delete_agent_grant(project_id, agent_id, user_id)`                       | `DELETE /accounts/projects/{project_id}/agent-grants/{agent_id}/{user_id}`  | Delete a user grant for an agent.             |
+| `get_agent_grant(project_id, agent_id, user_id)`                          | `GET /accounts/projects/{project_id}/agent-grants/{agent_id}/{user_id}`     | Fetch an agent grant.                         |
+| `create_agent_room_grant(project_id, agent_id, room_id, permissions?)`    | `POST /accounts/projects/{project_id}/agent-room-grants`                    | Grant an agent access to a room.              |
+| `update_agent_room_grant(project_id, agent_id, room_id, permissions?, grant_id?)` | `PUT /accounts/projects/{project_id}/agent-room-grants/{grant_id}` | Replace an agent-room grant.                  |
+| `delete_agent_room_grant(project_id, agent_id, room_id)`                  | `DELETE /accounts/projects/{project_id}/agent-room-grants/{agent_id}/{room_id}` | Delete an agent-room grant.              |
+| `get_agent_room_grant(project_id, agent_id, room_id)`                     | `GET /accounts/projects/{project_id}/agent-room-grants/{agent_id}/{room_id}` | Fetch an agent-room grant.                  |
+| `list_agent_room_grants_by_agent(project_id, agent_name, limit?, offset?)` | `GET /accounts/projects/{project_id}/agent-room-grants/by-agent/{agent_name}` | List rooms available to an agent.          |
+| `list_agent_room_grants_by_room(project_id, room_name, limit?, offset?)` | `GET /accounts/projects/{project_id}/agent-room-grants/by-room/{room_name}` | List agents with access to a room.          |
 
 
 ## Project Storage
@@ -180,7 +202,7 @@ Create and manage project and room services. Project services are available to a
 | `delete_room_service(project_id, room_name, service_id)`          | `DELETE /accounts/projects/{project_id}/rooms/{room_name}/services/{service_id}` | Delete a room service.        |
 
 ## Secrets
-Create and manage secrets. You can configure key based secrets as well as image pull secrets. 
+Create and manage project, room, and agent secrets. You can configure key based secrets as well as image pull secrets.
 
 | SDK method                                            | HTTP route                                                   | What it does                                    |
 | ----------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
@@ -193,6 +215,16 @@ Create and manage secrets. You can configure key based secrets as well as image 
 | `update_project_secret(project_id, secret_id, name, type, data)` | `PUT /accounts/projects/{project_id}/secrets/{secret_id}` | Update a project secret from raw bytes. |
 | `delete_secret(project_id, secret_id)`                | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a secret.                                |
 | `delete_project_secret(project_id, secret_id)`        | `DELETE /accounts/projects/{project_id}/secrets/{secret_id}` | Delete a project secret.                        |
+| `create_room_secret(project_id, room_name, data, secret_id?, name?, type?, delegated_to?)` | `POST /accounts/projects/{project_id}/rooms/{room_name}/secrets` | Create a room-scoped secret. |
+| `list_room_secrets(project_id, room_name)`            | `GET /accounts/projects/{project_id}/rooms/{room_name}/secrets` | List room secret metadata. |
+| `get_room_secret(project_id, room_name, secret_id, delegated_to?)` | `GET /accounts/projects/{project_id}/rooms/{room_name}/secrets/{secret_id}` | Fetch one room secret. |
+| `update_room_secret(project_id, room_name, secret_id, data, name?, type?, delegated_to?)` | `PUT /accounts/projects/{project_id}/rooms/{room_name}/secrets/{secret_id}` | Update a room secret. |
+| `delete_room_secret(project_id, room_name, secret_id, delegated_to?)` | `DELETE /accounts/projects/{project_id}/rooms/{room_name}/secrets/{secret_id}` | Delete a room secret. |
+| `create_agent_secret(project_id, agent_id, data, secret_id?, name?, type?, delegated_to?)` | `POST /accounts/projects/{project_id}/agents/{agent_id}/secrets` | Create an agent-scoped secret. |
+| `list_agent_secrets(project_id, agent_id)`            | `GET /accounts/projects/{project_id}/agents/{agent_id}/secrets` | List agent secret metadata. |
+| `get_agent_secret(project_id, agent_id, secret_id, delegated_to?)` | `GET /accounts/projects/{project_id}/agents/{agent_id}/secrets/{secret_id}` | Fetch one agent secret. |
+| `update_agent_secret(project_id, agent_id, secret_id, data, name?, type?, delegated_to?)` | `PUT /accounts/projects/{project_id}/agents/{agent_id}/secrets/{secret_id}` | Update an agent secret. |
+| `delete_agent_secret(project_id, agent_id, secret_id, delegated_to?)` | `DELETE /accounts/projects/{project_id}/agents/{agent_id}/secrets/{secret_id}` | Delete an agent secret. |
 
 ## Routes
 Create and manage project routes that map domains to rooms, ports, and route specs.
@@ -224,6 +256,17 @@ Create project feeds, publish messages, and fan them out into room storage throu
 | `get_feed_subscription(project_id, feed_id, subscription_id)` | `GET /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions/{subscription_id}` | Fetch a subscription. |
 | `list_feed_subscriptions(project_id, feed_id)`        | `GET /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions` | List subscriptions.       |
 | `delete_feed_subscription(project_id, feed_id, subscription_id)` | `DELETE /accounts/projects/{project_id}/feeds/{feed_id}/subscriptions/{subscription_id}` | Delete a subscription. |
+
+## LLM loggers
+Create project LLM loggers that copy LLM proxy events into destination feeds. Use these when you need a feed-backed stream of LLM request metadata for processing or analysis.
+
+| SDK method                                            | HTTP route                                                   | What it does                    |
+| ----------------------------------------------------- | ------------------------------------------------------------ | ------------------------------- |
+| `create_llm_logger(project_id, destination_feed_id, filter_expression, paused?, annotations?)` | `POST /accounts/projects/{project_id}/llm-loggers` | Create an LLM logger. |
+| `update_llm_logger(project_id, logger_id, destination_feed_id, filter_expression, paused?, annotations?)` | `PUT /accounts/projects/{project_id}/llm-loggers/{logger_id}` | Update an LLM logger. |
+| `get_llm_logger(project_id, logger_id)`               | `GET /accounts/projects/{project_id}/llm-loggers/{logger_id}` | Fetch an LLM logger. |
+| `list_llm_loggers(project_id)`                        | `GET /accounts/projects/{project_id}/llm-loggers`            | List LLM loggers. |
+| `delete_llm_logger(project_id, logger_id)`            | `DELETE /accounts/projects/{project_id}/llm-loggers/{logger_id}` | Delete an LLM logger. |
 
 ## Registries
 Create and manage project-owned image repositories.
@@ -265,6 +308,20 @@ Manage OAuth Clients for connections with other services.
 | `update_oauth_client(project_id, client_id, …)` | `PUT /accounts/projects/{project_id}/oauth/clients/{client_id}`    | Update a client.                          |
 | `delete_oauth_client(project_id, client_id)`    | `DELETE /accounts/projects/{project_id}/oauth/clients/{client_id}` | Delete a client.                          |
 
+## External OAuth registrations
+Manage project and room external OAuth registrations. These records are separate from project OAuth clients: OAuth clients let your app authenticate users through MeshAgent, while external OAuth registrations connect MeshAgent-managed integrations to external OAuth providers.
+
+| SDK method                                      | HTTP route                                                         | What it does                              |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------- |
+| `create_project_external_oauth_registration(project_id, registration)` | `POST /accounts/projects/{project_id}/external-oauth` | Create a project external OAuth registration. |
+| `update_project_external_oauth_registration(project_id, registration_id, registration)` | `PUT /accounts/projects/{project_id}/external-oauth/{registration_id}` | Update a project external OAuth registration. |
+| `list_project_external_oauth_registrations(project_id)` | `GET /accounts/projects/{project_id}/external-oauth` | List project external OAuth registrations. |
+| `delete_project_external_oauth_registration(project_id, registration_id)` | `DELETE /accounts/projects/{project_id}/external-oauth/{registration_id}` | Delete a project external OAuth registration. |
+| `create_room_external_oauth_registration(project_id, room_name, registration)` | `POST /accounts/projects/{project_id}/rooms/{room_name}/external-oauth` | Create a room external OAuth registration. |
+| `update_room_external_oauth_registration(project_id, room_name, registration_id, registration)` | `PUT /accounts/projects/{project_id}/rooms/{room_name}/external-oauth/{registration_id}` | Update a room external OAuth registration. |
+| `list_room_external_oauth_registrations(project_id, room_name)` | `GET /accounts/projects/{project_id}/rooms/{room_name}/external-oauth` | List room external OAuth registrations. |
+| `delete_room_external_oauth_registration(project_id, room_name, registration_id)` | `DELETE /accounts/projects/{project_id}/rooms/{room_name}/external-oauth/{registration_id}` | Delete a room external OAuth registration. |
+
 
 ## Shares
 Manage share records for a project.
@@ -301,7 +358,9 @@ Inspect active/recent sessions and fetch diagnostics, or terminate sessions.
 | `list_session_events(project_id, session_id)`  | `GET /accounts/projects/{project_id}/sessions/{session_id}/events`     | Session event stream.   |
 | `list_session_spans(project_id, session_id)`   | `GET /accounts/projects/{project_id}/sessions/{session_id}/spans`      | Trace spans.            |
 | `list_session_metrics(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/metrics`    | Metrics data.           |
-| `get_session_participant_counts(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/participant-counts` | Participant counts. |
+| `get_session_participant_counts(project_id, session_id)` | `GET /accounts/projects/{project_id}/sessions/{session_id}/participants` | Participant counts. |
+| `list_active_agent_sessions(project_id)`       | `GET /accounts/projects/{project_id}/agents/sessions/active`           | List active agent sessions. |
+| `list_recent_agent_sessions(project_id, limit?, agent_id?)` | `GET /accounts/projects/{project_id}/agents/sessions`          | List recent agent sessions. |
 | `terminate(project_id, session_id)`            | `POST /accounts/projects/{project_id}/sessions/{session_id}/terminate` | Terminate a session.    |
 
 
