@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Meshagent.Api.Room;
 
 // Run with:
-// meshagent room connect --room=toolsroom --identity=sample-participant -- <your dotnet command>
+// meshagent room connect --room=gettingstarted --identity=sample-participant -- dotnet run
 
 class Program
 {

@@ -1,4 +1,5 @@
 import asyncio
+from meshagent.api import TOOL_SEARCH_ANNOTATION
 from meshagent.agents import SingleRoomAgent
 from meshagent.tools import FunctionTool, ToolContext, Toolkit
 from meshagent.otel import otel_config
@@ -58,6 +59,7 @@ class MathToolkit(Toolkit):
             name="math-toolkit",
             title="math-toolkit",
             description="a toolkit for adding and subtracting numbers",
+            annotations={TOOL_SEARCH_ANNOTATION: "true"},
             tools=[Add(), Subtract()],
         )
 
