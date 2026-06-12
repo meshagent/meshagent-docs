@@ -1,0 +1,88 @@
+---
+title: "Codex Backend"
+description: Run a room-connected process agent with Codex as the backend.
+---
+
+Use the Codex backend when you want a MeshAgent process agent in a room, but you want Codex to handle the agent turns. The agent still joins the room, uses MeshAgent channels, and can be tested in Studio like other process agents. The difference is the backend that handles each turn.
+
+This is different from using MeshAgent with the Codex CLI or Codex Desktop. `meshagent setup` and `meshagent launch codex` route Codex through the MeshAgent LLM Proxy. They do not create a room participant. A Codex-backed process agent creates a room participant and uses Codex behind that process agent.
+
+## Run locally
+
+Start with a chat agent in the `gettingstarted` room:
+
+```bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name codex-agent \
+  --channel chat \
+  --backend codex
+```
+
+Open the same room in [MeshAgent Studio](https://studio.meshagent.com) and chat with `codex-agent`.
+
+While the command is running, the agent is connected to the room. Stop the local process when you are done testing.
+
+## Deploy the agent
+
+When the local version works, deploy the same agent so it stays available without your terminal open:
+
+```bash
+meshagent process deploy \
+  --service-name codex-agent \
+  --room gettingstarted \
+  --agent-name codex-agent \
+  --channel chat \
+  --backend codex
+```
+
+This creates or updates a room service for `codex-agent`.
+
+## Choose the backend
+
+`--backend codex` selects the Codex backend and uses MeshAgent's default Codex model for that backend.
+
+If you need to choose a specific Codex model, use a Codex model name instead:
+
+```bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name codex-agent \
+  --channel chat \
+  --model codex/gpt-5.5
+```
+
+Use `--backend codex` for the default path. Use `--model codex/...` only when you need to pin a specific Codex model.
+
+## How this differs from `meshagent launch codex`
+
+MeshAgent has two Codex workflows:
+
+| Workflow | What it does |
+| --- | --- |
+| `meshagent process join --backend codex` | Runs a MeshAgent process agent in a room with Codex as the backend |
+| `meshagent launch codex` | Launches Codex CLI or Codex Desktop through the MeshAgent LLM Proxy |
+
+Use the process-agent path when you want Codex to be a participant in a room, available through MeshAgent channels such as chat, queues, or tool calls.
+
+Use the LLM Proxy path when you want your local Codex CLI or Codex Desktop session to route model traffic through MeshAgent for project-level provider routing, usage tracking, and policy controls. See [Use Codex and Claude with MeshAgent](../routing/use_codex_claude).
+
+## Troubleshooting
+
+### The agent starts, but no one can talk to it
+
+Make sure you included a channel:
+
+```bash
+--channel chat
+```
+
+The backend decides how turns are handled. Channels decide how work reaches the agent.
+
+### The command says `meshagent codex join` does not exist
+
+Use `meshagent process join --backend codex`. The Codex backend is selected from the process agent command.
+
+### Thread storage errors
+
+The examples rely on the default process-agent thread storage, which stores thread history in MeshAgent datasets. Do not set a different thread storage backend unless you have a specific reason.
