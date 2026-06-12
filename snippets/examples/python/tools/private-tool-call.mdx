@@ -1,25 +1,22 @@
 ```python Python
-import json
 import asyncio
+import json
 import logging
-from meshagent.otel import otel_config
-from meshagent.api.services import ServiceHost
+
+from meshagent.api.messaging import JsonContent, TextContent
 from meshagent.api.room_server_client import RoomClient
-from meshagent.api.messaging import TextContent, JsonContent
+from meshagent.agents import SingleRoomAgent
 from meshagent.agents.llmrunner import LLMTaskRunner
+from meshagent.otel import otel_config
 from meshagent.openai import OpenAIResponsesAdapter
 from meshagent.tools import LocalRoomTool, ToolContext, Toolkit
 
 otel_config(service_name="my-service")
 log = logging.getLogger("my-service")
 
-service = ServiceHost()
-
 
 async def save_to_storage(room: RoomClient, path: str, data: bytes):
-    handle = await room.storage.open(path=path, overwrite=True)
-    await room.storage.write(handle=handle, data=data)
-    await room.storage.close(handle=handle)
+    await room.storage.upload(path=path, data=data)
 
 
 class Survey(LocalRoomTool):
@@ -54,10 +51,16 @@ class Survey(LocalRoomTool):
         self, context: ToolContext, subject: str, description: str, name: str
     ):
         room = self.room
-        participants = [
-            p for p in room.messaging.remote_participants if p.role == "user"
-        ]
+        participants = await self._wait_for_user_participants(room)
         log.info("Starting survey for %d participant(s)", len(participants))
+        if not participants:
+            return TextContent(
+                text=(
+                    "No user participants are available to survey. Open a MeshAgent UI "
+                    "client in this room, confirm it is registered as a user participant, "
+                    "and invoke the survey again."
+                )
+            )
 
         MAX_ATTEMPTS = 2
 
@@ -72,13 +75,14 @@ class Survey(LocalRoomTool):
                         participant_id=p.id,
                         input={
                             "subject": subject,
-                            "description": description,
+                            "help": description,
                             "form": [
                                 {
                                     "input": {
                                         "multiline": False,
                                         "name": name,
                                         "description": description,
+                                        "default_value": "",
                                     },
                                 },
                             ],
@@ -164,23 +168,45 @@ class Survey(LocalRoomTool):
 
         return TextContent(text=summary_text)
 
+    async def _wait_for_user_participants(self, room: RoomClient, timeout: float = 5.0):
+        deadline = asyncio.get_running_loop().time() + timeout
+        while True:
+            participants = [
+                p for p in room.messaging.remote_participants if p.role == "user"
+            ]
+            if participants:
+                return participants
+            if asyncio.get_running_loop().time() >= deadline:
+                return []
+            await asyncio.sleep(0.25)
 
-@service.path(path="/survey", identity="survey-toolkit")
+
 class SurveyToolkit(Toolkit):
-    def __init__(self):
+    def __init__(self, *, room: RoomClient):
         super().__init__(
             name="survey-toolkit",
             title="survey-toolkit",
             description="a toolkit for conducting a survey",
-            tools=[],
+            tools=[Survey(room=room)],
         )
 
-    async def start(self, *, room: RoomClient):
-        self.tools = [Survey(room=room)]
+
+class SurveyAgent(SingleRoomAgent):
+    async def start(self, *, room: RoomClient) -> None:
+        await room.messaging.enable()
+        await super().start(room=room)
+
+    async def get_exposed_toolkits(self) -> list[Toolkit]:
+        return [SurveyToolkit(room=self.room)]
 
 
-print(f"running on port {service.port}")
-asyncio.run(service.run())
+async def main() -> None:
+    agent = SurveyAgent(title="survey-toolkit-host")
+    await agent.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 ```
 

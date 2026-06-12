@@ -1,6 +1,6 @@
 ---
 title: "Custom Logs, Traces, and Metrics"
-description: Add your own OpenTelemetry spans, logs, and metrics inside a MeshAgent service.
+description: Add your own OpenTelemetry spans, logs, and metrics inside a MeshAgent service or room-connected toolkit.
 ---
 
 import OtelExample from "/snippets/examples/python/deployable/observability/observability.mdx"
@@ -9,12 +9,12 @@ import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.m
 
 MeshAgent already gives you logs, traces, metrics, session data, and developer logs in MeshAgent Studio.
 
-Use this page when you want to add your own spans, logs, and metrics inside a custom Python service.
+Use this page when you want to add your own spans, logs, and metrics inside a custom Python service or room-connected toolkit.
 
 For the built-in observability model first, see [Observability](./overview).
 
-## Enable telemetry in your service
-Add two lines at startup before you create your `ServiceHost`:
+## Enable telemetry in your process
+Call `otel_config()` once at process startup:
 
 ```python Python
 from meshagent.otel import otel_config
@@ -89,7 +89,16 @@ These metrics appear in the room's **Metrics** tab.
 
 ## Deploy the sample
 
-You can deploy this toolkit as a service and invoke `get_weather()` from Studio or the CLI.
+You can run this toolkit locally with `meshagent room connect`, deploy it as a service, and invoke `get_weather()` from Studio or the CLI.
+
+### Run it locally
+
+During development, run the toolkit with `meshagent room connect` so MeshAgent provides the room token, room name, LLM proxy credentials, and telemetry environment:
+
+```bash bash
+meshagent rooms create otel --if-not-exists
+meshagent room connect --room=otel --identity=weather-toolkit -- python3 observability.py
+```
 
 ### Step 1: Package and deploy the room service
 
@@ -136,6 +145,7 @@ Create a `meshagent.yaml` file that references:
 - Runtime image: The MeshAgent Python SDK image with all dependencies
 - Code mount: Your code-only image mounted at /src
 - Command path: Points to your sample's specific location
+- Participant token: Injects `MESHAGENT_TOKEN` for the room-connected toolkit process
 
 <CodeGroup>
     <OtelYAML />

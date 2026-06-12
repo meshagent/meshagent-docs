@@ -3,9 +3,6 @@ title: "VoiceBot"
 ---
 
 import CliVoiceBotYaml from "/snippets/examples/cli/voicebot/meshagent.mdx"
-import BasicVoicebot from "/snippets/examples/python/deployable/simple_voicebot/simple_voicebot.mdx"
-import ScratchDockerfile from "/snippets/examples/python/deployable/Dockerfile.mdx"
-import VoiceBotYaml from "/snippets/examples/python/deployable/simple_voicebot/meshagent.mdx"
 
 
 ## Overview
@@ -13,17 +10,12 @@ import VoiceBotYaml from "/snippets/examples/python/deployable/simple_voicebot/m
 
 A `VoiceBot` joins a MeshAgent room, listens for `voice_call` messages, connects to a LiveKit breakout room where it can speak and listen to participants in real-time. It combines speech-to-text (STT), text-to-speech (TTS), voice activity detection (VAD), LLM reasoning, and tool calling automatically. 
 
-### Two ways to build a VoiceBot
-1. **CLI**: Run production-ready voice agents with a single command. Configure speech, tools, and rules using CLI flags. Ideal for most use cases.
-2. **SDK**: Extend the base `VoiceBot` with custom code when you need deeper integrations or specialized behaviors. Best for full control or more complex logic. 
-
-Both approaches deploy the same way and can operate together in the same Rooms. We recommend starting with the CLI, it's fastest and covers most scenarios, then moving to the SDK when you need further customization. 
+The MeshAgent CLI is the recommended way to run and deploy VoiceBots. Configure speech, tools, and rules with CLI flags, then deploy the same command when you want the agent to stay available in a room.
 
 ### In this guide you will learn
 1. When to use `VoiceBot`
 2. How to run and deploy a `VoiceBot` with the MeshAgent CLI
-3. How to build and deploy a `VoiceBot` with the MeshAgent SDK
-4. How `VoiceBot` works, including lifecycle, voice sessions, conversation flow, hooks, and methods
+3. How `VoiceBot` works, including lifecycle, voice sessions, conversation flow, hooks, and methods
 
 ## When to use VoiceBot
 Use the ``VoiceBot`` when you need an agent that:
@@ -91,116 +83,17 @@ meshagent service create --file meshagent.yaml --room quickstart
 
 The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). With Powerboards you can easily share your agents with others or use built in agents. 
 
-## Build and deploy a VoiceBot with the SDK
-
-### Step 1: Create a VoiceBot agent 
-This example shows a `VoiceBot` with a custom rule to guide the agent's behavior. For an agent this simple the CLI VoiceBot would be sufficient. The Python SDK code here demonstrates how to get similar functionality as the CLI.  
-
-To run the ``VoiceBot`` we'll use the MeshAgent ``ServiceHost``. The ``ServiceHost`` is a lightweight HTTP server that allows you to register one or more tools or agents on their own path (e.g., ``/agent``). The host automatically exposes each path as a webhook. When a room makes a call to that path, ``ServiceHost`` handles the handshake, connects the agent to the room, and forwards requests and responses between your code and the MeshAgent infrastructure. 
-
-<CodeGroup>
-    <BasicVoicebot />
-</CodeGroup>
-
-### Step 2: Call the agent into a room 
-Run the `VoiceBot` locally and connect it to a Room: 
-```bash 
-meshagent setup # authenticate to MeshAgent
-meshagent service run "main.py" --room=quickstart
-```
-
-This command will start the VoiceBot on an available port at the path ``/agent``. If you are running multiple agents or tools, you can use the same ``ServiceHost`` and set different paths for each of the agents. The ``service run`` command automatically detects the different agent paths and identities (this is the recommended way to test your agents and tools). 
-
-Once the agent joins the room, you can converse with it in [MeshAgent Studio](https://www.studio.meshagent.com).
-
-### Step 3: Interact with the agent in MeshAgent Studio 
-1. Go to [MeshAgent Studio](https://www.studio.meshagent.com) and login
-2. Enter your room ``quickstart``
-3. Select the agent ``voiceagent`` and begin chatting!
-
-If you want to modify and restart the agent run `Ctrl+C` from the terminal to stop the agent then re-run the `meshagent service run` command. 
-
-> **Note**: Building an agent will likely take multiple rounds of iterating through writing different versions of the system prompt and crafting the best tools for the agent before it's ready for deployment. 
-
-### Step 4: Package and deploy the agent
-To deploy your SDK VoiceBot permanently, you'll package your code with a `meshagent.yaml` file that defines the service configuration and a container image that MeshAgent can run.
-For full details on the service spec and deployment flow, see [Service YAML](../../services/deployment/deploy_services).
-
-MeshAgent supports two deployment patterns for containers:
-1. **Runtime image + code mount (recommended)**: Use a pre-built MeshAgent runtime image (like `python-sdk-slim`) that contains Python and all MeshAgent dependencies. Mount your lightweight code-only image on top. This keeps your code image tiny (~KB), eliminates dependency installation time, and allows your service to start quickly.
-2. **Single Image**: Bundle your code and all dependencies into one image. This is good when you need to install additional libraries, but can result in larger images and slower pulls. If you build your own images we recommend [optimizing them with eStargz](../../services/containers/optimizing_containers).
-
-This example uses the runtime image + code mount pattern with the public `python-docs-examples` code image so you can run the documentation sample without building your own image.
-If you want to build and push your own code image, follow the steps below and update the `storage.images` entry in `meshagent.yaml`.
-
-**Prepare your project structure**
-This example organizes the agent code and configuration in the same folder, making each agent self-contained:
-
-```bash
-your-project/
-├── Dockerfile                    # Shared by all samples
-├── simple_voicebot/
-│   ├── simple_voicebot.py
-│   └── meshagent.yaml           # Config specific to this sample
-└── another_sample/              # Other samples follow same pattern
-    ├── another_sample.py
-    └── meshagent.yaml
-```
-
-> **Note:** If you're building a single agent, you only need the `simple_voicebot/` folder. The structure shown supports multiple samples sharing one Dockerfile.
-
-**Step 4a: Build a Docker container**
-If you want a code-only image, create a scratch Dockerfile and copy the files you want to run. This creates a minimal image that pairs with the runtime image + code mount pattern.
-
-<CodeGroup>
-    <ScratchDockerfile />
-</CodeGroup>
-
-Build and push the image with `docker buildx`:
-
-```bash bash
-docker buildx build . \
-  -t "<REGISTRY>/<NAMESPACE>/<IMAGE_NAME>:<TAG>" \
-  --platform linux/amd64 \
-  --push
-```
-
-> **Note:** Building from the project root copies your entire project structure into the image. For a single agent, this is fine - your image will just contain one folder. For multi-agent projects, all agents will be in one image, but each can deploy independently using its own `meshagent.yaml`.
-
-**Step 4b: Package the agent**
-Define the service configuration in a `meshagent.yaml` file.
-
-<CodeGroup>
-    <VoiceBotYaml />
-</CodeGroup>
-
-How the paths work:
-- Your code image contains `simple_voicebot/simple_voicebot.py`
-- It's mounted at `/src` in the runtime container
-- The command runs `python /src/simple_voicebot/simple_voicebot.py`
-
-> Note: The default YAML in the docs uses `us-central1-docker.pkg.dev/meshagent-public/images/python-docs-examples` so you can test this example immediately without building your own image first. Replace this with your actual image tag when deploying your own code.
-
-**Step 4c: Deploy the agent**
-Next from the CLI in the directory where your `meshagent.yaml` file is run:
-
-```bash
-meshagent service create --file "meshagent.yaml" --room=quickstart
-```
-
-The `VoiceBot` is now deployed to the `quickstart` room! Now the agent will always be available inside the room for us to chat with. You can interact with the agent directly from the Studio or from [Powerboards](https://www.powerboards.com/). 
-
-> **Note:** If you previously deployed the CLI voicebot with name "voiceagent" you will need to give your SDK based voicebot a unique identity (token name). 
-
 ## How VoiceBot Works
 ### Constructor Parameters
-``VoiceBot`` accepts the current Python ``SingleRoomAgent`` base options (``title``, ``description``, ``requires``, ``annotations``) and adds voice-specific configuration options.
+The CLI configures the underlying Python ``VoiceBot`` class. If you extend that class directly, it accepts the current ``SingleRoomAgent`` base options and adds voice-specific configuration options.
 
 | Parameter             | Type                          | Description                                                                                                           |
 | -------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `name`               | `str \| None`                 | Optional explicit participant name. Most CLI and deployment flows set the participant identity outside the class.       |
 | `title`              | `str \| None`                 | Human-friendly name for clients, logs, and operator surfaces.                                                          |
 | `description`        | `str \| None`                 | Short description of what the voice agent does.                                                                       |
 | `annotations`        | `list[str] \| None`           | Optional string metadata for clients and services that inspect the agent.                                             |
+| `voice`              | `str`                         | OpenAI Realtime voice name. Defaults to `"echo"`.                                                                     |
 | `rules`              | `list[str] \| None`           | System or behavior rules sent to the LLM. Defaults to `["You are a helpful assistant communicating through voice."]`. |
 | `auto_greet_message` | `str \| None`                 | Optional message spoken to the participant when the session starts.                                                   |
 | `auto_greet_prompt`  | `str \| None`                 | Optional text prompt that seeds the first LLM response at session start.                                              |

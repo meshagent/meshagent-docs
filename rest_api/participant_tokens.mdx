@@ -33,12 +33,12 @@ api:
 ```
 
 ## How tokens are issued
-MeshAgent signs participant tokens automatically for anything it launches on your behalf. You describe the identity and permissions through a Service or ServiceTemplate manifest and MeshAgent creates that token whenever it needs to connect the service to the room. When building a custom application on MeshAgent you will need to generate ParticipantTokens so participants can connect to your rooms with the appropriate permissions. 
+MeshAgent signs participant tokens automatically for room connections it creates on your behalf. Deployed services describe the identity and permissions in their manifest. Local development commands can also mint a room-scoped token for the process they start. When building a custom application on MeshAgent, generate ParticipantTokens so participants can connect to your rooms with the appropriate permissions.
 
-- **Project services and room containers**: MeshAgent reads the manifest for each endpoint (identity, role, `api` scope) and injects the signed token into the container as `MESHAGENT_TOKEN` during startup.
-- **Local development and MeshAgent Studio**: Running `meshagent service run` or answering a call from MeshAgent Studio creates a token on demand. This allows your `ServiceHost` to join the room automatically without creating the token manually.
+- **Project services and room containers**: MeshAgent reads the manifest for each endpoint or container (identity, role, `api` scope) and injects the signed token into the runtime as `MESHAGENT_TOKEN` during startup.
+- **Local room-connected processes**: `meshagent room connect --identity <name> -- <command>` mints a participant token locally for that identity and starts the command with `MESHAGENT_TOKEN`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` set to that room-scoped token. Use `--meshagent-token` when you need to choose the API scope (`agentDefault`, `userDefault`, `full`, or a JSON `ApiScope`).
 - **End-user connections**: When a participant connects to the room, MeshAgent looks up the participant’s permissions and returns the JWT to the browser or client that is joining the room.
-- **Custom apps built on MeshAgent**: When building a custom app on MeshAgent, you will need to manually create a ``ParticipantToken`` and define permissions for your users. 
+- **Custom apps built on MeshAgent**: When building a custom app on MeshAgent, create a `ParticipantToken` and define permissions for your users.
 
 ## Generate a token from the CLI
 
