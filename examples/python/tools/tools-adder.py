@@ -1,10 +1,9 @@
 import asyncio
-from meshagent.api.services import ServiceHost
+from meshagent.agents import SingleRoomAgent
 from meshagent.tools import FunctionTool, ToolContext, Toolkit
 from meshagent.otel import otel_config
 
 otel_config(service_name="math_tools")
-service = ServiceHost()
 
 
 class Add(FunctionTool):
@@ -53,7 +52,6 @@ class Subtract(FunctionTool):
         return result
 
 
-@service.path(path="/math", identity="math-toolkit")
 class MathToolkit(Toolkit):
     def __init__(self):
         super().__init__(
@@ -64,6 +62,15 @@ class MathToolkit(Toolkit):
         )
 
 
+class MathAgent(SingleRoomAgent):
+    async def get_exposed_toolkits(self) -> list[Toolkit]:
+        return [MathToolkit()]
+
+
+async def main() -> None:
+    agent = MathAgent(title="math-agent")
+    await agent.run()
+
+
 if __name__ == "__main__":
-    print(f"running on port {service.port}")
-    asyncio.run(service.run())
+    asyncio.run(main())

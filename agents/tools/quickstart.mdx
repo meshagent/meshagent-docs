@@ -22,7 +22,7 @@ In this guide you'll:
 ### Step 1: Writing custom tools
 Let's create a simple toolkit with two tools, one that can add two numbers, and one that can subtract two numbers. 
 
-First write the logic for the `add` and `subtract` tools. Then bundle them into a `Toolkit` that the `ServiceHost` can register for room calls.
+First write the logic for the `add` and `subtract` tools. Then bundle them into a `Toolkit` that a `SingleRoomAgent` can expose for room calls.
 
 Save this example as `tools-adder.py`:
 
@@ -38,13 +38,13 @@ Create the room and start the toolkit locally:
 ```bash bash
 meshagent setup # authenticate to MeshAgent
 meshagent rooms create toolsroom --if-not-exists
-meshagent service run tools-adder.py --room toolsroom
+meshagent room connect --room=toolsroom --identity=math-agent -- python3 tools-adder.py
 ```
 </CodeGroup>
 
-This command runs the local Python service and registers the toolkit into `toolsroom` as a temporary room service. In this example, the toolkit is exposed at the `/math` path with the name `math-toolkit`.
+This command runs the local Python agent and registers the `math-toolkit` toolkit into `toolsroom`.
 
-If you are running several local agents or tools, `meshagent service run` is the simplest way to test them in a room without packaging and deploying a full service first.
+The toolkit is available while that terminal session is still running. `SingleRoomAgent.run()` creates the room connection, starts the agent, and unregisters the exposed toolkit when the process stops.
 
 ### Step 3: Invoking a MeshAgent Tool
 #### Invoking tools in MeshAgent Studio
@@ -59,10 +59,10 @@ The tool will execute and display the result in the Studio UI.
 
 From the "Developer Console" on the bottom half of the screen you'll be able to see logs, traces, and metrics from tool calls as they happen in the room.
 
-Because this example is running locally through `meshagent service run`, the toolkit is only available while that terminal session is still running.
+Because this example is running locally through `meshagent room connect`, the toolkit is only available while that terminal session is still running.
 
 #### Invoking tools from the MeshAgent CLI
-While the service is running, from a new tab in your terminal invoke the tool. The result will print to the terminal.
+While the agent is running, from a new tab in your terminal invoke the tool. The result will print to the terminal.
 
 ```bash bash 
 meshagent room agents invoke-tool --room=toolsroom --toolkit=math-toolkit --tool=add --arguments='{"a": 5, "b":7}'
