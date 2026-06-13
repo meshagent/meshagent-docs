@@ -141,6 +141,34 @@ The process command is also where you shape what the agent can do.
 
 That means `meshagent process` is not just how the agent starts. It is also how you define its channels, rules, tools, and continuity behavior.
 
+## Choose a backend
+
+The backend is the part of the process agent that handles a turn after a channel delivers it.
+
+| Backend | How to select it | Use |
+| --- | --- | --- |
+| LLM | `--model gpt-5.5`, another standard model name, or `--backend llm` | General-purpose process agents that use MeshAgent's LLM adapters |
+| Codex | `--backend codex` or `--model codex/gpt-5.5` | Room-connected agents whose turns should be handled by Codex |
+
+Most process agents use the LLM backend. Use the [Codex Process Backend](./codex_backend) page when you want the same process-agent channel and deployment model, but Codex handling the turns.
+
+Use `--model` when you want to choose the exact model or models the agent can use. `--model` can be repeated. A plain model name such as `gpt-5.5` selects the LLM backend. A backend-qualified model such as `codex/gpt-5.5` selects the Codex backend.
+
+Use `--backend` when you want to make a backend's default model set available without naming every model yourself. `--backend llm` currently adds `llm/openai/gpt-5.2` and `llm/anthropic/claude-3-5-sonnet-latest`. `--backend codex` currently adds `codex/gpt-5.5`. If you omit both `--backend` and `--model`, the command defaults to `--model gpt-5.5`.
+
+You can also make more than one backend available from the same running agent by passing multiple model flags:
+
+```bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name support-agent \
+  --channel chat \
+  --model gpt-5.5 \
+  --model codex/gpt-5.5
+```
+
+With the default dataset-backed thread storage, the same agent can switch between those models on the same thread. In chat, use `/models` to see the available models, then use `/model` with a backend-qualified model when needed, such as `codex/gpt-5.5`. Keep the default dataset storage for this pattern; Codex thread storage only supports Codex backends.
+
 ## When to use `meshagent process`
 
 Use `meshagent process` when you want an agent that should:
@@ -155,7 +183,7 @@ Use `meshagent process` when you want an agent that should:
 
 Thread configuration matters most when the agent needs durable history.
 
-- `--thread-dir` controls where thread documents are stored
+- `--thread-dir` controls where persisted thread history is organized
 - `--threading-mode` controls how chat-oriented clients treat thread creation and selection
 
 Use a dedicated thread directory when you want one agent to support many conversations or jobs without mixing them together.
@@ -174,7 +202,7 @@ For the deeper persistence model, see [Threads Overview](../threads_overview).
 
 ## Where to go next
 
-- [Codex Backend](./codex_backend): run a room-connected process agent with Codex as the backend
+- [Codex Process Backend](./codex_backend): run a room-connected process agent with Codex as the backend
 - [Agent Turns](./agent_turns): understand how one request becomes one process-backed turn and how turn lifecycle differs from plain messages
 - [Process Agent Architecture](./architecture): understand how channels, supervisors, and per-thread execution fit together
 - [Threads Overview](../threads_overview): understand thread paths, thread directories, and persisted continuity

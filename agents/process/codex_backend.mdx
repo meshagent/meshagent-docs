@@ -1,15 +1,15 @@
 ---
-title: "Codex Backend"
-description: Run a room-connected process agent with Codex as the backend.
+title: "Codex Process Backend"
+description: Run a MeshAgent process agent whose turns are handled by Codex.
 ---
 
-Use the Codex backend when you want a MeshAgent process agent in a room, but you want Codex to handle the agent turns. The agent still joins the room, uses MeshAgent channels, and can be tested in Studio like other process agents. The difference is the backend that handles each turn.
+Use the Codex backend when you want Codex to run the turns for a room-connected process agent. MeshAgent owns the room-facing runtime: the agent participant, channels, deployment, routing, and stored thread history. Codex handles each turn behind that process agent.
 
-This is different from using MeshAgent with the Codex CLI or Codex Desktop. `meshagent setup` and `meshagent launch codex` route Codex through the MeshAgent LLM Proxy. They do not create a room participant. A Codex-backed process agent creates a room participant and uses Codex behind that process agent.
+This is different from using MeshAgent with Codex CLI or Codex Desktop. If you want to run Codex normally and route model traffic through the MeshAgent LLM Proxy, use `meshagent setup` or `meshagent launch codex`; see [Use Codex and Claude with MeshAgent](../routing/use_codex_claude). A Codex-backed process agent creates an agent participant in a room and sends that participant's turns to Codex app-server.
 
 ## Run locally
 
-Start with a chat agent in the `gettingstarted` room:
+Start a chat agent in the `gettingstarted` room:
 
 ```bash
 meshagent process join \
@@ -21,7 +21,30 @@ meshagent process join \
 
 Open the same room in [MeshAgent Studio](https://studio.meshagent.com) and chat with `codex-agent`.
 
-While the command is running, the agent is connected to the room. Stop the local process when you are done testing.
+While the command is running, the agent is connected to the room. You can test it in Studio like any other process agent because the room, participant, and chat channel are still managed by MeshAgent. Stop the local process when you are done testing.
+
+## Select the Codex backend
+
+<Tip>
+Use `--backend codex` for the default Codex-backed process agent. Use `--model codex/gpt-5.5` when you need to pin a specific Codex model.
+</Tip>
+
+If you pass a normal model name such as `--model gpt-5.5`, the process agent uses the standard LLM backend. That path sends turns through MeshAgent's LLM adapters. If you pass a Codex model path such as `--model codex/gpt-5.5`, the process agent uses the Codex backend.
+
+`--model` can be repeated when you want to choose the exact models the agent can switch between. `--backend` is broader: it makes a backend's default model set available. `--backend codex` currently adds `codex/gpt-5.5`. `--backend llm` currently adds `llm/openai/gpt-5.2` and `llm/anthropic/claude-3-5-sonnet-latest`. If you omit both `--backend` and `--model`, the process command defaults to `--model gpt-5.5`, which is a standard LLM-backed agent.
+
+You can also make both backends available from the same agent by passing both models:
+
+```bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name codex-agent \
+  --channel chat \
+  --model gpt-5.5 \
+  --model codex/gpt-5.5
+```
+
+This uses the default dataset-backed process-agent thread storage, so the room thread remains the durable history while the selected model can change. In chat, use `/models` to list available models, then use `/model codex/gpt-5.5` to switch to Codex or `/model gpt-5.5` to switch back to the standard LLM backend. Do not use `--thread-storage codex` for a mixed-backend agent; Codex thread storage only supports Codex backends.
 
 ## Deploy the agent
 
@@ -38,11 +61,7 @@ meshagent process deploy \
 
 This creates or updates a room service for `codex-agent`.
 
-## Choose the backend
-
-`--backend codex` selects the Codex backend and uses MeshAgent's default Codex model for that backend.
-
-If you need to choose a specific Codex model, use a Codex model name instead:
+## Pin a Codex model
 
 ```bash
 meshagent process join \
@@ -52,37 +71,32 @@ meshagent process join \
   --model codex/gpt-5.5
 ```
 
-Use `--backend codex` for the default path. Use `--model codex/...` only when you need to pin a specific Codex model.
+Use this form when you need to choose an exact Codex model. Otherwise, prefer `--backend codex` so the process agent uses the default Codex model.
 
-## How this differs from `meshagent launch codex`
+## How it works
 
-MeshAgent has two Codex workflows:
+The process agent still runs through MeshAgent, but turn execution moves to Codex:
 
-| Workflow | What it does |
-| --- | --- |
-| `meshagent process join --backend codex` | Runs a MeshAgent process agent in a room with Codex as the backend |
-| `meshagent launch codex` | Launches Codex CLI or Codex Desktop through the MeshAgent LLM Proxy |
+1. `meshagent process` joins the room as `codex-agent`.
+2. The `chat` channel turns room chat into process-agent turns.
+3. The process supervisor routes each turn to the selected backend.
+4. The Codex backend starts the local Codex app-server and sends the turn to it.
+5. Codex app-server runs the Codex thread with Codex's native coding-agent runtime.
+6. MeshAgent records the thread history using the default dataset-backed process-agent storage.
 
-Use the process-agent path when you want Codex to be a participant in a room, available through MeshAgent channels such as chat, queues, or tool calls.
+Codex app-server is the local Codex runtime used by the Codex SDK. OpenAI describes it as a local app-server controlled over JSON-RPC. MeshAgent uses that runtime so the room participant can use Codex behavior while still using MeshAgent rooms, channels, deployment, and thread storage. See the [OpenAI Codex SDK docs](https://developers.openai.com/codex/sdk#python-library) for the app-server client model.
 
-Use the LLM Proxy path when you want your local Codex CLI or Codex Desktop session to route model traffic through MeshAgent for project-level provider routing, usage tracking, and policy controls. See [Use Codex and Claude with MeshAgent](../routing/use_codex_claude).
+Use this instead of `--model gpt-5.5` when you specifically want Codex's coding-agent runtime behind the MeshAgent room participant. Use a normal model name when you need a standard LLM-backed process agent.
 
-## Troubleshooting
+## Tool support
 
-### The agent starts, but no one can talk to it
+Codex-backed process agents use Codex app-server's native runtime, not MeshAgent's LLM tool pipeline.
 
-Make sure you included a channel:
+That means Codex app-server owns coding-agent behavior such as command execution, file changes, plans, sandboxing, approvals, and any MCP tools configured for Codex itself. MeshAgent receives those Codex events and records them in the process thread. MeshAgent also surfaces Codex diff updates as `codex` tool events in the turn stream so Studio can show code changes as part of the work.
 
-```bash
---channel chat
-```
+Use the standard LLM backend when the agent needs MeshAgent tool flags such as `--require-toolkit`, `--tool-search`, `--web-search`, `--storage`, `--mcp`, `--shell`, or `--advanced-shell`. Those flags add tools to LLM turns. Custom MeshAgent room toolkits are not exposed to Codex turns through `--tool-search` or `--require-toolkit`.
 
-The backend decides how turns are handled. Channels decide how work reaches the agent.
+## Where to go next
 
-### The command says `meshagent codex join` does not exist
-
-Use `meshagent process join --backend codex`. The Codex backend is selected from the process agent command.
-
-### Thread storage errors
-
-The examples rely on the default process-agent thread storage, which stores thread history in MeshAgent datasets. Do not set a different thread storage backend unless you have a specific reason.
+- [Process Agents](./overview): learn the standard process-agent pattern
+- [Use Codex and Claude with MeshAgent](../routing/use_codex_claude): route Codex CLI or Codex Desktop through the MeshAgent LLM Proxy

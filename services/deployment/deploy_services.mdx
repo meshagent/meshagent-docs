@@ -194,7 +194,7 @@ Use `heartbeat` when the agent should enqueue a recurring turn for itself withou
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `queue` | string | Yes | Queue that receives the recurring work item. |
-| `thread_id` | string | No | Optional thread path or template. Time tokens such as `{YYYY}`, `{MM}`, `{DD}`, `{HH}`, and `{mm}` are expanded at runtime. |
+| `thread_id` | string | No | Optional thread path or template. Time tokens such as `{year}`, `{month}`, `{day}`, `{hour}`, and `{minute}` are expanded at runtime. Token matching is case-insensitive, so `{YYYY}/{MM}/{DD}/{HH}/{mm}` also works. |
 | `prompt` | list | Yes | Prompt content for each heartbeat turn. Uses typed content items such as `text` and `file`. |
 | `minutes` | integer | Yes | Interval, in minutes, between heartbeats. |
 
@@ -211,19 +211,33 @@ Example:
 ```yaml
 agents:
   - name: assistant
+    annotations:
+      meshagent.agent.type: ChatBot
+      meshagent.chatbot.threading: "default-new"
+      meshagent.chatbot.thread-dir: agents/assistant/threads
     email:
       address: assistant@example.com
       public: true
     heartbeat:
-      queue: heartbeats
-      thread_id: /agents/assistant/threads/heartbeats/{YYYY}/{MM}/{DD}/{HH}/{mm}/heartbeat.thread
+      queue: assistant-scheduled-tasks
+      thread_id: /agents/assistant/threads/heartbeats/{year}/{month}/{day}/{hour}.{minute}.thread
       prompt:
         - type: file
           url: room:///agents/assistant/heartbeat.md
-        - type: text
-          text: Review unresolved room work and summarize what changed.
       minutes: 60
+
+files:
+  - path: /agents/assistant/heartbeat.md
+    text: |
+      # Assistant Heartbeat
+      Review recent room activity, unresolved requests, and any obvious follow-up work.
+      If there is clear useful work to do, do it directly.
+      If there is nothing useful to add, end the turn quietly without posting a filler message.
+      Previous threads can be found looking at the threads in the path format based on the time: /data/agents/assistant/threads/heartbeats/{year}/{month}/{day}/{hour}.{minute}.thread
+      Read the last few heartbeat threads to make sure you are up to date with what has been done so far
 ```
+
+This mirrors the built-in assistant service template: each heartbeat run is queued to the assistant, uses the heartbeat prompt file from room storage, and writes the run into a timestamped thread under the assistant thread directory.
 
 ### files
 

@@ -10,7 +10,7 @@ At a high level, the runtime works like this:
 
 - channels convert outside inputs into process messages
 - a supervisor routes those messages by `thread_id`
-- one `LLMAgentProcess` handles each active thread
+- a configured backend creates one process for each active thread
 - a thread adapter writes runtime events back into the persisted thread model
 
 This gives you one process-backed agent that can accept several channels without collapsing unrelated work into one shared live context.
@@ -27,7 +27,8 @@ When you run `meshagent process`, the CLI builds:
 - zero or more `QueueChannel` instances
 - zero or more `ToolkitChannel` instances
 - one `AgentSupervisor`
-- one `LLMAgentProcess` per active thread
+- one or more configured backends, such as `LLMBackend` or `CodexBackend`
+- one backend-created process per active thread
 - one `AgentProcessThreadAdapter` per active thread
 
 That layering matters because `process` is not a single SDK class called "ProcessAgent". It is a runtime assembly of channels plus per-thread execution.
@@ -38,8 +39,8 @@ That layering matters because `process` is not a single SDK class called "Proces
 flowchart LR
     A["Channel receives input"] --> B["TurnStart or related message"]
     B --> C["AgentSupervisor"]
-    C --> D["LLMAgentProcess for thread A"]
-    C --> E["LLMAgentProcess for thread B"]
+    C --> D["Backend process for thread A"]
+    C --> E["Backend process for thread B"]
     D --> F["AgentProcessThreadAdapter"]
     E --> G["AgentProcessThreadAdapter"]
     F --> H["Thread events, tool calls, outputs"]
@@ -50,9 +51,10 @@ In practice:
 
 1. a channel receives input from chat, mail, a queue, or a toolkit invocation
 2. the channel emits process messages, including a `thread_id`
-3. the supervisor finds or creates the process for that thread
-4. the thread-scoped `LLMAgentProcess` runs the turn
-5. the thread adapter records outputs, lifecycle state, tool activity, and status into the thread model
+3. the supervisor selects the configured backend for the thread
+4. the backend finds or creates the process for that thread
+5. the thread-scoped process runs the turn
+6. the thread adapter records outputs, lifecycle state, tool activity, and status into the thread model
 
 ## Channel responsibilities
 
@@ -96,9 +98,9 @@ The built-in channels each adapt a different source of input:
 - `QueueChannel`: listens on a room queue and turns queue payloads into agent turns
 - `ToolkitChannel`: exposes the agent as a callable toolkit so other participants can send a prompt and receive a reply
 
-## What `LLMAgentProcess` does
+## What a backend process does
 
-`LLMAgentProcess` is the thread-level execution loop for LLM-backed turns.
+The backend process is the thread-level execution loop for turns.
 
 Each instance handles one active thread at a time and is responsible for:
 
@@ -110,16 +112,38 @@ Each instance handles one active thread at a time and is responsible for:
 
 This is why one process-backed agent can serve many channels and many threads without mixing unrelated thread state together.
 
+## Backend implementations
+
+A backend decides what kind of thread process gets created after a channel delivers a turn.
+
+| Backend | Selected with | Thread process | What it does |
+| --- | --- | --- | --- |
+| LLM | `--model gpt-5.5` or another standard model | `LLMAgentProcess` | Runs the turn through MeshAgent's LLM adapters, including tool calls, streaming, and model/provider selection. |
+| Codex | `--backend codex` or `--model codex/...` | `CodexAgentProcess` | Runs the turn through Codex app-server while MeshAgent keeps the room participant, channels, routing, and thread storage. |
+
+Most application agents should use the LLM backend. Use the Codex backend when you want the same room participant, channel, routing, deployment, and thread-storage model, but you want Codex to execute the turns.
+
 ## Per-thread routing and queueing
 
 The supervisor routes by `thread_id` and creates a thread process on first use.
 
 This matters for two reasons:
 
-- messages for the same thread go to the same `LLMAgentProcess`
+- messages for the same thread go to the same backend process
 - unrelated threads do not share one live execution state
 
 In practice, this is what prevents turns on the same thread from stepping on each other while still letting one process-backed agent serve many threads.
+
+## Local memory channel
+
+`meshagent process run` can also use a `memory` channel. This is separate from the Memories toolkit.
+
+- `--channel memory` is a local process-run channel used by the CLI's interactive process session.
+- `meshagent process run` defaults to the memory channel when no channel is provided.
+- `--no-room` uses that path to run locally without connecting to a room.
+- `--use-memory <name-or-path>` is different: it adds the room-backed Memories toolkit to the agent.
+
+Use `--channel chat` when the agent should be reachable from room chat in Studio or Powerboards. Use the memory channel when you want a local interactive process run that does not need room chat.
 
 ## Streaming and live turn state
 
