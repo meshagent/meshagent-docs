@@ -492,6 +492,8 @@ $ meshagent session [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List recent sessions
 * `get`: Get events for a session
+* `logs`: List logs for a session
+* `metrics`: List metrics for a session
 * `traces`: List trace spans for a session as a tree
 
 ### `meshagent session list`
@@ -530,6 +532,53 @@ $ meshagent session get [OPTIONS] SESSION_ID
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
+### `meshagent session logs`
+
+List logs for a session
+
+**Usage**:
+
+```console
+$ meshagent session logs [OPTIONS] [SESSION_ARG]
+```
+
+**Arguments**:
+
+* `[SESSION_ARG]`: Session id to inspect
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
+* `--room TEXT`: Use the most recent session for this room
+* `-o, --output TEXT`: output format   [default: table]
+* `--attrs`: Include log and resource attributes
+* `--help`: Show this message and exit.
+
+### `meshagent session metrics`
+
+List metrics for a session
+
+**Usage**:
+
+```console
+$ meshagent session metrics [OPTIONS] [SESSION_ARG]
+```
+
+**Arguments**:
+
+* `[SESSION_ARG]`: Session id to inspect
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
+* `--room TEXT`: Use the most recent session for this room
+* `-o, --output TEXT`: output format   [default: table]
+* `--attrs`: Include metric attributes
+* `--buckets`: Include histogram bucket counts
+* `--help`: Show this message and exit.
+
 ### `meshagent session traces`
 
 List trace spans for a session as a tree
@@ -537,16 +586,17 @@ List trace spans for a session as a tree
 **Usage**:
 
 ```console
-$ meshagent session traces [OPTIONS] [SESSION_ID]
+$ meshagent session traces [OPTIONS] [SESSION_ARG]
 ```
 
 **Arguments**:
 
-* `[SESSION_ID]`: Session id to inspect
+* `[SESSION_ARG]`: Session id to inspect
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
 * `--room TEXT`: Use the most recent session for this room
 * `--trace-id TEXT`: Only include spans from this trace
 * `--name TEXT`: Only include spans whose name contains this text
