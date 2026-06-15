@@ -1,0 +1,132 @@
+---
+title: "Dynamic Tool Discovery"
+---
+
+import ToolsAdder from "/snippets/examples/python/tools/tools-adder.mdx"
+
+Dynamic tool discovery lets an OpenAI-backed `meshagent process` agent use [OpenAI Responses tool search](https://developers.openai.com/api/docs/guides/tools-tool-search#tool-search-types) to choose from toolkits that MeshAgent makes available for a turn.
+
+Use this when an agent should not load every possible tool directly into every model request. Tool search gives the model a searchable set of candidate tools and lets it pull in the ones that match the user's request.
+
+## `--require-toolkit` vs `--tool-search`
+
+`--require-toolkit` attaches a known toolkit by name. Use it when the agent should always have a specific toolkit available.
+
+`--tool-search` changes how available toolkits are exposed to OpenAI Responses models. It does not create or start a toolkit by itself. The toolkit must already come from the agent's configured capabilities or from the room.
+
+`--tool-search` supports two modes:
+
+| Mode | What the model can search |
+| --- | --- |
+| `agent` | Toolkits already configured on the process agent, such as built-in capabilities and toolkits added with flags like `--require-toolkit`. This is useful when the agent already knows its candidate toolkits but you do not want every tool schema loaded directly on every request. |
+| `room` | The agent toolkits from `agent` mode, plus room toolkits annotated with `meshagent.tool_search: "true"`. |
+
+`--tool-search` is only supported for OpenAI Responses models. Use a model such as `gpt-5.5`.
+
+OpenAI's tool-search guidance makes the same distinction: use tool search over known candidate tools when the candidates are already available at request time, and use client-executed discovery when lookup depends on project, tenant, or other application state.
+
+## Start the example toolkit
+
+The examples below use the custom tools quickstart's `tools-adder.py` sample. It exposes `math-toolkit` from a room-connected `SingleRoomAgent`.
+
+<CodeGroup>
+  <ToolsAdder />
+</CodeGroup>
+
+The annotation is the part that makes this room toolkit eligible for dynamic room discovery:
+
+```python Python
+from meshagent.api import TOOL_SEARCH_ANNOTATION
+
+annotations={TOOL_SEARCH_ANNOTATION: "true"}
+```
+
+Start the toolkit and leave this terminal running:
+
+```bash bash
+meshagent rooms create gettingstarted --if-not-exists
+meshagent room connect --room=gettingstarted --identity=math-tools -- python3 tools-adder.py
+```
+
+## Search the agent's configured tools
+
+Use `--tool-search agent` when the process agent already has a configured set of toolkits and you want OpenAI Responses tool search to choose from that configured set. This is most useful for larger configured agents; for a single small toolkit, `--require-toolkit` by itself is simpler.
+
+In a second terminal, require `math-toolkit` by name, then expose the configured toolkit through tool search:
+
+```bash bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name math-helper \
+  --channel chat \
+  --model gpt-5.5 \
+  --require-toolkit math-toolkit \
+  --tool-search agent
+```
+
+Open the Studio link printed by the command and ask:
+
+```text
+Use the math toolkit to add 389 and 457.
+```
+
+`math-toolkit` is still required by name. Tool search controls how the OpenAI Responses model sees and selects tools from the agent's configured toolkits.
+
+## Search annotated room toolkits
+
+Use `--tool-search room` when the agent should be able to discover eligible toolkits that are already registered in the room.
+
+With the annotated `math-toolkit` still running, start a process agent with room tool search:
+
+```bash bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name math-helper \
+  --channel chat \
+  --model gpt-5.5 \
+  --tool-search room \
+  --log-llm-requests
+```
+
+Open the Studio link printed by the command and ask:
+
+```text
+Use the available math tool to add 389 and 457.
+```
+
+`--tool-search room` includes annotated room toolkits in the model's search set. The agent does not need `--require-toolkit math-toolkit` because the toolkit is discovered from the room.
+
+## Make a room toolkit discoverable
+
+Room tool search only includes toolkits that opt in with the `meshagent.tool_search` annotation. If the toolkit does not set the annotation, `--tool-search room` leaves it out even if the toolkit is visible in the room.
+
+Then verify the room sees the annotation:
+
+```bash bash
+meshagent room agents list-toolkits --room=gettingstarted
+```
+
+The output should include:
+
+```json
+"annotations": {
+  "meshagent.tool_search": "true"
+}
+```
+
+## Troubleshooting
+
+If the agent does not find a room toolkit:
+
+- Check that the toolkit process is still running.
+- Run `meshagent room agents list-toolkits --room=<room>` and confirm the toolkit is visible.
+- Confirm the toolkit has `"meshagent.tool_search": "true"` in its annotations.
+- Use `--tool-search room`, not `--tool-search agent`, when you want annotated room toolkits included.
+- Use an OpenAI Responses model. `--tool-search` is not supported by non-OpenAI process-agent models.
+- Do not use `--tool-search` with `--no-room`; room tool search needs a room connection.
+
+## Next Steps
+
+- [Create Custom Tools](./quickstart): build and run the `math-toolkit` sample used above.
+- [How Tools and Toolkits Work](./tools_and_toolkits): understand toolkit registration and hosted toolkit lifecycle.
+- [OpenAI tool search types](https://developers.openai.com/api/docs/guides/tools-tool-search#tool-search-types): understand the underlying Responses tool-search behavior.

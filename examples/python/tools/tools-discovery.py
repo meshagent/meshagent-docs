@@ -1,3 +1,6 @@
+# Run with:
+# meshagent room connect --room=gettingstarted --identity=sample-participant -- python3 tools-discovery.py
+
 import asyncio
 import logging
 from meshagent.api import RoomClient
@@ -8,8 +11,6 @@ log = logging.getLogger(__name__)
 
 
 async def main():
-    # Run with:
-    # meshagent room connect --room=toolsroom --identity=sample-participant -- python3 tools-discovery.py
     try:
         async with RoomClient() as room:
             toolkits = await room.agents.list_toolkits()

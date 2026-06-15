@@ -4,16 +4,14 @@ version: v1
 metadata:
   name: otel-example
   description: "An example weather tool with otel instrumentation"
-ports:
-- num: "*"
-  liveness: "/"
-  endpoints:
-  - path: /weather
-    meshagent:
-      identity: weather-toolkit
 container:
   image: "us-central1-docker.pkg.dev/meshagent-public/images/python-sdk:{SERVER_VERSION}-esgz"
   command: python /src/observability/observability.py
+  environment:
+    - name: MESHAGENT_TOKEN
+      token:
+        identity: weather-toolkit
+        role: agent
   storage:
     images:
       # Replace this image tag with your own code-only image if you build one.

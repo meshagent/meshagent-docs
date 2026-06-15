@@ -14,8 +14,9 @@ In this guide you'll:
 - Write custom tools 
 - Create a toolkit to group your related tools 
 - Register a toolkit in a room
-- Invoke tools using the MeshAgent Studio UI, MeshAgent CLI, and code
-- Discover available tools in a Room
+- Invoke tools using the MeshAgent CLI, MeshAgent Studio UI, and code
+- Give a process agent access to the toolkit
+- Let a process agent dynamically discover annotated room toolkits
 
 ## Creating a custom toolkit
 
@@ -32,25 +33,77 @@ Save this example as `tools-adder.py`:
 
 ### Step 2: Register the toolkit in a room
 
-Create the room and start the toolkit locally:
+Create the room and start the toolkit locally. This guide uses `gettingstarted`, the same room created in the CLI quickstart, so you can reuse a room you already own.
 
 <CodeGroup>
 ```bash bash
 meshagent setup # authenticate to MeshAgent
-meshagent rooms create toolsroom --if-not-exists
-meshagent room connect --room=toolsroom --identity=math-agent -- python3 tools-adder.py
+meshagent rooms create gettingstarted --if-not-exists
+meshagent room connect --room=gettingstarted --identity=math-tools -- python3 tools-adder.py
 ```
 </CodeGroup>
 
-This command runs the local Python agent and registers the `math-toolkit` toolkit into `toolsroom`.
+This command runs the local Python agent and registers the `math-toolkit` toolkit into `gettingstarted`.
 
 The toolkit is available while that terminal session is still running. `SingleRoomAgent.run()` creates the room connection, starts the agent, and unregisters the exposed toolkit when the process stops.
 
-### Step 3: Invoking a MeshAgent Tool
+### Step 3: Invoke and inspect the toolkit
+
+#### Invoking tools programmatically
+
+While the agent is running, invoke the toolkit from another terminal or from code.
+
+Run the Python and .NET examples through `meshagent room connect` so MeshAgent injects the room connection environment. The Python tab can be saved as `tools-calling.py` and run directly. For .NET, add the C# tab to a .NET project that references `Meshagent.Api`, then run the project through `meshagent room connect`.
+
+<CodeGroup>
+```bash CLI
+meshagent room agents invoke-tool \
+  --room=gettingstarted \
+  --toolkit=math-toolkit \
+  --tool=add \
+  --arguments='{"a": 5, "b":7}'
+```
+
+    <ToolsCalling />
+    <ToolsCallingCs />
+</CodeGroup>
+
+Invoking the tools using the RoomClient will give you the following result: 
+
+<CodeGroup>
+```text Output
+The result from adding the numbers is: Json: json={"result": 3}
+The result from subtracting the numbers is: Json: json={"result": -1}
+```
+</CodeGroup>
+
+#### Inspecting available toolkits
+
+You can also verify which toolkits are registered in the room.
+
+Run the Python and .NET discovery examples through the same `meshagent room connect` pattern.
+
+<CodeGroup>
+```bash CLI
+meshagent room agents list-toolkits --room=gettingstarted
+```
+
+    <ToolsDiscovery />
+    <ToolsDiscoveryCs />
+</CodeGroup>
+
+The output should include `math-toolkit`, its `add` and `subtract` tools, and this annotation:
+
+```json
+"annotations": {
+  "meshagent.tool_search": "true"
+}
+```
+
 #### Invoking tools in MeshAgent Studio
 
 1. Go to [studio.meshagent.com](https://studio.meshagent.com) and login
-1. From the **Sessions** tab enter the ``toolsroom``
+1. From the **Sessions** tab enter `gettingstarted`
 2. From the menu in the upper left, click **Toolkits**
 3. Find the tool you want to run and click **Invoke**
 4. Enter any required values and click **Ok**
@@ -61,58 +114,58 @@ From the "Developer Console" on the bottom half of the screen you'll be able to 
 
 Because this example is running locally through `meshagent room connect`, the toolkit is only available while that terminal session is still running.
 
-#### Invoking tools from the MeshAgent CLI
-While the agent is running, from a new tab in your terminal invoke the tool. The result will print to the terminal.
+### Step 4: Give a process agent access to the toolkit
 
-```bash bash 
-meshagent room agents invoke-tool --room=toolsroom --toolkit=math-toolkit --tool=add --arguments='{"a": 5, "b":7}'
+There are two common ways to make a room toolkit available to a process agent.
+
+#### Option A: Require the toolkit by name
+
+Use `--require-toolkit` when the agent should always have access to a specific room toolkit. This is the simpler path when you already know which toolkit the agent should use.
+
+Leave the terminal running `meshagent room connect --room=gettingstarted --identity=math-tools -- python3 tools-adder.py`; that process is hosting `math-toolkit` in the room. In a second terminal, start a chat agent that requires `math-toolkit`:
+
+```bash bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name math-helper \
+  --channel chat \
+  --model gpt-5.5 \
+  --require-toolkit math-toolkit
 ```
 
-#### Invoking tools from code
+Open the Studio link printed by the command and ask the agent an arithmetic question, such as:
 
-You can also call the tool directly from code. Run the Python or .NET example through `meshagent room connect --room=toolsroom --identity=sample-participant -- <command>` so MeshAgent injects the room connection environment automatically. For example: `meshagent room connect --room=toolsroom --identity=sample-participant -- python3 tools-calling.py`.
-
-<CodeGroup>
-    <ToolsCalling />
-    <ToolsCallingCs />
-</CodeGroup>
-
-Invoking the tools using the RoomClient will give you the following result: 
-
-<CodeGroup>
-```text Output
-The result from adding the numbers is: JsonChunk: json={"result": 3} usage=None
-The result from subtracting the numbers is: JsonChunk: json={"result": -1} usage=None
-```
-</CodeGroup>
-
-## Discovering tools
-
-At any time, you can use the MeshAgent CLI or connect to the room with a ``RoomClient`` to discover what tools are connected to a given room. This can be useful if you want to allow your users to grant additional capabilities to your agents at runtime or verify a tool is present in the room. 
-
-#### Discovering tools from the CLI 
-
-```bash 
-meshagent room agents list-toolkits --room=toolsroom
+```text
+Use the available math tool to add 389 and 457.
 ```
 
-#### Discovering tools from code
-Running this snippet lists the toolkits that are currently available in the room. Use the same `meshagent room connect --room=toolsroom --identity=sample-participant -- <command>` pattern when you run it locally.
+If you deploy the process agent with the same required toolkit, the agent will request that toolkit by name whenever it handles a turn in the room.
 
-<CodeGroup>
-    <ToolsDiscovery />
-    <ToolsDiscoveryCs />
-</CodeGroup>
+#### Option B: Let the agent discover annotated room toolkits
 
-You should see that the math toolkit with both the add and subtract tools are available in the room.
+Use `--tool-search room` when the agent should be able to dynamically discover annotated toolkits that are already present in the room. This is useful when you do not want to configure every toolkit directly on the agent.
 
-<CodeGroup>
-```text Output
-Toolkit: math-toolkit: math-toolkit - a toolkit for adding and subtracting numbers
- Tool: add: adding tool - a tool that adds two numbers
- Tool: subtract: subtracting tool - a tool that subtracts two numbers
+This option uses OpenAI Responses tool search behind the scenes, so it only applies to OpenAI-backed process-agent models.
+
+The sample toolkit sets the `meshagent.tool_search` annotation. Start a chat agent with room tool search enabled:
+
+```bash bash
+meshagent process join \
+  --room gettingstarted \
+  --agent-name math-helper \
+  --channel chat \
+  --model gpt-5.5 \
+  --tool-search room \
+  --log-llm-requests
 ```
-</CodeGroup>
+
+Open the Studio link printed by the command and ask the agent an arithmetic question:
+
+```text
+Use the available math tool to add 389 and 457.
+```
+
+`--tool-search room` adds annotated room toolkits to the model's tool-search candidate set. In the process-agent logs, `math-toolkit` should appear as a deferred toolkit available to the model.
 
 ## Next Steps
 
