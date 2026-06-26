@@ -12,27 +12,27 @@ agents:
     annotations:
       meshagent.agent.type: ChatBot
       meshagent.chatbot.threading: default-new
-      meshagent.chatbot.thread-list: .threads/support-agent/index.threadl
+      meshagent.chatbot.thread-dir: dataset://.threads/support-agent
+      meshagent.chatbot.thread-list: dataset://.threads/support-agent/index
 variables:
   - name: service_api_token
     description: "Sensitive token provided by the installer"
     obscure: true
     annotations:
       meshagent.secret.id: service-api-token
-      meshagent.secret.identity: support-agent
       meshagent.secret.name: service-api-token
       meshagent.secret.type: text/plain
 container:
   image: meshagent/cli:default
+  run_as:
+    email: support-agent@service.YOUR_PROJECT_KEY.YOUR_API_DOMAIN
+    scopes:
+      - secrets:proxy
   command: /bin/bash /var/start.sh
   environment:
     - name: MESHAGENT_TOKEN
       token:
         identity: support-agent
-    - name: SERVICE_API_TOKEN
-      secret:
-        identity: support-agent
-        id: service-api-token
   storage:
     room:
       - path: /data
@@ -42,11 +42,6 @@ container:
         text: |
           #!/bin/bash
           set -e
-
-          if [ -z "${SERVICE_API_TOKEN:-}" ]; then
-            echo "SERVICE_API_TOKEN is required for support-agent" >&2
-            exit 1
-          fi
 
           exec /usr/bin/meshagent process join \
             --agent-name=support-agent \
@@ -58,4 +53,3 @@ container:
             --rule="You are a support agent. Help users with support workflows and never reveal credentials or secret values."
 
 ```
-

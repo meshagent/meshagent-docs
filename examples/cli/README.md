@@ -5,7 +5,7 @@
 Use this directory for two kinds of examples:
 
 - **Scenario examples** at the top level, such as `process-news-agent/`, `voicebot/`, or `supabase-mcp/`
-- **Concept examples** under `concepts/`, such as `concepts/use-room-secrets/`
+- **Concept examples** under `concepts/`, such as `concepts/use-image-pull-secrets/`
 
 ## What belongs here
 
@@ -29,8 +29,8 @@ Examples:
 
 - `examples/cli/process-news-agent/`
 - `examples/cli/voicebot/`
-- `examples/cli/concepts/use-project-secrets/`
-- `examples/cli/concepts/use-room-secrets/`
+- `examples/cli/concepts/use-image-pull-secrets/`
+- `examples/cli/concepts/use-installer-secrets/`
 
 ## Snippet convention
 

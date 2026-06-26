@@ -6,7 +6,7 @@ title: "Threads Overview"
 
 A **thread** is the persisted conversation or work history an agent can use to continue from where it left off.
 
-In MeshAgent, a thread is stored as a Room sync document. It is the durable state behind things like:
+In MeshAgent, a thread is addressed by a thread path and stored by the agent's configured thread storage backend. Process agents store thread history in the room dataset; the legacy MeshDocument-backed thread storage path is no longer supported. A thread is the durable state behind things like:
 
 - an ongoing conversation with a process-backed agent
 - a resumable process-backed toolkit workflow
@@ -70,7 +70,7 @@ Use this when you want a callable agent workflow to be resumable or inspectable 
 
 ### Queue-backed process work
 
-Queue-backed process work also does **not** have to use threads. A queue channel can process jobs with fresh context each time, or it can write the work into thread documents so jobs have durable history.
+Queue-backed process work also does **not** have to use threads. A queue channel can process jobs with fresh context each time, or it can write the work into thread storage so jobs have durable history.
 
 Use this when queued work should leave behind a readable log, or when later work should build on earlier work.
 
@@ -122,7 +122,7 @@ If two agents use different thread paths, they have different histories even if 
 
 ## What is a thread directory?
 
-A **thread directory** is a path prefix used to organize many thread documents together.
+A **thread directory** is a path prefix used to organize many thread paths together.
 
 For example:
 
@@ -132,25 +132,25 @@ For example:
 
 A thread directory typically contains:
 
-- one `.thread` file per conversation or work item
-- one `index.threadl` file that lists the known threads
+- one thread path per conversation or work item
+- one thread list path that lists the known threads
 
 Example:
 
 ```text
-.threads/support-bot/
-  2d8b6f0e-0c9a-4f50-8e1c-2d83d6a64d4f.thread
-  660ef9d1-c70c-46e6-b309-4fe2b8c73b90.thread
-  index.threadl
+dataset://.threads/support-bot/
+  2d8b6f0e-0c9a-4f50-8e1c-2d83d6a64d4f
+  660ef9d1-c70c-46e6-b309-4fe2b8c73b90
+  index
 ```
 
 ## Example: process chat channel with thread-related CLI flags
 
-Here is a simple `meshagent process` command that enables a thread-aware chat UI and stores its thread documents under a dedicated thread directory:
+Here is a simple `meshagent process` command that enables a thread-aware chat UI and stores its thread history under a dedicated thread directory:
 
-```bash bash
+```bash
 meshagent process join \
-  --room quickstart \
+  --room gettingstarted \
   --agent-name support-bot \
   --channel chat \
   --threading-mode default-new \
@@ -163,15 +163,27 @@ meshagent process join \
 The thread-related flags here are:
 
 - `--threading-mode default-new`: tells chat UIs to treat this agent as thread-oriented and to show a new-thread composer before loading an existing thread
-- `--thread-dir ".threads/support-bot"`: tells the agent where its thread documents and thread list should live in Room sync/storage
+- `--thread-dir ".threads/support-bot"`: tells the agent where its thread history and thread list should live
 
-In practice, that means MeshAgent will organize this agent's conversations under:
+With the default dataset-backed thread storage, MeshAgent normalizes that directory into dataset-backed thread paths like:
 
 ```text
-.threads/support-bot/
-  <thread>.thread
-  index.threadl
+dataset://.threads/support-bot/
+  <thread>
+  index
 ```
+
+When you write a process-agent YAML file directly, use the explicit dataset-backed annotations that `meshagent process spec` emits:
+
+```yaml
+annotations:
+  meshagent.agent.type: ChatBot
+  meshagent.chatbot.threading: default-new
+  meshagent.chatbot.thread-dir: dataset://.threads/support-bot
+  meshagent.chatbot.thread-list: dataset://.threads/support-bot/index
+```
+
+`meshagent.chatbot.thread-list` can be derived by MeshAgent clients when `thread-dir` is present, which is why some built-in service templates only set `meshagent.chatbot.thread-dir`. Public examples should include both values so the YAML is self-contained and matches generated process-agent specs.
 
 This is a good default when:
 
@@ -181,11 +193,11 @@ This is a good default when:
 
 If you omit `--thread-dir`, the chat-oriented process runtime will choose a default thread directory for you. If you omit thread-related settings entirely, you can still chat with the agent, but you are no longer explicitly configuring thread list behavior or thread organization.
 
-## What is `index.threadl`?
+## What is the thread list?
 
-`index.threadl` is the thread list document for a thread directory.
+The thread list is the index for a thread directory.
 
-It is not the source of truth for the thread contents. The `.thread` files hold the actual history. The index exists so UIs and agents can:
+It is not the source of truth for the thread contents. Each thread path holds the actual history. The index exists so UIs and agents can:
 
 - list available threads
 - sort them by recent activity
@@ -194,8 +206,8 @@ It is not the source of truth for the thread contents. The `.thread` files hold 
 
 In other words:
 
-- `.thread` stores the conversation or work itself
-- `index.threadl` stores the list of threads
+- a thread path stores the conversation or work itself
+- the thread list stores the list of known threads
 
 ## How UIs use threads
 
@@ -204,7 +216,7 @@ Many chat-style UIs need two things:
 1. a thread list
 2. a selected thread path
 
-The thread list usually comes from `index.threadl`, and the selected conversation comes from a specific `.thread` path.
+The thread list usually comes from the thread directory's index path, and the selected conversation comes from a specific thread path.
 
 This is why thread directories matter most for process-backed agents with a chat channel: they let a UI show many conversations instead of only one.
 
@@ -221,5 +233,4 @@ Use one of these mental models:
 ## Where to go next
 
 - [Process Agents Overview](./process/overview): the main thread-aware runtime for new CLI agents
-- [Process Agents Overview](./process/overview): choose chat, mail, queue, or toolkit entry points
 - [Key Concepts](../introduction/introduction): Rooms, agents, tools, and services

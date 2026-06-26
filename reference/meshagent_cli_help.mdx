@@ -23,6 +23,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `auth`: Authenticate to meshagent
 * `project`: Manage or activate your meshagent projects
 * `service-account`: Manage service accounts for your project
+* `secret`: Manage user and service account secrets
 * `iam`: Manage IAM policies for project resources
 * `config`: Read MeshAgent deployment configuration
 * `doctor`: Inspect the current directory for...
@@ -33,7 +34,6 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `token`: Generate a participant token (JWT) from a...
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
-* `secret`: Manage secrets for your project.
 * `rooms`: Create, list, and manage rooms in a project
 * `agent`: Create, list, and manage managed agents in...
 * `mailbox`: Manage mailboxes for your project
@@ -523,6 +523,390 @@ $ meshagent service-account delete [OPTIONS] SERVICE_ACCOUNT
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
+## `meshagent secret`
+
+Manage user and service account secrets
+
+**Usage**:
+
+```console
+$ meshagent secret [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List secrets for a subject.
+* `search`: Search secrets for a subject.
+* `get`: Get a secret for a subject.
+* `create`: Create a secret for a subject.
+* `update`: Update a secret for a subject.
+* `delete`: Delete a secret for a subject.
+* `versions`: List versions for a secret.
+* `add-version`: Add a new version to a secret.
+* `access`: Access the contents of a secret version.
+* `delete-version`: Delete a secret version.
+* `grants`: List proxy access grants for one of your...
+* `grant-proxy`: Grant a service account proxy access to...
+* `revoke-proxy`: Revoke a service account proxy access...
+* `pull-secrets`: List pull secrets for a service account.
+* `add-pull-secret`: Add a pull secret to a service account.
+* `remove-pull-secret`: Remove a pull secret from a service account.
+
+### `meshagent secret list`
+
+List secrets for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--page-size INTEGER`: page size  [default: 100]
+* `--filter TEXT`: text filter
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret search`
+
+Search secrets for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret search [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--filter TEXT`: text filter
+* `--name TEXT`: secret name
+* `--type TEXT`: secret type
+* `--http-only / --not-http-only`: http-only flag
+* `--metadata TEXT`: metadata JSON object
+* `--annotations TEXT`: annotations JSON object
+* `--provider TEXT`: standard provider annotation
+* `--service TEXT`: standard service annotation
+* `--account TEXT`: standard account annotation
+* `--username TEXT`: standard username annotation
+* `--email TEXT`: standard email annotation
+* `--url TEXT`: standard url annotation
+* `--oauth-provider TEXT`: standard OAuth provider annotation
+* `--oauth-scopes TEXT`: standard OAuth scopes annotation
+* `--page-size INTEGER`: page size  [default: 100]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret get`
+
+Get a secret for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret get [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--include-value`: include the current secret value
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret create`
+
+Create a secret for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret create [OPTIONS] NAME
+```
+
+**Arguments**:
+
+* `NAME`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--type TEXT`: secret type  [default: opaque]
+* `--http-only`: make the secret proxy-only
+* `--metadata TEXT`: metadata JSON object
+* `--annotations TEXT`: annotations JSON object
+* `--value TEXT`: initial secret value
+* `--value-file PATH`: file containing secret value
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret update`
+
+Update a secret for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret update [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--name TEXT`: new name
+* `--type TEXT`: new type
+* `--http-only / --not-http-only`: http-only flag
+* `--metadata TEXT`: metadata JSON object
+* `--annotations TEXT`: annotations JSON object
+* `--help`: Show this message and exit.
+
+### `meshagent secret delete`
+
+Delete a secret for a subject.
+
+**Usage**:
+
+```console
+$ meshagent secret delete [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--help`: Show this message and exit.
+
+### `meshagent secret versions`
+
+List versions for a secret.
+
+**Usage**:
+
+```console
+$ meshagent secret versions [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret add-version`
+
+Add a new version to a secret.
+
+**Usage**:
+
+```console
+$ meshagent secret add-version [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--value TEXT`: new secret value
+* `--value-file PATH`: file containing secret value
+* `--set-current / --no-set-current`: set as current version  [default: set-current]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret access`
+
+Access the contents of a secret version.
+
+**Usage**:
+
+```console
+$ meshagent secret access [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--version TEXT`: secret version id; defaults to the current version
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret delete-version`
+
+Delete a secret version.
+
+**Usage**:
+
+```console
+$ meshagent secret delete-version [OPTIONS] SECRET_ID VERSION_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+* `VERSION_ID`: secret version id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: secret owner: &quot;me&quot; or a service account email, id, key, or name  [default: me]
+* `--help`: Show this message and exit.
+
+### `meshagent secret grants`
+
+List proxy access grants for one of your secrets.
+
+**Usage**:
+
+```console
+$ meshagent secret grants [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret grant-proxy`
+
+Grant a service account proxy access to one of your secrets.
+
+**Usage**:
+
+```console
+$ meshagent secret grant-proxy [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: service account email, id, key, or name  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secret revoke-proxy`
+
+Revoke a service account proxy access grant from one of your secrets.
+
+**Usage**:
+
+```console
+$ meshagent secret revoke-proxy [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: service account email, id, key, or name  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secret pull-secrets`
+
+List pull secrets for a service account.
+
+**Usage**:
+
+```console
+$ meshagent secret pull-secrets [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: service account email, id, key, or name  [required]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent secret add-pull-secret`
+
+Add a pull secret to a service account.
+
+**Usage**:
+
+```console
+$ meshagent secret add-pull-secret [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: service account email, id, key, or name  [required]
+* `--help`: Show this message and exit.
+
+### `meshagent secret remove-pull-secret`
+
+Remove a pull secret from a service account.
+
+**Usage**:
+
+```console
+$ meshagent secret remove-pull-secret [OPTIONS] SECRET_ID
+```
+
+**Arguments**:
+
+* `SECRET_ID`: secret id  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--subject TEXT`: service account email, id, key, or name  [required]
+* `--help`: Show this message and exit.
+
 ## `meshagent iam`
 
 Manage IAM policies for project resources
@@ -582,6 +966,8 @@ $ meshagent iam grant [OPTIONS]
 * `--subject-type TEXT`: subject type  [required]
 * `--subject-id TEXT`: subject id  [required]
 * `--role TEXT`: role to grant; repeat or comma-separate  [required]
+* `--subject-object-type TEXT`: userset object type
+* `--subject-relation TEXT`: userset relation
 * `--invite-redirect-url TEXT`: invite redirect URL for users
 * `--help`: Show this message and exit.
 
@@ -602,6 +988,8 @@ $ meshagent iam revoke [OPTIONS]
 * `--resource-id TEXT`: resource id  [required]
 * `--subject-type TEXT`: subject type  [required]
 * `--subject-id TEXT`: subject id  [required]
+* `--subject-object-type TEXT`: userset object type
+* `--subject-relation TEXT`: userset relation
 * `--help`: Show this message and exit.
 
 ## `meshagent config`
@@ -678,7 +1066,7 @@ $ meshagent create [OPTIONS] [PATH]
 **Options**:
 
 * `-l, --language TEXT`: Template language for non-interactive use. Supported: python, javascript, typescript, react, dotnet, dart/flutter.
-* `--focus TEXT`: Project focus for non-interactive use. Use stable IDs: webserver (Web App), backend-agent (Agent Toolkit), chatbot (OpenAI Chatbot), chatbot-anthropic (Anthropic Chatbot), chatbot-ui (Agent UI), room-chat (Room Chat), meeting-app (Meeting App), or contact-form (Contact Form).
+* `--focus TEXT`: Project focus for non-interactive use. Use stable IDs: webserver (Web App), backend-agent (Agent Toolkit), chatbot (OpenAI Chatbot), chatbot-anthropic (Anthropic Chatbot), chatbot-ui (Agent UI), room-chat (Room Chat), room-workspace (Room Workspace), or contact-form (Contact Form).
 * `--interactive / --no-interactive`: Run or bypass the interactive template picker. Defaults to interactive when attached to a TTY and language or focus is missing.
 * `--help`: Show this message and exit.
 
@@ -702,6 +1090,9 @@ $ meshagent session [OPTIONS] COMMAND [ARGS]...
 
 * `list`: List recent sessions
 * `get`: Get events for a session
+* `kill`: Forcefully kill a running session instance
+* `logs`: List logs for a session
+* `metrics`: List metrics for a session
 * `traces`: List trace spans for a session as a tree
 
 ### `meshagent session list`
@@ -740,6 +1131,73 @@ $ meshagent session get [OPTIONS] SESSION_ID
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
+### `meshagent session kill`
+
+Forcefully kill a running session instance
+
+**Usage**:
+
+```console
+$ meshagent session kill [OPTIONS] SESSION_ID
+```
+
+**Arguments**:
+
+* `SESSION_ID`: Session id to kill  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-y, --yes`: Skip the confirmation prompt
+* `--help`: Show this message and exit.
+
+### `meshagent session logs`
+
+List logs for a session
+
+**Usage**:
+
+```console
+$ meshagent session logs [OPTIONS] [SESSION_ARG]
+```
+
+**Arguments**:
+
+* `[SESSION_ARG]`: Session id to inspect
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
+* `--room TEXT`: Use the most recent session for this room
+* `-o, --output TEXT`: output format   [default: table]
+* `--attrs`: Include log and resource attributes
+* `--help`: Show this message and exit.
+
+### `meshagent session metrics`
+
+List metrics for a session
+
+**Usage**:
+
+```console
+$ meshagent session metrics [OPTIONS] [SESSION_ARG]
+```
+
+**Arguments**:
+
+* `[SESSION_ARG]`: Session id to inspect
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
+* `--room TEXT`: Use the most recent session for this room
+* `-o, --output TEXT`: output format   [default: table]
+* `--attrs`: Include metric attributes
+* `--buckets`: Include histogram bucket counts
+* `--help`: Show this message and exit.
+
 ### `meshagent session traces`
 
 List trace spans for a session as a tree
@@ -747,16 +1205,17 @@ List trace spans for a session as a tree
 **Usage**:
 
 ```console
-$ meshagent session traces [OPTIONS] [SESSION_ID]
+$ meshagent session traces [OPTIONS] [SESSION_ARG]
 ```
 
 **Arguments**:
 
-* `[SESSION_ID]`: Session id to inspect
+* `[SESSION_ARG]`: Session id to inspect
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--session-id TEXT`: Session id to inspect
 * `--room TEXT`: Use the most recent session for this room
 * `--trace-id TEXT`: Only include spans from this trace
 * `--name TEXT`: Only include spans whose name contains this text
@@ -927,7 +1386,7 @@ $ meshagent service create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
-* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and creates an external MCP service configured for dynamic client registration.
+* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and creates an external MCP service configured with discovered OAuth endpoints.
 * `--room TEXT`: Room name
 * `--global`: Create the service globally instead of in a room
 * `--service-id TEXT`: Optional override for meshagent.service.id in metadata annotations.
@@ -951,7 +1410,7 @@ $ meshagent service update [OPTIONS]
 * `--id TEXT`
 * `-f, --file TEXT`: File path to a service definition
 * `--url TEXT`: URL to a service definition
-* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and builds an external MCP service configured for dynamic client registration.
+* `--mcp TEXT`: MCP server URL. Auto-discovers OAuth metadata and builds an external MCP service configured with discovered OAuth endpoints.
 * `--create / --no-create`: create the service if it does not exist  [default: no-create]
 * `--room TEXT`: Room name
 * `--global`: Update the global service instead of a room service
@@ -1181,7 +1640,6 @@ $ meshagent mcp sse [OPTIONS]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: SSE URL for the MCP server  [required]
 * `-H, --header TEXT`: Request header (KEY:VALUE). Repeat for multiple headers
-* `--header-secret TEXT`: Header from secret (HEADER:FORMAT). FORMAT uses secret placeholders, e.g. Header:Bearer &#123;my_secret&#125;
 * `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
@@ -1204,7 +1662,6 @@ $ meshagent mcp http [OPTIONS]
 * `--role TEXT`: [default: tool]
 * `--url TEXT`: Streamable HTTP URL for the MCP server  [required]
 * `-H, --header TEXT`: Request header (KEY:VALUE). Repeat for multiple headers
-* `--header-secret TEXT`: Header from secret (HEADER:FORMAT). FORMAT uses secret placeholders, e.g. Header:Bearer &#123;my_secret&#125;
 * `--toolkit-name TEXT`: Toolkit name to register in the room (default: mcp)
 * `--key TEXT`: an api key to sign the token with
 * `--help`: Show this message and exit.
@@ -1290,303 +1747,6 @@ $ meshagent mcp stdio-service [OPTIONS]
 * `--path TEXT`: HTTP path to mount the service at
 * `--toolkit-name TEXT`: Toolkit name to expose (default: mcp)
 * `-e, --env TEXT`: KEY=VALUE
-* `--help`: Show this message and exit.
-
-## `meshagent secret`
-
-Manage secrets for your project.
-
-**Usage**:
-
-```console
-$ meshagent secret [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `key`: Create or update environment-based...
-* `docker`: Create or update a Docker registry pull...
-* `acr`: Create or update an Azure Container...
-* `gar`: Create or update a Google Artifact...
-* `list`: List all secrets in the project (typed as...
-* `delete`: Delete a secret.
-
-### `meshagent secret key`
-
-Create or update environment-based key-value secrets.
-
-**Usage**:
-
-```console
-$ meshagent secret key [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new 'keys' secret (opaque env-vars).
-* `update`: Update an existing 'keys' secret (opaque...
-
-#### `meshagent secret key create`
-
-Create a new &#x27;keys&#x27; secret (opaque env-vars).
-
-**Usage**:
-
-```console
-$ meshagent secret key create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Secret name  [required]
-* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent secret key update`
-
-Update an existing &#x27;keys&#x27; secret (opaque env-vars).
-
-**Usage**:
-
-```console
-$ meshagent secret key update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--data TEXT`: Format: key=value key2=value  (space-separated)  [required]
-* `--help`: Show this message and exit.
-
-### `meshagent secret docker`
-
-Create or update a Docker registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent secret docker [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new Docker pull secret (generic).
-* `update`: Update an existing Docker pull secret...
-
-#### `meshagent secret docker create`
-
-Create a new Docker pull secret (generic).
-
-**Usage**:
-
-```console
-$ meshagent secret docker create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: Docker registry server, e.g. index.docker.io  [required]
-* `--username TEXT`: Registry user name  [required]
-* `--password TEXT`: Registry password  [required]
-* `--email TEXT`: User email for Docker config
-* `--help`: Show this message and exit.
-
-#### `meshagent secret docker update`
-
-Update an existing Docker pull secret (generic).
-
-**Usage**:
-
-```console
-$ meshagent secret docker update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: Docker registry server  [required]
-* `--username TEXT`: Registry user name  [required]
-* `--password TEXT`: Registry password  [required]
-* `--email TEXT`: User email for Docker config
-* `--help`: Show this message and exit.
-
-### `meshagent secret acr`
-
-Create or update an Azure Container Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent secret acr [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new ACR pull secret (defaults...
-* `update`: Update an existing ACR pull secret...
-
-#### `meshagent secret acr create`
-
-Create a new ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
-
-**Usage**:
-
-```console
-$ meshagent secret acr create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
-* `--username TEXT`: Service principal ID  [required]
-* `--password TEXT`: Service principal secret/password  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent secret acr update`
-
-Update an existing ACR pull secret (defaults email to &#x27;none@microsoft.com&#x27;).
-
-**Usage**:
-
-```console
-$ meshagent secret acr update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: ACR server, e.g. myregistry.azurecr.io  [required]
-* `--username TEXT`: Service principal ID  [required]
-* `--password TEXT`: Service principal secret/password  [required]
-* `--help`: Show this message and exit.
-
-### `meshagent secret gar`
-
-Create or update a Google Artifact Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent secret gar [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `create`: Create a new Google Artifact Registry pull...
-* `update`: Update an existing Google Artifact...
-
-#### `meshagent secret gar create`
-
-Create a new Google Artifact Registry pull secret.
-
-By default, sets email=&#x27;none@google.com&#x27;, username=&#x27;_json_key&#x27;
-
-**Usage**:
-
-```console
-$ meshagent secret gar create [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
-* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent secret gar update`
-
-Update an existing Google Artifact Registry pull secret.
-
-**Usage**:
-
-```console
-$ meshagent secret gar update [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--secret-id TEXT`: Existing secret ID  [required]
-* `--name TEXT`: Secret name  [required]
-* `--server TEXT`: GAR host, e.g. us-west1-docker.pkg.dev  [required]
-* `--json-key TEXT`: Entire GCP service account JSON as string  [required]
-* `--help`: Show this message and exit.
-
-### `meshagent secret list`
-
-List all secrets in the project (typed as Docker/ACR/GAR or Keys secrets).
-
-**Usage**:
-
-```console
-$ meshagent secret list [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--help`: Show this message and exit.
-
-### `meshagent secret delete`
-
-Delete a secret.
-
-**Usage**:
-
-```console
-$ meshagent secret delete [OPTIONS] SECRET_ID
-```
-
-**Arguments**:
-
-* `SECRET_ID`: ID of the secret to delete  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
 ## `meshagent rooms`
@@ -1730,111 +1890,12 @@ $ meshagent agent [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `secret`: Manage secrets for a managed agent
 * `create`: Create a managed agent in the project.
 * `delete`: Delete a managed agent from the project.
 * `update`: Update a managed agent configuration.
 * `list`: List managed agents in the project.
 * `get`: Get a managed agent configuration.
 * `use`: Use a managed agent over its websocket...
-
-### `meshagent agent secret`
-
-Manage secrets for a managed agent
-
-**Usage**:
-
-```console
-$ meshagent agent secret [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `list`
-* `get`
-* `set`
-* `delete`
-
-#### `meshagent agent secret list`
-
-**Usage**:
-
-```console
-$ meshagent agent secret list [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--id TEXT`: Agent ID (preferred)
-* `--name TEXT`: Agent name
-* `-o, --output TEXT`: output format   [default: table]
-* `--help`: Show this message and exit.
-
-#### `meshagent agent secret get`
-
-**Usage**:
-
-```console
-$ meshagent agent secret get [OPTIONS] SECRET_ID
-```
-
-**Arguments**:
-
-* `SECRET_ID`: Secret ID  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--id TEXT`: Agent ID (preferred)
-* `--name TEXT`: Agent name
-* `-o, --output TEXT`: output format   [default: json]
-* `--help`: Show this message and exit.
-
-#### `meshagent agent secret set`
-
-**Usage**:
-
-```console
-$ meshagent agent secret set [OPTIONS] SECRET_ID
-```
-
-**Arguments**:
-
-* `SECRET_ID`: Secret ID  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--id TEXT`: Agent ID (preferred)
-* `--name TEXT`: Agent name
-* `--secret-name TEXT`: Display name
-* `--type TEXT`: Secret content type  [default: keys]
-* `--data TEXT`: Secret data as a JSON object, for example &#x27;&#123;&quot;OPENAI_API_KEY&quot;:&quot;...&quot;&#125;&#x27;  [required]
-* `--help`: Show this message and exit.
-
-#### `meshagent agent secret delete`
-
-**Usage**:
-
-```console
-$ meshagent agent secret delete [OPTIONS] SECRET_ID
-```
-
-**Arguments**:
-
-* `SECRET_ID`: Secret ID  [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--id TEXT`: Agent ID (preferred)
-* `--name TEXT`: Agent name
-* `--help`: Show this message and exit.
 
 ### `meshagent agent create`
 
@@ -2683,12 +2744,12 @@ $ meshagent deploy [OPTIONS] [PATH]
 * `--template TEXT`: Allowed values: agent, none. agent: MeshAgent mounts room storage at /data, sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a container-scoped MeshAgent token. agent also sets SMTP_PASSWORD to that token, SMTP_USERNAME to the container name, SMTP_PORT to 587, SMTP_HOSTNAME from MESHAGENT_MAIL_DOMAIN when available, plus OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_ROOM_URL, MESHAGENT_ROOM, MESHAGENT_PROJECT_ID, MESHAGENT_SESSION_ID, OTEL_ENDPOINT, OTEL_PYTHON_LOG_LEVEL, and MESHAGENT_MAIL_DOMAIN from the room runtime when available. Manual env values win. none: MeshAgent applies no template defaults.  [default: agent]
 * `--liveness TEXT`: HTTP path to use for service liveness checks. Defaults to / for new or missing HTTP liveness paths.
 * `--room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
 * `-e, --env TEXT`: Set environment variable as KEY=VALUE
-* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
-* `--identity TEXT`: Identity name to use for --meshagent-token and --env-secret. Defaults to the current token identity or the derived service name.
+* `--env-secret TEXT`: Set environment variable from a service account secret as NAME=SECRET_ID
+* `--identity TEXT`: Identity name to use for --meshagent-token. Defaults to the current token identity or the derived service name.
+* `--run-as TEXT`: Service account email the deployed container runs as. Required when using --env-secret.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
 * `--private / --public`: Whether published service ports should stay private or be public when they are created or updated. Defaults to private.  [default: private]
 * `--wait / --no-wait`: Wait for the deployed service to start, stream container logs, and verify the route liveness URL when --domain is provided.  [default: wait]
@@ -3091,7 +3152,6 @@ $ meshagent process join [OPTIONS]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
@@ -3129,10 +3189,10 @@ $ meshagent process join [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--threading-mode [none|default-new]`: Threading mode for thread UIs. Use &#x27;default-new&#x27; to show a new-thread composer before loading a thread.  [default: default-new]
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--context-management [auto|standalone|none]`: Context compaction mode for OpenAI Responses process agents: auto, standalone, or none.  [default: auto]
 * `--compaction-threshold INTEGER`: Token threshold for OpenAI Responses context compaction.
-* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.  [default: 32000]
+* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.
 * `--reasoning-effort TEXT`: Reasoning effort to request from OpenAI Responses models.
 * `--channel TEXT`: Attach a channel to the agent process. Can be repeated. Currently supported: chat, mail:EMAIL_ADDRESS[?reply-all=true|false], memory, queue:QUEUE_NAME, toolkit:NAME, websocket:PORT, websocket://HOST:PORT.
 * `--websocket-auth [iap|jwt|none]`: Authentication mode for websocket channels: jwt, iap, or none.  [default: jwt]
@@ -3182,7 +3242,6 @@ $ meshagent process service [OPTIONS]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--shell-image-mount TEXT`: Mount image as &lt;image&gt;=&lt;mount&gt;[:ro|rw]
@@ -3219,10 +3278,10 @@ $ meshagent process service [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--threading-mode [none|default-new]`: Threading mode for thread UIs. Use &#x27;default-new&#x27; to show a new-thread composer before loading a thread.  [default: default-new]
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--context-management [auto|standalone|none]`: Context compaction mode for OpenAI Responses process agents: auto, standalone, or none.  [default: auto]
 * `--compaction-threshold INTEGER`: Token threshold for OpenAI Responses context compaction.
-* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.  [default: 32000]
+* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.
 * `--reasoning-effort TEXT`: Reasoning effort to request from OpenAI Responses models.
 * `--channel TEXT`: Attach a channel to the agent process. Can be repeated. Currently supported: chat, mail:EMAIL_ADDRESS[?reply-all=true|false], memory, queue:QUEUE_NAME, toolkit:NAME, websocket:PORT, websocket://HOST:PORT.
 * `--skill-dir TEXT`: an agent skills directory
@@ -3273,7 +3332,6 @@ $ meshagent process spec [OPTIONS]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
@@ -3306,10 +3364,10 @@ $ meshagent process spec [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--threading-mode [none|default-new]`: Threading mode for thread UIs. Use &#x27;default-new&#x27; to show a new-thread composer before loading a thread.  [default: default-new]
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--context-management [auto|standalone|none]`: Context compaction mode for OpenAI Responses process agents: auto, standalone, or none.  [default: auto]
 * `--compaction-threshold INTEGER`: Token threshold for OpenAI Responses context compaction.
-* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.  [default: 32000]
+* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.
 * `--reasoning-effort TEXT`: Reasoning effort to request from OpenAI Responses models.
 * `--channel TEXT`: Attach a channel to the agent process. Can be repeated. Currently supported: chat, mail:EMAIL_ADDRESS[?reply-all=true|false], memory, queue:QUEUE_NAME, toolkit:NAME, websocket:PORT, websocket://HOST:PORT.
 * `--skill-dir TEXT`: an agent skills directory
@@ -3358,7 +3416,6 @@ $ meshagent process deploy [OPTIONS]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
@@ -3391,10 +3448,10 @@ $ meshagent process deploy [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--threading-mode [none|default-new]`: Threading mode for thread UIs. Use &#x27;default-new&#x27; to show a new-thread composer before loading a thread.  [default: default-new]
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--context-management [auto|standalone|none]`: Context compaction mode for OpenAI Responses process agents: auto, standalone, or none.  [default: auto]
 * `--compaction-threshold INTEGER`: Token threshold for OpenAI Responses context compaction.
-* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.  [default: 32000]
+* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.
 * `--reasoning-effort TEXT`: Reasoning effort to request from OpenAI Responses models.
 * `--channel TEXT`: Attach a channel to the agent process. Can be repeated. Currently supported: chat, mail:EMAIL_ADDRESS[?reply-all=true|false], memory, queue:QUEUE_NAME, toolkit:NAME, websocket:PORT, websocket://HOST:PORT.
 * `--skill-dir TEXT`: an agent skills directory
@@ -3446,7 +3503,6 @@ $ meshagent process run [OPTIONS]
 * `--storage-tool-local-path TEXT`: Mount local path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--storage-tool-room-path TEXT`: Mount room path as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-room-mount TEXT`: Mount room storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
-* `--shell-project-mount TEXT`: Mount project storage as &lt;source&gt;:&lt;mount&gt;[:ro|rw]
 * `--shell-empty-dir-mount TEXT`: Mount empty dir at &lt;mount&gt;[:ro|rw]
 * `--shell-tool-config-mount TEXT`: Mount meshagent runtime config files read-only into &lt;mount&gt;
 * `--starting-url TEXT`: Initial URL to open when starting a computer-use browser session
@@ -3480,10 +3536,10 @@ $ meshagent process run [OPTIONS]
 * `--always-reply / --no-always-reply`: Always reply
 * `--threading-mode [none|default-new]`: Threading mode for thread UIs. Use &#x27;default-new&#x27; to show a new-thread composer before loading a thread.  [default: default-new]
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument with a room, or none with --no-room.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset with a room, or none with --no-room.
 * `--context-management [auto|standalone|none]`: Context compaction mode for OpenAI Responses process agents: auto, standalone, or none.  [default: auto]
 * `--compaction-threshold INTEGER`: Token threshold for OpenAI Responses context compaction.
-* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.  [default: 32000]
+* `--max-output-tokens INTEGER`: Maximum output tokens to request from OpenAI Responses models.
 * `--reasoning-effort TEXT`: Reasoning effort to request from OpenAI Responses models.
 * `--channel TEXT`: Attach a channel to the agent process. Can be repeated. Currently supported: chat, mail:EMAIL_ADDRESS[?reply-all=true|false], memory, queue:QUEUE_NAME, toolkit:NAME, websocket:PORT, websocket://HOST:PORT.
 * `--skill-dir TEXT`: an agent skills directory
@@ -3522,7 +3578,7 @@ $ meshagent process threads [OPTIONS]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to list threads for
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--limit INTEGER`: Maximum threads to show  [default: 20]
 * `--offset INTEGER`: Thread list offset  [default: 0]
 * `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
@@ -3544,7 +3600,7 @@ $ meshagent process messages [OPTIONS]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--agent-name TEXT`: Name of the agent to inspect
 * `--thread-dir TEXT`: Thread directory for agent thread files. Defaults to /agents/&lt;agent-name&gt;/threads for process agents when threading mode is enabled.
-* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset then meshdocument.
+* `--thread-storage TEXT`: Thread storage backend for process agents. Can be repeated; the first value is the default. Defaults to dataset.
 * `--thread-id TEXT`: Thread id to inspect  [required]
 * `-o, --output [json|table|text]`: Output format: json, table, or text.  [default: text]
 * `--help`: Show this message and exit.
@@ -3612,7 +3668,6 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `agents`: Interact with agents and toolkits in a room
-* `secret`: Manage room-scoped secrets and OAuth flows
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages in a room
 * `storage`: Manage storage for a room
@@ -3799,177 +3854,6 @@ $ meshagent room agents list-toolkits [OPTIONS]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `--role TEXT`: [default: user]
 * `--participant-id TEXT`: Optional participant ID
-* `--help`: Show this message and exit.
-
-### `meshagent room secret`
-
-Manage room-scoped secrets and OAuth flows
-
-**Usage**:
-
-```console
-$ meshagent room secret [OPTIONS] COMMAND [ARGS]...
-```
-
-**Options**:
-
-* `--install-completion`: Install completion for the current shell.
-* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
-* `--help`: Show this message and exit.
-
-**Commands**:
-
-* `oauth`: Request an OAuth token from another...
-* `request`: Request a secret from another participant.
-* `get`: Fetch a stored secret by ID.
-* `exists`: Check whether a stored secret exists by ID.
-* `set`: Store a secret by ID.
-* `list`: List secrets in the room.
-* `delete`: Delete a secret by ID.
-
-#### `meshagent room secret oauth`
-
-Request an OAuth token from another participant.
-
-**Usage**:
-
-```console
-$ meshagent room secret oauth [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--from-participant-id TEXT`: Participant ID to request the token from  [required]
-* `--client-id TEXT`: OAuth client ID  [required]
-* `--authorization-endpoint TEXT`: OAuth authorization endpoint URL  [required]
-* `--token-endpoint TEXT`: OAuth token endpoint URL  [required]
-* `--scopes TEXT`: Comma-separated OAuth scopes
-* `--client-secret TEXT`: OAuth client secret (if required)  [required]
-* `--redirect-uri TEXT`: Redirect URI for the OAuth flow  [required]
-* `--pkce / --no-pkce`: Use PKCE (recommended)  [default: pkce]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret request`
-
-Request a secret from another participant.
-
-**Usage**:
-
-```console
-$ meshagent room secret request [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--from-participant-id TEXT`: Participant ID to request the secret from  [required]
-* `--url TEXT`: Secret URL identifier  [required]
-* `--type TEXT`: Secret type  [default: application/octet-stream]
-* `--delegate-to TEXT`: Delegate secret to this participant name
-* `--timeout INTEGER`: Timeout in seconds  [default: 300]
-* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret get`
-
-Fetch a stored secret by ID.
-
-**Usage**:
-
-```console
-$ meshagent room secret get [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--id TEXT`: Secret ID  [required]
-* `--delegated-to TEXT`: Fetch a secret delegated to this participant name
-* `-o, --out TEXT`: Output file path, or &#x27;-&#x27; for stdout  [default: -]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret exists`
-
-Check whether a stored secret exists by ID.
-
-**Usage**:
-
-```console
-$ meshagent room secret exists [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--id TEXT`: Secret ID  [required]
-* `--delegated-to TEXT`: Check a secret delegated to this participant name
-* `--for-identity TEXT`: Check a secret for a specific identity
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret set`
-
-Store a secret by ID.
-
-**Usage**:
-
-```console
-$ meshagent room secret set [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--id TEXT`: Secret ID  [required]
-* `--type TEXT`: Secret type
-* `--name TEXT`: Optional secret name
-* `--delegated-to TEXT`: Store a secret delegated to this participant name
-* `--for-identity TEXT`: Store a secret for a specific identity
-* `-i, --in TEXT`: Input file path, or &#x27;-&#x27; for stdin
-* `--text TEXT`: Provide secret as UTF-8 text
-* `--base64 TEXT`: Provide secret as base64-encoded data
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret list`
-
-List secrets in the room.
-
-**Usage**:
-
-```console
-$ meshagent room secret list [OPTIONS]
-```
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--help`: Show this message and exit.
-
-#### `meshagent room secret delete`
-
-Delete a secret by ID.
-
-**Usage**:
-
-```console
-$ meshagent room secret delete [OPTIONS] ID
-```
-
-**Arguments**:
-
-* `ID`: [required]
-
-**Options**:
-
-* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `--delegated-to TEXT`: The value of the delegated_to field of the secret, must be specified if secret was delegated
 * `--help`: Show this message and exit.
 
 ### `meshagent room queue`
@@ -5629,7 +5513,6 @@ $ meshagent room container image save [OPTIONS]
 * `--tag TEXT`: Image tag/ref to save  [required]
 * `--archive-path TEXT`: Path to write OCI archive inside one of the mounted paths (absolute path)  [required]
 * `--mount-room-path TEXT`: Room storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/images:/workspace&#x27;
-* `--mount-project-path TEXT`: Project storage mount &#x27;&lt;source&gt;:&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;/shared:/project:ro&#x27;
 * `--mount-image TEXT`: Image mount &#x27;&lt;image&gt;=&lt;mount&gt;[:ro|rw]&#x27;. Example &#x27;alpine:latest=/toolchain:ro&#x27;
 * `--private / --public`: Whether the save container is private to the participant  [default: public]
 * `--help`: Show this message and exit.
@@ -5916,8 +5799,7 @@ $ meshagent room connect [OPTIONS] [COMMAND]...
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.
 * `--room TEXT`: Room name
 * `-e, --env TEXT`: Set environment variable as KEY=VALUE
-* `--env-secret TEXT`: Set environment variable from a room secret as NAME=SECRET_ID
-* `--identity TEXT`: Identity name to use for the connected token, --meshagent-token, and --env-secret. Required with --role, --meshagent-token, and --env-secret. When set, room connect mints a participant token locally.
+* `--identity TEXT`: Identity name to use for the connected token and --meshagent-token. Required with --role and --meshagent-token. When set, room connect mints a participant token locally.
 * `--role TEXT`: Participant role for locally minted tokens. Requires --identity and defaults to agent.
 * `--meshagent-token TEXT`: Inject MESHAGENT_TOKEN using userDefault, agentDefault, full, or a JSON ApiScope object.
 * `--template TEXT`: Allowed values: agent, none. agent: MeshAgent sets MESHAGENT_TOKEN, OPENAI_API_KEY, and ANTHROPIC_API_KEY to a room-scoped MeshAgent token, and sets OPENAI_BASE_URL, ANTHROPIC_BASE_URL, MESHAGENT_API_URL, MESHAGENT_PROJECT_ID, and MESHAGENT_ROOM from the connected room unless manually set. none: MeshAgent applies no template defaults.  [default: agent]

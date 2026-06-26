@@ -12,18 +12,13 @@ variables:
   - name: supabase_access_token
     description: "Supabase access token"
     obscure: true
-    annotations:
-      meshagent.secret.id: supabase
-      meshagent.secret.identity: supabase
-      meshagent.secret.name: supabase
-      meshagent.secret.type: text
 container:
   image: "meshagent/cli:default"
   command: >
     /usr/bin/meshagent mcp http
     --toolkit-name supabase
     --url 'https://mcp.supabase.com/mcp?project_ref={{ supabase_project_ref }}'
-    --header-secret "Authorization:Bearer {supabase}"
+    --header "Authorization:Bearer {{ supabase_access_token }}"
   environment:
     - name: SUPABASE_PROJECT_REF
       value: "{{ supabase_project_ref }}"
@@ -33,4 +28,3 @@ container:
         role: agent
 
 ```
-
