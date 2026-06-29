@@ -1,0 +1,363 @@
+---
+title: IAM Roles and Permissions
+description: Every MeshAgent IAM principal, resource, role, and room API scope permission.
+---
+
+MeshAgent IAM controls access to project resources. It answers four questions:
+
+- **Who** is requesting access: a user, group, agent, service account, or userset.
+- **What** they are accessing: a project, room, repository, feed, secret, service account, or other project resource.
+- **Which role** they have on that resource.
+- **Which room API scope** a participant token carries after access is granted.
+
+Use the smallest role or scope that lets the subject do its job.
+
+## Principals
+
+| Principal type | Description |
+| --- | --- |
+| `user` | A human project member. |
+| `group` | A group of users. Group access applies through the group's members. |
+| `agent` | A managed agent principal. |
+| `service_account` | A non-human identity used by services, jobs, API keys, and automation. |
+| `userset` | A reference to another resource relation, such as all project members. |
+
+## Resources
+
+| Resource type | Description |
+| --- | --- |
+| `project` | The top-level project boundary. Project roles can grant project-wide create, inventory, manage, billing, LLM proxy, and group-management access. |
+| `room` | A room and its room-scoped APIs. |
+| `agent` | A managed agent resource. Managed agent resource policies are not set through the generic IAM policy API; agent run-as and project agent roles control this surface. |
+| `group` | A group and its membership. |
+| `repository` | A project image repository. |
+| `feed` | A feed and its publish/subscribe operations. |
+| `secret` | A user secret that can be proxied to a service account. |
+| `service_account` | A service account and the credentials or run-as permissions attached to it. |
+
+## Project Roles
+
+Project roles apply at the project level. `owner` is assigned to the project owner. `admin` inherits owner-level administrative capabilities. `developer` inherits a focused operational subset. Direct, narrower roles can also be granted independently.
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `owner` | Project ownership | Owns the project and implicitly has project admin access. |
+| `member` | Project membership | Lets the subject act as a project member and be targeted by project-member access. |
+| `agent` | Project agent identity | Marks an agent as belonging to the project so it can be targeted by project-agent access. |
+| `service_account` | Project service account identity | Marks a service account as belonging to the project so it can be targeted by project service-account access. |
+| `admin` | Full project administration | Grants administrative project access and all project roles that are not core membership roles. |
+| `developer` | Operational project access | Grants developer access, including inventory/manage access for rooms, agents, repositories, feeds, service inventory, mailbox inventory, route inventory, scheduled task inventory, feed subscription inventory, LLM logger inventory, usage reporting, service account creation/inventory, and participant token creation. |
+| `room_creator` | Room creation | Create rooms. |
+| `room_inventory` | Room inventory | List and inspect room inventory across the project. |
+| `room_manager` | Room management | Manage rooms across the project. |
+| `session_inventory` | Session inventory | Inspect project session inventory. |
+| `agent_creator` | Managed agent creation | Create managed agents. |
+| `agent_inventory` | Managed agent inventory | List and inspect managed agent inventory. |
+| `agent_manager` | Managed agent management | Manage managed agents. |
+| `repository_creator` | Repository creation | Create project repositories. |
+| `repository_inventory` | Repository inventory | List and inspect repositories. |
+| `repository_manager` | Repository management | Manage repositories. |
+| `feed_creator` | Feed creation | Create feeds. |
+| `feed_inventory` | Feed inventory | List and inspect feeds. |
+| `feed_manager` | Feed management | Manage feeds. |
+| `oauth_client_creator` | OAuth client creation | Create project OAuth clients. |
+| `oauth_client_inventory` | OAuth client inventory | List and inspect project OAuth clients. |
+| `oauth_client_manager` | OAuth client management | Manage project OAuth clients. |
+| `api_key_creator` | API key creation | Create API keys. |
+| `api_key_inventory` | API key inventory | List and inspect API keys. |
+| `api_key_manager` | API key management | Manage API keys. |
+| `service_creator` | Service creation | Create deployed services. |
+| `service_inventory` | Service inventory | List and inspect deployed services. |
+| `service_manager` | Service management | Manage deployed services. |
+| `service_account_creator` | Service account creation | Create service accounts. |
+| `service_account_inventory` | Service account inventory | List and inspect service accounts. |
+| `service_account_manager` | Service account management | Manage service accounts. |
+| `participant_token_creator` | Participant token creation | Create participant tokens for rooms or agents. |
+| `mailbox_creator` | Mailbox creation | Create mailboxes. |
+| `mailbox_inventory` | Mailbox inventory | List and inspect mailboxes. |
+| `mailbox_manager` | Mailbox management | Manage mailboxes. |
+| `route_creator` | Route creation | Create routes. |
+| `route_inventory` | Route inventory | List and inspect routes. |
+| `route_manager` | Route management | Manage routes. |
+| `scheduled_task_creator` | Scheduled task creation | Create scheduled tasks. |
+| `scheduled_task_inventory` | Scheduled task inventory | List and inspect scheduled tasks. |
+| `scheduled_task_manager` | Scheduled task management | Manage scheduled tasks. |
+| `feed_subscription_creator` | Feed subscription creation | Create feed subscriptions. |
+| `feed_subscription_inventory` | Feed subscription inventory | List and inspect feed subscriptions. |
+| `feed_subscription_manager` | Feed subscription management | Manage feed subscriptions. |
+| `llm_logger_creator` | LLM logger creation | Create LLM loggers. |
+| `llm_logger_inventory` | LLM logger inventory | List and inspect LLM loggers. |
+| `llm_logger_manager` | LLM logger management | Manage LLM loggers. |
+| `llm_proxy_user` | Project LLM proxy use | Use the project LLM proxy and related OAuth proxy surfaces. |
+| `usage_reporter` | Usage reporting | Report or query project usage. |
+| `billing_manager` | Billing | Manage project billing. |
+| `group_manager` | Groups | Manage project groups. |
+
+## Room, Agent, and Repository Roles
+
+These roles apply to resource policies for rooms and repositories. They also describe the effective role set used for room and agent access decisions.
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `viewer` | Read-only resource access | View or connect to the resource with limited API scope. |
+| `operator` | Standard resource operation | Operate the resource with the standard user API scope. |
+| `developer` | Developer resource operation | Operate the resource with the agent-default API scope and developer capabilities. |
+| `admin` | Resource administration | Manage the resource and receive full room API scope where applicable. |
+| `list` | Resource discoverability | Include the resource in listings without granting full resource use by itself. |
+
+For rooms, `viewer`, `operator`, `developer`, and `admin` map to room API scopes:
+
+| Resource role | Room API scope |
+| --- | --- |
+| `viewer` | Livekit access, read-only messaging list access, and service listing. |
+| `operator` | `ApiScope.user_default()`. |
+| `developer` | `ApiScope.agent_default(tunnels=True)` with admin config disabled. |
+| `admin` | `ApiScope.full()`. |
+
+## Group Roles
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `member` | Group membership | Makes the subject a member of the group. Group membership can be used anywhere the group has access. |
+| `manager` | Group management | Manage the group and its membership. Project `group_manager` also grants group-management access. |
+
+## Feed Roles
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `reader` | Feed read access | Read feed items. |
+| `subscriber` | Feed subscriptions | Subscribe to the feed and read feed items. |
+| `publisher` | Feed publishing | Publish feed items and read feed items. |
+| `manager` | Feed management | Manage the feed, publish, subscribe, and read. |
+| `list` | Feed discoverability | Include the feed in listings without granting publish or manage by itself. |
+
+## Secret Roles
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `use_proxy` | User secret proxying | Allows a service account to use the proxied value of a user secret. |
+
+## Service Account Roles
+
+| Role | Controls | What it allows |
+| --- | --- | --- |
+| `run_service_as` | Service run identity | Run a service or managed agent as the service account. |
+| `secret_accessor` | Service account secret access | Access service account secret versions. |
+| `secret_manager` | Service account secret management | Manage service account secrets. |
+| `secret_list` | Service account secret listing | List service account secrets. |
+| `use_proxy_secrets` | Proxy secret use | Use proxied secrets attached to the service account. |
+
+## Effective Permissions
+
+Effective permissions are the checks MeshAgent evaluates after combining direct resource roles with inherited project roles. You do not assign these directly; you grant the roles that satisfy them.
+
+| Permission | Applies to | Satisfied by | What it controls |
+| --- | --- | --- | --- |
+| `room.can_use` | Rooms | `viewer`, `operator`, `developer`, or `admin` on the room | Whether the subject can use the room. |
+| `room.accessible` | Rooms | `list` or `room.can_use` | Whether the room is visible or otherwise accessible to the subject. |
+| `room.can_inventory` | Rooms | Project `room_inventory` | Whether the subject can inspect room inventory. |
+| `room.can_debug` | Rooms | Room `developer`, room `admin`, or project `room_manager` | Whether the subject can use room debugging surfaces. |
+| `room.can_manage` | Rooms | Room `admin` or project `room_manager` | Whether the subject can manage the room. |
+| `agent.can_use` | Managed agents | `viewer`, `operator`, `developer`, or `admin` on the agent | Whether the subject can use the agent. |
+| `agent.accessible` | Managed agents | `list` or `agent.can_use` | Whether the agent is visible or otherwise accessible to the subject. |
+| `agent.can_inventory` | Managed agents | Project `agent_inventory` | Whether the subject can inspect agent inventory. |
+| `agent.can_manage` | Managed agents | Agent `admin` or project `agent_manager` | Whether the subject can manage the agent. |
+| `repository.can_use` | Repositories | `viewer`, `operator`, `developer`, or `admin` on the repository | Whether the subject can use the repository. |
+| `repository.accessible` | Repositories | `list` or `repository.can_use` | Whether the repository is visible or otherwise accessible to the subject. |
+| `repository.can_inventory` | Repositories | Project `repository_inventory` | Whether the subject can inspect repository inventory. |
+| `repository.can_manage` | Repositories | Repository `admin` or project `repository_manager` | Whether the subject can manage the repository. |
+| `feed.can_read` | Feeds | `reader`, `subscriber`, `publisher`, or `manager` on the feed | Whether the subject can read feed items. |
+| `feed.accessible` | Feeds | `list` or `feed.can_read` | Whether the feed is visible or otherwise accessible to the subject. |
+| `feed.can_subscribe` | Feeds | Feed `subscriber` or `manager` | Whether the subject can subscribe to the feed. |
+| `feed.can_publish` | Feeds | Feed `publisher` or `manager` | Whether the subject can publish to the feed. |
+| `feed.can_inventory` | Feeds | Project `feed_inventory` | Whether the subject can inspect feed inventory. |
+| `feed.can_manage` | Feeds | Feed `manager` or project `feed_manager` | Whether the subject can manage the feed. |
+
+## Room API Scope Permissions
+
+Room API scopes are embedded in participant tokens. They are not project roles. They control what a connected participant can call inside a room.
+
+If a grant object is absent, that API surface is denied. When a grant object exists, `None` in an allowlist generally means unrestricted access within that grant, and a boolean set to `false` disables that operation.
+
+### `livekit`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `livekit.breakout_rooms` | Breakout room membership | `None` allows any breakout room. A list allows only the named breakout rooms. |
+
+### `queues`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `queues.send` | Queue publishing | `None` allows sending to any queue. A list allows only the named queues. |
+| `queues.receive` | Queue consumption | `None` allows receiving from any queue. A list allows only the named queues. |
+| `queues.list` | Queue listing | Allows listing queues when `true`. |
+
+### `messaging`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `messaging.broadcast` | Broadcast messages | Allows broadcasting messages to room participants. |
+| `messaging.list` | Message listing | Allows listing messages. |
+| `messaging.send` | Direct message sending | Allows sending messages. |
+
+### `dataset`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `dataset.list_tables` | Dataset table listing | Allows listing dataset tables. |
+| `dataset.tables[].name` | Table selection | Names the table covered by the grant. |
+| `dataset.tables[].namespace` | Table namespace selection | Restricts the table grant to a namespace. `None` matches any namespace. |
+| `dataset.tables[].read` | Table reads | Allows reading matching tables. |
+| `dataset.tables[].write` | Table writes | Allows writing matching tables. |
+| `dataset.tables[].alter` | Table schema changes | Allows altering matching tables. |
+
+If `dataset.tables` is `None`, the participant may read, write, and alter every dataset table allowed by the grant.
+
+### `sqlite`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `sqlite.create_database` | Database creation | Allows creating SQLite databases. |
+| `sqlite.list_databases` | Database listing | Allows listing SQLite databases. |
+| `sqlite.databases[].name` | Database selection | Names the database covered by the grant. |
+| `sqlite.databases[].namespace` | Database namespace selection | Restricts the database grant to a namespace. `None` matches any namespace. |
+| `sqlite.databases[].create_table` | Table creation | Allows creating tables in the matching database. |
+| `sqlite.databases[].drop` | Database deletion | Allows dropping the matching database. |
+| `sqlite.databases[].inspect` | Database inspection | Allows inspecting the matching database. |
+| `sqlite.databases[].list_tables` | Table listing | Allows listing tables in the matching database. |
+| `sqlite.databases[].execute` | SQL execution | Allows executing SQL against the matching database. |
+| `sqlite.databases[].tables[].database` | Table database selection | Names the database for a table-specific grant. |
+| `sqlite.databases[].tables[].table` | Table selection | Names the table covered by the table-specific grant. |
+| `sqlite.databases[].tables[].namespace` | Table namespace selection | Restricts the table grant to a namespace. `None` matches any namespace. |
+| `sqlite.databases[].tables[].read` | Table reads | Allows reading matching tables. |
+| `sqlite.databases[].tables[].write` | Table writes | Allows writing matching tables. |
+| `sqlite.databases[].tables[].alter` | Table schema changes | Allows altering matching tables. |
+
+If `sqlite.databases` is `None`, the participant may use all SQLite databases allowed by the grant. If a matching database grant has `tables: None`, table read, write, and alter access applies to all tables in that database.
+
+### `memory`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `memory.list` | Memory listing | Allows listing memories. |
+| `memory.memories[].name` | Memory selection | Names the memory covered by the grant. |
+| `memory.memories[].namespace` | Memory namespace selection | Restricts the memory grant to a namespace. `None` matches any namespace. |
+| `memory.memories[].permissions.create` | Memory creation | Allows creating the matching memory. |
+| `memory.memories[].permissions.drop` | Memory deletion | Allows dropping the matching memory. |
+| `memory.memories[].permissions.inspect` | Memory inspection | Allows inspecting the matching memory. |
+| `memory.memories[].permissions.query` | Memory querying | Allows querying the matching memory. |
+| `memory.memories[].permissions.upsert` | Memory upserts | Allows upserting into the matching memory. |
+| `memory.memories[].permissions.ingest` | Memory ingestion | Allows ingesting content into the matching memory. |
+| `memory.memories[].permissions.recall` | Memory recall | Allows recall operations on the matching memory. |
+| `memory.memories[].permissions.optimize` | Memory optimization | Allows optimizing the matching memory. |
+
+If `memory.memories` is `None`, the participant may use all memories allowed by the grant.
+
+### `sync`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `sync.paths[].path` | Sync path selection | Allows matching paths. A path may end with `*` to match a prefix. |
+| `sync.paths[].read_only` | Sync write access | When `true`, matching paths can be read but not written. |
+
+If `sync.paths` is `None`, the participant may read and write all sync paths allowed by the grant.
+
+### `storage`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `storage.paths[].path` | Storage path selection | Allows paths that start with the configured prefix. |
+| `storage.paths[].read_only` | Storage write access | When `true`, matching paths can be read but not written. |
+
+If `storage.paths` is `None`, the participant may read and write all storage paths allowed by the grant.
+
+### `containers`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `containers.use_containers` | Container API use | Enables container operations when `true`. |
+| `containers.logs` | Container logs | Allows reading container logs when `true`. |
+| `containers.pull` | Image pull allowlist | `None` allows pulling any image tag. A list allows exact tags or prefixes ending in `*`. |
+| `containers.run` | Image run allowlist | `None` allows running any image tag. A list allows exact tags or prefixes ending in `*`. |
+| `containers.registry.list` | Registry repository listing | `None` allows listing repositories implied by pull, run, or write access. A list allows exact repositories or prefixes ending in `*`. |
+| `containers.registry.pull` | Registry pull access | `None` allows pulling any repository. A list allows exact repositories or prefixes ending in `*`. |
+| `containers.registry.run` | Registry run access | `None` allows running any repository. A list allows exact repositories or prefixes ending in `*`. |
+| `containers.registry.write` | Registry write access | `None` allows writing any repository. A list allows exact repositories or prefixes ending in `*`. |
+
+If `containers.registry` is absent, registry list, pull, run, and write checks allow any repository covered by the container grant.
+
+### `developer`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `developer.logs` | Developer logs | Allows developer log forwarding when `true`. |
+
+### `agents`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `agents.register_agent` | Agent registration | Allows registering agents. |
+| `agents.register_public_toolkit` | Public toolkit registration | Allows registering public toolkits. |
+| `agents.register_private_toolkit` | Private toolkit registration | Allows registering private toolkits. |
+| `agents.call` | Agent calls | Allows invoking the Agents API. |
+| `agents.use_agents` | Agent use | Allows using agents. |
+| `agents.use_tools` | Tool use | Allows using tools. |
+| `agents.allowed_toolkits` | Toolkit allowlist | `None` allows all toolkits. A list restricts access to the named toolkits. |
+
+### `llm`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `llm.models` | Model allowlist | `None` allows any provider/model. A list allows exact `provider/model` entries or prefixes ending in `*`. |
+
+### `admin`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `admin.config` | Room admin configuration | Allows using the room admin configuration surface when `true`. |
+
+### `secrets`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `secrets` | Secret grant presence | Enables room API routes that require the secrets grant. The grant has no nested fields. |
+
+### `tunnels`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `tunnels.ports` | Tunnel port allowlist | `None` or an empty list allows any port. A non-empty list allows only the listed ports. If `tunnels` is absent, tunnels are denied. |
+
+### `services`
+
+| Permission | Controls | What it does |
+| --- | --- | --- |
+| `services.list` | Service listing | Allows listing services in the room when `true`. |
+
+## Built-in Room API Scope Presets
+
+| Preset | Grants |
+| --- | --- |
+| `ApiScope.user_default()` | Livekit, queues, messaging, dataset, SQLite, memory, sync, storage, containers, developer logs, agents, and service listing. It excludes LLM, admin config, secrets, and tunnels. |
+| `ApiScope.agent_default()` | Same core access as `user_default()` plus LLM. It excludes admin config, secrets, and tunnels unless called as `ApiScope.agent_default(tunnels=True)`. |
+| `ApiScope.full()` | Livekit, queues, messaging, dataset, SQLite, memory, sync, storage, containers, developer logs, agents, LLM, admin config, tunnels, and service listing. |
+
+## Managing IAM
+
+Use MeshAgent Studio for day-to-day member management. Use the CLI or SDKs when provisioning access from automation.
+
+```bash
+meshagent iam policy --project-id <project-id> --resource-type room --resource-id <room-id>
+meshagent iam grant --project-id <project-id> --resource-type room --resource-id <room-id> \
+  --subject-type user --subject-id <user-id> --role viewer
+meshagent iam revoke --project-id <project-id> --resource-type room --resource-id <room-id> \
+  --subject-type user --subject-id <user-id> --role viewer
+```
+
+## Related Guides
+
+- [Project Roles and Access](./project_roles)
+- [API Keys](./api_keys)
+- [Participant Tokens](../rest_api/participant_tokens)
+- [API Scopes](../rest_api/api_scopes)
