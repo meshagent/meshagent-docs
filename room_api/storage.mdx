@@ -352,7 +352,7 @@ if (entry != null) {
 - **Availability**: Python, JavaScript/TypeScript, and Dart SDKs expose `stat`.
 
 
-### `upload(path, data, overwrite=False)`
+### `upload(path, data, overwrite=False, name=None, mime_type=None)`
 
 **Description**  
 Uploads a complete file payload in one call. Use this when you already have the bytes in memory.
@@ -361,6 +361,8 @@ Uploads a complete file payload in one call. Use this when you already have the 
 - `path` *(str)*: The destination file path.
 - `data` *(bytes / Uint8Array / byte[])*: The file contents to write.
 - `overwrite` *(bool, optional)*: Whether to replace an existing file at that path.
+- `name` / `mimeType` *(optional)*: File-name metadata for the stored object. Defaults to the basename of `path` in SDKs that infer it.
+- `mime_type` / `mimeType` *(optional)*: MIME type metadata. Python, JavaScript/TypeScript, and Dart infer a MIME type from the file name when omitted.
 
 **Returns**  
 - `None`
@@ -416,7 +418,7 @@ await room.Storage.Upload(
 </CodeGroup>
 
 
-### `upload_stream(path, chunks, ...)`
+### `upload_stream(path, chunks, overwrite=False, chunk_size=65536, size=None, name=None, mime_type=None)`
 
 **Description**  
 Streams file contents chunk-by-chunk. Use this when you do not want to materialize the whole file in memory at once.
@@ -427,6 +429,8 @@ Streams file contents chunk-by-chunk. Use this when you do not want to materiali
 - `overwrite` *(optional)*: Replace an existing file at that path.
 - `size` *(optional)*: Total byte size when you already know it.
 - `chunk_size` / `chunkSize` *(optional)*: Pull size for streamed uploads.
+- `name` / `mimeType` *(optional)*: File-name metadata for the upload stream. Defaults to the basename of `path` in SDKs that infer it.
+- `mime_type` / `mimeType` *(optional)*: MIME type metadata for the upload stream. Python, JavaScript/TypeScript, and Dart infer a MIME type from the file name when omitted.
 
 **Returns**  
 - `None`
@@ -504,7 +508,7 @@ await room.Storage.UploadStream(
 </CodeGroup>
 
 
-### `download_stream(path, chunk_size=...)`
+### `download_stream(path, chunk_size=65536)`
 
 **Description**  
 Streams a file back as metadata plus data chunks. Use this for larger files or when you want to process the response incrementally.
@@ -519,9 +523,7 @@ Streams a file back as metadata plus data chunks. Use this for larger files or w
 **Example**:
 <CodeGroup>
 ```python Python
-stream = await room.storage.download_stream(path="files/report.pdf")
-
-async for chunk in stream:
+async for chunk in room.storage.download_stream(path="files/report.pdf"):
     if chunk.headers["kind"] == "start":
         print(chunk.headers["name"], chunk.headers["size"])
         continue
@@ -717,17 +719,17 @@ for (var e in entries) {
 var entries = await room.Storage.List("some_folder");
 foreach (var e in entries)
 {
-    Console.WriteLine($"{e.Name} {(e.IsFolder ? \"is folder\" : \"is file\")}");
+    Console.WriteLine($"{e.Name} {(e.IsFolder ? "is folder" : "is file")}");
 }
 
 ```
 </CodeGroup>
 
 
-### `delete(path)`
+### `delete(path, recursive=None)`
 
 **Description**  
-Deletes a file or folder at the given path. A `file.deleted` event is typically emitted afterward. To delete a folder, pass `recursive=True` (Python) or call the raw `storage.delete` request with the `recursive` flag.
+Deletes a file or folder at the given path. A `file.deleted` event is typically emitted afterward. To delete a folder, pass `recursive=True` where the SDK exposes that option, or call the raw `storage.delete` request with the `recursive` flag.
 
 **Parameters**  
 - `path` *(str)*: The file path to delete.
@@ -745,7 +747,7 @@ meshagent room storage rm \
 
 ```
 ```python Python
-await room.storage.delete("folder/old_file.txt")
+await room.storage.delete("folder/old_file.txt", recursive=False)
 print("File deleted.")
 
 ```

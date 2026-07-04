@@ -93,6 +93,16 @@ Project roles apply at the project level. `owner` is assigned to the project own
 | `billing_manager` | Billing | Manage project billing. |
 | `group_manager` | Groups | Manage project groups. |
 
+Project membership APIs and Studio member settings expand into these roles:
+
+| Member setting | Expanded role effect |
+| --- | --- |
+| `is_admin` | Grants `admin` plus every non-core creator, inventory, manager, billing, usage, group, and LLM proxy role. |
+| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, developer inventory roles, `service_account_creator`, `service_account_inventory`, `participant_token_creator`, `usage_reporter`, and `llm_proxy_user` unless LLM proxy access is set explicitly. |
+| `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
+| `can_create_agents` | Grants `agent_creator`. |
+| `can_use_llm_proxy` | Grants `llm_proxy_user`. |
+
 ## Room, Agent, and Repository Roles
 
 These roles apply to resource policies for rooms and repositories. They also describe the effective role set used for room and agent access decisions.
@@ -141,11 +151,37 @@ For rooms, `viewer`, `operator`, `developer`, and `admin` map to room API scopes
 
 | Role | Controls | What it allows |
 | --- | --- | --- |
+| `list` | Service account listing | List or discover the service account. |
 | `run_service_as` | Service run identity | Run a service or managed agent as the service account. |
 | `secret_accessor` | Service account secret access | Access service account secret versions. |
 | `secret_manager` | Service account secret management | Manage service account secrets. |
 | `secret_list` | Service account secret listing | List service account secrets. |
 | `use_proxy_secrets` | Proxy secret use | Use proxied secrets attached to the service account. |
+
+## OAuth Scopes
+
+OAuth scopes are token scopes, not OpenFGA resource roles. MeshAgent accepts the current scope names below for OAuth access tokens. Project and room wildcard scopes (`project/*`, `room/*`) still identify the project or room boundary for token checks.
+
+| Scope group | Scopes |
+| --- | --- |
+| Profile | `profile:read`, `profile:write` |
+| Project and room boundary | `project/*`, `room/*` |
+| Users | `users:create`, `users:read`, `users:update`, `users:delete` |
+| Projects | `projects:read`, `projects:update`, `projects:iam.read`, `projects:iam.write`, `projects:billing.read`, `projects:billing.write` |
+| Rooms | `rooms:create`, `rooms:read`, `rooms:connect`, `rooms:update`, `rooms:delete` |
+| Managed agents | `agents:create`, `agents:read`, `agents:update`, `agents:delete`, `agents:run`, `agents:sessions.read` |
+| Mailboxes | `mailboxes:create`, `mailboxes:read`, `mailboxes:update`, `mailboxes:delete` |
+| Routes | `routes:create`, `routes:read`, `routes:update`, `routes:delete` |
+| Scheduled tasks | `scheduledTasks:create`, `scheduledTasks:read`, `scheduledTasks:update`, `scheduledTasks:delete` |
+| Services | `services:create`, `services:read`, `services:update`, `services:delete` |
+| Repositories | `repositories:create`, `repositories:read`, `repositories:update`, `repositories:delete` |
+| API keys | `apiKeys:create`, `apiKeys:read`, `apiKeys:delete` |
+| Service accounts | `serviceAccounts:create`, `serviceAccounts:read`, `serviceAccounts:update`, `serviceAccounts:delete` |
+| OAuth clients | `oauthClients:create`, `oauthClients:read`, `oauthClients:update`, `oauthClients:delete` |
+| LLM proxy and usage | `llm:invoke`, `llm:usage.read`, `llm:logs.read`, `llm:logs.write` |
+| Secrets | `secrets:read`, `secrets:write`, `secrets:delete`, `secrets:grant`, `secrets:proxy` |
+
+Current tokens also accept compatibility aliases used by older clients, such as `profile`, `create_rooms`, `connect_room`, `managed_agents`, `llm_proxy`, `developer`, and `admin`, when they map to the current scope names.
 
 ## Effective Permissions
 

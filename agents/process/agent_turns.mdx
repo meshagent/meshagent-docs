@@ -48,7 +48,7 @@ The important distinction is:
 
 | Message or event | What it means |
 | --- | --- |
-| `meshagent.agent.turn.start` | Start a new turn for a given `thread_id` with typed input content. |
+| `meshagent.agent.turn.start` | Start a new turn for a given thread path, carried on the process-message `thread_id` field, with typed input content. |
 | `meshagent.agent.turn.start.accepted` | The runtime accepted the request and tied it to the source message. |
 | `meshagent.agent.turn.started` | The turn is now active and has a `turn_id`. |
 | `meshagent.agent.turn.steer` | Add more input to the active turn without starting a separate turn. |
@@ -59,7 +59,7 @@ The important distinction is:
 
 A turn start request includes:
 
-- `thread_id`: which persisted thread this work belongs to
+- `thread_id`: the persisted thread path this work belongs to
 - `message_id`: the client-side message id for correlation
 - `content`: typed input items such as text or files
 - optional `model`: override the model for this turn
@@ -68,6 +68,8 @@ A turn start request includes:
 - optional tool choice
 
 That allows one process-backed agent to accept work from different sources while still keeping continuity and per-turn behavior explicit.
+
+Queue and scheduled-task inputs use `path` for the same value. The process runtime carries that resolved thread path as `thread_id` after the queue item has been converted into a turn-start message.
 
 Example shape:
 

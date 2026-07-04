@@ -116,7 +116,7 @@ To create a MeshDocument based on your schema and enable synchronization across 
 
 Use the methods below to create documents, open live sync sessions, inspect the current document state, and send low-level sync operations when needed.
 
-### `create(path, json=None)`
+### `create(path, json=None, schema=None)`
 
 <CodeGroup>
 ```bash CLI
@@ -128,7 +128,7 @@ meshagent room sync create \
 
 ```
 ```python Python
-await room.sync.create(path="my/path", json={"key": "value"})
+await room.sync.create(path="my/path", json={"key": "value"}, schema=my_schema)
 
 ```
 ```javascript NodeJs
@@ -153,9 +153,10 @@ await room.Sync.Create("my/path", new Dictionary<string, object?> { ["title"] = 
 - **Parameters**:
   - `path`: Document path.
   - `json`: Optional initial JSON payload.
-- **Description**: Create a new `MeshDocument` at the given path. The CLI create command requires `--schema`; SDK callers can pass a `MeshSchema` when creating a document.
+  - `schema`: Optional `MeshSchema` for validating and describing the document shape. The Python helper exposes this parameter; other SDKs can pass a schema when opening a document.
+- **Description**: Create a new `MeshDocument` at the given path. The CLI create command requires `--schema`; Python SDK callers can pass a `MeshSchema` when creating a document.
 
-### `describe(path)`
+### `describe(path, create=True)`
 
 <CodeGroup>
 ```python Python
@@ -166,15 +167,21 @@ doc_json = await room.sync.describe(path="my/path")
 
 - **Parameters**:
   - `path`: Document path.
+  - `create`: Accepted by the Python helper for compatibility; the current implementation ignores it and only describes the existing document.
 - **Returns**: The current document root as JSON.
 - **Description**: Read the current state of a `MeshDocument` without opening a live sync session.
 - **Availability**: Python exposes `room.sync.describe` today. Other SDKs can use `open()` or a lower-level request until they add a helper.
 
-### `open(path, create=True)`
+### `open(path, create=True, initial_json=None, schema=None)`
 
 <CodeGroup>
 ```python Python
-doc = await room.sync.open(path="my/path", create=True)
+doc = await room.sync.open(
+  path="my/path",
+  create=True,
+  initial_json={"key": "value"},
+  schema=my_schema,
+)
 
 ```
 ```javascript NodeJs
@@ -199,6 +206,8 @@ var doc = await room.Sync.Open("my/path", create: true);
 - **Parameters**:
   - `path`: Document path.
   - `create`: When `true`, create the document if it does not already exist.
+  - `initial_json`: Optional initial document JSON when creating a document through `open`.
+  - `schema`: Optional `MeshSchema` to use when creating/opening the document.
 - **Returns**: A `MeshDocument` tied to that path.
 - **Description**: Open a live synchronization session for the document. Local changes are sent automatically while the document remains open.
 

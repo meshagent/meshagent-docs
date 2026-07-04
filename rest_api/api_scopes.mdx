@@ -6,7 +6,7 @@ title: API Scopes
 ## Built-in presets
 MeshAgent ships three convenience constructors:
 
-- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Dataset, Memory, Sync, Storage, Containers, Developer, Agents, LLM, Services, and Secrets access. Use `ApiScope.agent_default(tunnels=True)` to include the tunnels grant.
+- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Dataset, Memory, Sync, Storage, Containers, Developer, Agents, LLM, and Services access. Use `ApiScope.agent_default(tunnels=True)` to include the tunnels grant.
 - `ApiScope.user_default()` – enables the same core room access as `agent_default()`, but omits the LLM grant and still excludes Admin and Tunnels.
 - `ApiScope.full()` – everything in `agent_default()` plus the Admin and Tunnels grants.
 
@@ -70,6 +70,8 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 `AdminGrant` currently exposes a single `config` boolean. When `True`, the participant may use the admin configuration surface.
 
 ### `secrets`
+The room API `SecretsGrant` enables room routes that require a participant-token secrets grant. It has no nested fields.
+
 User and service-account secrets are managed through the account REST API. Proxy use is controlled by OAuth scopes such as `secrets:proxy` plus service-account permissions.
 
 ### `services`

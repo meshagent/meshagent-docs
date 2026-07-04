@@ -79,11 +79,11 @@ var queues = await room.Queues.List();
 
 Create or reopen a queue explicitly.
 
-<Alert type="note">
-Python does not expose `open()` today. In Python, queues are created implicitly when you call `send(..., create=True)` or `receive(..., create=True)`.
-</Alert>
-
 <CodeGroup>
+```python Python
+await room.queues.open(name="my-queue")
+
+```
 ```javascript NodeJs
 await room.queues.open("my-queue");
 
@@ -172,7 +172,7 @@ When the queue consumer is a MeshAgent queue channel, the payload can include tu
 
 - `prompt`: string or typed content items for the next turn
 - `content`: typed content items that should be passed through directly
-- `thread_id` or `path`: explicit thread path for the work item
+- `path`: explicit thread path for the work item
 - `model`, `instructions`, `tools`, `sender_name`: optional turn settings
 
 #### Structured agent payloads
@@ -185,7 +185,7 @@ For queue-backed MeshAgent agents, `prompt` and `content` can carry typed conten
 - Use `content` when you want a `room:///...` file passed through as a file item in the turn input instead of being converted into text.
 - `content` does not create or update room artifacts by itself. It only defines the turn input that the queue consumer receives.
 - `prompt` can be plain text, typed content, or typed content that includes `room:///...` files. You only need a room file when you want to pull existing room content into the prompt.
-- `thread_id` and `path` can use UTC time tokens such as `{YYYY}`, `{MM}`, `{DD}`, `{HH}`, `{mm}`, and `{SECOND}`.
+- `path` can use UTC time tokens such as `{YYYY}`, `{MM}`, `{DD}`, `{HH}`, `{mm}`, and `{SECOND}`.
 - Legacy `prompt_file` payloads still work, but typed `prompt` items are the preferred format.
 
 Examples:
@@ -207,7 +207,7 @@ This sends plain prompt text. No room file is involved.
 meshagent room queue send \
   --room myroom \
   --queue support-jobs \
-  --json '{"thread_id":"dataset://threads/support/{YYYY}/{MM}/{DD}/{HH}/{mm}/summary","prompt":[{"type":"file","url":"room:///prompts/support-summary.md"},{"type":"text","text":"Summarize the current support backlog and highlight urgent issues."}]}'
+  --json '{"path":"dataset://threads/support/{YYYY}/{MM}/{DD}/{HH}/{mm}/summary","prompt":[{"type":"file","url":"room:///prompts/support-summary.md"},{"type":"text","text":"Summarize the current support backlog and highlight urgent issues."}]}'
 ```
 
 In this example, MeshAgent reads `room:///prompts/support-summary.md` from room storage and inserts that file's UTF-8 text into the turn before the agent runs.

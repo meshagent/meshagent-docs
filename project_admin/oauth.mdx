@@ -7,7 +7,7 @@ OAuth clients are the project-level auth configuration for your own application.
 
 Use them when you want users to sign in to your app through MeshAgent, then connect to rooms with the right participant tokens and room grants.
 
-Project OAuth client management for LLM proxy use is gated by the `can_use_llm_proxy` project permission (admins also qualify).
+Project OAuth client management is controlled by the project OAuth-client roles: `oauth_client_creator`, `oauth_client_inventory`, and `oauth_client_manager`. Project admins receive those roles.
 
 Do not use OAuth clients for backend automation or CI. Use [API Keys](./api_keys) for that.
 
@@ -45,9 +45,9 @@ The client secret is only shown when the client is created. Store it in your bac
 - **Redirect URIs**: the callback URLs MeshAgent can send users back to after sign-in
 - **Grant types**: the OAuth flows your app is allowed to use, such as `authorization_code`, `refresh_token`, or `client_credentials`
 - **Response types**: the response formats your app expects from the OAuth flow, such as `code`, `token`, or `id_token`
-- **Scopes**: the scopes returned in tokens for this client, such as `openid profile email offline_access`
+- **Scopes**: the OAuth scopes returned in tokens for this client, such as `profile:read`, `rooms:connect`, `llm:invoke`, or `secrets:proxy`
 
-For project-level LLM proxy access, include the `llm_proxy` scope. OAuth-authenticated requests to the MeshAgent OpenAI or Anthropic proxy also require `Meshagent-Project-Id: <project_id>` and a user who has the `can_use_llm_proxy` project permission.
+For project-level LLM proxy access, include the `llm:invoke` scope. OAuth-authenticated requests to the MeshAgent OpenAI or Anthropic proxy also require `Meshagent-Project-Id: <project_id>` and a user who has the `can_use_llm_proxy` project permission.
 
 If you use `authorization_code`, you need at least one redirect URI.
 

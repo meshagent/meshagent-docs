@@ -19,9 +19,10 @@ MeshAgent Studio opens to an active project. Use the dropdown in the upper-left 
 
 ## Project navigation
 
-The main project sidebar depends on your project role:
+The main project sidebar and available actions depend on your project role:
 - **Everyone**: **Rooms**, [**Feeds**](../project_admin/feeds), [**LLM Proxy**](../agents/routing/llm_proxy)
-- **Developers and Admins**: [**Sessions**](../room_api/sessions), **Registries**, [**Routes**](../project_admin/routes), [**Scheduled Tasks**](../project_admin/scheduled_tasks), [**Mailboxes**](../project_admin/mailboxes), [**System Services**](../services/deployment/deploy_services), [**OAuth Clients**](../project_admin/oauth)
+- **Developers and Admins**: [**Sessions**](../room_api/sessions), **Registries**, [**Routes**](../project_admin/routes), [**Scheduled Tasks**](../project_admin/scheduled_tasks), [**Mailboxes**](../project_admin/mailboxes), [**System Services**](../services/deployment/deploy_services)
+- **Admins and focused project roles**: create and management actions for services, routes, scheduled tasks, mailboxes, and [**OAuth Clients**](../project_admin/oauth)
 - **Admins only**: [**API Keys**](../project_admin/api_keys), [**Integrations**](../project_admin/integrations)
 
 Some project pages are opened contextually instead of living in the permanent sidebar. For example, Studio links to **Billing** when a project is out of credits or after checkout flows.
@@ -30,7 +31,7 @@ Some project pages are opened contextually instead of living in the permanent si
 Use rooms to isolate agent runtime environments. Rooms are secure environments where humans and agents can collaborate and share context. Rooms can have their own services, scheduled tasks, routes, mailboxes, and feed subscriptions.
 
 From the MeshAgent Studio UI you can:
-- **Create** a room with **New Room**
+- **Create** a room with **New Room** when your project role allows room creation
 - Toggle between **My Rooms** and **All Rooms**. **All Rooms** is available to developers and admins.
 - Open a room from the list to enter its workspace.
 - Use the room menu to open **Edit**, **Services**, **Scheduled Tasks**, **Mailboxes**, **Feeds**, **Routes**, **Permissions**, or **Delete**.
@@ -85,6 +86,8 @@ From **System Services** you can:
 - Create, update, or remove deployed services
 - Change the **Room Server Version** if you need to pin a project to a specific version of MeshAgent or return to `latest`
 
+Service inspection is available to users with service inventory access. Creating services requires the project `service_creator` role, and updating or deleting services requires `service_manager`.
+
 ## Integrations
 Bring your own model routing and observability settings. See [Integrations](../project_admin/integrations) for the full configuration reference:
 
@@ -105,25 +108,25 @@ From this page you can:
 - open the main LLM Proxy docs from the built-in **Read docs** link
 
 ## OAuth
-Create OAuth2/OIDC clients to enable MeshAgent to sign in for your apps. A client is used to identify a single app to MeshAgent's OAuth servers. See [OAuth Clients](../project_admin/oauth) for the full setup flow.  
+Create OAuth2/OIDC clients to enable MeshAgent to sign in for your apps. A client is used to identify a single app to MeshAgent's OAuth servers. OAuth client actions require the project OAuth client inventory, creator, or manager roles. See [OAuth Clients](../project_admin/oauth) for the full setup flow.
 - Register a client with redirect URIs, scopes, grant types, and response types.
 - Create, edit, and delete clients from the project.
 
 ## Routes
-Use **Routes** to map project or room traffic to the right room. See [Routes](../project_admin/routes) for the full route model and setup details. From this page you can create, edit, refresh, and delete routes, including the domain and port that should route into a room.
+Use **Routes** to map project or room traffic to the right room. See [Routes](../project_admin/routes) for the full route model and setup details. From this page you can inspect routes, and users with route creator or manager access can create, edit, refresh, and delete routes, including the domain and port that should route into a room.
 
 ## Scheduled Tasks
-Use **Scheduled Tasks** to enqueue work on a schedule. See [Scheduled Tasks](../project_admin/scheduled_tasks) for the full behavior and examples. You can create tasks at the project or room level, edit schedules, toggle tasks on or off, and delete tasks that are no longer needed.
+Use **Scheduled Tasks** to enqueue work on a schedule. See [Scheduled Tasks](../project_admin/scheduled_tasks) for the full behavior and examples. From this page you can inspect scheduled tasks, and users with scheduled task creator or manager access can create tasks at the project or room level, edit schedules, toggle tasks on or off, and delete tasks that are no longer needed.
 
 ## Mailboxes
 Provision room-scoped mailboxes that agents can read from or send through. See [Mailboxes](../project_admin/mailboxes) for the full setup flow:
-- Create mailboxes and assign them to rooms
+- Inspect mailboxes, or create mailboxes and assign them to rooms when you have mailbox creator or manager access
 - Map incoming mail to queues so worker agents can process it asynchronously
 - Edit or delete mailboxes when your routing changes
 
 ## Feeds
 Use **Feeds** to manage project feeds and room storage subscriptions. See [Feeds](../project_admin/feeds) for the full model and examples:
-- Create feeds and choose visibility, schema validation, and paused state
+- Inspect feeds, or create feeds and choose visibility, schema validation, and paused state when you have feed creator access
 - Publish a single JSON message or import a JSONL file into a feed
 - Open a room-scoped **Feeds...** view to manage which feed subscriptions deliver into that room
 - Inspect subscriptions that write feed batches into room storage paths

@@ -53,6 +53,7 @@ Use the methods below to call a named agent endpoint, inspect toolkits in the ro
   - `name`: The agent name.
   - `url`: The route on the agent to call.
   - `arguments`: Payload to send.
+  - `api` *(optional, Python)*: Room API scope to include with the call.
 - **Returns**: `None`.
 
 <CodeGroup>
@@ -106,6 +107,8 @@ await room.Agents.MakeCall(
 - **Description**: Get the toolkits currently available in the room.
 - **Parameters**:
   - `participant_id` *(optional, Python)*: Filter toolkits for a given participant.
+  - `participant_name` *(optional, Python)*: Filter toolkits for a participant by name.
+  - `timeout` *(optional, Python)*: Discovery timeout in seconds.
 - **Returns**: `ToolkitDescription[]`, where each toolkit includes its metadata and a `tools` list.
 
 <CodeGroup>
@@ -169,7 +172,8 @@ foreach (var toolkit in toolkits)
   - `tool`: Tool name.
   - `input` *(Python/Dart)*: Payload for the tool.
   - `arguments` *(JS/TS/.NET)*: Payload for the tool.
-  - `participant_id` / `on_behalf_of_id` *(optional, Python)*: Act as another participant.
+  - `participant_id` *(optional, Python)*: Target a specific participant-hosted toolkit.
+  - `on_behalf_of_id` *(optional, Python)*: Invoke on behalf of another participant when the token allows it.
 - **Returns**: Tool output (`Content` / `JsonChunk`, depending on the SDK).
 
 <CodeGroup>
