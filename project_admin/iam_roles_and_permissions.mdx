@@ -93,15 +93,15 @@ Project roles apply at the project level. `owner` is assigned to the project own
 | `billing_manager` | Billing | Manage project billing. |
 | `group_manager` | Groups | Manage project groups. |
 
-Project membership APIs and Studio member settings expand into these roles:
+Project membership APIs accept a `roles` list. The server normalizes project membership to include `member` and expands inherited `admin` and `developer` roles. Older member records and Studio convenience settings map to roles like this:
 
-| Member setting | Expanded role effect |
+| Setting | Expanded role effect |
 | --- | --- |
 | `is_admin` | Grants `admin` plus every non-core creator, inventory, manager, billing, usage, group, and LLM proxy role. |
-| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, developer inventory roles, `service_account_creator`, `service_account_inventory`, `participant_token_creator`, `usage_reporter`, and `llm_proxy_user` unless LLM proxy access is set explicitly. |
+| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, developer inventory roles, `service_account_creator`, `service_account_inventory`, `participant_token_creator`, and `usage_reporter`. The `developer` relation also qualifies for LLM proxy use in access checks. |
 | `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
 | `can_create_agents` | Grants `agent_creator`. |
-| `can_use_llm_proxy` | Grants `llm_proxy_user`. |
+| `can_use_llm_proxy` | Grants the direct `llm_proxy_user` role. |
 
 ## Room, Agent, and Repository Roles
 

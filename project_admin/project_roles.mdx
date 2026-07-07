@@ -85,25 +85,25 @@ Use this role when someone needs to:
 
 ## How project roles map to the API
 
-In the admin API and SDKs, project membership is controlled with five flags:
+In the admin API and SDKs, project membership is controlled with a `roles` list. The server normalizes that list to include `member` and expands inherited roles for `admin` and `developer`.
 
-- `is_admin`
-- `is_developer`
-- `can_create_rooms`
-- `can_create_agents`
-- `can_use_llm_proxy`
+Common role entries include:
 
-MeshAgent Studio's Members UI writes those settings for you. A default member is just a project member with none of those extra flags enabled.
+- `admin`
+- `developer`
+- `room_creator`
+- `agent_creator`
+- `llm_proxy_user`
 
-Those flags expand into IAM roles:
+Some older project member records and Studio settings still surface convenience booleans. They map to roles like this:
 
-| Flag | IAM role effect |
+| Setting | IAM role effect |
 | --- | --- |
 | `is_admin` | Grants `admin` plus project-wide creator, inventory, manager, billing, usage, group, and LLM proxy roles. |
-| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, inventory roles for operational resources such as services, routes, mailboxes, scheduled tasks, feed subscriptions, and LLM loggers, service-account creation and inventory, participant-token creation, usage reporting, and LLM proxy use unless `can_use_llm_proxy` is set explicitly. |
+| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, inventory roles for operational resources such as services, routes, mailboxes, scheduled tasks, feed subscriptions, and LLM loggers, service-account creation and inventory, participant-token creation, and usage reporting. The `developer` relation also qualifies for LLM proxy use in access checks. |
 | `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
 | `can_create_agents` | Grants `agent_creator`. |
-| `can_use_llm_proxy` | Grants `llm_proxy_user`. |
+| `can_use_llm_proxy` | Grants the direct `llm_proxy_user` role. |
 
 If you are managing access programmatically, use the project user-management endpoints or SDK helpers that add and update project users.
 
