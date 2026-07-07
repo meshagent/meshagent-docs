@@ -194,7 +194,7 @@ Use `heartbeat` when the agent should enqueue a recurring turn for itself withou
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `queue` | string | Yes | Queue that receives the recurring work item. |
-| `path` | string | No | Optional thread path or template. Time tokens such as `{year}`, `{month}`, `{day}`, `{hour}`, and `{minute}` are expanded at runtime. Token matching is case-insensitive, so `{YYYY}/{MM}/{DD}/{HH}/{mm}` also works. |
+| `thread_id` | string | No | Optional thread path or template. Time tokens such as `{year}`, `{month}`, `{day}`, `{hour}`, and `{minute}` are expanded at runtime. Token matching is case-insensitive, so `{YYYY}/{MM}/{DD}/{HH}/{mm}` also works. |
 | `prompt` | list | Yes | Prompt content for each heartbeat turn. Uses typed content items such as `text` and `file`. |
 | `minutes` | integer | Yes | Interval, in minutes, between heartbeats. |
 
@@ -220,7 +220,7 @@ agents:
       public: true
     heartbeat:
       queue: assistant-scheduled-tasks
-      path: /agents/assistant/threads/heartbeats/{year}/{month}/{day}/{hour}.{minute}.thread
+      thread_id: /agents/assistant/threads/heartbeats/{year}/{month}/{day}/{hour}.{minute}.thread
       prompt:
         - type: file
           url: room:///agents/assistant/heartbeat.md
