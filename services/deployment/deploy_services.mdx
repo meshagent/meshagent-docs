@@ -419,6 +419,8 @@ Defines network ports the service listens on and how MeshAgent routes HTTP traff
 | `public` | boolean | No | When false, requests must include a participant token. |
 | `annotations` | object | No | Key-value metadata. |
 
+For HTTP ports, set `liveness` to the path MeshAgent should poll to decide whether the service port is ready. For example, `liveness: /healthz` tells MeshAgent to request that path on the running service. A `2xx` response reports the port as `ready`; failed checks report `not ready`; ports without a liveness path report `no liveness` in `meshagent room service list`.
+
 <a id="ports-endpoints"></a>
 #### ports.endpoints
 

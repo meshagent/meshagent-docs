@@ -6,17 +6,17 @@ title: API Scopes
 ## Built-in presets
 MeshAgent ships three convenience constructors:
 
-- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Dataset, Memory, Sync, Storage, Containers, Developer, Agents, LLM, and Services access. Use `ApiScope.agent_default(tunnels=True)` to include the tunnels grant.
-- `ApiScope.user_default()` – enables the same core room access as `agent_default()`, but omits the LLM grant and still excludes Admin and Tunnels.
-- `ApiScope.full()` – everything in `agent_default()` plus the Admin and Tunnels grants.
+- `ApiScope.agent_default()` – enables Livekit, Queues, Messaging, Dataset, SQLite, Memory, Sync, Storage, Containers, Developer, Agents, LLM, and Services access. Use `ApiScope.agent_default(tunnels=True)` to include the tunnels grant.
+- `ApiScope.user_default()` – enables the same core room access as `agent_default()`, including SQLite, but omits the LLM grant and still excludes Admin and Tunnels.
+- `ApiScope.full()` – everything in `agent_default()` plus the Admin and Tunnels grants. It does not add the room `secrets` grant.
 
 Use these helpers when you want broad access, then override individual fields when you need to lock things down.
 
 ## Scope fields
-Each field is optional. Most fields treat `None` as "no restriction" for that capability. Tunnels are opt-in: when `tunnels` is `None`, tunnel access is denied.
+Each top-level field is a grant for one Room API surface. If a grant object is absent, that API surface is denied. When a grant object is present, `None` in an allowlist generally means unrestricted access within that grant. Tunnels are opt-in: when `tunnels` is absent, tunnel access is denied.
 
 ### `livekit`
-`LivekitGrant` contains an optional `breakout_rooms` list. When provided, only the named breakout rooms can be joined; leaving it empty allows every breakout room (`LivekitGrant.can_join_breakout_room`).
+`LivekitGrant` contains an optional `breakout_rooms` list. When omitted, any breakout room may be joined. When provided, only the named breakout rooms can be joined.
 
 ### `queues`
 `QueuesGrant` exposes three controls:
@@ -34,6 +34,24 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 - `tables`: optional list of `TableGrant` entries (`name`, and booleans for `read`, `write`, `alter`). When omitted the participant may access every table.
 - `list_tables`: boolean (defaults to `True`).
 - Helper methods (`can_read`, `can_write`, `can_alter`) enforce the per-table flags.
+
+Table grants can also include `namespace`. A grant with no namespace matches the table in any namespace; a grant with a namespace only matches requests for that namespace.
+
+### `sqlite`
+`SqliteGrant` controls room-scoped SQLite databases:
+
+- `create_database`: boolean controlling database creation.
+- `list_databases`: boolean controlling database discovery.
+- `databases`: optional list of `SqliteDatabaseGrant` entries. When omitted, the participant may use every SQLite database allowed by the grant.
+
+Each database grant can include:
+
+- `name`: database name.
+- `namespace`: optional namespace restriction.
+- `create_table`, `drop`, `inspect`, `list_tables`, and `execute`: booleans for database-level operations.
+- `tables`: optional list of table-specific grants. When omitted on a matching database grant, table read, write, and alter access applies to all tables in that database.
+
+Each SQLite table grant includes `database`, `table`, optional `namespace`, and booleans for `read`, `write`, and `alter`.
 
 ### `memory`
 `MemoryGrant` controls room-memory access:
@@ -54,6 +72,16 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 - `use_containers`: overall switch for container operations (defaults to `True`).
 - `pull` / `run`: optional allowlists of image tags; each entry can end with `*` to allow a prefix (`can_pull` / `can_run`).
 - `logs`: booleans toggling log streaming support.
+- `registry`: optional `ContainerRegistryGrant` for repository-level registry operations.
+
+`ContainerRegistryGrant` includes:
+
+- `list`: repositories the participant may list.
+- `pull`: repositories the participant may pull from.
+- `run`: repositories the participant may run images from.
+- `write`: repositories the participant may write to.
+
+Repository patterns can be exact names or prefixes ending in `*`. If `registry` is absent, registry checks allow repositories covered by the container grant. If `registry.list` is absent but `pull`, `run`, or `write` are present, list access is inferred from those repository allowlists.
 
 ### `developer`
 `DeveloperGrant` currently exposes a single `logs` boolean, enabling developer log forwarding when `True`.
@@ -61,10 +89,17 @@ Each field is optional. Most fields treat `None` as "no restriction" for that ca
 ### `tunnels`
 `TunnelsGrant` controls port-forwarding into room containers.
 
-- `ports`: optional list of allowed container ports. If omitted or empty, all ports are allowed. If `tunnels` is `None`, port forwarding is denied.
+- `ports`: optional list of allowed container ports. If omitted or empty, all ports are allowed. If the `tunnels` grant is absent, port forwarding is denied.
 
 ### `agents`
 `AgentsGrant` exposes boolean switches for registering agents or toolkits (`register_agent`, `register_public_toolkit`, `register_private_toolkit`) and for invoking the Agents API (`call`, `use_agents`, `use_tools`). They default to `True` to match the typical agent workflow.
+
+Use `allowed_toolkits` to restrict tool use to specific toolkit names. When `allowed_toolkits` is omitted, the participant may use any toolkit allowed by the rest of the grant.
+
+### `llm`
+`LLMGrant` controls room-scoped LLM proxy access.
+
+- `models`: optional provider/model allowlist. When omitted, the participant may use any model allowed by the project policy. Entries can be exact `provider/model` names or prefixes ending in `*`.
 
 ### `admin`
 `AdminGrant` currently exposes a single `config` boolean. When `True`, the participant may use the admin configuration surface.
@@ -95,6 +130,34 @@ api:
 api:
   tunnels:
     ports: ["9000"]
+```
+
+```yaml
+# Allow only selected room SQLite access
+api:
+  sqlite:
+    create_database: false
+    list_databases: true
+    databases:
+      - name: reports
+        inspect: true
+        list_tables: true
+        execute: true
+        tables:
+          - database: reports
+            table: daily_metrics
+            read: true
+            write: false
+            alter: false
+```
+
+```yaml
+# Limit LLM proxy access and tool use
+api:
+  llm:
+    models: ["openai/gpt-5.5", "anthropic/claude-opus-*"]
+  agents:
+    allowed_toolkits: ["support-search", "ticket-reader"]
 ```
 
 ```python
