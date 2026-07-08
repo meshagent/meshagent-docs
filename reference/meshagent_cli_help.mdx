@@ -3676,6 +3676,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `service`: Manage services inside a room
 * `developer`: Stream developer logs from a room
 * `dataset`: Manage dataset tables in a room
+* `sqlite`: Manage SQLite databases and tables in a room
 * `memory`: Manage room memories
 * `container`: Manage containers and images inside a room
 * `sync`: Inspect and update mesh documents in a room
@@ -4909,6 +4910,436 @@ $ meshagent room dataset index-drop [OPTIONS]
 * `--name TEXT`: Index name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
+* `--help`: Show this message and exit.
+
+### `meshagent room sqlite`
+
+Manage SQLite databases and tables in a room
+
+**Usage**:
+
+```console
+$ meshagent room sqlite [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `database`: Manage SQLite databases in a room
+* `table`: List SQLite tables in a room database.
+* `inspect`: Inspect a SQLite table schema in a room...
+* `create`: Create a SQLite table with optional Arrow...
+* `import`: Import a local Arrow, CSV, TSV, Parquet,...
+* `drop`: Drop a SQLite table.
+* `rename`: Rename a SQLite table.
+* `add-columns`: Add columns to a SQLite table.
+* `drop-columns`: Drop columns from a SQLite table.
+* `insert`: Insert records into a SQLite table.
+* `update`: Update rows in a SQLite table.
+* `delete`: Delete rows from a SQLite table.
+* `search`: Search rows in a SQLite table.
+* `count`: Count rows in a SQLite table.
+* `sql`: Execute SQL against a room SQLite database.
+
+#### `meshagent room sqlite database`
+
+Manage SQLite databases in a room
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List SQLite databases in a room namespace.
+* `create`: Create a SQLite database in a room.
+* `drop`: Drop a SQLite database in a room.
+* `inspect`: Inspect a SQLite database in a room.
+
+##### `meshagent room sqlite database list`
+
+List SQLite databases in a room namespace.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+##### `meshagent room sqlite database create`
+
+Create a SQLite database in a room.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+##### `meshagent room sqlite database drop`
+
+Drop a SQLite database in a room.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database drop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--ignore-missing`: Ignore missing database
+* `--help`: Show this message and exit.
+
+##### `meshagent room sqlite database inspect`
+
+Inspect a SQLite database in a room.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database inspect [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite table`
+
+List SQLite tables in a room database.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite table [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite inspect`
+
+Inspect a SQLite table schema in a room database.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite inspect [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--json`: Output raw schema JSON
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite create`
+
+Create a SQLite table with optional Arrow schema and seed data.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. CLI shorthand types: int, bool, date, timestamp, float, text, json, uuid, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).
+* `--data-json TEXT`: Initial rows (JSON list)
+* `--data-file TEXT`: Path to JSON file with initial rows
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite import`
+
+Import a local Arrow, CSV, TSV, Parquet, JSON, or Excel file into a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite import [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-f, --file TEXT`: Local file to import  [required]
+* `--mode TEXT`: Import mode: create, replace  [default: create]
+* `--format TEXT`: Input format: auto, json, arrow, csv, tsv, parquet, excel  [default: auto]
+* `--sheet TEXT`: Excel worksheet name
+* `--batch-size INTEGER`: Rows per imported batch for Parquet, JSON, and Excel  [default: 8192]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite drop`
+
+Drop a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite drop [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--ignore-missing`: Ignore missing table
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite rename`
+
+Rename a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite rename [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--new-name TEXT`: New table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite add-columns`
+
+Add columns to a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite add-columns [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-c, --columns TEXT`: Comma-separated column definitions. Example: &quot;names vector(20) null, tags list(text), meta struct(owner text, score float)&quot;. CLI shorthand types: int, bool, date, timestamp, float, text, json, uuid, binary, vector, list, struct. Vector syntax: vector(size[, element_type]). List syntax: list(element_type). Struct syntax: struct(field_name type[, ...]).  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite drop-columns`
+
+Drop columns from a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite drop-columns [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-c, --column TEXT`: Column to drop (repeatable)
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite insert`
+
+Insert records into a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite insert [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--json TEXT`: JSON list of records
+* `-f, --file TEXT`: Path to JSON file (list of records)
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite update`
+
+Update rows in a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--where TEXT`: SQL WHERE clause, e.g. &quot;id = ?&quot;  [required]
+* `--values-json TEXT`: JSON object of update values  [required]
+* `--params-json TEXT`: JSON SQL parameters
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite delete`
+
+Delete rows from a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--where TEXT`: SQL WHERE clause  [required]
+* `--params-json TEXT`: JSON SQL parameters
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite search`
+
+Search rows in a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite search [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--where TEXT`: SQL WHERE clause
+* `--where-json TEXT`: JSON object converted to equality ANDs
+* `--params-json TEXT`: JSON SQL parameters
+* `--select TEXT`: Columns to select (repeatable)
+* `--limit INTEGER`: Max rows to return
+* `--offset INTEGER`: Rows to skip
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite count`
+
+Count rows in a SQLite table.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite count [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-t, --table TEXT`: Table name  [required]
+* `--where TEXT`: SQL WHERE clause
+* `--where-json TEXT`: JSON object converted to equality ANDs
+* `--params-json TEXT`: JSON SQL parameters
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--help`: Show this message and exit.
+
+#### `meshagent room sqlite sql`
+
+Execute SQL against a room SQLite database.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite sql [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: Database name  [required]
+* `-q, --query TEXT`: SQL query to execute  [required]
+* `--params-json TEXT`: JSON SQL parameters
+* `--params-file TEXT`: Path/URL to JSON parameters
+* `--pretty / --no-pretty`: Pretty-print JSON  [default: pretty]
+* `--format TEXT`: Output format: table, json, arrow, csv, tsv, parquet, excel  [default: table]
+* `-o, --output TEXT`: Write output to this file path instead of stdout
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
 ### `meshagent room memory`
