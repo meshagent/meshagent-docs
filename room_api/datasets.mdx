@@ -43,7 +43,82 @@ See [API Scopes](../rest_api/api_scopes) and [Service YAML](../services/deployme
 
 ## API reference
 
-Use the methods below to manage room tables, rows, indexes, and search workflows. Each method is asynchronous, so you should `await` the call.
+Use the methods below to manage room tables, rows, indexes, and search workflows. Most methods are asynchronous calls that you `await`; streaming helpers such as `sql_stream()`, `search_stream()`, and `watch_table()` return async iterators that you consume with `async for`.
+
+### Python SDK signatures
+
+The examples below focus on common cross-SDK workflows. The Python SDK also exposes namespace, branch, version, streaming, SQL, and maintenance helpers directly on `room.datasets`:
+
+```python Python
+await room.datasets.list_tables(namespace=None, branch=None)
+await room.datasets.inspect(table="users", namespace=None, branch=None, version=None)
+
+await room.datasets.create_table_with_schema(
+    name="users", schema=None, data=None, mode="create",
+    namespace=None, branch=None, metadata=None,
+)
+await room.datasets.create_table_from_data(
+    name="users", data=None, mode="create",
+    namespace=None, branch=None, metadata=None,
+)
+await room.datasets.create_table_from_data_stream(
+    name="users", chunks=chunks, schema=None, mode="create",
+    namespace=None, branch=None, metadata=None,
+)
+await room.datasets.create_table_from_json_data(
+    name="users", data=None, mode="create",
+    namespace=None, branch=None, metadata=None,
+)
+
+await room.datasets.drop_table(name="users", ignore_missing=False, namespace=None, branch=None)
+await room.datasets.rename_table(name="users", new_name="customers", namespace=None, branch=None)
+await room.datasets.add_columns(table="users", new_columns={"active": "true"}, namespace=None, branch=None)
+await room.datasets.drop_columns(table="users", columns=["active"], namespace=None, branch=None)
+
+await room.datasets.insert(table="users", records=records, namespace=None, branch=None)
+await room.datasets.insert_stream(table="users", chunks=chunks, namespace=None, branch=None)
+await room.datasets.update(table="users", where="id = 1", values={"email": "alice@example.com"}, namespace=None, branch=None)
+await room.datasets.delete(table="users", where="id = 1", namespace=None, branch=None)
+await room.datasets.merge(table="users", on="id", records=records, namespace=None, branch=None)
+await room.datasets.merge_stream(table="users", on="id", chunks=chunks, namespace=None, branch=None)
+
+rows = await room.datasets.sql(query="select * from users", tables=None, params=None, namespace=None, branch=None)
+opened = await room.datasets.open_sql_query(query="select * from users", tables=None, params=None, namespace=None, branch=None)
+result = await room.datasets.execute_sql(query="select * from users", tables=None, params=None, namespace=None, branch=None)
+async for batch in room.datasets.sql_stream(query="select * from users", tables=None, params=None, namespace=None, branch=None):
+    ...
+async for batch in room.datasets.read_sql_query(query_id=opened.query_id):
+    ...
+await room.datasets.close_sql_query(query_id=opened.query_id)
+await room.datasets.cancel_sql_query(query_id=opened.query_id)
+rows_affected = await room.datasets.execute_sql_statement(query="delete from users where active = false", tables=None, params=None, namespace=None, branch=None)
+
+rows = await room.datasets.search(
+    table="users", text=None, vector=None, where=None, offset=None, limit=None,
+    select=None, namespace=None, branch=None, version=None,
+)
+async for batch in room.datasets.search_stream(
+    table="users", text=None, vector=None, where=None, offset=None, limit=None,
+    select=None, namespace=None, branch=None, version=None,
+):
+    ...
+async for event in room.datasets.watch_table(table="users", namespace=None, branch=None, poll_interval_seconds=0.5):
+    ...
+count = await room.datasets.count(table="users", text=None, vector=None, where=None, namespace=None, branch=None, version=None)
+
+await room.datasets.optimize(table="users", namespace=None, branch=None, config=None)
+stats = await room.datasets.stats(table="users", namespace=None, branch=None, version=None, max_rows_per_group=None)
+await room.datasets.restore(table="users", version=12, namespace=None, branch=None)
+versions = await room.datasets.list_versions(table="users", namespace=None, branch=None)
+
+await room.datasets.create_index(table="users", config=index_config, namespace=None, branch=None)
+await room.datasets.drop_index(table="users", name="users_email_idx", namespace=None, branch=None)
+indexes = await room.datasets.list_indexes(table="users", namespace=None, branch=None, version=None)
+
+branches = await room.datasets.list_branches(namespace=None)
+await room.datasets.create_branch(branch="exp", from_branch=None, namespace=None)
+await room.datasets.delete_branch(branch="exp", namespace=None)
+```
 
 ### `list_tables()`
 **Description**
@@ -1106,9 +1181,10 @@ const branches = await room.datasets.listBranches();
 The current SDKs and CLI include a few operations that are useful once tables move beyond basic CRUD:
 
 - `rename_table(...)` renames a table without copying its data.
-- `query(...)` / `query_stream(...)` run SQL against room datasets.
+- `sql(...)`, `open_sql_query(...)`, `execute_sql(...)`, `sql_stream(...)`, and `execute_sql_statement(...)` run SQL against room datasets.
 - `watch_table(...)` streams table changes.
 - `count(...)` returns the matching row count for a table query.
+- `restore(...)` restores a table to a previous version.
 - `meshagent room dataset import` imports local data into a room table.
 - `meshagent room dataset sql` runs SQL from the CLI.
 

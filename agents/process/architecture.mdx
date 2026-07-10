@@ -9,9 +9,9 @@ This page is for engineers who want to understand how `meshagent process` maps t
 At a high level, the runtime works like this:
 
 - channels convert outside inputs into process messages
-- a supervisor routes those messages by `thread_id`
+- a supervisor routes those process messages by their resolved thread path
 - a configured backend creates one process for each active thread
-- a thread adapter writes runtime events back into the persisted thread model
+- thread storage writes runtime events back into the persisted thread model
 
 This gives you one process-backed agent that can accept several channels without collapsing unrelated work into one shared live context.
 
@@ -29,7 +29,7 @@ When you run `meshagent process`, the CLI builds:
 - one `AgentSupervisor`
 - one or more configured backends, such as `LLMBackend` or `CodexBackend`
 - one backend-created process per active thread
-- one `AgentProcessThreadAdapter` per active thread
+- one `ThreadStorage` instance per persisted active thread
 
 That layering matters because `process` is not a single SDK class called "ProcessAgent". It is a runtime assembly of channels plus per-thread execution.
 
@@ -41,8 +41,8 @@ flowchart LR
     B --> C["AgentSupervisor"]
     C --> D["Backend process for thread A"]
     C --> E["Backend process for thread B"]
-    D --> F["AgentProcessThreadAdapter"]
-    E --> G["AgentProcessThreadAdapter"]
+    D --> F["ThreadStorage"]
+    E --> G["ThreadStorage"]
     F --> H["Thread events, tool calls, outputs"]
     G --> H
 ```
@@ -50,11 +50,11 @@ flowchart LR
 In practice:
 
 1. a channel receives input from chat, mail, a queue, or a toolkit invocation
-2. the channel emits process messages, including a `thread_id`
+2. the channel emits process messages, including the resolved thread path on `thread_id`
 3. the supervisor selects the configured backend for the thread
 4. the backend finds or creates the process for that thread
 5. the thread-scoped process runs the turn
-6. the thread adapter records outputs, lifecycle state, tool activity, and status into the thread model
+6. thread storage records outputs, lifecycle state, tool activity, and status into the thread model
 
 ## Channel responsibilities
 
@@ -108,7 +108,7 @@ Each instance handles one active thread at a time and is responsible for:
 - running the agent logic
 - managing turn lifecycle events
 - coordinating tool calls and approvals
-- emitting outputs back to the channels and thread adapter
+- emitting outputs back to the channels and thread storage
 
 This is why one process-backed agent can serve many channels and many threads without mixing unrelated thread state together.
 
@@ -125,7 +125,7 @@ Most application agents should use the LLM backend. Use the Codex backend when y
 
 ## Per-thread routing and queueing
 
-The supervisor routes by `thread_id` and creates a thread process on first use.
+The supervisor routes by the process-message `thread_id` field, which contains the resolved thread path, and creates a thread process on first use.
 
 This matters for two reasons:
 
@@ -171,9 +171,9 @@ These are runtime features, not channel-specific hacks. Channels deliver the mes
 
 This is part of what makes process-backed agents useful for coding, research, and other longer-running workflows.
 
-## What `AgentProcessThreadAdapter` does
+## What thread storage does
 
-`AgentProcessThreadAdapter` is the bridge between the process runtime and the persisted thread representation.
+`ThreadStorage` is the bridge between the process runtime and the persisted thread representation.
 
 It is responsible for turning process events into thread updates such as:
 
@@ -190,7 +190,7 @@ It also maintains per-thread status and pending-message metadata so clients can 
 
 The important rule is:
 
-- **context isolation is by `thread_id`, not by process**
+- **context isolation is by thread path, not by process**
 
 That means one process-backed agent can accept input from several channels without automatically mixing those histories together. Context only overlaps when two inputs use the same thread path.
 

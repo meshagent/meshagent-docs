@@ -22,6 +22,8 @@ Start with the CLI help, then use a few common commands:
 ```bash bash
 meshagent room service --help
 meshagent room service list --room myroom
+meshagent room service list --room myroom --output json
+meshagent room service describe --room myroom --name my-service
 meshagent room service restart --room myroom --name my-service
 ```
 
@@ -37,8 +39,7 @@ Saved services are deployed with the `meshagent service` command or generated th
 
 Once a room session is active, those saved services become running workloads in the room runtime. The `ServicesClient` gives you visibility into that runtime layer:
 
-- `list()` returns the service specs visible in the room
-- `list_with_state()` / `listWithState()` adds runtime state details from the room service controller
+- `list()` returns the service specs visible in the room plus runtime state details from the room service controller
 - `restart()` asks MeshAgent to stop the current container for one service so it can come back up cleanly
 
 This is intentionally separate from service packaging and deployment. Deployment changes the saved configuration through `meshagent service`. The Room Services API tells you what is running right now.
@@ -53,8 +54,24 @@ For the broader deployment permission model, see [API Scopes](../rest_api/api_sc
 
 ### `list()`
 
-- **Description**: List the services currently visible in the room runtime.
-- **Returns**: A list of `ServiceSpec` values.
+- **Description**: List services plus runtime state details from the service controller.
+- **Returns**: `ListServicesResult` with:
+  - `services`: the service specs visible in the room
+  - `service_states`: runtime state keyed by service id
+
+Runtime state includes service state, container id, started time, restart count, last exit code, scheduled restart time, lifecycle events, and `status.ports`.
+
+Each `status.ports` entry is a `ServicePortRuntimeState`:
+
+| Field | Description |
+|-------|-------------|
+| `num` | Service port number, or `"*"` for an auto-assigned port. |
+| `liveness` | HTTP path MeshAgent checks for this port, when configured. |
+| `liveness_status` | `not_configured`, `not_ready`, or `ready`. |
+| `last_checked_at` | Unix timestamp for the most recent liveness check. |
+| `last_error` | Most recent liveness error, when the port is not ready. |
+
+The CLI table includes a `ports` column. Ports without a liveness path show `no liveness`; ports with a passing liveness check show `ready`; ports with a configured liveness path that is not passing show `not ready`.
 
 <CodeGroup>
 ```bash CLI
@@ -63,42 +80,7 @@ meshagent room service list \
 
 ```
 ```python Python
-services = await room.services.list()
-
-for service in services:
-  print(service.metadata.name)
-
-```
-```typescript TypeScript
-const services = await room.services.list();
-
-for (const service of services) {
-  console.log(service.metadata.name);
-}
-
-```
-```dart Dart
-final services = await room.services.list();
-
-for (final service in services) {
-  print(service.metadata.name);
-}
-
-```
-</CodeGroup>
-
-### `list_with_state()` / `listWithState()`
-
-- **Description**: List services plus runtime state details from the service controller.
-- **Returns**: `ListServicesResult` with:
-  - `services`: the service specs
-  - `service_states`: runtime state keyed by service id
-
-Typical runtime fields include service state, container id, started time, restart count, last exit code, and any scheduled restart time.
-
-<CodeGroup>
-```python Python
-result = await room.services.list_with_state()
+result = await room.services.list()
 
 for service in result.services:
   state = result.service_states.get(service.id or "")
@@ -106,7 +88,7 @@ for service in result.services:
 
 ```
 ```typescript TypeScript
-const result = await room.services.listWithState();
+const result = await room.services.list();
 
 for (const service of result.services) {
   const state = service.id ? result.serviceStates[service.id] : undefined;
@@ -115,7 +97,7 @@ for (const service of result.services) {
 
 ```
 ```dart Dart
-final result = await room.services.listWithState();
+final result = await room.services.list();
 
 for (final service in result.services) {
   final state = service.id == null ? null : result.serviceStates[service.id!];

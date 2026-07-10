@@ -130,13 +130,17 @@ await room.containers.pull_image(tag="registry.example.com/agents/chatbot:0.2")
 - **Parameters** (all optional except `image`):
   - `image`: Container image to run.
   - `command`: Override the default command (`str`).
+  - `working_dir`: Working directory for the container process.
   - `env`: Environment variables injected as `dict[str, str]`.
   - `mount_path`, `mount_subpath`: Mount configuration when using storage.
+  - `mounts`: Structured container mount configuration for advanced mount layouts.
   - `role`, `participant_name`: Launch on behalf of a specific room identity.
   - `ports`: Port mappings `{container_port: host_port}`.
   - `credentials`: Registry secrets for the image.
   - `name`: Friendly name for the container.
   - `template`: Runtime defaults to apply. `"none"` (default) applies no template defaults; `"agent"` mounts room storage at `/data` and injects MeshAgent/OpenAI/Anthropic/SMTP proxy environment variables using a token for the container name with role `agent`.
+  - `writable_root_fs`: Override whether the container root filesystem is writable.
+  - `private`: Request private container placement where supported.
 - **Returns**: Container ID string.
 
 <CodeGroup>
@@ -166,7 +170,6 @@ print(f"Container launched: {container_id}")
   - `container_id`: Target container.
   - `command`: Optional command list; defaults to the container's shell.
   - `tty`: Request a TTY session (`True` for interactive).
-  - `detach`: Leave the session running in the background (`True` by default).
 - **Returns**: An exec-session object (`ExecSession` in Python) exposing helpers to read output, send input, resize the terminal, and await completion.
 
 <CodeGroup>
@@ -182,7 +185,6 @@ session = await room.containers.exec(
     container_id=container_id,
     command=["bash"],
     tty=True,
-    detach=False,
 )
 
 async for chunk in session.stdout():
@@ -220,6 +222,36 @@ meshagent room container image save \
   --mount-room-path /images:/workspace
 ```
 
+The Python SDK exposes these container image, build, service, and lifecycle helpers:
+
+```python Python
+await room.containers.push_image(tag="registry.example.com/agents/chatbot:0.2", credentials=None, private=False)
+await room.containers.load(archive_path="/images/chatbot.tar")
+await room.containers.load_image(mounts=mounts, archive_path="/workspace/chatbot.tar", private=False)
+await room.containers.save_image(tag="registry.example.com/agents/chatbot:0.2", mounts=mounts, archive_path="/workspace/chatbot.tar", private=False)
+
+build_id = await room.containers.build(
+    tags=["registry.example.com/agents/chatbot:0.2"],
+    mount_path="/workspace",
+    context_path=".",
+    chunks=chunks,
+    dockerfile_path=None,
+    optimize_image=True,
+    private=False,
+    credentials=None,
+    builder_name=None,
+    size=None,
+)
+builds = await room.containers.list_builds()
+await room.containers.cancel_build(build_id=build_id)
+await room.containers.delete_build(build_id=build_id)
+logs = room.containers.get_build_logs(build_id=build_id, follow=True)
+
+container_id = await room.containers.run_service(service_id="svc_123", env=None)
+exit_code = await room.containers.wait_for_exit(container_id=container_id)
+status = await room.containers.wait_for_exit_status(container_id=container_id)
+```
+
 ### `logs(container_id, follow=False)`
 
 - **Description**: Stream container logs and optionally follow until exit.
@@ -247,7 +279,7 @@ await stream  # optional: wait for the request to finish
 ```
 </CodeGroup>
 
-### `list(all=False)`
+### `list(all=None)`
 
 - **Description**: List containers in the room, optionally including exited ones.
 - **Parameters**:

@@ -35,14 +35,21 @@ Use this when someone should be part of the project without extra project-wide p
 
 ### Room Creator
 
-Room Creator is a limited project role for collaborators who mainly need to create rooms.
+Room Creator is a limited project role for collaborators who create room-centered project resources.
 
 Use this when someone should be able to:
 
 - create new rooms
+- create mailboxes, routes, and scheduled tasks that attach work to rooms
 - organize work into separate rooms
 
 But should not automatically manage the broader project surface such as billing, secrets, or member administration.
+
+### Agent Creator
+
+Agent Creator is a focused project role for collaborators who need to create managed agent identities.
+
+Use this when someone should be able to create agents without giving them broader developer or admin access.
 
 ### Developer
 
@@ -51,8 +58,8 @@ Developers are for people building and operating workloads without giving them f
 Use this role when someone needs to:
 
 - build and test in project rooms
-- deploy and manage services
-- perform operational tasks such as mailbox creation
+- inspect deployed services and runtime state
+- inspect operational resources such as mailboxes, routes, scheduled tasks, feed subscriptions, and LLM loggers
 - work in MeshAgent Studio and the CLI without managing the whole project
 
 ### LLM Proxy User
@@ -62,8 +69,6 @@ LLM Proxy User is a focused project permission for collaborators who need projec
 Use this when someone needs to:
 
 - call the project LLM proxy with OAuth access tokens
-- manage project OAuth clients used for LLM proxy access
-- manage project external OAuth registrations used by the LLM proxy
 
 But should not automatically get the rest of the developer project surface.
 
@@ -80,14 +85,25 @@ Use this role when someone needs to:
 
 ## How project roles map to the API
 
-In the admin API and SDKs, project membership is controlled with four flags:
+In the admin API and SDKs, project membership is controlled with a `roles` list. The server normalizes that list to include `member` and expands inherited roles for `admin` and `developer`.
 
-- `is_admin`
-- `is_developer`
-- `can_create_rooms`
-- `can_use_llm_proxy`
+Common role entries include:
 
-MeshAgent Studio's Members UI writes those settings for you. A default member is just a project member with none of those extra flags enabled.
+- `admin`
+- `developer`
+- `room_creator`
+- `agent_creator`
+- `llm_proxy_user`
+
+Some older project member records and Studio settings still surface convenience booleans. They map to roles like this:
+
+| Setting | IAM role effect |
+| --- | --- |
+| `is_admin` | Grants `admin` plus project-wide creator, inventory, manager, billing, usage, group, and LLM proxy roles. |
+| `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, inventory roles for operational resources such as services, routes, mailboxes, scheduled tasks, feed subscriptions, and LLM loggers, service-account creation and inventory, participant-token creation, and usage reporting. The `developer` relation also qualifies for LLM proxy use in access checks. |
+| `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
+| `can_create_agents` | Grants `agent_creator`. |
+| `can_use_llm_proxy` | Grants the direct `llm_proxy_user` role. |
 
 If you are managing access programmatically, use the project user-management endpoints or SDK helpers that add and update project users.
 
