@@ -186,7 +186,51 @@ Today the queued message payload is:
 
 You can place these annotations on the port or on a specific endpoint. Endpoint annotations override port annotations.
 
-Queue-backed routes must remain non-public. They are intended for authenticated ingress handled by MeshAgent, not open anonymous forwarding.
+### Secret-backed validation
+
+The validation secret is not copied into the route itself. Instead, MeshAgent reads it from room secrets at request time and uses it to verify the incoming webhook or signed request before anything is placed on the queue.
+
+This keeps the shared secret inside the room security boundary while still letting you publish an external URL.
+
+Supported validation methods currently include:
+
+- `github`
+- `salesforce`
+- `sentry`
+- `slack`
+- `shopify`
+- `stripe`
+- `telegram`
+- `twilio`
+- `whatsapp`
+- `zendesk`
+
+### What to store in the room secret
+
+Store the provider's original shared secret value in the room secret.
+
+Do not store:
+
+- the incoming signature header value
+- a computed HMAC or digest
+- a JSON wrapper object unless the provider explicitly gives you a plain secret inside it
+
+Use the raw secret string or key that the provider tells you to use for request verification.
+
+| Method | Secret value to store in the room | Provider docs |
+|-------|------------------------------------|---------------|
+| `github` | The webhook secret token you configured for that GitHub webhook. | [GitHub: Validating webhook deliveries](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) |
+| `slack` | Your Slack app's signing secret. | [Slack: Verifying requests from Slack](https://api.slack.com/docs/verifying-requests-from-slack) |
+| `stripe` | The webhook endpoint's signing secret. This is not a Stripe API key. | [Stripe: Receive events with an HTTPS server](https://docs.stripe.com/webhooks/test) |
+| `shopify` | For Shopify app webhooks, your app client secret. | [Shopify: Deliver webhooks through HTTPS](https://shopify.dev/docs/apps/build/webhooks/subscribe/https), [Shopify: About client credentials](https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets) |
+| `telegram` | The Telegram webhook secret token you pass to `setWebhook` as `secret_token`. | [Telegram Bot API: setWebhook](https://core.telegram.org/bots/api#setwebhook) |
+| `twilio` | Your Twilio Auth Token used for request validation. | [Twilio: Security](https://www.twilio.com/docs/usage/security), [Twilio: REST API Auth Token](https://www.twilio.com/docs/iam/api/authtoken) |
+| `whatsapp` | Your Meta app secret used for `X-Hub-Signature-256` validation. | [WhatsApp Cloud API: Set up webhooks](https://developers.facebook.com/docs/whatsapp/cloud-api/guides/set-up-webhooks) |
+| `zendesk` | The webhook signing secret key from the Zendesk webhook configuration. | [Zendesk: Verifying webhook authenticity](https://developer.zendesk.com/documentation/event-connectors/webhooks/verifying) |
+| `sentry` | The Sentry service hook `secret` value for that hook. | [Sentry: Register a New Service Hook](https://docs.sentry.io/api/projects/register-a-new-service-hook/), [Sentry: Retrieve a Service Hook](https://docs.sentry.io/api/projects/retrieve-a-service-hook/) |
+| `salesforce` | The signing key or shared secret for the Salesforce webhook product that is sending the request. Common cases are Marketing Cloud ENS callback signature keys and Data Cloud generated signing keys. | [Salesforce Marketing Cloud ENS: Notification Signing](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ens-notification-signing.html), [Salesforce Data Cloud: Generate a Secret Key for Signature Validation](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-generate-secret-key-for-signature-validation.htm), [Salesforce Data Cloud: Payload Signature](https://developer.salesforce.com/docs/data/data-cloud-ref/guide/c360a-api-payload-signature.htm) |
+
+Queue-backed validated routes must remain non-public. They are intended for authenticated or signature-validated ingress handled by MeshAgent, not open anonymous forwarding.
 
 ## Liveness and startup behavior
 

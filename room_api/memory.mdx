@@ -41,6 +41,53 @@ See [API Scopes](../rest_api/api_scopes), [Participant Tokens](../rest_api/parti
 
 Use the methods below to create memories, ingest content, query or recall context, and maintain memory datasets over time.
 
+### Python SDK signatures
+
+The examples below show common workflows. The Python SDK exposes these parameters directly on `room.memory`:
+
+```python Python
+await room.memory.list(namespace=None)
+await room.memory.create(name="customer-memory", namespace=None, overwrite=False, ignore_exists=False)
+await room.memory.drop(name="customer-memory", namespace=None, ignore_missing=False)
+details = await room.memory.inspect(name="customer-memory", namespace=None)
+rows = await room.memory.query(name="customer-memory", statement="MATCH (e) RETURN e LIMIT 10", namespace=None)
+
+await room.memory.upsert_table(name="customer-memory", table="facts", records=records, merge=True, namespace=None)
+await room.memory.upsert_nodes(name="customer-memory", records=nodes, merge=True, namespace=None)
+await room.memory.upsert_relationships(name="customer-memory", records=relationships, merge=True, namespace=None)
+
+result = await room.memory.ingest_text(
+    name="customer-memory", text="ACME is planning a renewal review in Q3.",
+    namespace=None, strategy="heuristic", llm_model=None, llm_temperature=None,
+)
+result = await room.memory.ingest_image(
+    name="customer-memory", caption=None, data=None, mime_type=None, source=None,
+    annotations=None, namespace=None, strategy="heuristic",
+    llm_model=None, llm_temperature=None,
+)
+result = await room.memory.ingest_file(
+    name="customer-memory", path=None, text=None, mime_type=None,
+    namespace=None, strategy="heuristic", llm_model=None, llm_temperature=None,
+)
+result = await room.memory.ingest_from_table(
+    name="customer-memory", table="customer_notes", text_columns=None,
+    table_namespace=None, limit=None, namespace=None, strategy="heuristic",
+    llm_model=None, llm_temperature=None,
+)
+result = await room.memory.ingest_from_storage(
+    name="customer-memory", paths=["room://notes/acme.txt"],
+    namespace=None, strategy="heuristic", llm_model=None, llm_temperature=None,
+)
+
+result = await room.memory.recall(
+    name="customer-memory", query="renewal timeline", namespace=None,
+    limit=5, include_relationships=True,
+)
+result = await room.memory.delete_entities(name="customer-memory", entity_ids=["acme"], namespace=None)
+result = await room.memory.delete_relationships(name="customer-memory", relationships=relationships, namespace=None)
+result = await room.memory.optimize(name="customer-memory", namespace=None, compact=True, cleanup=True)
+```
+
 ### `list(namespace=None)`
 - **Description**: List memory names in a namespace.
 
