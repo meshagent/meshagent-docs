@@ -34,7 +34,7 @@ This is the same route used by `meshagent ask` and the [MeshAgent Codex and Clau
 ## How to use the LLM Proxy
 `meshagent room connect` runs a local command with the same environment variables it will have in a MeshAgent room. It connects to the room, starts your local command, and sets `MESHAGENT_TOKEN` to a participant token with access to that room. It also sets `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_API_KEY`, `MESHAGENT_PROJECT_ID`, and `MESHAGENT_ROOM`.
 
-Use those environment variables directly. Do not hardcode the proxy address in local code; let `meshagent room connect` provide the OpenAI and Anthropic base URLs for the room you are testing.
+Use those environment variables directly. Do not hardcode the proxy address in local code; let `meshagent room connect` provide the OpenAI and Anthropic base URLs and credentials.
 
 ### Connect a local command to a room
 ```bash
@@ -95,7 +95,7 @@ For Anthropic-compatible raw HTTP requests, append `/v1` to the `ANTHROPIC_BASE_
 
 ### Use The OpenAI And Anthropic SDKs
 
-Run these examples through `meshagent room connect` so the SDKs receive the room-scoped base URLs and participant token API keys.
+Run these examples through `meshagent room connect` so the SDKs receive the MeshAgent base URLs and participant token API keys.
 
 #### OpenAI SDK
 
@@ -112,7 +112,7 @@ Run these examples through `meshagent room connect` so the SDKs receive the room
 </CodeGroup>
 
 ### Use Other Frameworks
-Configure OpenAI- or Anthropic-compatible frameworks with the MeshAgent base URL and a MeshAgent credential: a participant token, API key, or OAuth access token. For local testing, `meshagent room connect` supplies the room-scoped base URLs and participant token as environment variables.
+Configure OpenAI- or Anthropic-compatible frameworks with the MeshAgent base URL and a MeshAgent credential: a participant token, API key, or OAuth access token. For local testing, `meshagent room connect` supplies the MeshAgent base URLs and participant token as environment variables.
 
 For OpenAI-compatible transports:
 - Set the base URL from `OPENAI_BASE_URL`
@@ -123,7 +123,7 @@ For Anthropic-compatible transports:
 - Set the base URL to `$ANTHROPIC_BASE_URL/v1` for raw HTTP transports
 - Set the API key or bearer token from `ANTHROPIC_API_KEY`
 
-For example, LangChain can use the room-scoped OpenAI-compatible route directly:
+For example, LangChain can use the OpenAI-compatible route directly:
 
 <CodeGroup>
   <LlmProxyLangChainPython />
@@ -173,7 +173,7 @@ Use `meshagent llm logger list`, `meshagent llm logger get LOGGER_ID`, `meshagen
 - `meshagent room connect` sets `MESHAGENT_TOKEN`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` to a participant token with access to the room.
 - The participant token must carry the room grant and LLM API grant.
 - The signed-in user must have permission to connect to the room and use the LLM proxy for that project.
-- The room-scoped base URLs are `{room_url}/openai/v1` for OpenAI-compatible requests and `{room_url}/anthropic` for Anthropic SDK requests.
+- Provider base URLs use the project API endpoint: `${MESHAGENT_API_URL}/openai/v1` for OpenAI-compatible requests and `${MESHAGENT_API_URL}/anthropic` for Anthropic SDK requests.
 - OAuth proxy requests require an access token with the `llm:invoke` scope and `Meshagent-Project-Id`.
 
 ## Supported Provider Paths
