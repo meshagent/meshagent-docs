@@ -53,11 +53,20 @@ meshagent build ./my-app \
 Key things to know:
 
 - `PATH` is required and becomes the streamed build context
-- `--tag` is required
+- `-t` or `--tag` is required
 - `--room` is required unless `MESHAGENT_ROOM` is already set
-- `--context-path` and `--dockerfile-path` let you point at a different directory or Dockerfile inside the streamed context
+- `-f` or `--file` selects a Dockerfile relative to `PATH`; otherwise MeshAgent uses `PATH/Dockerfile` or `PATH/Containerfile`
 - build logs stream back through the CLI while the build runs
 - this is a good fit for agent-driven build workflows inside a room because the build happens in MeshAgent, not on the local machine
+
+For example, use a Dockerfile in a subdirectory with the same flags as Docker:
+
+```bash
+meshagent build ./my-app \
+  --room myroom \
+  -t registry.meshagent.com/myproject/my-app:dev \
+  -f refresher/Dockerfile
+```
 
 ### `meshagent deploy`
 
@@ -78,6 +87,7 @@ Example building and deploying from a local directory:
 meshagent deploy ./my-app \
   --room myroom \
   --tag registry.meshagent.com/myproject/my-app:dev \
+  --file refresher/Dockerfile \
   --env APP_ENV=dev
 ```
 
