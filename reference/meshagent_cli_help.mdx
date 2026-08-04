@@ -35,6 +35,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `service`: Manage services for your project
 * `mcp`: Bridge MCP servers into MeshAgent rooms
 * `rooms`: Create, list, and manage rooms in a project
+* `volumes`: Manage durable storage volumes for a room
 * `agent`: Create, list, and manage managed agents in...
 * `mailbox`: Manage mailboxes for your project
 * `feed`: Manage feeds for your project
@@ -1874,6 +1875,104 @@ $ meshagent rooms get [OPTIONS] [ROOM]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.
 
+## `meshagent volumes`
+
+Manage durable storage volumes for a room
+
+**Usage**:
+
+```console
+$ meshagent volumes [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`
+* `create`
+* `delete`
+* `expand`
+
+### `meshagent volumes list`
+
+**Usage**:
+
+```console
+$ meshagent volumes list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent volumes create`
+
+**Usage**:
+
+```console
+$ meshagent volumes create [OPTIONS] NAME
+```
+
+**Arguments**:
+
+* `NAME`: Volume name  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--description TEXT`: Volume description
+* `--metadata TEXT`: Volume metadata JSON object
+* `--annotations TEXT`: Volume annotations JSON object
+* `--type TEXT`: Storage type: standard, juice, or zerofs
+* `--max-size INTEGER`: Maximum volume size in MB (JuiceFS and ZeroFS only)
+* `--help`: Show this message and exit.
+
+### `meshagent volumes delete`
+
+**Usage**:
+
+```console
+$ meshagent volumes delete [OPTIONS] VOLUME
+```
+
+**Arguments**:
+
+* `VOLUME`: Volume ID or name  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent volumes expand`
+
+**Usage**:
+
+```console
+$ meshagent volumes expand [OPTIONS] VOLUME
+```
+
+**Arguments**:
+
+* `VOLUME`: Volume ID or name  [required]
+
+**Options**:
+
+* `--max-size INTEGER`: New maximum volume size in MB  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
 ## `meshagent agent`
 
 Create, list, and manage managed agents in a project
@@ -3671,6 +3770,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages in a room
 * `storage`: Manage storage for a room
+* `mounts`: List storage mounts currently ready in a room
 * `service`: Manage services inside a room
 * `developer`: Stream developer logs from a room
 * `dataset`: Manage dataset tables in a room
@@ -4172,6 +4272,41 @@ $ meshagent room storage ls [OPTIONS] PATH
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--room TEXT`: Room name  [default: (dynamic)]
 * `-r`: List subfolders/files recursively
+* `--help`: Show this message and exit.
+
+### `meshagent room mounts`
+
+List storage mounts currently ready in a room
+
+**Usage**:
+
+```console
+$ meshagent room mounts [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`
+
+#### `meshagent room mounts list`
+
+**Usage**:
+
+```console
+$ meshagent room mounts list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ### `meshagent room service`
