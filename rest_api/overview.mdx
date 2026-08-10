@@ -106,12 +106,16 @@ REST calls raise `meshagent.api.RoomException` on non-2xx responses. Many method
 ## Projects, Rooms, and managed agents
 Create and manage projects, Rooms, and managed agent identities. Room and agent connection methods return signed connection information for the target runtime.
 
+Project settings are independent documents named `openai`, `anthropic`, `otel`, `admission`, `room`, and `room_roles`. The REST path for `room_roles` is `room-roles`; SDK clients translate that name automatically. A missing document is unconfigured and is not read from the legacy project settings field.
+
 | SDK method                                                               | HTTP route                                                       | What it does                                                      |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `create_project(name, settings?)`                                        | `POST /accounts/projects`                                        | Create a project.                                                 |
+| `create_project(name)`                                                   | `POST /accounts/projects`                                        | Create a project.                                                 |
 | `list_projects()`                                                        | `GET /accounts/projects`                                         | List projects you can access.                                     |
 | `get_project(project_id)`                                                | `GET /accounts/projects/{project_id}`                            | Fetch one project.                                                |
-| `update_project_settings(project_id, settings)`                          | `PUT /accounts/projects/{project_id}/settings`                   | Update project settings.                                          |
+| `get_project_settings_document(project_id, name)`                        | `GET /accounts/projects/{project_id}/settings/{name}`            | Fetch one settings document.                                      |
+| `set_project_settings_document(project_id, name, document)`              | `PUT /accounts/projects/{project_id}/settings/{name}`            | Set one settings document.                                        |
+| `delete_project_settings_document(project_id, name)`                     | `DELETE /accounts/projects/{project_id}/settings/{name}`         | Revert one settings document to its unconfigured/default state.   |
 | `get_project_status(project_id)`                                         | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
 | `get_project_role(project_id)`                                           | `GET /accounts/projects/{project_id}/role`                       | Get your role in the project.                                     |
 | `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user with project roles such as `admin`, `developer`, `room_creator`, `agent_creator`, or `llm_proxy_user`. |
