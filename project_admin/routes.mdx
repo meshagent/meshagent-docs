@@ -106,6 +106,8 @@ This exposes `websites/docs/logo.svg` as `/logo.svg`. With `index: true`, reques
 
 Content routes support `GET`, `HEAD`, and CORS preflight `OPTIONS` requests. CORS rules use the familiar object-storage controls for allowed origins, methods, and headers, exposed response headers, preflight cache age, and credentials. Credentialed CORS rules must list explicit origins rather than `*`.
 
+Web serving requires MeshAgent's built-in GCS or local-filesystem room storage provider. Other room storage implementations are rejected with `unsupported room storage type: X for web serving` rather than being accessed through a running room.
+
 `compression` accepts `brotli`, `gzip`, or `none` and defaults to `brotli`. Compression is negotiated with the request's `Accept-Encoding` header; clients that do not advertise the selected encoding receive the original content.
 
 Set `iap: true` to protect the content with MeshAgent's identity-aware proxy. The router authenticates the IAP session and checks room site access before reading the file. CORS preflight responses do not expose file content and do not require an IAP cookie.
