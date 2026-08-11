@@ -1,13 +1,13 @@
 ---
 title: Routes
-description: Manage project routes that map domains and paths to rooms or managed agents.
+description: Manage project routes that map domains and paths to room services, room content, or managed agents.
 ---
 
-Routes map a domain to either room HTTP paths or a managed agent websocket.
+Routes map a domain to room HTTP services, files in room storage, or a managed agent websocket.
 
-Use them when you want a stable URL for something running inside a room, such as a web app or HTTP integration.
+Use them when you want a stable URL for something inside a room, such as a web app, static website, or HTTP integration.
 
-This is the normal way to publish an HTTP service from a room. A common pattern is: an agent or service creates a web app in the room, serves it on a published port, and then a route gives that app a stable URL.
+For dynamic applications, a route can proxy to a published service port. For static sites, a route can serve a room storage subpath directly without running a web server.
 
 Routes can front either a fully public site or a private app protected by MeshAgent. For browser apps, MeshAgent can act as an identity-aware proxy in front of your service: it authenticates the user, checks that they are allowed into the room, and only then forwards the request to your app.
 
@@ -15,10 +15,10 @@ For deployment basics, see [Service YAML](../services/deployment/deploy_services
 
 ## How routes work
 
-- A service in the room listens on an HTTP port.
-- That port is marked as `published` in the service config.
-- The route maps a domain and one or more paths to that room and published port.
-- When a request arrives, MeshAgent matches the route path, resolves the room and port, applies the port's security rules, and then proxies the request to the service.
+- A route selects a room or managed agent backend.
+- Each room route path targets either a published service port with `targetPort` or room storage with `targetContent`.
+- When a request arrives, MeshAgent chooses the longest matching path and applies that target's security and response options.
+- Service targets are proxied to the published port. Content targets are read directly from room storage.
 
 ## Create a route
 
@@ -69,6 +69,48 @@ backend:
   agent:
     name: my-agent
 ```
+
+## Serve room content directly
+
+Use `targetContent` when a site already exists in room storage and does not need an application server. `subpath` is relative to the room storage root; the matched public route path is removed before the remaining request path is appended.
+
+```yaml
+kind: Route
+version: v1
+metadata:
+  name: docs
+  annotations: {}
+domain: docs.meshagent.app
+backend:
+  room:
+    name: docs-room
+paths:
+  - path: /
+    pathType: prefix
+    targetContent:
+      subpath: websites/docs
+      index: true
+      iap: false
+      compression: brotli
+      cors:
+        - allowedOrigins:
+            - https://app.example.com
+          allowedMethods: [GET, HEAD]
+          allowedHeaders: [Authorization]
+          exposeHeaders: [Content-Length]
+          maxAgeSeconds: 3600
+          allowCredentials: false
+```
+
+This exposes `websites/docs/logo.svg` as `/logo.svg`. With `index: true`, requests for the route root and directories serve `index.html`, such as `websites/docs/index.html` and `websites/docs/guide/index.html`.
+
+Content routes support `GET`, `HEAD`, and CORS preflight `OPTIONS` requests. CORS rules use the familiar object-storage controls for allowed origins, methods, and headers, exposed response headers, preflight cache age, and credentials. Credentialed CORS rules must list explicit origins rather than `*`.
+
+`compression` accepts `brotli`, `gzip`, or `none` and defaults to `brotli`. Compression is negotiated with the request's `Accept-Encoding` header; clients that do not advertise the selected encoding receive the original content.
+
+Set `iap: true` to protect the content with MeshAgent's identity-aware proxy. The router authenticates the IAP session and checks room site access before reading the file. CORS preflight responses do not expose file content and do not require an IAP cookie.
+
+A route can mix service and content targets on different paths. Each individual path must set exactly one of `targetPort` or `targetContent`.
 
 ## Mark the port as published
 
