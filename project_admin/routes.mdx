@@ -74,6 +74,20 @@ backend:
 
 Use `targetContent` when a site already exists in room storage and does not need an application server. `subpath` is relative to the room storage root; the matched public route path is removed before the remaining request path is appended.
 
+For a single content path, create the route directly from the CLI:
+
+```console
+meshagent route create \
+  --domain docs.meshagent.app \
+  --room docs-room \
+  --content-path websites/docs \
+  --index \
+  --compression brotli \
+  --cors '[{"allowedOrigins":["https://app.example.com"]}]'
+```
+
+Use `--path /docs` to mount the content below a public URL path, `--iap` to require identity-aware access, and `meshagent route update` with the same options to change an existing route. `--room-path` is an alias for `--content-path`.
+
 ```yaml
 kind: Route
 version: v1
@@ -311,6 +325,8 @@ meshagent route get my-app.meshagent.app
 meshagent route update my-app.meshagent.app --port 5003
 meshagent route delete my-app.meshagent.app
 ```
+
+The default `route list` table includes each public path, service port or room content path, `index`, `iap`, `compression`, and CORS rules. Use `meshagent route list --output json` or `meshagent route get DOMAIN` for the complete RouteSpec, including routes with multiple path targets.
 
 To create or update a route, you need permission to administer the target room.
 
