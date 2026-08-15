@@ -103,6 +103,12 @@ meshagent service update --file meshagent.yaml --room myroom --id SERVICE_ID
 # Update a deployed ServiceTemplate
 meshagent service update-template --file meshagent.yaml --value key=value --room myroom --id SERVICE_ID
 
+# Stop a service and prevent it from starting
+meshagent service disable SERVICE_ID --room myroom
+
+# Allow a disabled service to start again
+meshagent service enable SERVICE_ID --room myroom
+
 # Delete a deployed service
 meshagent service delete SERVICE_ID --room myroom
 ```
@@ -117,6 +123,7 @@ Omit `--room myroom` when you are updating, listing, or deleting a project servi
 |-------|----------|-------------|
 | `version` | Yes | Schema version. Always `v1`. |
 | `kind` | Yes | `Service` or `ServiceTemplate`. |
+| `enabled` | No | `Service` only. Whether the service should run. Defaults to `true`; setting it to `false` stops a running managed service and prevents future starts. |
 | `metadata` | Yes | Service identity and display information. |
 | `agents` | No | Agent identities exposed by this service. |
 | `files` | No | Files MeshAgent should seed into room storage if they do not already exist. |
