@@ -27,10 +27,32 @@ meshagent mailbox update support@mail.meshagent.com --queue escalations
 meshagent mailbox delete support@mail.meshagent.com
 ```
 
+## Inspect outbound delivery status
+
+When Mailgun delivery tracking is enabled for the deployment, inspect each
+recipient's current status and provider event timeline:
+
+```bash
+meshagent mailbox deliveries support@mail.meshagent.com
+meshagent mailbox delivery support@mail.meshagent.com DELIVERY_ID
+meshagent mailbox delivery-events support@mail.meshagent.com DELIVERY_ID
+```
+
+The delivery list is newest submission first. A submission with multiple
+recipients has one delivery row per recipient because their outcomes and retry
+timelines can differ. Delivery events are oldest first.
+
+In Studio, open the mailbox options menu and select **Deliveries...**. Select a
+delivery row to open its event timeline.
+
 ## Permissions
 
 - To create, update, or delete a mailbox for a room, you need permission to administer that room.
 - To list mailboxes across the whole project, you need developer access.
+- To read delivery status as a user, you need the OAuth scope `mailboxes:read`
+  and the project `mailbox_inventory` relation. Room membership and room read
+  access do not grant delivery visibility. Project API keys retain project-wide
+  access.
 
 ## Where to manage mailboxes
 

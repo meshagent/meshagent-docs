@@ -303,6 +303,14 @@ Create and manage mailboxes that can be used by Agents or Rooms.
 | `get_mailbox(project_id, address)`                          | `GET /accounts/projects/{project_id}/mailboxes/{address}`    | Get a mailbox.            |
 | `update_mailbox(project_id, address, room, queue, public?)` | `PUT /accounts/projects/{project_id}/mailboxes/{address}`    | Update mapping.           |
 | `delete_mailbox(project_id, address)`                       | `DELETE /accounts/projects/{project_id}/mailboxes/{address}` | Delete mapping.           |
+| `list_mailbox_deliveries(project_id, address, ...)`         | `GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries` | List recipient deliveries, ordered by `submitted_at DESC, id DESC`. |
+| `get_mailbox_delivery(project_id, address, delivery_id)`    | `GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries/{delivery_id}` | Get current delivery status and SMTP details. |
+| `list_mailbox_delivery_events(project_id, address, delivery_id, ...)` | `GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries/{delivery_id}/events` | List provider events, ordered by `occurred_at ASC, id ASC`. |
+
+Delivery routes require `mailboxes:read` plus the project
+`mailbox_inventory` relation. They are not room-scoped, and the response does
+not repeat the mailbox address because it is already part of the request path.
+Project API keys retain project-wide access.
 
 
 ## Sessions

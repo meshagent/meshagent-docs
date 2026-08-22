@@ -2256,6 +2256,9 @@ $ meshagent mailbox [OPTIONS] COMMAND [ARGS]...
 * `create`: Create a mailbox attached to the project.
 * `update`: Update a mailbox routing configuration.
 * `get`: Get mailbox details.
+* `deliveries`: List outbound deliveries for a mailbox,...
+* `delivery`: Get the current status and SMTP details...
+* `delivery-events`: List a delivery's events in chronological...
 * `list`: List mailboxes for the project.
 * `delete`: Delete a mailbox.
 
@@ -2319,6 +2322,74 @@ $ meshagent mailbox get [OPTIONS] ADDRESS
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent mailbox deliveries`
+
+List outbound deliveries for a mailbox, newest submission first.
+
+**Usage**:
+
+```console
+$ meshagent mailbox deliveries [OPTIONS] ADDRESS
+```
+
+**Arguments**:
+
+* `ADDRESS`: Mailbox address  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--status [accepted|deferred|delivered|failed]`: Filter by current delivery status
+* `--recipient TEXT`: Recipient contains filter
+* `--message-id TEXT`: Exact Message-ID filter
+* `--count INTEGER RANGE`: Maximum rows to return  [default: 100; x&gt;=1]
+* `--offset INTEGER RANGE`: Row offset for pagination  [default: 0; x&gt;=0]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent mailbox delivery`
+
+Get the current status and SMTP details for a delivery.
+
+**Usage**:
+
+```console
+$ meshagent mailbox delivery [OPTIONS] ADDRESS DELIVERY_ID
+```
+
+**Arguments**:
+
+* `ADDRESS`: Mailbox address  [required]
+* `DELIVERY_ID`: Delivery ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent mailbox delivery-events`
+
+List a delivery&#x27;s events in chronological order.
+
+**Usage**:
+
+```console
+$ meshagent mailbox delivery-events [OPTIONS] ADDRESS DELIVERY_ID
+```
+
+**Arguments**:
+
+* `ADDRESS`: Mailbox address  [required]
+* `DELIVERY_ID`: Delivery ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--count INTEGER RANGE`: Maximum rows to return  [default: 100; x&gt;=1]
+* `--offset INTEGER RANGE`: Row offset for pagination  [default: 0; x&gt;=0]
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ### `meshagent mailbox list`
