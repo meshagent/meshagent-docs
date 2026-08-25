@@ -40,6 +40,8 @@ MeshAgent signs participant tokens automatically for room connections it creates
 - **End-user connections**: When a participant connects to the room, MeshAgent looks up the participant’s permissions and returns the JWT to the browser or client that is joining the room.
 - **Custom apps built on MeshAgent**: When building a custom app on MeshAgent, create a `ParticipantToken` and define permissions for your users.
 
+Service-account API keys authenticate the service account; they do not bypass room or agent policy. Tokens requested normally use the service account's effective resource role. A service account with `participant_token_creator` can pass `user_id` when connecting to a room or agent, or when requesting a participant token, to act for that user. MeshAgent still derives the token permissions from the target user's effective role on the requested resource.
+
 ## Generate a token from the CLI
 
 Use `meshagent token` when you need to sign a participant token yourself.
