@@ -314,6 +314,34 @@ Delivery routes require `mailboxes:read` plus the project
 not repeat the mailbox address because it is already part of the request path.
 Project API keys retain project-wide access.
 
+### Delivery status API
+
+`GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries` returns one
+current delivery record per recipient. Results are newest first and the response
+has the shape `{ "deliveries": [...], "total": number }`. It accepts:
+
+| Query parameter | Description |
+| --- | --- |
+| `status` | Current status: `accepted`, `deferred`, `delivered`, or `failed`. |
+| `recipient` | Case-insensitive recipient substring. |
+| `message_id` | Exact message ID. |
+| `count` | Page size from 1 through 1000; defaults to 100. |
+| `offset` | Zero-based row offset; defaults to 0. |
+
+`GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries/{delivery_id}`
+returns `{ "delivery": {...} }`. The record contains the current status,
+submission and recipient identifiers, status timestamps, attempt count, and
+the latest available SMTP, MX host, TLS, and failure details.
+
+`GET /accounts/projects/{project_id}/mailboxes/{address}/deliveries/{delivery_id}/events`
+returns `{ "events": [...], "total": number }`. It accepts `count` and
+`offset`, and returns events in chronological order. The normalized event types
+are `accepted`, `temporary_failed`, `delivered`, and `permanent_failed`; their
+resulting delivery statuses are `accepted`, `deferred`, `delivered`, and
+`failed`, respectively. Each event includes its occurrence and receipt times,
+provider event ID, resulting status, and any provider-supplied attempt, SMTP,
+MX host, TLS, certificate, reason, and description fields.
+
 
 ## Sessions
 Inspect active/recent sessions and fetch diagnostics, or terminate sessions.

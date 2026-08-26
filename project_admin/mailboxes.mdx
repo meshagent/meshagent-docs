@@ -40,7 +40,51 @@ meshagent mailbox delivery-events support@mail.meshagent.com DELIVERY_ID
 
 The delivery list is newest submission first. A submission with multiple
 recipients has one delivery row per recipient because their outcomes and retry
-timelines can differ. Delivery events are oldest first.
+timelines can differ. Use `--status`, `--recipient`, or `--message-id` to narrow
+the list, and use `--output json` when calling the commands from a script:
+
+```bash
+meshagent mailbox deliveries support@mail.meshagent.com \
+  --status deferred \
+  --recipient example.com \
+  --output json
+
+meshagent mailbox delivery-events support@mail.meshagent.com DELIVERY_ID \
+  --count 100 \
+  --offset 0 \
+  --output json
+```
+
+### Delivery statuses and events
+
+A delivery is the current rollup for one recipient. Its `status` is one of:
+
+| Status | Meaning |
+| --- | --- |
+| `accepted` | The provider accepted the message for delivery. |
+| `deferred` | A delivery attempt failed temporarily and may be retried. |
+| `delivered` | The provider reported successful delivery. |
+| `failed` | The provider reported a permanent delivery failure. |
+
+The delivery also contains the latest provider details, including
+`attempt_count`, SMTP response codes, failure reason and description, MX host,
+and TLS and certificate-verification results when the provider supplies them.
+
+Delivery events are the chronological history behind that current status. The
+API normalizes provider notifications into these event types:
+
+| Event type | Resulting delivery status |
+| --- | --- |
+| `accepted` | `accepted` |
+| `temporary_failed` | `deferred` |
+| `delivered` | `delivered` |
+| `permanent_failed` | `failed` |
+
+Each event includes `occurred_at` and `received_at`, its resulting `status`, and
+the provider and provider event ID. When available, it also includes the
+attempt number, SMTP and enhanced SMTP codes, reason, description, MX host,
+TLS use, and certificate-verification result. Events are returned oldest first,
+ordered by `occurred_at` and then event ID.
 
 In Studio, open the mailbox options menu and select **Deliveries...**. Select a
 delivery row to open its event timeline.
