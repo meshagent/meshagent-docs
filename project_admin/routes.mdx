@@ -49,7 +49,10 @@ paths:
   - path: /
     pathType: prefix
     targetPort: 5002
+    unavailable: errors/unavailable.html
 ```
+
+For a service route, `unavailable` names a file in the room storage root to return when the room, published service, container, or tunnel is unavailable. The fallback response has status `503`. A leading `/` is accepted but remains storage-relative, so `/errors/unavailable.html` does not address the host filesystem. Application responses, including an intentional `503` returned by the service itself, are passed through unchanged.
 
 ```console
 meshagent route create -f route.yaml
@@ -103,6 +106,7 @@ paths:
     pathType: prefix
     targetContent:
       subpath: websites/docs
+      notFound: errors/404.html
       index: true
       iap: false
       compression: brotli
@@ -117,6 +121,8 @@ paths:
 ```
 
 This exposes `websites/docs/logo.svg` as `/logo.svg`. With `index: true`, requests for the route root and directories serve `index.html`, such as `websites/docs/index.html` and `websites/docs/guide/index.html`.
+
+When a requested object does not exist, `notFound` names a fallback file relative to the same `targetContent.subpath`. In the example, a missing object serves `websites/docs/errors/404.html` with status `404`. A leading `/` is accepted but still resolves beneath `websites/docs`; it never changes the storage root. If the fallback file is also missing, the normal not-found response is returned.
 
 Content routes support `GET`, `HEAD`, and CORS preflight `OPTIONS` requests. CORS rules use the familiar object-storage controls for allowed origins, methods, and headers, exposed response headers, preflight cache age, and credentials. Credentialed CORS rules must list explicit origins rather than `*`.
 
