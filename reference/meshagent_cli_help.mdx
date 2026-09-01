@@ -41,6 +41,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `feed`: Manage feeds for your project
 * `subscription`: Manage feed subscriptions for your project
 * `route`: Manage routes for your project
+* `custom-domain`: Manage custom domains for project routes
 * `registry`: Manage registries for your project
 * `build`: Build a container image inside a room.
 * `deploy`: Create or update a room service from an...
@@ -2863,6 +2864,107 @@ $ meshagent route delete [OPTIONS] DOMAIN
 **Arguments**:
 
 * `DOMAIN`: Domain name to delete  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+## `meshagent custom-domain`
+
+Manage custom domains for project routes
+
+**Usage**:
+
+```console
+$ meshagent custom-domain [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Register an immutable custom domain and...
+* `get`: Show availability and the DNS records that...
+* `list`: List registered custom domains and...
+* `delete`: Delete a custom domain after all covered...
+
+### `meshagent custom-domain create`
+
+Register an immutable custom domain and begin certificate provisioning.
+
+**Usage**:
+
+```console
+$ meshagent custom-domain create [OPTIONS] DOMAIN
+```
+
+**Arguments**:
+
+* `DOMAIN`: Exact domain or wildcard such as *.example.com  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent custom-domain get`
+
+Show availability and the DNS records that must be published.
+
+**Usage**:
+
+```console
+$ meshagent custom-domain get [OPTIONS] DOMAIN
+```
+
+**Arguments**:
+
+* `DOMAIN`: Exact registered domain  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent custom-domain list`
+
+List registered custom domains and certificate availability.
+
+**Usage**:
+
+```console
+$ meshagent custom-domain list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--filter TEXT`: Lowercase contains filter
+* `--count INTEGER`: Maximum number of domains to return  [default: 100]
+* `--view [my|all]`: List directly accessible domains or all domains  [default: my]
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent custom-domain delete`
+
+Delete a custom domain after all covered routes have been removed.
+
+**Usage**:
+
+```console
+$ meshagent custom-domain delete [OPTIONS] DOMAIN
+```
+
+**Arguments**:
+
+* `DOMAIN`: Exact registered domain  [required]
 
 **Options**:
 
