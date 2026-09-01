@@ -1,0 +1,127 @@
+---
+title: Custom Domains
+description: Authorize a domain, configure DNS, and assign it to MeshAgent routes.
+---
+
+Custom Domains let a project use domains it owns for MeshAgent routes. A project can own
+multiple Custom Domain resources, and each resource can authorize either one hostname or a
+one-label wildcard.
+
+Custom Domains are separate from routes. A route still has exactly one `domain` field:
+
+```yaml
+version: v1
+kind: Route
+metadata:
+  name: docs
+domain: docs.example.com
+backend:
+  room:
+    name: docs
+paths:
+  - path: /
+    pathType: prefix
+    targetPort: 8080
+```
+
+There is no Custom Domain ID on the route. When a route is created or updated, MeshAgent
+matches its domain against an available Custom Domain in the same project and checks that the
+caller can use that resource.
+
+## Exact and wildcard resources
+
+An exact resource such as `docs.example.com` authorizes only that hostname. A wildcard resource
+such as `*.example.com` authorizes one label below `example.com`, including
+`docs.example.com`, but not `example.com` or `api.docs.example.com`.
+
+The domain is the resource identifier and cannot be changed after creation. Delete the resource
+and create another one to use a different domain. MeshAgent rejects overlapping exact and
+wildcard resources so route authorization remains unambiguous.
+
+## Create a Custom Domain
+
+```bash
+meshagent custom-domain create docs.example.com --project-id PROJECT_ID
+meshagent custom-domain get docs.example.com --project-id PROJECT_ID
+```
+
+The create and get responses contain the DNS authorization record. Add that record at your DNS
+provider exactly as returned. Certificate Manager uses the record to prove control of the domain.
+Keep the authorization CNAME in place so Google can renew the certificate. It must be the only
+record at its returned DNS name; do not add a TXT, A, or other record at that same validation
+name. For wildcard certificates, MeshAgent returns the authorization record under the parent
+domain as required by Certificate Manager. Do not point the application hostname at the
+MeshAgent Gateway until the response reports `available: true`.
+
+After the certificate is available, create the application DNS record returned by MeshAgent. It
+points the hostname at the dedicated Custom Domain Gateway and does not affect MeshAgent's stock
+route domains. Copy the returned routing records as a set: a deployment returns either one CNAME
+target or its A/AAAA address targets, never a CNAME alongside address records.
+
+```bash
+meshagent custom-domain list --project-id PROJECT_ID
+meshagent custom-domain delete docs.example.com --project-id PROJECT_ID
+```
+
+A Custom Domain cannot be deleted while a route uses the exact hostname or a hostname covered
+by its wildcard.
+
+## Lifecycle and availability
+
+The API exposes the reconciled state rather than performing Google Cloud operations in the
+request path. A resource moves through these phases:
+
+- `pending_dns`: the DNS authorization record has not propagated yet.
+- `provisioning_certificate`: Google is issuing the managed certificate.
+- `provisioning_map_entry`: the certificate is being attached to the Gateway certificate map.
+- `available`: the certificate map entry is active and the domain can be assigned to a route.
+- `degraded`: provisioning previously succeeded but Google now reports an unhealthy resource.
+- `failed`: reconciliation failed; inspect `conditions` for the reason.
+- `deleting`: MeshAgent is deleting the map entry, certificate, and DNS authorization.
+
+`available` is true only when Certificate Manager reports an active certificate and serving map
+entry. DNS and certificate issuance can take time; clients should poll `get` with normal backoff.
+
+## Permissions
+
+Custom Domains have direct `viewer`, `user`, and `admin` roles. Their effective permissions are:
+
+- `accessible`: list or view the resource.
+- `can_use`: assign a matching domain to a route.
+- `can_manage`: create access grants or delete the resource.
+- `can_inventory`: list all Custom Domains in the project.
+
+Project roles provide project-wide access:
+
+- `custom_domain_creator`
+- `custom_domain_inventory`
+- `custom_domain_manager`
+
+Creating a route requires normal route permissions and `can_use` on the matching Custom Domain.
+Updating a route performs the same check. Built-in MeshAgent route domains continue to use the
+existing route permissions only.
+
+## IAP and cookies
+
+IAP continues to use the fixed MeshAgent API callback domain, so OAuth providers do not need a
+callback registration for every custom hostname. After authentication, MeshAgent transfers a
+short-lived token to the route's `/.meshagent/auth` endpoint and installs a secure, host-only
+cookie for that concrete hostname.
+
+Sessions are bound to the normalized route hostname. A session created for one custom hostname
+cannot be replayed on another hostname, including a sibling covered by the same wildcard.
+Production redirects must use HTTPS and must resolve to an active route. MeshAgent strips its IAP
+cookie before proxying a request to the application.
+
+## REST API
+
+Custom Domain resources are addressed by their URL-encoded domain:
+
+```text
+POST   /accounts/projects/{project_id}/custom-domains
+GET    /accounts/projects/{project_id}/custom-domains
+GET    /accounts/projects/{project_id}/custom-domains/{domain}
+DELETE /accounts/projects/{project_id}/custom-domains/{domain}
+```
+
+The domain is immutable, so there is no update endpoint for changing it.
