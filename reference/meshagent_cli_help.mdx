@@ -194,6 +194,8 @@ $ meshagent project [OPTIONS] COMMAND [ARGS]...
 * `get`: Get a MeshAgent project.
 * `set-room-roles`: Set authoritative project room-role...
 * `reset-room-roles`: Remove the project room-role override and...
+* `get-llm-router-config`: Get the complete LLM router configuration...
+* `set-llm-router-config`: Validate and replace allowedModels, apps,...
 * `activate`: Set the active project for subsequent CLI...
 
 ### `meshagent project create`
@@ -276,6 +278,41 @@ Remove the project room-role override and restore built-in defaults.
 ```console
 $ meshagent project reset-room-roles [OPTIONS]
 ```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+### `meshagent project get-llm-router-config`
+
+Get the complete LLM router configuration as YAML. The document contains allowedModels, apps, and rules.
+
+**Usage**:
+
+```console
+$ meshagent project get-llm-router-config [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `-o, --output PATH`: Write YAML to this file instead of stdout.
+* `--help`: Show this message and exit.
+
+### `meshagent project set-llm-router-config`
+
+Validate and replace allowedModels, apps, and rules from YAML. Providers: openai, anthropic, grok. APIs: completions, chat_completions, responses, messages, realtime. Transports: http, websocket. App modes: allowed, blocked. Ensure tools: web_search, static, advice; other tool types are filter-only. Search context: low, medium, high. Advice strategy: parallel.
+
+**Usage**:
+
+```console
+$ meshagent project set-llm-router-config [OPTIONS] FILE
+```
+
+**Arguments**:
+
+* `FILE`: LLM router configuration YAML  [required]
 
 **Options**:
 
