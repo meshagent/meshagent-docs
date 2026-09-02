@@ -1,4 +1,4 @@
-# meshagent room connect --room=my-room --identity=sample-participant -- python3 llm-proxy-anthropic-sdk.py
+# python3 llm-proxy-anthropic-sdk.py
 
 import os
 from anthropic import Anthropic
@@ -6,6 +6,7 @@ from anthropic import Anthropic
 client = Anthropic(
     base_url=os.environ["ANTHROPIC_BASE_URL"],
     api_key=os.environ["ANTHROPIC_API_KEY"],
+    default_headers={"Meshagent-Project-Id": os.environ["MESHAGENT_PROJECT_ID"]},
 )
 
 message = client.messages.create(

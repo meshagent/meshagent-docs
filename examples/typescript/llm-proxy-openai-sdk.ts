@@ -1,4 +1,4 @@
-// meshagent room connect --room=my-room --identity=sample-participant -- npx tsx llm-proxy-openai-sdk.ts
+// npx tsx llm-proxy-openai-sdk.ts
 
 import OpenAI from "openai";
 
@@ -6,6 +6,9 @@ async function main() {
   const client = new OpenAI({
     baseURL: process.env.OPENAI_BASE_URL!,
     apiKey: process.env.OPENAI_API_KEY!,
+    defaultHeaders: {
+      "Meshagent-Project-Id": process.env.MESHAGENT_PROJECT_ID!,
+    },
   });
 
   const response = await client.responses.create({

@@ -1,4 +1,4 @@
-# meshagent room connect --room=my-room --identity=sample-participant -- python3 llm-proxy-openai-sdk.py
+# python3 llm-proxy-openai-sdk.py
 
 import os
 from openai import OpenAI
@@ -6,6 +6,7 @@ from openai import OpenAI
 client = OpenAI(
     base_url=os.environ["OPENAI_BASE_URL"],
     api_key=os.environ["OPENAI_API_KEY"],
+    default_headers={"Meshagent-Project-Id": os.environ["MESHAGENT_PROJECT_ID"]},
 )
 
 response = client.responses.create(
