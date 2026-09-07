@@ -5407,10 +5407,32 @@ $ meshagent room sqlite database [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `restore`: Restore replica history to a new local...
 * `list`: List SQLite databases in a room namespace.
 * `create`: Create a SQLite database in a room.
 * `drop`: Drop a SQLite database in a room.
 * `inspect`: Inspect a SQLite database in a room.
+
+##### `meshagent room sqlite database restore`
+
+Restore replica history to a new local SQLite file, with full validation.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database restore [OPTIONS]
+```
+
+**Options**:
+
+* `--source TEXT`: Copied replica directory, or gs:// replica URL  [required]
+* `-o, --output PATH`: New local SQLite file; never overwritten
+* `--txid TEXT`: Exact 16-digit hexadecimal TXID; defaults to latest
+* `--dry-run`: Reconstruct and validate without publishing a file
+* `--report PATH`: Also write JSON results to a new report file
+* `--expected-sha256 TEXT`: Expected database SHA-256 from planning; fail if the result differs
+* `--recovery-tool PATH`: Path to meshagent-sqlite-recover executable
+* `--help`: Show this message and exit.
 
 ##### `meshagent room sqlite database list`
 
