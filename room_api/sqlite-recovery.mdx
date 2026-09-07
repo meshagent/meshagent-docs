@@ -1,0 +1,204 @@
+---
+title: "SQLite recovery"
+description: "Validate and restore replica history to a separate SQLite database."
+---
+
+Use `meshagent room sqlite database restore` when you have a copied SQLite replica
+or direct access to its Google Cloud Storage prefix. Recovery does not require a
+working room SQLite connection. It creates a **new local SQLite file**; it does
+not replace, reset, or migrate the room database.
+
+## Install the recovery helper
+
+The standalone CLI build bundles `meshagent-sqlite-recover`, built from MeshAgent's vendored
+Litestream source. Python-package installations need the helper installed separately. A stock upstream `litestream` executable is not this helper.
+From a MeshAgent repository checkout with Go installed:
+
+```sh
+./meshagent-sdk/meshagent-cli/scripts/build-sqlite-recovery.sh ./bin/meshagent-sqlite-recover
+```
+
+Put the executable on `PATH`, or pass its path with `--recovery-tool`. The CLI
+checks the helper's protocol version before starting recovery. The helper is not
+yet bundled into the Python wheel; installing `meshagent-cli` alone does not
+install the native executable.
+
+## Validate before restoring
+
+The source directory must contain the original `ltx/` directory and its numbered
+level directories. Preserve the original objects, including failed snapshots.
+The recovery engine identifies and reports invalid objects itself.
+
+If a server reports a failed final upload, also preserve any
+`.litestream-unsynced-*.ltx` or `.litestream-orphaned-*.buffer` files in its write
+buffer directory. These contain local forensic evidence and are kept outside the
+replica layout. They may include uncommitted or conflicting writes, so this
+restore command does not replay them automatically.
+
+```sh
+meshagent room sqlite database restore \
+  --source ./copied-replica \
+  --dry-run \
+  --report ./recovery-plan.json \
+  --recovery-tool ./bin/meshagent-sqlite-recover
+```
+
+A dry run reconstructs into temporary storage and runs full SQLite integrity and
+foreign-key checks. It publishes no SQLite database. Allow temporary disk space
+for the copied LTX objects plus the reconstructed database.
+
+For a directly accessible GCS replica, `--source gs://BUCKET/DATABASE_PREFIX` uses
+Google Application Default Credentials with read access. Use the database prefix
+containing `ltx/`, not the bucket root. This path does not use MeshAgent room-login
+credentials or require Kubernetes access. No remote object is changed.
+
+## Write a recovery candidate
+
+```sh
+meshagent room sqlite database restore \
+  --source ./copied-replica \
+  --output ./recovered.sqlite \
+  --report ./recovery-result.json \
+  --recovery-tool ./bin/meshagent-sqlite-recover
+```
+
+Both output paths must be new. A failed reconstruction never publishes a
+successful database output. If the validated candidate is published but syncing
+its directory fails, recovery reports failure and preserves the candidate at the
+reported output path; its durability is unconfirmed. Source files are preserved. Once recovery runs,
+its JSON result is printed to stdout; `--report` also saves it to a new file.
+Argument errors or an unavailable/incompatible helper may produce a CLI error
+instead. Exit code zero means the requested operation validated successfully;
+a nonzero exit code means failure. The CLI checks a restored file's path and
+SHA-256 against the helper's report before reporting success.
+The CLI reserves `--report` before launching recovery. If launch fails after
+that reservation, the command exits nonzero and may leave an empty report file.
+It preserves that path rather than deleting it during cleanup. An empty report
+is not a successful result; use a fresh attempt directory when retrying.
+It also requires hashes and valid metadata for every selected source, and checks
+that their transaction ranges form a contiguous chain ending at the requested
+target. The native helper validates and hashes the source bytes themselves.
+
+To require the exact database validated by a previous plan, pass its
+`output_sha256` as `--expected-sha256`, together with its transaction ID. A hash
+mismatch produces a JSON failure and nonzero exit code. The reconstructed
+candidate may already exist; it is preserved with its actual hash in the failed
+report and must not be activated. The option also works with `--dry-run`.
+
+If the CLI cannot open or read the candidate during checksum verification, it
+preserves the file and emits a JSON failure, also saving it to `--report` when
+possible. The included checksum is the helper's reported checksum; the CLI has
+not confirmed it. Resolve the read error and validate the candidate before use.
+After reading the checksum, the CLI checks that the output path still refers
+to the file it read. Removal or replacement during verification produces a JSON
+failure and leaves any replacement untouched. This check does not prevent later
+changes; keep each recovery attempt in its own directory until it is reviewed.
+
+Before acknowledging a saved report, the CLI syncs both its contents and its
+parent directory so the new filename is included in the durability check.
+If saving or syncing `--report` fails after recovery, the CLI exits nonzero and
+prints a JSON failure to stdout, preserving the candidate's path and hash when
+available. A validated candidate is kept. The saved report may be incomplete or
+contain the earlier result from before the reporting error; use the exit code
+and stdout failure, not that file, to decide whether the command succeeded.
+Before reporting success, the CLI also checks that the report path still refers
+to the file it reserved. If the path was removed or replaced during recovery,
+it reports failure and preserves the candidate and any replacement report.
+
+If the helper exits without a valid report, the CLI emits and saves a JSON
+failure with an unverified-outcome message and exits nonzero, even if the helper
+returned exit code zero. This also covers output interrupted inside a UTF-8
+character on stdout or stderr. A file may already exist at the requested output
+path; it is preserved for inspection. The failure does not claim a recovered transaction,
+output checksum, or validated output path. `requested_txid` is empty when the
+latest target could not be established from the missing report. Inspect and
+validate any existing candidate before retrying or using it.
+
+While waiting for recovery, the CLI forwards SIGINT and SIGTERM to its helper
+and waits for cleanup and the final report. An interrupted invocation exits
+nonzero even if publication finished just before cancellation. Any published
+candidate is preserved for inspection. This does not cover forced termination
+(SIGKILL), interruption during the initial helper version probe, or a backend
+operation that cannot be interrupted; those cases may leave an empty report or
+temporary files and require inspection before retrying.
+
+The report fields are:
+
+- The requested and recovered transaction IDs.
+- Selected LTX files and their SHA-256 hashes.
+- Rejected objects and validation errors.
+- Any unused pages filled with zeros.
+- Integrity and foreign-key check results.
+- The output file's SHA-256 hash when reconstruction succeeds.
+
+The default target is the latest transaction observed in the inventory, even if
+its snapshot is invalid. Recovery fails if validated history cannot reach that
+target. It never silently restores an older transaction. To explicitly choose
+an earlier boundary, pass its 16-digit hexadecimal ID:
+
+```sh
+meshagent room sqlite database restore \
+  --source ./copied-replica \
+  --txid 00000000000000b3 \
+  --output ./recovered-b3.sqlite \
+  --recovery-tool ./bin/meshagent-sqlite-recover
+```
+
+Execution validates the sources again; a previous dry-run report is not a promise
+that remote history will remain unchanged. Reconstruction uses private staged
+copies, so later changes cannot alter bytes already copied. Listing and staging
+are separate operations, not an atomic snapshot of a changing replica. Preserve
+a replica copy and pin the planned transaction and output hash for automation.
+
+## Automate candidate creation on Linux
+
+This shell example uses `jq` and a unique directory for each attempt. It stops on
+any failed command and pins execution to the transaction and database hash selected during planning.
+New transactions arriving after planning therefore cannot change the target of
+this attempt. Keep the directory and its reports when a command fails.
+
+```sh
+set -eu
+attempt=$(mktemp -d ./sqlite-recovery.XXXXXX)
+
+meshagent room sqlite database restore \
+  --source ./copied-replica \
+  --dry-run \
+  --report "$attempt/plan.json"
+
+target=$(jq -er '.requested_txid' "$attempt/plan.json")
+expected_sha256=$(jq -er '.output_sha256' "$attempt/plan.json")
+
+meshagent room sqlite database restore \
+  --source ./copied-replica \
+  --txid "$target" \
+  --expected-sha256 "$expected_sha256" \
+  --output "$attempt/candidate.sqlite" \
+  --report "$attempt/result.json"
+```
+
+The helper must already be on `PATH` or bundled with the standalone CLI; you can
+also add `--recovery-tool` to both invocations. Use a preserved replica copy when
+possible: pinning the transaction does not prevent remote retention from deleting
+source objects between planning and execution. A failed attempt must not trigger
+activation or an automatic retry at an older transaction. Start a fresh attempt
+directory after resolving the failure, and run application-specific receipt and
+revision checks on the candidate before any coordinated live replacement.
+
+## Missing pages and application validation
+
+Recovery can fill a missing SQLite freelist **leaf** with zeros when the target
+state's freelist proves that page is unused. It also permits the reserved SQLite
+lock page to be absent. It rejects missing live pages,
+freelist trunks, and invalid freelist metadata. It does not invoke SQLite's
+best-effort `.recover` salvage command or guess missing live records.
+
+A successful integrity check establishes database structural validity. Verify
+application receipts, revisions, and expected records before returning a recovery
+candidate to service. A successful restore does not prove that an operation whose
+client response was lost committed.
+
+There is no automatic live-database activation in this command. Keep the original
+replica and candidate until application validation is complete. Live replacement
+requires coordinated writer fencing and connection invalidation; do not overwrite
+objects beneath an active VFS connection.
