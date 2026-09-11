@@ -37,6 +37,31 @@ Run `meshagent process join --help` to see the current tool flags and related co
 | Web search | `WebSearchTool` | `--web-search` | Search the web |
 | Web fetch | `WebFetchTool` | `--web-fetch` | Fetch and read web pages directly |
 
+### Managed-agent web-search domains
+
+In a managed agent's configuration, set `allowed_domains` to restrict web search to
+specific domains, or `blocked_domains` to exclude domains:
+
+```yaml
+toolkits:
+  - type: web_search
+    allowed_domains:
+      - example.com
+      - example.org
+```
+
+Use domain names without `http://` or `https://`. OpenAI includes subdomains and
+supports up to 100 entries in each list, including both lists together. Anthropic
+supports either list individually and rejects configurations with both nonempty.
+Omitting both lists keeps web search unrestricted by domain.
+
+When using the Python OpenAI SDK integration directly, pass the same options to
+`meshagent.openai.tools.responses_adapter.WebSearchTool`:
+
+```python
+WebSearchTool(blocked_domains=["example.com"])
+```
+
 ### Storage and memory
 
 | Capability | Toolkit or tool | Flags | What it does |
