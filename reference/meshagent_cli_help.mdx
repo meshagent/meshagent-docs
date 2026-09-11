@@ -52,6 +52,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `process`: Run process-backed agents
 * `room`: Operate within a room
 * `llm`: Local LLM proxy utilities
+* `oauth-client`: Manage OAuth clients and login branding
 
 ## `meshagent version`
 
@@ -6921,4 +6922,88 @@ $ meshagent llm proxy [OPTIONS]
 * `--token-from-env TEXT`: Name of environment variable containing a MeshAgent token to forward upstream.
 * `--insecure`: Disable local bearer-token enforcement.
 * `--tui / --no-tui`: Show the live usage dashboard when attached to a TTY.  [default: tui]
+* `--help`: Show this message and exit.
+
+## `meshagent oauth-client`
+
+Manage OAuth clients and login branding
+
+**Usage**:
+
+```console
+$ meshagent oauth-client [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `create`: Create an authorization-code client.
+* `update`: Update login branding, preserving other...
+* `get`: Show an OAuth client's configuration and...
+
+### `meshagent oauth-client create`
+
+Create an authorization-code client. The output includes its new secret.
+
+**Usage**:
+
+```console
+$ meshagent oauth-client create [OPTIONS]
+```
+
+**Options**:
+
+* `--name TEXT`: Application name shown at login  [required]
+* `--redirect-uri TEXT`: Allowed callback URL; repeat for multiple URLs  [required]
+* `--scope TEXT`: OAuth scopes  [required]
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--logo-url TEXT`: Optional HTTP(S) login logo URL
+* `--theme [light|dark|auto]`: Login appearance  [default: auto]
+* `--help`: Show this message and exit.
+
+### `meshagent oauth-client update`
+
+Update login branding, preserving other client settings and metadata.
+
+**Usage**:
+
+```console
+$ meshagent oauth-client update [OPTIONS] CLIENT_ID
+```
+
+**Arguments**:
+
+* `CLIENT_ID`: OAuth client ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--name TEXT`: Application name shown at login
+* `--logo-url TEXT`: HTTP(S) login logo URL
+* `--theme [light|dark|auto]`: Login appearance: light, dark, or auto
+* `--clear-logo / --no-clear-logo`: Restore the default MeshAgent logo  [default: no-clear-logo]
+* `--help`: Show this message and exit.
+
+### `meshagent oauth-client get`
+
+Show an OAuth client&#x27;s configuration and branding.
+
+**Usage**:
+
+```console
+$ meshagent oauth-client get [OPTIONS] CLIENT_ID
+```
+
+**Arguments**:
+
+* `CLIENT_ID`: OAuth client ID  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `--help`: Show this message and exit.

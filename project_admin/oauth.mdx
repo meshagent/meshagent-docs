@@ -95,3 +95,61 @@ External OAuth registrations live under the project or a room:
 - [Participant Tokens](../rest_api/participant_tokens)
 - [API Scopes](../rest_api/api_scopes)
 - [MeshAgent Studio](../interfaces/meshagent_studio)
+
+## Login branding
+
+In Studio, open **Account management**, select your project, then open **OAuth Clients**
+and create or edit a client. Set **Login logo URL** to an absolute HTTP(S) image URL
+and choose **Login appearance**: **Light**, **Dark**,
+or **Auto (system)**. Leave the logo empty to use MeshAgent's logo. Auto follows the
+browser's color preference. These settings also apply to the OAuth consent screen.
+
+The same settings are available through the CLI:
+
+```bash
+meshagent oauth-client update CLIENT_ID --logo-url https://example.com/logo.svg --theme dark
+meshagent oauth-client update CLIENT_ID --clear-logo --theme auto
+meshagent oauth-client get CLIENT_ID
+```
+
+For API clients, these optional settings live alongside `name` in the OAuth client's
+`metadata` object: `logo_url` and `theme` (`light`, `dark`, or `auto`). Preserve other
+metadata entries when updating the object. Remove `logo_url` to restore the default
+logo; omitted `theme` defaults to `auto`.
+
+## Email and password login
+
+Deployment administrators can enable email/password login alongside Google and
+Microsoft in the MeshAgent Helm chart:
+
+```yaml
+meshagent:
+  router:
+    emailPasswordLoginEnabled: true
+```
+
+It is disabled by default. Enable the email provider in the deployment's Supabase
+Auth configuration as well, with email confirmation required. For self-hosted
+Supabase, set `GOTRUE_MAILER_AUTOCONFIRM=false` (the local k3s default). New accounts
+must confirm their email before they can sign in or complete OAuth authorization.
+Supabase controls signup availability, password policy, rate limits, and email delivery.
+Allow the router's `/login` and `/oauth/login` URLs (including query parameters)
+in Supabase's redirect allow list so confirmation and recovery links return to the
+login flow. Supabase's public Auth URL (`API_EXTERNAL_URL` for self-hosted Supabase)
+must be reachable by users' browsers so email links can be opened.
+
+Users can enter an email, continue with a password, create an account, or choose
+**Forgot password?**. Confirmation and recovery links return to the same branded
+login flow. Verification-code entry is also supported if your Supabase email
+templates include `{{ .Token }}`. Passwords and Supabase session tokens are never
+included in OAuth client metadata; the router stores the authenticated session in
+its existing HTTP-only browser session.
+
+The live regression test is
+`meshagent-cloud-smoke/meshagent_cloud_smoke/email_login_live_smoke_test.py`. Run it
+with `RUN_MESHAGENT_CLOUD_SMOKE=1`, `MESHAGENT_API_URL`, `MESHAGENT_PROJECT_ID`,
+`SUPABASE_URL`, and the Supabase service-role `SUPABASE_KEY`. It creates and removes
+a temporary `tmp-<random>@timu.com` user and OAuth client. Confirmation uses an
+admin-generated code, and recovery uses an admin-generated link, so delivered
+email is not required. The test also checks forced light/dark themes, automatic
+theme changes, custom branding on consent, and the OAuth token exchange.
