@@ -1,9 +1,56 @@
 ---
-title: "SQLite recovery"
-description: "Validate and restore replica history to a separate SQLite database."
+title: "SQLite backup, restore, and recovery"
+description: "Back up room databases to local SQLite files, restore new databases, or recover replica history."
 ---
 
-Use `meshagent room sqlite database restore` when you have a copied SQLite replica
+## Back up and restore a room database
+
+These commands require a room server with SQLite backup/restore support and use
+ordinary room authentication. No cloud-storage credentials or recovery helper are
+needed. Add `--project-id` if you do not have an activated project; use repeatable
+`-n` options for a database namespace on both commands.
+
+```sh
+meshagent room sqlite backup \
+  --room xhominid --database xahoy_app -n xahoy \
+  --output ./xahoy_app.sqlite
+
+meshagent room sqlite restore \
+  --room xhominid --database xahoy_restored -n xahoy \
+  --input ./xahoy_app.sqlite
+```
+
+Backup takes a consistent snapshot including committed WAL data, tables, indexes,
+views, triggers, blobs, and SQLite sequence state. It streams a standalone SQLite
+file, verifies its size and SHA-256, and publishes the local filename only after
+successful completion. An existing local output is never overwritten. Whole-file
+backup requires database access without table restrictions. Snapshot creation can
+hold up writes while SQLite copies the database.
+
+Restore streams the file to private server scratch storage, verifies the transfer,
+and runs SQLite integrity and foreign-key checks before creating the destination.
+The target database name must be new. Restoring copies database pages, so it does
+not run insertion triggers. Success is reported after replica synchronization for
+replicated databases. Source files with a WAL or rollback journal must first be
+converted to a standalone backup. Uploads are limited to 64 GiB.
+
+Interrupted uploads are discarded. If the connection fails after the final upload
+confirmation, the server may have completed the restore: inspect the destination
+before retrying. A retry with the same name never overwrites a database. Retain the
+source database and backup until you have checked the restored database.
+
+Both operations use temporary disk space proportional to database size. Room pools
+mount disk-backed ephemeral SQLite scratch storage separately from their memory
+volumes. Explicit backup/restore integrity checks remain enabled even when full
+periodic retention verification is disabled.
+
+## Recover replica history
+
+The previous `room sqlite database restore` command is now `room sqlite recover`.
+Update recovery scripts to use the new name. To put its resulting file into a room,
+run `room sqlite restore --input recovered.sqlite --database NEW_NAME --room ROOM`.
+
+Use `meshagent room sqlite recover` when you have a copied SQLite replica
 or direct access to its Google Cloud Storage prefix. Recovery does not require a
 working room SQLite connection. It creates a **new local SQLite file**; it does
 not replace, reset, or migrate the room database.
@@ -36,7 +83,7 @@ replica layout. They may include uncommitted or conflicting writes, so this
 restore command does not replay them automatically.
 
 ```sh
-meshagent room sqlite database restore \
+meshagent room sqlite recover \
   --source ./copied-replica \
   --dry-run \
   --report ./recovery-plan.json \
@@ -55,7 +102,7 @@ credentials or require Kubernetes access. No remote object is changed.
 ## Write a recovery candidate
 
 ```sh
-meshagent room sqlite database restore \
+meshagent room sqlite recover \
   --source ./copied-replica \
   --output ./recovered.sqlite \
   --report ./recovery-result.json \
@@ -137,7 +184,7 @@ target. It never silently restores an older transaction. To explicitly choose
 an earlier boundary, pass its 16-digit hexadecimal ID:
 
 ```sh
-meshagent room sqlite database restore \
+meshagent room sqlite recover \
   --source ./copied-replica \
   --txid 00000000000000b3 \
   --output ./recovered-b3.sqlite \
@@ -161,7 +208,7 @@ this attempt. Keep the directory and its reports when a command fails.
 set -eu
 attempt=$(mktemp -d ./sqlite-recovery.XXXXXX)
 
-meshagent room sqlite database restore \
+meshagent room sqlite recover \
   --source ./copied-replica \
   --dry-run \
   --report "$attempt/plan.json"
@@ -169,7 +216,7 @@ meshagent room sqlite database restore \
 target=$(jq -er '.requested_txid' "$attempt/plan.json")
 expected_sha256=$(jq -er '.output_sha256' "$attempt/plan.json")
 
-meshagent room sqlite database restore \
+meshagent room sqlite recover \
   --source ./copied-replica \
   --txid "$target" \
   --expected-sha256 "$expected_sha256" \
