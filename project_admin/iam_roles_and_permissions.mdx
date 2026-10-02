@@ -37,7 +37,7 @@ Use the smallest role or scope that lets the subject do its job.
 
 ## Project Roles
 
-Project roles apply at the project level. `owner` is assigned to the project owner. `admin` inherits owner-level administrative capabilities. `developer` inherits a focused operational subset. Direct, narrower roles can also be granted independently.
+Project roles apply at the project level. The user who creates a project becomes its `owner` and automatically inherits `admin` access. Admins inherit `user_profile_editor` along with the other administrative project permissions. `developer` inherits a focused operational subset and does not include `user_profile_editor`. Direct, narrower roles can also be granted independently.
 
 | Role | Controls | What it allows |
 | --- | --- | --- |
@@ -92,16 +92,27 @@ Project roles apply at the project level. `owner` is assigned to the project own
 | `usage_reporter` | Usage reporting | Report or query project usage. |
 | `billing_manager` | Billing | Manage project billing. |
 | `group_manager` | Groups | Manage project groups. |
+| `user_profile_editor` | User profiles | Edit metadata, annotations, and first and last names for users who belong to the project. Inherited by project owners and admins. |
 
 Project membership APIs accept a `roles` list. The server normalizes project membership to include `member` and expands inherited `admin` and `developer` roles. Older member records and Studio convenience settings map to roles like this:
 
 | Setting | Expanded role effect |
 | --- | --- |
-| `is_admin` | Grants `admin` plus every non-core creator, inventory, manager, billing, usage, group, and LLM proxy role. |
+| `is_admin` | Grants `admin` plus every non-core creator, inventory, manager, billing, usage, group, LLM proxy, and user profile editor role. |
 | `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, developer inventory roles, `service_account_creator`, `service_account_inventory`, `participant_token_creator`, and `usage_reporter`. The `developer` relation also qualifies for LLM proxy use in access checks. |
 | `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
 | `can_create_agents` | Grants `agent_creator`. |
 | `can_use_llm_proxy` | Grants the direct `llm_proxy_user` role. |
+
+### User profile permissions
+
+Users can edit their own names and metadata with the OAuth `profile:write` scope. Editing another user or supplying annotations, including on your own profile, also requires `user_profile_editor` in a project containing the target user. Those requests must include `project_id`, a token scope covering that project (`project/{project_id}` or `project/*`), and `projects:iam.write`. The legacy `admin` scope is also accepted in place of `projects:iam.write`. The OAuth scopes and the project role are both required.
+
+Project creators inherit this permission through `owner` → `admin` → `user_profile_editor`; no separate editor grant is needed. You can grant `user_profile_editor` independently to a member who needs to edit profiles.
+
+Profile data is shared across all projects a user belongs to. The project determines permission to edit the profile; changes apply to the user's shared profile.
+
+See [User profiles in the REST API](../rest_api/overview#user-profiles) for request formats and SDK examples, or [Editing user profiles in Accounts](../interfaces/accounts#edit-user-profiles) for the app workflow.
 
 ## Room, Agent, and Repository Roles
 

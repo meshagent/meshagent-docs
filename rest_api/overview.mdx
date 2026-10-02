@@ -118,11 +118,12 @@ Project settings are independent documents named `openai`, `anthropic`, `otel`, 
 | `delete_project_settings_document(project_id, name)`                     | `DELETE /accounts/projects/{project_id}/settings/{name}`         | Revert one settings document to its unconfigured/default state.   |
 | `get_project_status(project_id)`                                         | `GET /accounts/projects/{project_id}/status`                     | Check whether the project is enabled.                             |
 | `get_project_role(project_id)`                                           | `GET /accounts/projects/{project_id}/role`                       | Get your role in the project.                                     |
-| `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user with project roles such as `admin`, `developer`, `room_creator`, `agent_creator`, or `llm_proxy_user`. |
+| `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user with project roles such as `admin`, `developer`, `room_creator`, `agent_creator`, `user_profile_editor`, or `llm_proxy_user`. |
+| `update_project_user(project_id, user_id, roles)`                         | `PUT /accounts/projects/{project_id}/users/{user_id}`            | Replace a user's project roles. |
 | `remove_user_from_project(project_id, user_id)`                          | `DELETE /accounts/projects/{project_id}/users/{user_id}`         | Remove a user from the project.                                   |
-| `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List users in the project.                                        |
-| `get_user_profile(user_id)`                                              | `GET /accounts/profiles/{user_id}`                               | Fetch a user profile.                                             |
-| `update_user_profile(user_id, first_name, last_name)`                    | `PUT /accounts/profiles/{user_id}`                               | Update basic profile fields.                                      |
+| `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List users in the project, including profile metadata and annotations. |
+| `get_user_profile(user_id)`                                              | `GET /accounts/profiles/{user_id}`                               | Fetch names, email, metadata, and annotations. Use `me` for yourself. |
+| `update_user_profile(user_id, first_name=None, last_name=None, metadata=..., annotations=..., project_id=...)` | `PUT /accounts/profiles/{user_id}` | Update supplied profile fields. Editing another user or annotations requires a project `user_profile_editor` role and `project_id` query parameter. |
 | `create_room(project_id, name, metadata?, permissions?, if_not_exists?)` | `POST /accounts/projects/{project_id}/rooms`                     | Create a room (supports metadata + optional initial permissions). |
 | `list_rooms(project_id, limit?, offset?, order_by?)`                     | `GET /accounts/projects/{project_id}/rooms`                      | List rooms with pagination.                                       |
 | `get_room(project_id, room_name)`                                        | `GET /accounts/projects/{project_id}/rooms/{room_name}`          | Fetch a room by name.                                             |
@@ -136,6 +137,131 @@ Project settings are independent documents named `openai`, `anthropic`, `otel`, 
 | `update_agent(project_id, agent_id, configuration)`                      | `PUT /accounts/projects/{project_id}/agents/{agent_id}`          | Update a managed agent.                                           |
 | `delete_agent(project_id, agent_id)`                                     | `DELETE /accounts/projects/{project_id}/agents/{agent_id}`       | Delete a managed agent.                                           |
 | `connect_agent(project_id, agent)`                                       | `POST /accounts/projects/{project_id}/agents/{agent_name}/connect` | Return `AgentConnectionInfo`.                                   |
+
+## User profiles
+
+User profiles contain first and last names, email, metadata, and annotations. `GET /accounts/profiles/{user_id}` returns these fields, and `GET /accounts/projects/{project_id}/users` includes them in each member's `user` object. Use `me` as the profile ID to address the signed-in user.
+
+Profiles are shared across all projects a user belongs to. The `project_id` on an update determines permission to edit a member's profile; it does not create a separate profile for that project.
+
+### Authentication and permissions
+
+Authenticate profile requests with a user OAuth bearer token. Reading profiles requires `profile:read`; all profile updates require `profile:write`.
+
+| Update | Additional requirements |
+| --- | --- |
+| Your own names or metadata | No additional project permission. |
+| Another user's names or metadata | `project_id` query parameter, OAuth scopes covering that project with `projects:iam.write`, and `user_profile_editor` permission in that project. The target must be a member of the project. |
+| Annotations on any profile, including your own | The same project requirements as editing another user. |
+
+For project editor requests, the token must cover the project with `project/{project_id}` or `project/*`, and include `projects:iam.write` alongside `profile:write`. The legacy `admin` scope is accepted in place of `projects:iam.write`. Token scopes do not grant the user a project role; the server checks `user_profile_editor` separately.
+
+The project creator inherits `user_profile_editor` through `owner` → `admin` → `user_profile_editor`. Admins also inherit it. Developers need an explicit editor grant. See [IAM Roles and Permissions](../project_admin/iam_roles_and_permissions#user-profile-permissions).
+
+### Update fields
+
+Send only the fields you want to change in `PUT /accounts/profiles/{user_id}`:
+
+| Field | Type | Behavior |
+| --- | --- | --- |
+| `first_name`, `last_name` | String or `null` | Set the name; REST `null` clears it. |
+| `metadata` | JSON object | Replace metadata with the supplied object. Values may be nested JSON objects, arrays, strings, numbers, booleans, or `null`. |
+| `annotations` | Object with string values | Replace annotations with the supplied string map. |
+
+Omitted fields remain unchanged. Maps are replaced in full rather than merged, so include any existing keys you want to keep. `{}` clears a map; `null` is invalid for either map. Successful updates return `{"ok": true}`. Unknown fields and invalid field types return `400`; missing scopes or editor permissions, or a target outside the specified project, return `403`.
+
+### REST examples
+
+Update your own metadata:
+
+```http
+PUT /accounts/profiles/me
+Authorization: Bearer <user-oauth-token>
+Content-Type: application/json
+
+{
+  "metadata": {"theme": "dark", "notifications": {"email": true}}
+}
+```
+
+Update a project member's names, metadata, and annotations as a profile editor:
+
+```http
+PUT /accounts/profiles/{user_id}?project_id={project_id}
+Authorization: Bearer <user-oauth-token>
+Content-Type: application/json
+
+{
+  "first_name": "Ada",
+  "last_name": "Lovelace",
+  "metadata": {"department": "engineering"},
+  "annotations": {"status": "verified"}
+}
+```
+
+An administrator can grant the editor role through the existing project membership API:
+
+```http
+PUT /accounts/projects/{project_id}/users/{user_id}
+Authorization: Bearer <user-oauth-token>
+Content-Type: application/json
+
+{"roles": ["member", "user_profile_editor"]}
+```
+
+This replaces the user's project roles. Include any other roles that should be retained. Managing role assignments requires project administrative access; `user_profile_editor` alone grants profile editing.
+
+### SDK examples
+
+These snippets use a client authenticated with a user OAuth token and run inside an async function. `user_id` identifies a member of `project_id`. Optional SDK fields set to Python `None`, Dart `null`, or TypeScript `undefined` are omitted; an empty map still clears the corresponding stored map.
+
+<CodeGroup>
+```python Python
+await client.update_user_profile("me", metadata={"theme": "dark"})
+
+await client.update_user_profile(
+    user_id,
+    first_name="Ada",
+    last_name="Lovelace",
+    metadata={"department": "engineering"},
+    annotations={"status": "verified"},
+    project_id=project_id,
+)
+
+profile = await client.get_user_profile(user_id)
+```
+
+```dart Dart
+await client.updateUserProfile('me', null, null, metadata: {'theme': 'dark'});
+
+await client.updateUserProfile(
+  userId,
+  'Ada',
+  'Lovelace',
+  metadata: {'department': 'engineering'},
+  annotations: {'status': 'verified'},
+  projectId: projectId,
+);
+
+final profile = await client.getUserProfile(userId);
+```
+
+```typescript TypeScript
+await client.updateUserProfile("me", undefined, undefined, {
+  metadata: {theme: "dark"},
+});
+
+await client.updateUserProfile(userId, "Ada", "Lovelace", {
+  metadata: {department: "engineering"},
+  annotations: {status: "verified"},
+  projectId,
+});
+
+const profile = await client.getUserProfile(userId);
+```
+</CodeGroup>
+
+To edit profiles in the app, see [MeshAgent Accounts](../interfaces/accounts#edit-user-profiles).
 
 ## Resource policies
 Managed agent resource policies are not supported. Use service-account `run_as` configuration for agent access, and use resource policies for supported resource types.

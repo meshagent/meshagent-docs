@@ -1,6 +1,6 @@
 ---
 title: MeshAgent Accounts
-description: Manage projects, members, billing, and usage across your MeshAgent account.
+description: Manage projects, member profiles and roles, billing, and usage across your MeshAgent account.
 ---
 
 [MeshAgent Accounts](https://accounts.meshagent.com) is the account and project-management interface for MeshAgent.
@@ -9,6 +9,7 @@ Use it when you need to manage the parts of MeshAgent that live above any one ro
 
 - projects
 - project members and roles
+- user profiles, metadata, and annotations
 - billing and AI credits
 - usage reports
 
@@ -18,19 +19,35 @@ MeshAgent Accounts works alongside [MeshAgent Studio](./meshagent_studio) and [P
 
 - Create and switch between projects.
 - Manage project members and roles.
+- Edit user names, metadata, and annotations.
 - View project balance and add credits.
 - Configure auto-recharge and an optional monthly auto-recharge budget.
 - Review usage reports for a project.
 
 ## How it relates to the other interfaces
 
-- Use **MeshAgent Accounts** for project membership, billing, and usage.
+- Use **MeshAgent Accounts** for project membership, user profiles, billing, and usage.
 - Use **MeshAgent Studio** for rooms, services, routes, mailboxes, secrets, sessions, and developer workflows.
 - Use **Powerboards** for end-user room experiences and install flows.
 
 Although MeshAgent Accounts is its own app, the resources you manage there are still mostly project-scoped. Billing, usage, and members are selected per project, not shared globally across every project in your account.
 
 If a project uses [MeshAgent LLM Proxy](../agents/routing/llm_proxy), the related provider usage and proxy surcharge roll up into that project's billing and usage views.
+
+## Edit user profiles
+
+1. Open MeshAgent Accounts and select the project.
+2. Open **Access Management**.
+3. Open the menu next to a user and choose **Edit...**.
+4. Update the first and last names, **Metadata**, and, when permitted, **Annotations**, then choose **Save**.
+
+You can edit your own names and metadata by default. **Edit...** appears for other users when you have the project's `user_profile_editor` permission. Project owners and admins inherit this permission automatically; developers need a separate grant. Annotations appear in the editor only when you have this permission, including when editing your own profile.
+
+Metadata is a JSON object and can contain nested objects, arrays, numbers, booleans, and strings. Annotation values are strings. Saving either map replaces its previous contents; an empty map clears it.
+
+User profiles are shared across projects. Changing a user's name, metadata, or annotations here updates the same profile used in their other projects. The selected project determines whether you may edit that user's profile.
+
+For permissions, see [IAM Roles and Permissions](../project_admin/iam_roles_and_permissions#user-profile-permissions). For programmatic updates, see [User profiles in the REST API](../rest_api/overview#user-profiles).
 
 ## Open the app
 
@@ -39,6 +56,7 @@ Go to [accounts.meshagent.com](https://accounts.meshagent.com).
 ## Related docs
 
 - [Project Roles and Access](../project_admin/project_roles)
+- [IAM Roles and Permissions](../project_admin/iam_roles_and_permissions)
 - [Billing and Usage](../project_admin/billing)
 - [MeshAgent Studio](./meshagent_studio)
 - [Powerboards](./powerboards)

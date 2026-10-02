@@ -23,9 +23,9 @@ For room-specific permissions, see [REST API](../rest_api/overview), [Participan
 
 ## Common project roles
 
-MeshAgent has a default **Member** role, plus stronger project membership presets such as **Room Creator**, **Developer**, and **Admin**.
+MeshAgent has a default **Member** role, plus focused roles such as **Room Creator** and **User Profile Editor**, and broader roles such as **Developer** and **Admin**.
 
-This page is ordered from least access to most access.
+The user who creates a project becomes its **Owner**. Owners inherit Admin access, including User Profile Editor, automatically.
 
 ### Member
 
@@ -51,6 +51,16 @@ Agent Creator is a focused project role for collaborators who need to create man
 
 Use this when someone should be able to create agents without giving them broader developer or admin access.
 
+### User Profile Editor
+
+User Profile Editor (`user_profile_editor`) lets a member edit the first and last names, metadata, and annotations of users who belong to the project.
+
+Use this when someone needs to maintain user profiles without broad project administration access. Ordinary users can edit their own names and metadata. Editing annotations, including their own, requires User Profile Editor permission.
+
+The profile is shared across all projects the user belongs to, so edits are visible wherever that profile is used. The project controls permission to make the edit.
+
+See [MeshAgent Accounts](../interfaces/accounts#edit-user-profiles) for the editing workflow and [User profiles in the REST API](../rest_api/overview#user-profiles) for programmatic updates.
+
 ### Developer
 
 Developers are for people building and operating workloads without giving them full project administration.
@@ -61,6 +71,8 @@ Use this role when someone needs to:
 - inspect deployed services and runtime state
 - inspect operational resources such as mailboxes, routes, scheduled tasks, feed subscriptions, and LLM loggers
 - work in MeshAgent Studio and the CLI without managing the whole project
+
+Developer does not include User Profile Editor. Grant `user_profile_editor` separately when a developer also needs to edit member profiles.
 
 ### LLM Proxy User
 
@@ -79,6 +91,7 @@ Admins have full project-level control.
 Use this role when someone needs to:
 
 - manage members and role assignments
+- edit member names, metadata, and annotations through the inherited User Profile Editor permission
 - edit project settings
 - manage secrets, billing, domains, and other project-wide resources
 - deploy and manage services across the project
@@ -93,13 +106,14 @@ Common role entries include:
 - `developer`
 - `room_creator`
 - `agent_creator`
+- `user_profile_editor`
 - `llm_proxy_user`
 
 Some older project member records and Studio settings still surface convenience booleans. They map to roles like this:
 
 | Setting | IAM role effect |
 | --- | --- |
-| `is_admin` | Grants `admin` plus project-wide creator, inventory, manager, billing, usage, group, and LLM proxy roles. |
+| `is_admin` | Grants `admin` plus project-wide creator, inventory, manager, billing, usage, group, LLM proxy, and user profile editor roles. |
 | `is_developer` | Grants `developer`, room/agent/repository/feed manager roles, inventory roles for operational resources such as services, routes, mailboxes, scheduled tasks, feed subscriptions, and LLM loggers, service-account creation and inventory, participant-token creation, and usage reporting. The `developer` relation also qualifies for LLM proxy use in access checks. |
 | `can_create_rooms` | Grants `room_creator`, `mailbox_creator`, `route_creator`, and `scheduled_task_creator`. |
 | `can_create_agents` | Grants `agent_creator`. |
@@ -139,11 +153,14 @@ This is why a collaborator might need both:
 
 ## Where to manage roles
 
+- **MeshAgent Accounts**: open Access Management for the project, then use the user's menu to manage permissions or edit their profile.
 - **MeshAgent Studio**: use the Members tab for day-to-day role assignment.
 - **REST API / SDKs**: use the project user-management endpoints such as `POST /accounts/projects/:id/users` and `PUT /accounts/projects/:id/users/:user_id`, or the matching SDK helpers, when provisioning or syncing access from your own systems.
 
 ## Related guides
 
+- [IAM Roles and Permissions](./iam_roles_and_permissions)
+- [MeshAgent Accounts](../interfaces/accounts)
 - [MeshAgent Studio](../interfaces/meshagent_studio)
 - [REST API](../rest_api/overview)
 - [Participant Tokens](../rest_api/participant_tokens)
