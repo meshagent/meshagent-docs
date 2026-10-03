@@ -25,6 +25,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `service-account`: Manage service accounts for your project
 * `secret`: Manage user and service account secrets
 * `iam`: Manage IAM policies for project resources
+* `user`: List project users and manage user profiles
 * `config`: Read MeshAgent deployment configuration
 * `doctor`: Inspect the current directory for...
 * `create`: Create a minimal deployable project.
@@ -1066,6 +1067,90 @@ $ meshagent iam revoke [OPTIONS]
 * `--subject-id TEXT`: subject id  [required]
 * `--subject-object-type TEXT`: userset object type
 * `--subject-relation TEXT`: userset relation
+* `--help`: Show this message and exit.
+
+## `meshagent user`
+
+List project users and manage user profiles
+
+**Usage**:
+
+```console
+$ meshagent user [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List project users and their direct roles.
+* `get`: Get a user profile, including metadata and...
+* `update`: Update supplied fields; supplied JSON maps...
+
+### `meshagent user list`
+
+List project users and their direct roles.
+
+**Usage**:
+
+```console
+$ meshagent user list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--count INTEGER RANGE`: Maximum number of users to return  [default: 100; x&gt;=1]
+* `--filter TEXT`: Filter by email or name
+* `--continuation-token TEXT`: Resume a previous listing
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent user get`
+
+Get a user profile, including metadata and annotations.
+
+**Usage**:
+
+```console
+$ meshagent user get [OPTIONS] [USER_ID]
+```
+
+**Arguments**:
+
+* `[USER_ID]`: User id, or me for your own profile  [default: me]
+
+**Options**:
+
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+### `meshagent user update`
+
+Update supplied fields; supplied JSON maps replace existing maps.
+
+**Usage**:
+
+```console
+$ meshagent user update [OPTIONS] [USER_ID]
+```
+
+**Arguments**:
+
+* `[USER_ID]`: User id, or me for your own profile  [default: me]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--first-name TEXT`: First name
+* `--last-name TEXT`: Last name
+* `--metadata TEXT`: Replacement metadata JSON object; &#123;&#125; clears it
+* `--annotations TEXT`: Replacement string-valued JSON object; &#123;&#125; clears it
+* `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
 ## `meshagent config`

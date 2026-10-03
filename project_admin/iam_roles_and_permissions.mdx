@@ -114,6 +114,31 @@ Profile data is shared across all projects a user belongs to. The project determ
 
 See [User profiles in the REST API](../rest_api/overview#user-profiles) for request formats and SDK examples, or [Editing user profiles in Accounts](../interfaces/accounts#edit-user-profiles) for the app workflow.
 
+### Manage users from the CLI
+
+Both the Python and Rust CLIs provide `meshagent user list`, `get`, and `update` with the same options. Use a project you belong to when listing members:
+
+```bash
+meshagent user list --project-id "$PROJECT_ID" --filter alice --count 100 -o json
+meshagent user get "$USER_ID" -o json
+meshagent user get me -o json
+```
+
+`list` follows pagination up to `--count` users (100 by default). Its JSON output contains `users`, with each user's profile and `direct_roles`, plus `continuation_token`. Pass a returned token to `--continuation-token` to resume, keeping the same project and filter. `get` returns the profile, including metadata and annotations. Reading profiles requires `profile:read`.
+
+Update your own names or metadata without a project, or supply a project when editing another member or annotations:
+
+```bash
+meshagent user update me --first-name Alice --metadata '{"timezone":"America/Los_Angeles"}'
+meshagent user update "$USER_ID" --project-id "$PROJECT_ID" \
+  --metadata '{"department":"support"}' --annotations '{"team":"support"}'
+meshagent user update "$USER_ID" --project-id "$PROJECT_ID" --annotations '{}'
+```
+
+Omitted fields stay unchanged. Supplying `--metadata` or `--annotations` replaces the entire corresponding map; `{}` clears it. Metadata accepts a JSON object with arbitrary JSON values; annotation values must be strings. `get` and `update` default to `me` when the user id is omitted. Project options also accept `MESHAGENT_PROJECT_ID` or the activated project. The [user profile permissions](#user-profile-permissions) above apply to these commands.
+
+See the [generated CLI reference](../reference/meshagent_cli_help#meshagent-user) for all options.
+
 ## Room, Agent, and Repository Roles
 
 These roles apply to resource policies for rooms and repositories. They also describe the effective role set used for room and agent access decisions.
