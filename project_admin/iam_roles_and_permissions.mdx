@@ -92,7 +92,7 @@ Project roles apply at the project level. The user who creates a project becomes
 | `usage_reporter` | Usage reporting | Report or query project usage. |
 | `billing_manager` | Billing | Manage project billing. |
 | `group_manager` | Groups | Manage project groups. |
-| `user_profile_editor` | User profiles | Edit metadata, annotations, and first and last names for users who belong to the project. Inherited by project owners and admins. |
+| `user_profile_editor` | User profiles | Edit project-local names, metadata, and annotations for users who belong to the project, including your own overrides. Inherited by project owners and admins. |
 
 Project membership APIs accept a `roles` list. The server normalizes project membership to include `member` and expands inherited `admin` and `developer` roles. Older member records and Studio convenience settings map to roles like this:
 
@@ -106,38 +106,34 @@ Project membership APIs accept a `roles` list. The server normalizes project mem
 
 ### User profile permissions
 
-Users can edit their own names and metadata with the OAuth `profile:write` scope. Editing another user or supplying annotations, including on your own profile, also requires `user_profile_editor` in a project containing the target user. Those requests must include `project_id`, a token scope covering that project (`project/{project_id}` or `project/*`), and `projects:iam.write`. The legacy `admin` scope is also accepted in place of `projects:iam.write`. The OAuth scopes and the project role are both required.
+Users can edit their own global names and metadata with `profile:write`. Project roles cannot edit global account defaults. Global annotations and editing other accounts require sysadmin endpoints, the OAuth `sysadmin` scope, and registered sysadmin membership.
 
-Project creators inherit this permission through `owner` → `admin` → `user_profile_editor`; no separate editor grant is needed. You can grant `user_profile_editor` independently to a member who needs to edit profiles.
+Editing any project-local user profile, including your own, requires `user_profile_editor`, a token covering the project with `projects:iam.write`, and target membership. The legacy `admin` scope is accepted in place of `projects:iam.write`. Owners and admins inherit the editor permission; developers and ordinary members need an explicit grant.
 
-Profile data is shared across all projects a user belongs to. The project determines permission to edit the profile; changes apply to the user's shared profile.
-
-See [User profiles in the REST API](../rest_api/overview#user-profiles) for request formats and SDK examples, or [Editing user profiles in Accounts](../interfaces/accounts#edit-user-profiles) for the app workflow.
-
-### Manage users from the CLI
-
-Both the Python and Rust CLIs provide `meshagent user list`, `get`, and `update` with the same options. Use a project you belong to when listing members:
+Project profile reads and listings accept `--view project|user|merged` (default `merged`). All views require project access; `project` returns stored overrides, `user` returns global defaults, and `merged` applies overrides to defaults. Metadata and annotations merge by key.
 
 ```bash
-meshagent user list --project-id "$PROJECT_ID" --filter alice --count 100 -o json
-meshagent user get "$USER_ID" -o json
-meshagent user get me -o json
-```
+# Edit your shared defaults regardless of the active project.
+meshagent user update me --global --first-name Alice --metadata '{"theme":"dark"}'
 
-`list` follows pagination up to `--count` users (100 by default). Its JSON output contains `users`, with each user's profile and `direct_roles`, plus `continuation_token`. Pass a returned token to `--continuation-token` to resume, keeping the same project and filter. `get` returns the profile, including metadata and annotations. Reading profiles requires `profile:read`.
-
-Update your own names or metadata without a project, or supply a project when editing another member or annotations:
-
-```bash
-meshagent user update me --first-name Alice --metadata '{"timezone":"America/Los_Angeles"}'
+# Edit only this project's user record; requires user_profile_editor.
 meshagent user update "$USER_ID" --project-id "$PROJECT_ID" \
   --metadata '{"department":"support"}' --annotations '{"team":"support"}'
-meshagent user update "$USER_ID" --project-id "$PROJECT_ID" --annotations '{}'
+meshagent user get "$USER_ID" --project-id "$PROJECT_ID" --view project -o json
+meshagent user list --project-id "$PROJECT_ID" --view merged
+meshagent user update "$USER_ID" --project-id "$PROJECT_ID" --inherit first_name
+
+# Platform administration; requires sysadmin scope and membership.
+meshagent sysadmin user list --filter alice -o json
+meshagent sysadmin user get "$USER_ID"
+meshagent sysadmin user update "$USER_ID" --annotations '{"verified":"yes"}'
 ```
 
-Omitted fields stay unchanged. Supplying `--metadata` or `--annotations` replaces the entire corresponding map; `{}` clears it. Metadata accepts a JSON object with arbitrary JSON values; annotation values must be strings. `get` and `update` default to `me` when the user id is omitted. Project options also accept `MESHAGENT_PROJECT_ID` or the activated project. The [user profile permissions](#user-profile-permissions) above apply to these commands.
+CLI profile reads and updates use the selected project, including `MESHAGENT_PROJECT_ID` or the active project. Use `--global` for personal account defaults. Without a project, ordinary profile commands address only your own global profile. Supplied maps replace the selected layer's map; `{}` clears it. `--inherit` removes a project override and can be repeated. Annotations require string values. Global annotations can only be changed with `sysadmin user update`.
 
-See the [generated CLI reference](../reference/meshagent_cli_help#meshagent-user) for all options.
+Sysadmin CLI commands require a login token containing `sysadmin`. For a dedicated administrator login, use `MESHAGENT_OAUTH_SCOPES='profile:read profile:write sysadmin' meshagent auth login`. Registered sysadmin membership is still required; adding the scope does not grant that membership.
+
+See [User profiles in the REST API](../rest_api/overview#user-profiles) for SDK examples, or [Editing user profiles in Accounts](../interfaces/accounts#edit-user-profiles) for the app workflow.
 
 ## Room, Agent, and Repository Roles
 

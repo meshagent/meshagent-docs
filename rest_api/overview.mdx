@@ -121,9 +121,14 @@ Project settings are independent documents named `openai`, `anthropic`, `otel`, 
 | `add_user_to_project(project_id, user_id, …)`                            | `POST /accounts/projects/{project_id}/users`                     | Add a user with project roles such as `admin`, `developer`, `room_creator`, `agent_creator`, `user_profile_editor`, or `llm_proxy_user`. |
 | `update_project_user(project_id, user_id, roles)`                         | `PUT /accounts/projects/{project_id}/users/{user_id}`            | Replace a user's project roles. |
 | `remove_user_from_project(project_id, user_id)`                          | `DELETE /accounts/projects/{project_id}/users/{user_id}`         | Remove a user from the project.                                   |
-| `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List users in the project, including profile metadata and annotations. |
-| `get_user_profile(user_id)`                                              | `GET /accounts/profiles/{user_id}`                               | Fetch names, email, metadata, and annotations. Use `me` for yourself. |
-| `update_user_profile(user_id, first_name=None, last_name=None, metadata=..., annotations=..., project_id=...)` | `PUT /accounts/profiles/{user_id}` | Update supplied profile fields. Editing another user or annotations requires a project `user_profile_editor` role and `project_id` query parameter. |
+| `get_users_in_project(project_id)`                                       | `GET /accounts/projects/{project_id}/users`                      | List project users with `view=project|user|merged` (default merged). |
+| `get_user_profile(user_id)`                                              | `GET /accounts/profiles/{user_id}`                               | Fetch your global profile. With `project_id`, use the project profile route and selected view. |
+| `update_user_profile(user_id, first_name=None, last_name=None, metadata=..., annotations=..., project_id=...)` | `PUT /accounts/profiles/{user_id}` | Edit your global names/metadata, or project overrides when `project_id` is supplied. Project edits always require `user_profile_editor`. |
+| `get_user_profile(user_id, project_id=..., view="merged")`                 | `GET /accounts/projects/{project_id}/users/{user_id}/profile`     | Read project overrides, global defaults, or their merged profile. |
+| `update_user_profile(user_id, project_id=..., inherit=...)`                 | `PUT /accounts/projects/{project_id}/users/{user_id}/profile`     | Update project overrides or restore inheritance; requires `user_profile_editor`. |
+| `search_sysadmin_users(filter=..., page_size=...)`                          | `GET /accounts/sysadmin/users`                                  | Search and paginate global accounts; requires sysadmin scope and membership. |
+| `get_sysadmin_user_profile(user_id)`                                       | `GET /accounts/sysadmin/users/{user_id}`                          | Read a global account profile as a sysadmin. |
+| `update_sysadmin_user_profile(user_id, update=...)`                         | `PUT /accounts/sysadmin/users/{user_id}`                          | Edit global names, metadata, and annotations as a sysadmin. |
 | `create_room(project_id, name, metadata?, permissions?, if_not_exists?)` | `POST /accounts/projects/{project_id}/rooms`                     | Create a room (supports metadata + optional initial permissions). |
 | `list_rooms(project_id, limit?, offset?, order_by?)`                     | `GET /accounts/projects/{project_id}/rooms`                      | List rooms with pagination.                                       |
 | `get_room(project_id, room_name)`                                        | `GET /accounts/projects/{project_id}/rooms/{room_name}`          | Fetch a room by name.                                             |
@@ -140,128 +145,81 @@ Project settings are independent documents named `openai`, `anthropic`, `otel`, 
 
 ## User profiles
 
-User profiles contain first and last names, email, metadata, and annotations. `GET /accounts/profiles/{user_id}` returns these fields, and `GET /accounts/projects/{project_id}/users` includes them in each member's `user` object. Use `me` as the profile ID to address the signed-in user.
+A project user profile combines shared account defaults with overrides stored for that project. The same account can have different names, metadata, and annotations in different projects. ID and email remain account identity fields and cannot be edited through profile updates.
 
-Profiles are shared across all projects a user belongs to. The `project_id` on an update determines permission to edit a member's profile; it does not create a separate profile for that project.
+### Read views
 
-### Authentication and permissions
+`GET /accounts/projects/{project_id}/users` and `GET /accounts/projects/{project_id}/users/{user_id}/profile` accept `view=project|user|merged`. Use `me` for the signed-in user.
 
-Authenticate profile requests with a user OAuth bearer token. Reading profiles requires `profile:read`; all profile updates require `profile:write`.
-
-| Update | Additional requirements |
+| View | Attributes returned |
 | --- | --- |
-| Your own names or metadata | No additional project permission. |
-| Another user's names or metadata | `project_id` query parameter, OAuth scopes covering that project with `projects:iam.write`, and `user_profile_editor` permission in that project. The target must be a member of the project. |
-| Annotations on any profile, including your own | The same project requirements as editing another user. |
+| `merged` (default) | Global names and maps with project overrides applied. |
+| `user` | Shared global profile attributes, without project overrides. |
+| `project` | Only stored project overrides, together with the account ID and email. Missing name fields mean inherit; an explicit `null` clears the name. |
 
-For project editor requests, the token must cover the project with `project/{project_id}` or `project/*`, and include `projects:iam.write` alongside `profile:write`. The legacy `admin` scope is accepted in place of `projects:iam.write`. Token scopes do not grant the user a project role; the server checks `user_profile_editor` separately.
+Metadata and annotations merge by key; a project key replaces the global value, including an entire nested metadata value. Global values remain visible wherever the project has no override. All three views require project membership and an OAuth token covering the project with `projects:iam.read`. The legacy `admin` scope and `projects:iam.write` also cover reads. A requested user must belong to the project. Project API keys can read users in their project.
 
-The project creator inherits `user_profile_editor` through `owner` → `admin` → `user_profile_editor`. Admins also inherit it. Developers need an explicit editor grant. See [IAM Roles and Permissions](../project_admin/iam_roles_and_permissions#user-profile-permissions).
+The account endpoint, `GET /accounts/profiles/me`, requires `profile:read` and is self-only. To read another user's shared profile, use an authorized project endpoint with `view=user`, or a sysadmin endpoint.
 
-### Update fields
+### Editing project overrides
 
-Send only the fields you want to change in `PUT /accounts/profiles/{user_id}`:
-
-| Field | Type | Behavior |
-| --- | --- | --- |
-| `first_name`, `last_name` | String or `null` | Set the name; REST `null` clears it. |
-| `metadata` | JSON object | Replace metadata with the supplied object. Values may be nested JSON objects, arrays, strings, numbers, booleans, or `null`. |
-| `annotations` | Object with string values | Replace annotations with the supplied string map. |
-
-Omitted fields remain unchanged. Maps are replaced in full rather than merged, so include any existing keys you want to keep. `{}` clears a map; `null` is invalid for either map. Successful updates return `{"ok": true}`. Unknown fields and invalid field types return `400`; missing scopes or editor permissions, or a target outside the specified project, return `403`.
-
-### REST examples
-
-Update your own metadata:
+`PUT /accounts/projects/{project_id}/users/{user_id}/profile` always edits project-local overrides. Every edit requires `user_profile_editor`, including editing your own project profile, and a token covering the project with `projects:iam.write` (legacy `admin` is accepted). Project owners and admins inherit the editor role. The target must belong to the project.
 
 ```http
-PUT /accounts/profiles/me
-Authorization: Bearer <user-oauth-token>
-Content-Type: application/json
-
-{
-  "metadata": {"theme": "dark", "notifications": {"email": true}}
-}
-```
-
-Update a project member's names, metadata, and annotations as a profile editor:
-
-```http
-PUT /accounts/profiles/{user_id}?project_id={project_id}
-Authorization: Bearer <user-oauth-token>
+PUT /accounts/projects/{project_id}/users/{user_id}/profile
+Authorization: Bearer {access_token}
 Content-Type: application/json
 
 {
   "first_name": "Ada",
-  "last_name": "Lovelace",
-  "metadata": {"department": "engineering"},
-  "annotations": {"status": "verified"}
+  "metadata": {"department": "research"},
+  "annotations": {"reviewed": "yes"}
 }
 ```
 
-An administrator can grant the editor role through the existing project membership API:
+Send only changed fields. Supplied maps replace the project's stored map; omitted fields are preserved. `{}` clears the local map, revealing global defaults. Annotation values must be strings; metadata values may be arbitrary JSON. Name fields accept strings or `null`. Email, IDs, and roles are not editable through this endpoint.
 
-```http
-PUT /accounts/projects/{project_id}/users/{user_id}
-Authorization: Bearer <user-oauth-token>
-Content-Type: application/json
+To restore inheritance, send `inherit`, containing field names to remove from the project profile:
 
-{"roles": ["member", "user_profile_editor"]}
+```json
+{"inherit": ["first_name", "metadata", "annotations"]}
 ```
 
-This replaces the user's project roles. Include any other roles that should be retained. Managing role assignments requires project administrative access; `user_profile_editor` alone grants profile editing.
+A field cannot be both supplied and inherited in the same request. Project profile editors should load `view=project` for editing and `view=user` to show inherited defaults. Saving the merged view would copy defaults into project overrides.
 
-### SDK examples
+### Editing global defaults
 
-These snippets use a client authenticated with a user OAuth token and run inside an async function. `user_id` identifies a member of `project_id`. Optional SDK fields set to Python `None`, Dart `null`, or TypeScript `undefined` are omitted; an empty map still clears the corresponding stored map.
+`PUT /accounts/profiles/me` requires `profile:write` and lets users edit their own global names and metadata. It cannot edit global annotations or another account, even when the caller has a project editor role. Project edits never write the global profile.
 
-<CodeGroup>
-```python Python
+Sysadmins use these dedicated endpoints:
+
+| Route | Purpose |
+| --- | --- |
+| `GET /accounts/sysadmin/users?filter=...` | Search by email, name, or user ID, with `page_size` and `continuation_token`. |
+| `GET /accounts/sysadmin/users/{user_id}` | Read a global profile. |
+| `PUT /accounts/sysadmin/users/{user_id}` | Edit global names, metadata, or annotations. |
+
+All sysadmin endpoints require both the OAuth `sysadmin` scope and registered sysadmin membership. A scope alone does not grant platform authority. Global annotations are edited only through these endpoints. Global profile data returned to projects is shared data; keep private account settings outside these profile maps.
+
+Successful updates return `{"ok": true}`. Invalid views, JSON, fields, or inheritance requests return `400`; missing permissions return `403`; missing profiles return `404`.
+
+### Python SDK examples
+
+```python
 await client.update_user_profile("me", metadata={"theme": "dark"})
 
 await client.update_user_profile(
     user_id,
-    first_name="Ada",
-    last_name="Lovelace",
-    metadata={"department": "engineering"},
-    annotations={"status": "verified"},
     project_id=project_id,
+    metadata={"department": "research"},
+    annotations={"reviewed": "yes"},
 )
 
-profile = await client.get_user_profile(user_id)
+merged = await client.get_user_profile(user_id, project_id=project_id)
+overrides = await client.get_user_profile(user_id, project_id=project_id, view="project")
+defaults = await client.get_user_profile(user_id, project_id=project_id, view="user")
+await client.update_user_profile(user_id, project_id=project_id, inherit=["first_name"])
 ```
-
-```dart Dart
-await client.updateUserProfile('me', null, null, metadata: {'theme': 'dark'});
-
-await client.updateUserProfile(
-  userId,
-  'Ada',
-  'Lovelace',
-  metadata: {'department': 'engineering'},
-  annotations: {'status': 'verified'},
-  projectId: projectId,
-);
-
-final profile = await client.getUserProfile(userId);
-```
-
-```typescript TypeScript
-await client.updateUserProfile("me", undefined, undefined, {
-  metadata: {theme: "dark"},
-});
-
-await client.updateUserProfile(userId, "Ada", "Lovelace", {
-  metadata: {department: "engineering"},
-  annotations: {status: "verified"},
-  projectId,
-});
-
-const profile = await client.getUserProfile(userId);
-```
-</CodeGroup>
-
-To edit profiles in the app, see [MeshAgent Accounts](../interfaces/accounts#edit-user-profiles).
 
 ## Resource policies
 Managed agent resource policies are not supported. Use service-account `run_as` configuration for agent access, and use resource policies for supported resource types.

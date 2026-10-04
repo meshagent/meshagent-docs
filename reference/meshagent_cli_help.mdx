@@ -25,6 +25,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `service-account`: Manage service accounts for your project
 * `secret`: Manage user and service account secrets
 * `iam`: Manage IAM policies for project resources
+* `sysadmin`: Platform administration; requires sysadmin...
 * `user`: List project users and manage user profiles
 * `config`: Read MeshAgent deployment configuration
 * `doctor`: Inspect the current directory for...
@@ -1069,6 +1070,106 @@ $ meshagent iam revoke [OPTIONS]
 * `--subject-relation TEXT`: userset relation
 * `--help`: Show this message and exit.
 
+## `meshagent sysadmin`
+
+Platform administration; requires sysadmin access
+
+**Usage**:
+
+```console
+$ meshagent sysadmin [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `user`: Search and edit global user profiles;...
+
+### `meshagent sysadmin user`
+
+Search and edit global user profiles; requires sysadmin access
+
+**Usage**:
+
+```console
+$ meshagent sysadmin user [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: Search global users by email, name, or...
+* `get`: Get a global user profile.
+* `update`: Update global names, metadata, or...
+
+#### `meshagent sysadmin user list`
+
+Search global users by email, name, or user id.
+
+**Usage**:
+
+```console
+$ meshagent sysadmin user list [OPTIONS]
+```
+
+**Options**:
+
+* `--filter TEXT`
+* `--count INTEGER RANGE`: [default: 100; x&gt;=1]
+* `--continuation-token TEXT`
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent sysadmin user get`
+
+Get a global user profile.
+
+**Usage**:
+
+```console
+$ meshagent sysadmin user get [OPTIONS] [USER_ID]
+```
+
+**Arguments**:
+
+* `[USER_ID]`: User id, or me for your own profile  [default: me]
+
+**Options**:
+
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+#### `meshagent sysadmin user update`
+
+Update global names, metadata, or annotations.
+
+**Usage**:
+
+```console
+$ meshagent sysadmin user update [OPTIONS] [USER_ID]
+```
+
+**Arguments**:
+
+* `[USER_ID]`: User id, or me for your own profile  [default: me]
+
+**Options**:
+
+* `--first-name TEXT`
+* `--last-name TEXT`
+* `--metadata TEXT`: Replacement JSON object
+* `--annotations TEXT`: Replacement string map
+* `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
 ## `meshagent user`
 
 List project users and manage user profiles
@@ -1088,7 +1189,7 @@ $ meshagent user [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `list`: List project users and their direct roles.
-* `get`: Get a user profile, including metadata and...
+* `get`: Get a project user profile or your global...
 * `update`: Update supplied fields; supplied JSON maps...
 
 ### `meshagent user list`
@@ -1104,6 +1205,7 @@ $ meshagent user list [OPTIONS]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--view [project|user|merged]`: Profile attributes to return  [default: merged]
 * `--count INTEGER RANGE`: Maximum number of users to return  [default: 100; x&gt;=1]
 * `--filter TEXT`: Filter by email or name
 * `--continuation-token TEXT`: Resume a previous listing
@@ -1112,7 +1214,7 @@ $ meshagent user list [OPTIONS]
 
 ### `meshagent user get`
 
-Get a user profile, including metadata and annotations.
+Get a project user profile or your global account profile.
 
 **Usage**:
 
@@ -1126,6 +1228,9 @@ $ meshagent user get [OPTIONS] [USER_ID]
 
 **Options**:
 
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--view [project|user|merged]`: Profile attributes to return  [default: merged]
+* `--global`: Use your global account profile, ignoring the active project
 * `-o, --output TEXT`: output format   [default: table]
 * `--help`: Show this message and exit.
 
@@ -1146,6 +1251,8 @@ $ meshagent user update [OPTIONS] [USER_ID]
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--global`: Use your global account profile, ignoring the active project
+* `--inherit [first_name|last_name|metadata|annotations]`: Remove a project override; repeat for multiple fields
 * `--first-name TEXT`: First name
 * `--last-name TEXT`: Last name
 * `--metadata TEXT`: Replacement metadata JSON object; &#123;&#125; clears it
