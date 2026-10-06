@@ -36,6 +36,8 @@ This is the same route used by `meshagent ask` and the [MeshAgent Codex and Clau
 
 For OpenAI-compatible clients, the router supports Chat Completions and Responses over HTTP, including streamed responses. It also proxies WebSocket upgrades for the Responses API and Realtime API. The legacy `/v1/completions` endpoint is not part of the supported route set; use `/v1/chat/completions` or `/v1/responses`.
 
+The router also supports the [OpenAI Decisions API](https://developers.openai.com/api/docs/guides/decisions) at `/openai/v1/decisions`. Send the usual `model`, `input`, and `questions` fields; answers are returned unchanged. Decisions currently supports `gpt-6-luna` and costs $0.10 per million input tokens ($0.20 above 272,000 input tokens), plus the router surcharge. Usage is tracked as `input_tokens_decisions` or `input_tokens_decisions_long`, separately from Responses usage for the same model. Cache reads, cache writes, and output tokens have no separate Decisions charges.
+
 ## Select a deployment and project
 
 ```bash
