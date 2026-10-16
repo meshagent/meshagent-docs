@@ -1,0 +1,50 @@
+---
+title: "SQLite"
+description: "Room SQLite databases and atomic SQL batches."
+---
+
+Use `room.sqlite.database("app", namespace=["team"])` to bind a database and namespace. Create the database with `await db.create_database()` before using it.
+
+## Atomic SQL batches
+
+`execute_sql_batch` sends multiple parameterized commands in one request and executes them in one transaction. Each command contains exactly one SQL statement and its own positional or named parameters.
+
+```python
+from meshagent.api import SqliteSqlCommand, SqliteSqlQuery
+
+results = await db.execute_sql_batch(commands=[
+    SqliteSqlCommand("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT)"),
+    SqliteSqlCommand("INSERT INTO users VALUES (?, ?)", [1, "Ada"]),
+    SqliteSqlCommand("SELECT * FROM users WHERE id=:id", {"id": 1}),
+])
+
+query = results[2]
+assert isinstance(query, SqliteSqlQuery)
+try:
+    async for table in room.sqlite.read_sql_query(query_id=query.query_id):
+        print(table.to_pylist())
+finally:
+    await room.sqlite.close_sql_query(query_id=query.query_id)
+```
+
+Commands run in order; later commands see earlier writes. The result list preserves command order. Non-row commands return `SqliteSqlStatement` with `rows_affected`. Row-returning commands, including `RETURNING`, produce `SqliteSqlQuery` with an Arrow schema and a query handle. Query rows are materialized when their command executes; handles become available only after the transaction commits. Close every returned query handle when finished.
+
+If a command fails, the entire batch rolls back, later commands do not run, and no query handles are published. The error retains its error code and identifies the failing command by its zero-based index. Commit failures are reported separately and roll back the transaction. A lost response after commit does not establish that the batch failed; automatically retrying mutations can apply them twice.
+
+A batch targets one database and namespace. Each command undergoes the same permission checks as individual SQL execution. Empty batches return an empty result list without opening a database. Transaction-control statements, `PRAGMA`, `ATTACH`, `DETACH`, and `VACUUM` are rejected. A nonempty batch is rejected if the shared connection already has an active transaction; that transaction is left intact. Parameters belong to individual commands; results cannot be referenced as parameters by later commands.
+
+## SDK methods
+
+All SDKs expose the operation on both the SQLite client and the bound database wrapper:
+
+| SDK | Method | Command model |
+| --- | --- | --- |
+| Python | `execute_sql_batch` | `SqliteSqlCommand(query, params=None)` |
+| Rust | `execute_sql_batch` | `SqliteSqlCommand { query, params }` |
+| TypeScript | `executeSqlBatch` | `{ query, params? }` (`SqliteSqlCommand`) |
+| Dart | `executeSqlBatch` | `SqliteSqlCommand(query: ..., params: ...)` |
+| .NET | `ExecuteSqlBatch` | `new SqliteSqlCommand(query, @params)` |
+
+The wire tool is `sqlite.execute_sql_batch`. Its JSON request contains `database`, optional `namespace`, and `commands`. Its JSON response contains ordered `results`: statement entries carry `kind: "statement"` and `rows_affected`; query entries carry `kind: "query"`, `query_id`, and `schema_base64` containing an Arrow IPC schema. SDKs decode schemas and reuse `read_sql_query` and `close_sql_query` for query results.
+
+See [SQLite recovery](/room_api/sqlite-recovery) for persistent storage recovery.
