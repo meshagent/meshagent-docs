@@ -31,7 +31,26 @@ Paths are relative to the room storage root. Use `upload` or `uploadStream` to w
 
 ## Permissions and grants
 
-`upload` / `uploadStream` and `download` / `downloadStream` / `download_url` require a storage grant on the participant token for the target path. Storage grants are path-based, which lets you give a service access to only part of room storage. In the current server implementation, `list`, `exists`, `stat`, and `delete` are not gated by storage grants.
+Storage operations require the corresponding action on the participant's effective storage grant: `read` for downloads, existence checks and metadata, `write` for uploads, `delete` for removal, and `list` for directory entries and file events. Moves require read/delete on the source and write on the destination. Recursive operations require permission for the complete subtree; excluded descendants prevent a recursive mutation. Listings filter inaccessible entries and allow navigation through ancestors of listable paths.
+
+`StorageGrant.files` accepts typed file policies. An explicit policy replaces legacy `paths`; an empty policy denies all file actions. Legacy prefixes match whole path components and retain their ordered read-only rules. Keep the participant's existing tool-invocation permission when adding a storage policy; file actions do not grant other runtime authority.
+
+Creating a public download URL additionally requires `presign` for that path. Legacy storage grants, including unrestricted storage grants, do not grant URL delegation. Authenticated `download_stream` / `downloadStream` requires read access and can transfer large files without URL delegation.
+
+For example, this storage grant permits listing, reading and sharing published files while excluding a private subtree:
+
+```json
+{
+  "files": {
+    "paths": [{
+      "path": "published",
+      "recursive": true,
+      "actions": ["list", "read", "presign"],
+      "excluded_paths": ["published/private"]
+    }]
+  }
+}
+```
 
 Use [API Scopes](../rest_api/api_scopes) and [Service YAML](../services/deployment/deploy_services) for the full scope model.
 
@@ -585,7 +604,7 @@ await foreach (var chunk in room.Storage.DownloadStream("files/report.pdf"))
 ### `download(path)`
 
 **Description**  
-Retrieves the content of a file from the remote storage. This loads the entire file into memory; use `download_url` for large files or streaming.
+Retrieves the content of a file from the remote storage. This loads the entire file into memory; use `download_stream` / `downloadStream` for authenticated streaming.
 
 **Parameters**  
 - `path` *(str)*: The file path to download.
@@ -632,7 +651,7 @@ Console.WriteLine(fileResponse.Data);  // raw bytes
 ### `download_url(path)`
 
 **Description**  
-Requests a downloadable URL for the specified file path, which can be used to fetch the file directly (e.g., via HTTP). The exact protocol or format of the returned URL may vary, and may be a signed URL if the backing storage provider supports it.
+Requests a downloadable URL for the specified file path, which can be used to fetch the file directly (e.g., via HTTP). Both `read` and explicit `presign` permission are required. The exact protocol or format of the returned URL may vary, and may be a signed URL if the backing storage provider supports it. Existing room download links retain their signature/expiration behavior; use authenticated downloads when a public link is unnecessary.
 
 **Parameters**  
 - `path` *(str)*: The file path to retrieve a download URL for.

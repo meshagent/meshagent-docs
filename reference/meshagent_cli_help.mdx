@@ -39,6 +39,7 @@ $ meshagent [OPTIONS] COMMAND [ARGS]...
 * `rooms`: Create, list, and manage rooms in a project
 * `volumes`: Manage durable storage volumes for a room
 * `agent`: Create, list, and manage managed agents in...
+* `files`: Manage persistent room and managed-agent...
 * `mailbox`: Manage mailboxes for your project
 * `feed`: Manage feeds for your project
 * `subscription`: Manage feed subscriptions for your project
@@ -1292,7 +1293,7 @@ $ meshagent config get [OPTIONS] PATH
 
 **Arguments**:
 
-* `PATH`: Config path to read. Supported paths: version, openai.url, anthropic.url, grok.url, domains.studio, domains.accounts, domains.powerboards, domains.api, domains.mail, domains.pages, domains.registry  [required]
+* `PATH`: Config path to read. Supported paths: version, openai.url, anthropic.url, grok.url, domains.studio, domains.accounts, domains.powerboards, domains.api, domains.files, domains.mail, domains.pages, domains.registry  [required]
 
 **Options**:
 
@@ -2344,12 +2345,169 @@ $ meshagent agent [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `storage`: Manage persistent agent files using...
 * `create`: Create a managed agent in the project.
 * `delete`: Delete a managed agent from the project.
 * `update`: Update a managed agent configuration.
 * `list`: List managed agents in the project.
 * `get`: Get a managed agent configuration.
 * `use`: Use a managed agent over its websocket...
+
+### `meshagent agent storage`
+
+Manage persistent agent files using --agent or a qualified path
+
+**Usage**:
+
+```console
+$ meshagent agent storage [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `exists`: Check whether a path exists in room or...
+* `cp`: Copy local, room or agent files, including...
+* `get`: Print a local, room or agent text file.
+* `rm`: Remove local, room or agent files;...
+* `ls`: List local, room or agent files, with...
+* `presign`: Create a scoped temporary file URL...
+
+#### `meshagent agent storage exists`
+
+Check whether a path exists in room or agent files.
+
+**Usage**:
+
+```console
+$ meshagent agent storage exists [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--help`: Show this message and exit.
+
+#### `meshagent agent storage cp`
+
+Copy local, room or agent files, including across projects/targets.
+
+**Usage**:
+
+```console
+$ meshagent agent storage cp [OPTIONS] SOURCE_PATH DEST_PATH
+```
+
+**Arguments**:
+
+* `SOURCE_PATH`: [required]
+* `DEST_PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+#### `meshagent agent storage get`
+
+Print a local, room or agent text file.
+
+**Usage**:
+
+```console
+$ meshagent agent storage get [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--encoding TEXT`: Text encoding  [default: utf-8]
+* `--help`: Show this message and exit.
+
+#### `meshagent agent storage rm`
+
+Remove local, room or agent files; directories require -r.
+
+**Usage**:
+
+```console
+$ meshagent agent storage rm [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+#### `meshagent agent storage ls`
+
+List local, room or agent files, with optional globs and -r.
+
+**Usage**:
+
+```console
+$ meshagent agent storage ls [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Local, room://, agent:// or meshagent:// path  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+#### `meshagent agent storage presign`
+
+Create a scoped temporary file URL (requires presign permission).
+
+**Usage**:
+
+```console
+$ meshagent agent storage presign [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--method [GET|HEAD|PUT|DELETE]`: [default: GET]
+* `--expires-in INTEGER RANGE`: Lifetime in seconds  [default: 3600; 1&lt;=x&lt;=604800]
+* `--help`: Show this message and exit.
 
 ### `meshagent agent create`
 
@@ -2464,6 +2622,164 @@ $ meshagent agent use [OPTIONS] [AGENT]
 * `--since-turn TEXT`: Replay persisted thread messages starting with this turn id
 * `-m, --message TEXT`: Send one message without opening the TUI
 * `-o, --output [text|json]`: Output format for one-shot messages  [default: text]
+* `--help`: Show this message and exit.
+
+## `meshagent files`
+
+Manage persistent room and managed-agent files
+
+**Usage**:
+
+```console
+$ meshagent files [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--install-completion`: Install completion for the current shell.
+* `--show-completion`: Show completion for the current shell, to copy it or customize the installation.
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `exists`: Check whether a path exists in room or...
+* `cp`: Copy local, room or agent files, including...
+* `get`: Print a local, room or agent text file.
+* `rm`: Remove local, room or agent files;...
+* `ls`: List local, room or agent files, with...
+* `presign`: Create a scoped temporary file URL...
+
+### `meshagent files exists`
+
+Check whether a path exists in room or agent files.
+
+**Usage**:
+
+```console
+$ meshagent files exists [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--help`: Show this message and exit.
+
+### `meshagent files cp`
+
+Copy local, room or agent files, including across projects/targets.
+
+**Usage**:
+
+```console
+$ meshagent files cp [OPTIONS] SOURCE_PATH DEST_PATH
+```
+
+**Arguments**:
+
+* `SOURCE_PATH`: [required]
+* `DEST_PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+### `meshagent files get`
+
+Print a local, room or agent text file.
+
+**Usage**:
+
+```console
+$ meshagent files get [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--encoding TEXT`: Text encoding  [default: utf-8]
+* `--help`: Show this message and exit.
+
+### `meshagent files rm`
+
+Remove local, room or agent files; directories require -r.
+
+**Usage**:
+
+```console
+$ meshagent files rm [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+### `meshagent files ls`
+
+List local, room or agent files, with optional globs and -r.
+
+**Usage**:
+
+```console
+$ meshagent files ls [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: Local, room://, agent:// or meshagent:// path  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+### `meshagent files presign`
+
+Create a scoped temporary file URL (requires presign permission).
+
+**Usage**:
+
+```console
+$ meshagent files presign [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--method [GET|HEAD|PUT|DELETE]`: [default: GET]
+* `--expires-in INTEGER RANGE`: Lifetime in seconds  [default: 3600; 1&lt;=x&lt;=604800]
 * `--help`: Show this message and exit.
 
 ## `meshagent mailbox`
@@ -3003,9 +3319,10 @@ $ meshagent route create [OPTIONS]
 * `-d, --domain TEXT`: Domain name to route (unique per project). Keep it short and DNS-safe; long room-name-derived domains may be rejected.
 * `-f, --file TEXT`: Path to a RouteSpec YAML or JSON file
 * `--room TEXT`: Room name
+* `--agent TEXT`: Managed agent whose files to publish (public only)
 * `-p, --port TEXT`: Published port to route to
 * `--path TEXT`: Public URL path to expose  [default: /]
-* `--content-path, --room-path TEXT`: Room storage subpath to serve directly
+* `--content-path, --room-path TEXT`: Room or managed-agent files subpath to serve directly
 * `--cors TEXT`: CORS rules as a JSON array
 * `--index / --no-index`: Serve index.html for directories
 * `--iap / --no-iap`: Require identity-aware proxy access
@@ -3032,9 +3349,10 @@ $ meshagent route update [OPTIONS] DOMAIN
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-f, --file TEXT`: Path to a RouteSpec YAML or JSON file
 * `-r, --room TEXT`: Room name to route traffic into
+* `--agent TEXT`: Managed agent whose files to publish (public only)
 * `-p, --port TEXT`: Published port to route to
 * `--path TEXT`: Public URL path to expose
-* `--content-path, --room-path TEXT`: Room storage subpath to serve directly
+* `--content-path, --room-path TEXT`: Room or managed-agent files subpath to serve directly
 * `--cors TEXT`: CORS rules as a JSON array
 * `--index / --no-index`: Serve index.html for directories
 * `--iap / --no-iap`: Require identity-aware proxy access
@@ -4311,7 +4629,7 @@ $ meshagent room [OPTIONS] COMMAND [ARGS]...
 * `agents`: Interact with agents and toolkits in a room
 * `queue`: Use queues in a room
 * `messaging`: Send and receive messages in a room
-* `storage`: Manage storage for a room
+* `storage`: Manage persistent room and managed-agent...
 * `mounts`: List storage mounts currently ready in a room
 * `service`: Manage services inside a room
 * `developer`: Stream developer logs from a room
@@ -4690,7 +5008,7 @@ $ meshagent room messaging broadcast [OPTIONS]
 
 ### `meshagent room storage`
 
-Manage storage for a room
+Manage persistent room and managed-agent files
 
 **Usage**:
 
@@ -4706,15 +5024,16 @@ $ meshagent room storage [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `exists`: Check whether a path exists in room storage.
-* `cp`: Copy files between local paths and room...
-* `get`: Print file contents from local disk or...
-* `rm`: Remove files or directories from local...
-* `ls`: List files and directories locally or in...
+* `exists`: Check whether a path exists in room or...
+* `cp`: Copy local, room or agent files, including...
+* `get`: Print a local, room or agent text file.
+* `rm`: Remove local, room or agent files;...
+* `ls`: List local, room or agent files, with...
+* `presign`: Create a scoped temporary file URL...
 
 #### `meshagent room storage exists`
 
-Check whether a path exists in room storage.
+Check whether a path exists in room or agent files.
 
 **Usage**:
 
@@ -4729,12 +5048,13 @@ $ meshagent room storage exists [OPTIONS] PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
 * `--help`: Show this message and exit.
 
 #### `meshagent room storage cp`
 
-Copy files between local paths and room storage.
+Copy local, room or agent files, including across projects/targets.
 
 **Usage**:
 
@@ -4750,12 +5070,14 @@ $ meshagent room storage cp [OPTIONS] SOURCE_PATH DEST_PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
 * `--help`: Show this message and exit.
 
 #### `meshagent room storage get`
 
-Print file contents from local disk or room storage.
+Print a local, room or agent text file.
 
 **Usage**:
 
@@ -4770,13 +5092,14 @@ $ meshagent room storage get [OPTIONS] PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
 * `--encoding TEXT`: Text encoding  [default: utf-8]
 * `--help`: Show this message and exit.
 
 #### `meshagent room storage rm`
 
-Remove files or directories from local disk or room storage.
+Remove local, room or agent files; directories require -r.
 
 **Usage**:
 
@@ -4791,13 +5114,14 @@ $ meshagent room storage rm [OPTIONS] PATH
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `-r`: Remove directories/folders recursively
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
 * `--help`: Show this message and exit.
 
 #### `meshagent room storage ls`
 
-List files and directories locally or in room storage.
+List local, room or agent files, with optional globs and -r.
 
 **Usage**:
 
@@ -4807,13 +5131,37 @@ $ meshagent room storage ls [OPTIONS] PATH
 
 **Arguments**:
 
-* `PATH`: Path to list (local or room://...)  [required]
+* `PATH`: Local, room://, agent:// or meshagent:// path  [required]
 
 **Options**:
 
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
-* `--room TEXT`: Room name  [default: (dynamic)]
-* `-r`: List subfolders/files recursively
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `-r, --recursive`: Include directories recursively
+* `--help`: Show this message and exit.
+
+#### `meshagent room storage presign`
+
+Create a scoped temporary file URL (requires presign permission).
+
+**Usage**:
+
+```console
+$ meshagent room storage presign [OPTIONS] PATH
+```
+
+**Arguments**:
+
+* `PATH`: [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name (defaults to MESHAGENT_ROOM)  [required]
+* `--agent TEXT`: Managed agent name
+* `--method [GET|HEAD|PUT|DELETE]`: [default: GET]
+* `--expires-in INTEGER RANGE`: Lifetime in seconds  [default: 3600; 1&lt;=x&lt;=604800]
 * `--help`: Show this message and exit.
 
 ### `meshagent room mounts`
