@@ -19,6 +19,27 @@ meshagent room storage cp ./report.pdf room://artifacts/report.pdf --room myroom
 meshagent room storage get --room myroom room://artifacts/report.pdf
 ```
 
+The top-level `meshagent files` commands also work with managed-agent files. Use
+`--agent` with an `agent://` path; no room is required:
+
+```bash bash
+meshagent files cp ./report.pdf agent://artifacts/report.pdf --agent analyst
+meshagent files ls agent://artifacts/ --agent analyst
+meshagent files cp agent://artifacts/report.pdf ./report.pdf --agent analyst
+```
+
+Use a qualified path to select a project and agent directly, or to copy between
+room and agent storage:
+
+```bash bash
+meshagent files cp ./report.pdf meshagent://PROJECT_ID/agents/analyst/artifacts/report.pdf
+meshagent files cp meshagent://PROJECT_ID/rooms/myroom/artifacts/report.pdf meshagent://PROJECT_ID/agents/analyst/artifacts/report.pdf
+```
+
+`room://` paths use `--room` or `MESHAGENT_ROOM`. `agent://` paths use `--agent`.
+Qualified `meshagent://PROJECT_ID/{rooms|agents}/NAME/PATH` paths contain their own
+target and need neither option. Paths without a URI scheme refer to local files.
+
 ## Why use the Storage API?
 
 - Share files between people, agents, and deployed services without wiring separate object storage access.
