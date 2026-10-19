@@ -20,7 +20,42 @@ Use the smallest role or scope that lets the subject do its job.
 | `group` | A group of users. Group access applies through the group's members. |
 | `agent` | A managed agent principal. |
 | `service_account` | A non-human identity used by services, jobs, API keys, and automation. |
+| `everyone` | Everyone, including visitors who have not signed in. Use subject ID `all`. |
 | `userset` | A reference to another resource relation, such as all project members. |
+
+## Anonymous website access
+
+Grant a resource role to `everyone:all` through its permissions dialog or the CLI:
+
+```bash
+meshagent iam grant --project-id PROJECT_ID --resource-type agent \
+  --resource-id AGENT_ID --subject-type everyone --subject-id all --role operator
+```
+
+The same principal works with room roles. Public grants also apply to signed-in
+callers. They do not create project membership. Managed agents must use
+`thread_isolation: participant` for anonymous connections; global thread sharing
+cannot provide private visitor conversations.
+
+On a website bound to a room or agent, send a same-origin POST to
+`/.well-known/meshagent/authorize`. The response includes a short-lived `jwt`,
+`expires_in`, and `connect_path` for the room or agent WebSocket. The server sets
+an HttpOnly browser cookie to retain the anonymous identity across visits. Keep
+the cookie when renewing credentials. Clearing it creates a new identity.
+
+The TypeScript and Dart SDKs handle this exchange through
+`RoomClient.withAnonymous()` and `WebSocketChatClient.withAnonymous()`. Call
+`start()` as usual. They obtain fresh credentials before the initial connection
+and every reconnect, using the same anonymous cookie. An open WebSocket is not
+interrupted when its connection token expires. Outside a browser, pass an absolute
+`authorizationUrl`; native clients retain the cookie for the provider's lifetime.
+For custom authentication, the existing WebSocket clients accept a `tokenProvider`
+callback in TypeScript or an `AccessTokenProvider` in Dart.
+
+Authorization and connection paths must reach the router without CDN caching.
+The server checks the current Everyone permissions when issuing and validating
+credentials. Browser sessions can be revoked, and credentials stop working if
+the site is rebound to another resource. The visitor ID is not itself a credential.
 
 ## Resources
 
@@ -28,7 +63,7 @@ Use the smallest role or scope that lets the subject do its job.
 | --- | --- |
 | `project` | The top-level project boundary. Project roles can grant project-wide create, inventory, manage, billing, LLM proxy, and group-management access. |
 | `room` | A room and its room-scoped APIs. |
-| `agent` | A managed agent resource. Managed agent resource policies are not set through the generic IAM policy API; agent run-as and project agent roles control this surface. |
+| `agent` | A managed agent resource. Managed agent resource policies use the generic IAM policy API. The agent run-as identity is configured separately. |
 | `group` | A group and its membership. |
 | `repository` | A project image repository. |
 | `feed` | A feed and its publish/subscribe operations. |
