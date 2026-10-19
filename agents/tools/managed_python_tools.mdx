@@ -1,0 +1,209 @@
+---
+title: Python tools for managed agents
+description: Embed Python tools in an agent specification and test the same source locally with Monty.
+---
+
+Managed agents can define Python tools directly in their versioned configuration.
+Put each tool in `tools` with an explicit JSON Schema and embedded `source`.
+The source runs in Monty, with JSON arguments and a host-provided HTTP interface.
+
+```yaml
+version: v1
+kind: ManagedAgent
+metadata:
+  name: customer-assistant
+allowed_models:
+  - provider: openai
+    model: gpt-4.1
+tools:
+  - type: python
+    name: lookup_customer
+    description: Look up a customer by ID.
+    input_schema:
+      type: object
+      properties:
+        customer_id:
+          type: string
+      required: [customer_id]
+      additionalProperties: false
+    source: |
+      async def lookup_customer(args):
+          response = await http.request(
+              connection="crm",
+              path="/customers",
+              params={"id": args["customer_id"]},
+              headers={"Accept": "application/json"},
+          )
+          response.raise_for_status()
+          return response.json()
+connections:
+  crm:
+    base_url: https://api.example.com
+    use_proxy_secret: YOUR_SECRET_ID
+```
+
+The entrypoint defaults to the tool's `name`. Set `entrypoint: main` to use a
+different function. The function must be async, accept one argument, and return
+JSON-serializable data. Each invocation starts with fresh script state.
+
+## Schemas
+
+The schema is sent as a strict function-tool schema and validates arguments before
+execution. Every object, including nested objects, must set
+`additionalProperties: false` and list every property in `required`. Represent
+optional values with nullable types, such as `type: [string, "null"]`.
+Local `$defs` references and nested `anyOf` schemas are supported. Remote schema
+references and a root `anyOf` are rejected. Annotations in the Python source do not
+generate the schema.
+
+## HTTP and optional secrets
+
+Use a direct URL for requests that do not need a configured connection:
+
+```python
+response = await http.request(
+    "https://api.example.com/search",
+    method="POST",
+    headers={"X-API-Version": "2"},
+    json={"query": args["query"]},
+)
+response.raise_for_status()
+return response.json()
+```
+
+`http.request` supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, and
+`OPTIONS`. Pass scalar query values in `params`, custom headers in `headers`,
+and either a JSON value in `json` or a string in `body`. The response exposes
+`status`, `status_code`, `headers`, `text`, `json()`, and `raise_for_status()`.
+HTTP error statuses are returned normally until `raise_for_status()` is called.
+Transport errors and invalid requests raise Python exceptions.
+
+Connections without `use_proxy_secret` make ordinary HTTP requests. Connections
+with a secret use MeshAgent's existing secret proxy, which checks permission and
+injects authorization. The managed agent's `run_as` service account needs the
+`secrets:proxy` scope and the secret's `use_proxy` permission. Neither secret
+values nor the runtime's bearer token are supplied to the script. Secret-backed
+requests cannot override the authorization header, and a connection's path must
+stay on its configured origin. Only configure trusted API destinations for secrets.
+
+Host-controlled transport headers cannot be overridden. Direct requests do not
+follow redirects. Deployed tools can call public HTTP(S) destinations; private
+addresses are blocked. The runtime does not expose filesystem access, process
+execution, arbitrary Python packages, or environment variables.
+
+## Test the current source before deploying
+
+Run the actual source in your agent YAML file:
+
+```bash
+meshagent agent tools test agent.yaml \
+  --tool lookup_customer \
+  --input '{"customer_id":"customer-123"}'
+```
+
+This command uses the same Monty executor as managed agents. It does not save or
+deploy the spec and does not require tests or fixtures inside the file. Output is
+JSON containing `result`, captured `logs`, and HTTP request summaries. Invalid
+arguments, Python errors, and timeouts fail the command with a nonzero exit code.
+
+HTTP requests are live and can change data. Secret-backed local tests use your
+current CLI identity and its proxy permissions. They do not impersonate the
+deployed agent's service account. Use `--allow-private-http` only when testing
+against a local development server.
+
+Managed agents use a dedicated Monty execution pool when deployed with the default Helm configuration. HTTP calls and secret-proxy credentials stay in the managed-agent host. Each active Python invocation reserves an interpreter until it completes, including time waiting on HTTP; idle agent connections do not reserve interpreters. The pool scales independently of managed agents.
+
+The Rust CLI container image includes Monty for local testing. For a local source
+checkout, install the pinned worker and, for the Python CLI, the shared runner:
+
+```bash
+cargo install monty-runtime --version 1.2.0 --locked
+cargo install --path rust/meshagent-python-tools --locked
+```
+
+Alternatively, set `MESHAGENT_MONTY_BIN` and `MESHAGENT_PYTHON_TOOLS_BIN` to the
+corresponding executables. The Rust CLI calls the shared runner directly and only
+needs the Monty executable.
+
+Each invocation has a 30-second total deadline, a 10-second interpreter execution
+budget per feed, a 64 MiB sandbox memory limit, and at most 32 HTTP calls. Each
+request has a 15-second timeout. HTTP request data, response bodies, and returned
+JSON are limited to 1 MiB; captured logs are capped at 16 KiB. Source is limited to
+64 KiB per tool.
+
+## Run the local managed-agent end-to-end suite
+
+The dedicated suite exercises the real router, room tunnel, managed-agent runtime,
+Monty worker, and secret-proxy IAM. A recording HTTP service and a deterministic
+Responses provider run on the host. The provider supports both WebSockets and SSE
+and requests the exact function advertised by the agent. No external LLM is needed.
+
+From a source checkout, deploy the changed components to `k3s-local`:
+
+```bash
+./local-build.sh --k3s --managed-agents
+./local-build.sh --k3s --router --rust-room-tunnel
+cargo build --manifest-path rust/Cargo.toml -p meshagent-python-tools
+cargo install monty-runtime --version 1.2.0 --locked
+```
+
+Select a **dedicated local test project** and credentials that can manage its
+agents, settings, service accounts, secrets, and IAM. Configure the fixture URL
+with this host's node InternalIP and an unused TCP port reachable from pods:
+
+```bash
+export MESHAGENT_API_URL=http://127.0.0.1:8080
+export MESHAGENT_API_KEY=... # local test-project administrative credentials
+export MESHAGENT_MANAGED_TEST_PROJECT_ID=...
+export MESHAGENT_MANAGED_TEST_HTTP_URL=http://NODE_INTERNAL_IP:18991
+./meshagent-cloud-smoke/run-managed-agent-tests.sh -v
+```
+
+The runner sets `RUN_MESHAGENT_CLOUD_SMOKE=1`. It requires exactly one node in
+`k3s-local`, with this host's name and instance type `k3s`, and refuses endpoints
+that resolve outside this host. It temporarily points the test project's OpenAI
+settings at the fixture, creates separate secret-owner and agent service accounts,
+and adds an exact-origin HTTP exception and an exact-address/port network policy
+for the managed-agent pool. The roompool controller rolls out the configuration.
+The suite restores settings and pool configuration, removes the network policy,
+and deletes its agents, secrets, and service accounts on teardown.
+
+The eight live cases assert:
+
+- Saved source, schema, and connection round trips; real HTTP method, headers,
+  query, body, and a fresh response nonce; parity with the CLI using the same YAML.
+- Secret injection, denial at both the secret `use_proxy` and service-account
+  `use_proxy_secrets` gates, no upstream request on denial, and recovery after
+  restoring permission. Secret values must not appear in provider traffic or
+  client events.
+- Python exceptions, invalid arguments, missing functions, HTTP errors, and
+  execution timeouts reaching the client as tool failures. Each case then runs a
+  successful turn on the same agent connection.
+- An explicit entrypoint and updated source after terminating and restarting the
+  agent session.
+
+Run this suite serially against an otherwise idle local managed-agent pool. It
+changes that pool's desired configuration temporarily; it does not connect to
+remote clusters. Normal teardown restores configuration, but a forcibly killed
+pytest process may require manual cleanup. The exact-origin host setting is
+`MESHAGENT_PYTHON_HTTP_ALLOWED_ORIGINS` (a JSON array), also exposed as Helm value
+`meshagent.kubernetes.managedAgentsRoomPool.pythonHttpAllowedOrigins`. Agent specs
+cannot grant this exception. Other private destinations remain blocked.
+
+
+## Dedicated execution pool
+
+Helm settings under `meshagent.monty` control worker resources, session admission,
+gateway replicas, and autoscaling bounds. The chart configures the managed-agent
+host with `MESHAGENT_MONTY_ENDPOINT`, `MESHAGENT_MONTY_TOKEN`, and
+`MESHAGENT_MONTY_MAX_CONNECTIONS`. These are deployment settings, not agent YAML
+fields. Set `meshagent.monty.enabled=false` to retain local interpreter execution.
+
+Capacity exhaustion returns an error before execution. A lost worker or expired
+session fails the tool call without replaying it, since an HTTP request may already
+have taken effect. The execution pool drains active calls during shutdown.
+
+Run `rust/meshagent-monty-service/run-tests.sh` with `MESHAGENT_MONTY_BIN` set to a
+pinned 1.2.0 interpreter to validate the remote transport and the production HTTP
+host locally. `./local-build.sh --k3s --managed-agents` builds the managed-agent and
+Monty service images and applies the Helm configuration.
