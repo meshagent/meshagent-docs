@@ -87,6 +87,34 @@ At the end of setup, the TUI asks whether you want to create a sample MeshAgent 
 
 By default MeshAgent provides OpenAI and Anthropic access for the project through MeshAgent-managed routing. You do not need to add your own OpenAI or Anthropic keys first unless you want the project to use your own provider accounts.
 
+### Keep logins for multiple environments
+
+Both the Rust and Python CLIs save profiles by API URL and user ID. You can stay
+logged in to `.com` and `.life` even when both accounts have the same ID or email:
+
+```bash
+meshagent auth login --api-url https://api.meshagent.com
+meshagent auth login --api-url https://api.meshagent.life
+meshagent auth switch
+meshagent auth switch you@example.com --api-url https://api.meshagent.com
+```
+
+Without a profile argument, `auth switch` lists the saved profiles or opens an
+interactive picker in a terminal. Each entry shows its environment. Use
+`--api-url` to disambiguate a shared ID or email. Switching restores that
+environment's session, active project, project API keys, and LLM proxy token.
+Logging out clears only the selected profile's session.
+
+`MESHAGENT_API_URL` overrides the saved environment. When set, commands use the
+saved profile for that URL and do not reuse another environment's credentials.
+Unset it to follow the environment selected by `auth switch`.
+
+Existing `~/.meshagent/settings.json` files upgrade automatically when the CLI
+loads settings at startup. The upgrade preserves saved sessions and project
+settings and uses each profile's saved API URL. Older profiles without an API
+URL belong to the default `.com` environment. Both CLIs read and write the same
+upgraded format.
+
 If setup or later CLI commands behave unexpectedly, run:
 
 ```bash bash
