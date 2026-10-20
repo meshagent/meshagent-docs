@@ -18,7 +18,7 @@ metadata:
   name: customer-assistant
 allowed_models:
   - provider: openai
-    model: gpt-4.1
+    model: gpt-6.1-sol
 tools:
   - type: python
     name: lookup_customer
@@ -61,7 +61,8 @@ JSON-serializable data. Each invocation starts with fresh script state.
 | `source` | Embedded Python source, from 1 byte to 64 KiB encoded as UTF-8. |
 | `entrypoint` | Optional async function name, with the same identifier rules as `name`. Defaults to `name`. |
 
-The model sees the name, description, and schema. It supplies one JSON object;
+The runtime groups these functions in the `managed_python` toolkit. The model
+sees the name, description, and schema. It supplies one JSON object;
 MeshAgent calls the async entrypoint with that object and returns its JSON result
 to the model. Return strings, numbers, booleans, `None`, lists, or dictionaries
 containing JSON-compatible values. Printing captures logs for the local test
