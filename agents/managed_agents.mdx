@@ -95,7 +95,7 @@ confirm that the deployed service account can access a secret.
 | API credentials | A connection's `use_proxy_secret` selects a secret proxy. Deployed calls use the agent's `run_as` identity and require its proxy permissions. |
 | Built-in web search | Configure `toolkits: [{type: web_search}]`. OpenAI, Grok, and Anthropic use their provider-native search tools; optional domain filters are forwarded. |
 | Web fetch | Configure `toolkits: [{type: web_fetch}]`. OpenAI and Grok receive a `web_fetch` function with `url` and nullable `offset` arguments. Anthropic uses its native web-fetch tool. |
-| Image generation | Configure `toolkits: [{type: image_generation}]` for OpenAI or Grok. Image settings are forwarded to the provider and image results reach the client. Selecting Anthropic with this toolkit returns an explicit error. |
+| Image generation | Configure `toolkits: [{type: image_generation}]` for OpenAI or Grok. OpenAI supports the image settings below; Grok accepts the bare tool without settings. Image results reach the client. Selecting Anthropic with this toolkit returns an explicit error. |
 | MCP servers | Configure `toolkits: [{type: mcp, servers: [...]}]` with server URLs, allowed tools, and optional proxy secrets. See the provider restrictions below. |
 | General Python applications | The embedded interpreter is a sandbox: no filesystem, shell/process execution, environment variables, or arbitrary installed packages. |
 
@@ -128,7 +128,10 @@ toolkits:
         use_proxy_secret: YOUR_SECRET_ID
 ```
 
-Use an OpenAI or Grok model for the image-generation example. Secret-backed MCP
+Use an OpenAI model for this image-generation example. Grok's
+[native image tool](https://docs.x.ai/developers/tools/image-generation) accepts
+only `type: image_generation`; it chooses its image model, size, and format.
+Configuring image settings with Grok returns an explicit error. Secret-backed MCP
 requests use the agent's `run_as` service account and the existing
 [secret proxy permissions](../secrets/service_account_secrets).
 
@@ -137,9 +140,17 @@ interactive MCP approvals. Omitting this setting, selecting `always`, or adding
 nonempty `always_require_approval` returns an explicit error rather than
 automatically approving calls. Use `allowed_tools` to limit which tools can run.
 
-For OpenAI and Grok, MCP preserves custom headers, `allowed_tools`,
+For OpenAI, MCP preserves custom headers, `allowed_tools`,
 `never_require_approval`, and optional `openai_connector_id`. A connector ID
 cannot be combined with `use_proxy_secret`; proxy secrets require a server URL.
+
+Grok MCP supports server URLs, custom headers, `allowed_tools`, and proxy secrets.
+It does not support OpenAI connector IDs or per-tool approval settings; these
+configurations return explicit errors. The managed `require_approval: never`
+setting selects calls without interactive approvals and is omitted from the
+provider request because [Grok does not accept that field](https://docs.x.ai/developers/tools/remote-mcp).
+An empty `allowed_tools` list disables the server rather than forwarding Grok's
+native empty list, which would enable every tool.
 
 Anthropic MCP supports server URLs, `allowed_tools`, and authentication through
 `use_proxy_secret`. An empty `allowed_tools` list disables all tools on that
