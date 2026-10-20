@@ -1,0 +1,164 @@
+---
+title: Managed Agents
+description: Configure a hosted agent, add Python function tools, test them, and start a conversation.
+---
+
+Managed agents store their configuration in a project and run in MeshAgent's
+managed runtime. Their configuration selects models, instructions, tools, and
+optional service-account credentials. You do not need to host a separate tool
+server for an embedded Python tool.
+
+## Start with a working tool
+
+Save this configuration as `agent.yaml`. Select a model enabled in your project;
+the example uses `gpt-4.1`.
+
+```yaml
+version: v1
+kind: ManagedAgent
+metadata:
+  name: pricing-assistant
+allowed_models:
+  - provider: openai
+    model: gpt-4.1
+instructions: Use quote_total to calculate totals. Amounts are integer cents.
+tools:
+  - type: python
+    name: quote_total
+    description: Calculate a total from a subtotal and shipping, in integer cents.
+    input_schema:
+      type: object
+      properties:
+        subtotal_cents:
+          type: integer
+        shipping_cents:
+          type: integer
+      required: [subtotal_cents, shipping_cents]
+      additionalProperties: false
+    source: |
+      async def quote_total(args):
+          return {"total_cents": args["subtotal_cents"] + args["shipping_cents"]}
+```
+
+Test the function directly before saving the agent:
+
+```bash
+meshagent agent tools test agent.yaml \
+  --tool quote_total \
+  --input '{"subtotal_cents":2500,"shipping_cents":500}'
+```
+
+The result contains `{"total_cents":3000}`, captured logs, and an empty list of
+HTTP requests. This runs the embedded source; it does not ask a model to choose a
+tool or create an agent. See [Python tools](./tools/managed_python_tools) for local
+runner installation and the complete execution contract.
+
+## Save the agent and talk to it
+
+In Studio, open your project's **Agents** list and select **New Agent**. Paste the
+configuration into the YAML editor and select **Create**. The **Edit Agent**
+dialog lets you update an existing agent's configuration.
+
+The CLI's `create` and `update` commands accept **JSON**, while `tools test`
+accepts a YAML file. To use the same file with the CLI, convert it to JSON with a
+Python environment containing PyYAML:
+
+```bash
+python3 -c 'import json,sys,yaml; json.dump(yaml.safe_load(sys.stdin), sys.stdout)' < agent.yaml > agent.json
+meshagent agent create --project-id PROJECT_ID --configuration "$(cat agent.json)"
+```
+
+For an existing agent, use:
+
+```bash
+meshagent agent update --project-id PROJECT_ID --name pricing-assistant --configuration "$(cat agent.json)"
+```
+
+Start a conversation with the saved agent:
+
+```bash
+meshagent agent use pricing-assistant --project-id PROJECT_ID \
+  --message 'Use quote_total for a 2500-cent subtotal and 500-cent shipping.'
+```
+
+Use credentials and an API URL for the same environment as your Powerboards or
+Studio project. A successful local function test does not create the agent or
+confirm that the deployed service account can access a secret.
+
+## What tool calls support
+
+| Capability | Managed-agent behavior |
+| --- | --- |
+| Custom server-side functions | Define `type: python` entries in `tools`; provide `name`, `input_schema`, and embedded `source`. The model receives the tool name, description, and strict schema. |
+| Function arguments and results | One JSON object enters an async function; its return value must be JSON-serializable. Arguments are validated before execution. |
+| External APIs | Use the injected `http.request(...)` interface with a public HTTP(S) URL or a named entry in `connections`. |
+| API credentials | A connection's `use_proxy_secret` selects a secret proxy. Deployed calls use the agent's `run_as` identity and require its proxy permissions. |
+| Built-in web search | Configure `toolkits: [{type: web_search}]`. OpenAI, Grok, and Anthropic use their provider-native search tools; optional domain filters are forwarded. |
+| Web fetch | Configure `toolkits: [{type: web_fetch}]`. OpenAI and Grok receive a `web_fetch` function with `url` and nullable `offset` arguments. Anthropic uses its native web-fetch tool. |
+| Image generation | Configure `toolkits: [{type: image_generation}]` for OpenAI or Grok. Image settings are forwarded to the provider and image results reach the client. Selecting Anthropic with this toolkit returns an explicit error. |
+| MCP servers | Configure `toolkits: [{type: mcp, servers: [...]}]` with server URLs, allowed tools, and optional proxy secrets. See the provider restrictions below. |
+| General Python applications | The embedded interpreter is a sandbox: no filesystem, shell/process execution, environment variables, or arbitrary installed packages. |
+
+The detailed [Python tool reference](./tools/managed_python_tools) documents every
+HTTP argument, response field, schema rule, secret permission, and execution
+limit. Room-hosted SDK tools are a separate surface described in
+[Tools and Toolkits](./tools/tools_and_toolkits).
+
+## Configure built-in tools and MCP
+
+`tools` holds embedded Python functions. `toolkits` enables built-in and
+provider-hosted capabilities. For example, add this to your agent configuration:
+
+```yaml
+toolkits:
+  - type: web_search
+    allowed_domains: [example.com]
+  - type: web_fetch
+  - type: image_generation
+    background: transparent
+    output_format: png
+    quality: high
+    size: 1024x1536
+  - type: mcp
+    servers:
+      - server_label: crm
+        server_url: https://mcp.example.com/mcp
+        allowed_tools: [lookup_customer]
+        require_approval: never
+        use_proxy_secret: YOUR_SECRET_ID
+```
+
+Use an OpenAI or Grok model for the image-generation example. Secret-backed MCP
+requests use the agent's `run_as` service account and the existing
+[secret proxy permissions](../secrets/service_account_secrets).
+
+For every provider, set `require_approval: never`. Managed agents do not yet route
+interactive MCP approvals. Omitting this setting, selecting `always`, or adding
+nonempty `always_require_approval` returns an explicit error rather than
+automatically approving calls. Use `allowed_tools` to limit which tools can run.
+
+For OpenAI and Grok, MCP preserves custom headers, `allowed_tools`,
+`never_require_approval`, and optional `openai_connector_id`. A connector ID
+cannot be combined with `use_proxy_secret`; proxy secrets require a server URL.
+
+Anthropic MCP supports server URLs, `allowed_tools`, and authentication through
+`use_proxy_secret`. An empty `allowed_tools` list disables all tools on that
+server. Its native connector does not support custom headers, OpenAI connector
+IDs; these configurations return explicit errors. Configured toolkits are
+rebuilt for the selected provider on each turn, including provider changes.
+
+## How a tool call runs
+
+1. The model chooses an advertised tool and supplies arguments matching its schema.
+2. MeshAgent validates those arguments and starts a fresh Python invocation.
+3. The function may transform JSON data or await HTTP requests through the host.
+4. Its JSON result returns to the model, which continues the conversation.
+
+Python exceptions, invalid arguments, HTTP transport errors, resource limits, and
+timeouts fail the tool call. HTTP error responses are available to the function;
+call `response.raise_for_status()` to raise for a status of 400 or greater.
+Worker loss does not automatically replay a call, because an HTTP request may
+already have changed data.
+
+For API-based creation, connection, and access management, see the
+[managed-agent endpoints](../rest_api/overview#projects-rooms-and-managed-agents).

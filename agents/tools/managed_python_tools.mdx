@@ -7,6 +7,10 @@ Managed agents can define Python tools directly in their versioned configuration
 Put each tool in `tools` with an explicit JSON Schema and embedded `source`.
 The source runs in Monty, with JSON arguments and a host-provided HTTP interface.
 
+New to managed agents? Follow the [Managed Agents quickstart](../managed_agents)
+to test a function, save the configuration, and start a conversation. This page
+is the reference for the function and HTTP interfaces.
+
 ```yaml
 version: v1
 kind: ManagedAgent
@@ -46,6 +50,30 @@ The entrypoint defaults to the tool's `name`. Set `entrypoint: main` to use a
 different function. The function must be async, accept one argument, and return
 JSON-serializable data. Each invocation starts with fresh script state.
 
+## Tool definition
+
+| Field | Contract |
+| --- | --- |
+| `type` | `python`; this is the embedded function type supported by the managed runtime. |
+| `name` | Unique within the agent, at most 64 characters, and a Python identifier using ASCII letters, digits, and underscores. It cannot start with a digit. |
+| `description` | Text advertised to the model to explain when to call the tool. Defaults to an empty string; provide a useful description. |
+| `input_schema` | A strict JSON object schema for the function's one argument. See the schema rules below. |
+| `source` | Embedded Python source, from 1 byte to 64 KiB encoded as UTF-8. |
+| `entrypoint` | Optional async function name, with the same identifier rules as `name`. Defaults to `name`. |
+
+The model sees the name, description, and schema. It supplies one JSON object;
+MeshAgent calls the async entrypoint with that object and returns its JSON result
+to the model. Return strings, numbers, booleans, `None`, lists, or dictionaries
+containing JSON-compatible values. Printing captures logs for the local test
+result; it does not replace the function's return value. The deployed tool result
+contains the returned JSON value.
+
+The sandbox supports Python data processing and the injected HTTP interface. It
+does not provide a general CPython environment: do not assume `requests`,
+`aiohttp`, an SDK package, filesystem APIs, subprocesses, or arbitrary imports are
+available. `json` and the examples on this page are supported; test additional
+language or library features with the exact source using `agent tools test`.
+
 ## Schemas
 
 The schema is sent as a strict function-tool schema and validates arguments before
@@ -55,6 +83,18 @@ optional values with nullable types, such as `type: [string, "null"]`.
 Local `$defs` references and nested `anyOf` schemas are supported. Remote schema
 references and a root `anyOf` are rejected. Annotations in the Python source do not
 generate the schema.
+
+The accepted schema keywords are:
+
+| Purpose | Keywords |
+| --- | --- |
+| Types and descriptions | `type`, `title`, `description` |
+| Objects and arrays | `properties`, `required`, `additionalProperties`, `items`, `minItems`, `maxItems` |
+| Reuse and alternatives | `$defs`, local `$ref`, nested `anyOf` |
+| Value constraints | `enum`, `const`, `format`, `pattern`, `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf` |
+
+Other keywords, including `$schema`, `allOf`, `oneOf`, `minLength`, and
+`maxLength`, are rejected by the current strict-schema validator.
 
 ## HTTP and optional secrets
 
@@ -78,6 +118,37 @@ and either a JSON value in `json` or a string in `body`. The response exposes
 HTTP error statuses are returned normally until `raise_for_status()` is called.
 Transport errors and invalid requests raise Python exceptions.
 
+### Request arguments
+
+```python
+await http.request(
+    url=None,
+    connection=None,
+    path=None,
+    method="GET",
+    headers=None,
+    params=None,
+    json=None,
+    body=None,
+)
+```
+
+| Argument | Supported value |
+| --- | --- |
+| `url` | An absolute public HTTP(S) URL, optionally passed positionally. Use it without `connection` or `path`. Embedded URL credentials and fragments are rejected. |
+| `connection` | The name of an entry in the agent's `connections` map. Use it instead of `url`. |
+| `path` | Optional path joined to that connection's `base_url`. The resolved URL must stay on the configured origin. A leading `/` resolves from the origin root. |
+| `method` | Uppercase `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, or `OPTIONS`. Defaults to `GET`. |
+| `headers` | A map of string names to string values. Transport headers are host-controlled; secret-backed calls also reserve `Authorization`. |
+| `params` | A map whose values are strings, numbers, or booleans. Lists, objects, and null query values are rejected. |
+| `json` | A JSON request body. `None` means no JSON body. Cannot be combined with `body`. |
+| `body` | A string request body. Cannot be combined with a non-null `json` value. |
+
+`response.json()` and `response.raise_for_status()` are synchronous methods after
+the awaited request. Response headers use lowercase names and omit `set-cookie`.
+The interface returns text and JSON; it does not expose streaming responses,
+binary uploads, multipart file uploads, or a Python HTTP client session.
+
 Connections without `use_proxy_secret` make ordinary HTTP requests. Connections
 with a secret use MeshAgent's existing secret proxy, which checks permission and
 injects authorization. The managed agent's `run_as` service account needs the
@@ -85,6 +156,20 @@ injects authorization. The managed agent's `run_as` service account needs the
 values nor the runtime's bearer token are supplied to the script. Secret-backed
 requests cannot override the authorization header, and a connection's path must
 stay on its configured origin. Only configure trusted API destinations for secrets.
+
+Set `run_as` on the agent to the service account that will make deployed calls:
+
+```yaml
+run_as:
+  email: agent@service.example.meshagent.dev
+  scopes: [secrets:proxy, llm_proxy]
+```
+
+Use your actual service account email. The caller saving the agent needs
+`run_service_as`; the runtime identity also needs `use_proxy_secrets` on the
+secret's owning service account, as well as `use_proxy` on the secret itself.
+See [Service Account Secrets](../../secrets/service_account_secrets) and the
+[HTTP Secret Proxy](../../secrets/http_proxy) for permission and secret setup.
 
 Host-controlled transport headers cannot be overridden. Direct requests do not
 follow redirects. Deployed tools can call public HTTP(S) destinations; private
@@ -124,6 +209,8 @@ cargo install --path rust/meshagent-python-tools --locked
 Alternatively, set `MESHAGENT_MONTY_BIN` and `MESHAGENT_PYTHON_TOOLS_BIN` to the
 corresponding executables. The Rust CLI calls the shared runner directly and only
 needs the Monty executable.
+
+## Execution limits
 
 Each invocation has a 30-second total deadline, a 10-second interpreter execution
 budget per feed, a 64 MiB sandbox memory limit, and at most 32 HTTP calls. Each
