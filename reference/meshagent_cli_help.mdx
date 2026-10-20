@@ -6035,6 +6035,8 @@ $ meshagent room sqlite database [OPTIONS] COMMAND [ARGS]...
 * `create`: Create a SQLite database in a room.
 * `drop`: Drop a SQLite database in a room.
 * `inspect`: Inspect a SQLite database in a room.
+* `settings`: Read database replication settings, or...
+* `flush`: Wait until pending database writes are...
 
 ##### `meshagent room sqlite database list`
 
@@ -6070,6 +6072,8 @@ $ meshagent room sqlite database create [OPTIONS]
 * `-d, --database TEXT`: Database name  [required]
 * `--mode TEXT`: create | overwrite | create_if_not_exists  [default: create]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--replication-mode [synchronous|asynchronous]`: Commit acknowledgement: synchronous or asynchronous replication
+* `--flush-interval-ms INTEGER RANGE`: Background replication interval in milliseconds (asynchronous mode)  [1&lt;=x&lt;=3600000]
 * `--help`: Show this message and exit.
 
 ##### `meshagent room sqlite database drop`
@@ -6108,6 +6112,44 @@ $ meshagent room sqlite database inspect [OPTIONS]
 * `-d, --database TEXT`: Database name  [required]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `-o, --output TEXT`: output format   [default: table]
+* `--help`: Show this message and exit.
+
+##### `meshagent room sqlite database settings`
+
+Read database replication settings, or save changes immediately. Asynchronous mode can lose unpublished writes if local state is lost.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database settings [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--replication-mode [synchronous|asynchronous]`
+* `--flush-interval-ms INTEGER RANGE`: [1&lt;=x&lt;=3600000]
+* `--help`: Show this message and exit.
+
+##### `meshagent room sqlite database flush`
+
+Wait until pending database writes are replicated to remote storage.
+
+**Usage**:
+
+```console
+$ meshagent room sqlite database flush [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room TEXT`: Room name  [default: (dynamic)]
+* `-d, --database TEXT`: [required]
+* `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--help`: Show this message and exit.
 
 #### `meshagent room sqlite recover`

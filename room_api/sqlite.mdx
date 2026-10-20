@@ -48,3 +48,37 @@ All SDKs expose the operation on both the SQLite client and the bound database w
 The wire tool is `sqlite.execute_sql_batch`. Its JSON request contains `database`, optional `namespace`, and `commands`. Its JSON response contains ordered `results`: statement entries carry `kind: "statement"` and `rows_affected`; query entries carry `kind: "query"`, `query_id`, and `schema_base64` containing an Arrow IPC schema. SDKs decode schemas and reuse `read_sql_query` and `close_sql_query` for query results.
 
 See [SQLite recovery](/room_api/sqlite-recovery) for persistent storage recovery.
+
+## Replication settings
+
+Persistent databases default to `replication_mode: "synchronous"`: a commit waits for remote publication. Opt into `"asynchronous"` to acknowledge writes before remote publication. Unpublished writes can be lost if the process or its local state is lost. `flush_interval_ms` defaults to `1000` and accepts integers from `1` through `3600000`. It controls background replication in asynchronous mode; it does not guarantee a maximum loss window during a storage outage.
+
+```python
+await room.sqlite.create_database(
+    name="app",
+    replication_mode="asynchronous",
+    flush_interval_ms=1000,
+)
+settings = await room.sqlite.get_database_settings(name="app")
+await room.sqlite.update_database_settings(
+    name="app", replication_mode="synchronous"
+)
+await room.sqlite.flush_database(name="app")
+```
+
+Updates preserve omitted fields. Saving first waits for pending writes to replicate, persists the policy alongside the database, and applies it to the open connection. A failed flush fails the save and retains the old policy. Settings are loaded again when the database is reopened. An existing database opened with `create_if_not_exists` retains its settings.
+
+The TypeScript and Dart clients expose `replicationMode` and `flushIntervalMs` creation options and `getDatabaseSettings`, `updateDatabaseSettings`, and `flushDatabase`. Rust exposes `create_database_with_settings`, `get_database_settings`, `update_database_settings`, and `flush_database`, using `SqliteReplicationSettings` and `SqliteReplicationMode`. Reading settings requires database inspect permission; changing settings or explicitly flushing requires database management permission (the existing `drop` grant). Use these APIs rather than connection-level replication pragmas.
+
+```bash
+meshagent room sqlite database create --room my-room --database app \
+  --replication-mode asynchronous --flush-interval-ms 1000
+meshagent room sqlite database settings --room my-room --database app
+meshagent room sqlite database settings --room my-room --database app \
+  --replication-mode synchronous
+meshagent room sqlite database flush --room my-room --database app
+```
+
+In Studio, the **New SQLite Database** dialog includes replication settings. For an existing database, open it and select **Settings**, then **Save**. Changes take effect when Save completes; no reconnect is required. Local databases without a remote VFS retain normal local SQLite commit behavior.
+
+Batching remains useful in either mode. Synchronous batches amortize remote publication across multiple commands without weakening acknowledgement durability.
