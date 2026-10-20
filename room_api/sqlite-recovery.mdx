@@ -34,6 +34,11 @@ not run insertion triggers. Success is reported after replica synchronization fo
 replicated databases. Source files with a WAL or rollback journal must first be
 converted to a standalone backup. Uploads are limited to 64 GiB.
 
+Replication settings are stored separately from SQLite pages and are not included
+in a standalone database backup. A restored database starts with the default
+synchronous policy. To change it after restoration, use the
+[replication settings API, CLI, or Studio settings](/room_api/sqlite#replication-settings).
+
 Interrupted uploads are discarded. If the connection fails after the final upload
 confirmation, the server may have completed the restore: inspect the destination
 before retrying. A retry with the same name never overwrites a database. Retain the

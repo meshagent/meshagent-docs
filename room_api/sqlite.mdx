@@ -1,6 +1,6 @@
 ---
 title: "SQLite"
-description: "Room SQLite databases and atomic SQL batches."
+description: "Room SQLite databases, atomic SQL batches, and configurable replication."
 ---
 
 Use `room.sqlite.database("app", namespace=["team"])` to bind a database and namespace. Create the database with `await db.create_database()` before using it.
@@ -51,7 +51,20 @@ See [SQLite recovery](/room_api/sqlite-recovery) for persistent storage recovery
 
 ## Replication settings
 
-Persistent databases default to `replication_mode: "synchronous"`: a commit waits for remote publication. Opt into `"asynchronous"` to acknowledge writes before remote publication. Unpublished writes can be lost if the process or its local state is lost. `flush_interval_ms` defaults to `1000` and accepts integers from `1` through `3600000`. It controls background replication in asynchronous mode; it does not guarantee a maximum loss window during a storage outage.
+Replication settings belong to each database, including its namespace. They control when a write is acknowledged relative to publication to remote storage.
+
+| Setting | Default | Accepted values | Behavior |
+| --- | --- | --- | --- |
+| `replication_mode` | `"synchronous"` | `"synchronous"`, `"asynchronous"` | Synchronous commits wait for remote publication. Asynchronous commits return before remote publication and publish committed changes in the background. |
+| `flush_interval_ms` | `1000` | Integer from `1` through `3600000` | Background replication interval in milliseconds for asynchronous mode. |
+
+Use synchronous mode when acknowledged writes must already be in remote storage. Asynchronous mode reduces commit latency by allowing multiple commits to accumulate before publication. Unpublished writes can be lost if the process or its local state is lost. The flush interval is a scheduling interval, not a guaranteed maximum loss window: active transactions or storage failures can delay publication.
+
+Local databases without a remote VFS retain normal local SQLite commit behavior.
+
+### Create a database
+
+Set either option when creating a database. Omitted options use the defaults above.
 
 ```python
 await room.sqlite.create_database(
@@ -59,16 +72,57 @@ await room.sqlite.create_database(
     replication_mode="asynchronous",
     flush_interval_ms=1000,
 )
+```
+
+An existing database opened with `mode="create_if_not_exists"` retains its settings, even if creation options are supplied. Use `update_database_settings` to change an existing database.
+
+### Read and update settings
+
+```python
 settings = await room.sqlite.get_database_settings(name="app")
+print(settings.replication_mode, settings.flush_interval_ms)
+
+# Keep the current replication mode and change only the interval.
+settings = await room.sqlite.update_database_settings(
+    name="app", flush_interval_ms=250
+)
+
+# Switch back to waiting for remote publication on every commit.
 await room.sqlite.update_database_settings(
     name="app", replication_mode="synchronous"
 )
+```
+
+Pass the same `namespace` to creation, settings, and flush calls when the database is in a namespace, for example `namespace=["team"]`.
+
+Updates preserve omitted fields. Save waits for pending writes to replicate before switching policy. When it succeeds, the settings are persisted and active on the open connection; no reconnect or room restart is required. A failed flush fails the save and retains the old policy. A policy change is rejected while the connection has an active transaction.
+
+Settings are stored in `replication.json` alongside the database in room storage and loaded again when the database is reopened. Databases without a saved settings file use the defaults. Use the settings API or CLI to update the policy so the running connection is updated as well.
+
+### Flush pending writes
+
+```python
 await room.sqlite.flush_database(name="app")
 ```
 
-Updates preserve omitted fields. Saving first waits for pending writes to replicate, persists the policy alongside the database, and applies it to the open connection. A failed flush fails the save and retains the old policy. Settings are loaded again when the database is reopened. An existing database opened with `create_if_not_exists` retains its settings.
+Flush waits for pending committed changes to reach remote storage without changing the replication mode or interval. Use it when an asynchronous workload reaches a point that must be replicated before continuing. A storage failure is returned to the caller, and flushing during an active transaction is rejected. Subsequent asynchronous writes still need their own publication.
+
+### SDK and wire APIs
 
 The TypeScript and Dart clients expose `replicationMode` and `flushIntervalMs` creation options and `getDatabaseSettings`, `updateDatabaseSettings`, and `flushDatabase`. Rust exposes `create_database_with_settings`, `get_database_settings`, `update_database_settings`, and `flush_database`, using `SqliteReplicationSettings` and `SqliteReplicationMode`. Reading settings requires database inspect permission; changing settings or explicitly flushing requires database management permission (the existing `drop` grant). Use these APIs rather than connection-level replication pragmas.
+
+The wire tools are `sqlite.get_database_settings`, `sqlite.update_database_settings`, and `sqlite.flush_database`. Each accepts `name` and optional `namespace`. Update also accepts either or both settings fields. All three return the current settings as JSON:
+
+```json
+{
+  "replication_mode": "asynchronous",
+  "flush_interval_ms": 1000
+}
+```
+
+### CLI
+
+Use `settings` without setting flags to read the policy, or supply flags to save changes immediately. Add `--project-id` if you do not have an activated project, and use repeatable `-n` options for a namespace.
 
 ```bash
 meshagent room sqlite database create --room my-room --database app \
@@ -76,9 +130,17 @@ meshagent room sqlite database create --room my-room --database app \
 meshagent room sqlite database settings --room my-room --database app
 meshagent room sqlite database settings --room my-room --database app \
   --replication-mode synchronous
+meshagent room sqlite database settings --room my-room --database app \
+  --flush-interval-ms 250
 meshagent room sqlite database flush --room my-room --database app
 ```
 
-In Studio, the **New SQLite Database** dialog includes replication settings. For an existing database, open it and select **Settings**, then **Save**. Changes take effect when Save completes; no reconnect is required. Local databases without a remote VFS retain normal local SQLite commit behavior.
+### Studio
 
-Batching remains useful in either mode. Synchronous batches amortize remote publication across multiple commands without weakening acknowledgement durability.
+The **New SQLite Database** dialog includes **Replication Mode** and **Flush Interval (ms)**. For an existing database, open it and select **Settings**, edit either value, then select **Save**. Save waits for pending replication and applies the settings immediately. The interval controls background publication when asynchronous mode is selected.
+
+### Batching and latency
+
+Batching remains useful in either mode. Synchronous batches amortize remote publication across multiple commands without weakening acknowledgement durability. Asynchronous replication does not enable concurrent SQLite writers; writes still serialize for a database.
+
+A client request to a remote room also includes network and request-processing latency. Asynchronous replication removes the wait for remote storage publication from each commit, but a separate request per statement still pays the client-to-room round trip. Use `execute_sql_batch` to group related commands into one request and transaction.
