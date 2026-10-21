@@ -150,13 +150,41 @@ the awaited request. Response headers use lowercase names and omit `set-cookie`.
 The interface returns text and JSON; it does not expose streaming responses,
 binary uploads, multipart file uploads, or a Python HTTP client session.
 
-Connections without `use_proxy_secret` make ordinary HTTP requests. Connections
-with a secret use MeshAgent's existing secret proxy, which checks permission and
-injects authorization. The managed agent's `run_as` service account needs the
+Connections without secret references make ordinary HTTP requests. Connections
+with a secret use MeshAgent's secret proxy, which checks permission and injects
+the configured headers. The managed agent's `run_as` service account needs the
 `secrets:proxy` scope and the secret's `use_proxy` permission. Neither secret
 values nor the runtime's bearer token are supplied to the script. Secret-backed
-requests cannot override the authorization header, and a connection's path must
+requests cannot override the configured secret headers, and a connection's path must
 stay on its configured origin. Only configure trusted API destinations for secrets.
+
+For an opaque secret, `use_proxy_secret` sends `Authorization: Bearer <value>`;
+store only the token as the secret value. Use connection `headers` when an API
+requires a different scheme or several headers:
+
+```yaml
+connections:
+  crm:
+    base_url: https://api.example.com
+    headers:
+      - name: Authorization
+        secret:
+          id: basic-credentials
+        prefix: "Basic "
+      - name: X-API-Key
+        secret:
+          id: api-key
+      - name: Accept
+        value: application/json
+```
+
+Each secret reference inserts the secret's value after `prefix`, which defaults
+to an empty string. For HTTP Basic, store the base64-encoded `username:password`
+as the secret value. Literal headers such as `Accept` are stored in the agent
+configuration; do not put credentials in literal headers. The proxy checks
+`use_proxy` for every referenced secret and sends no upstream request if any
+check fails. Tool code cannot override a secret-backed header. OAuth secrets
+continue to use their saved `token_type` and access token.
 
 Set `run_as` on the agent to the service account that will make deployed calls:
 
@@ -175,7 +203,43 @@ See [Service Account Secrets](../../secrets/service_account_secrets) and the
 Host-controlled transport headers cannot be overridden. Direct requests do not
 follow redirects. Deployed tools can call public HTTP(S) destinations; private
 addresses are blocked. The runtime does not expose filesystem access, process
-execution, arbitrary Python packages, or environment variables.
+execution, or arbitrary Python packages.
+
+## Environment variables
+
+Declare values in `environment` using the same `name`, `value`, and `secret`
+shape as container environment entries. Only declared variables are visible to
+the embedded Python tool through `os.getenv()` and `os.environ`:
+
+```yaml
+run_as:
+  email: agent@service.example.meshagent.dev
+  scopes: [secrets:proxy, secrets:read, llm_proxy]
+environment:
+  - name: CRM_URL
+    value: https://api.example.com
+  - name: CRM_API_KEY
+    secret:
+      id: crm-api-key
+```
+
+```python
+import os
+
+async def lookup_customer(args):
+    api_url = os.getenv("CRM_URL")
+    api_key = os.environ["CRM_API_KEY"]
+    response = await http.request(
+        api_url + "/customers", headers={"X-API-Key": api_key}
+    )
+    return response.json()
+```
+
+Secret environment entries require the managed agent's `run_as` identity and
+`secrets:read` scope. The secret must belong to that service account and allow
+value access; `http_only` secrets cannot be exposed as environment variables.
+Use connection secret headers when the script does not need to read the secret.
+The tool sees only these declared entries, never the host process environment.
 
 ## Test the current source before deploying
 
@@ -199,17 +263,15 @@ against a local development server.
 
 Managed agents use a dedicated Monty execution pool when deployed with the default Helm configuration. HTTP calls and secret-proxy credentials stay in the managed-agent host. Each active Python invocation reserves an interpreter until it completes, including time waiting on HTTP; idle agent connections do not reserve interpreters. The pool scales independently of managed agents.
 
-The Rust CLI container image includes Monty for local testing. For a local source
-checkout, install the pinned worker and, for the Python CLI, the shared runner:
+The Python CLI installs Monty and its worker with the `pydantic-monty` dependency;
+its packaged executable includes the worker. No separate runner installation is
+needed. For a local Rust CLI source checkout, install the pinned Monty worker:
 
 ```bash
 cargo install monty-runtime --version 1.2.0 --locked
-cargo install --path rust/meshagent-python-tools --locked
 ```
 
-Alternatively, set `MESHAGENT_MONTY_BIN` and `MESHAGENT_PYTHON_TOOLS_BIN` to the
-corresponding executables. The Rust CLI calls the shared runner directly and only
-needs the Monty executable.
+Alternatively, set `MESHAGENT_MONTY_BIN` to its executable for the Rust CLI.
 
 ## Execution limits
 
