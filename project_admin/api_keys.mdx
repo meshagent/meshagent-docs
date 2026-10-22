@@ -37,6 +37,29 @@ To activate an existing key later, use:
 meshagent service-account api-key activate <key-value>
 ```
 
+## Permissions to create keys
+
+The caller must have both `api_key_creator` and `api_key_manager` on the project. Service accounts do not have these roles by default, so a default service account cannot create API keys, including keys for itself. OAuth credentials must also include the `developer` scope.
+
+A project administrator can assign the roles with the CLI. For example, to give a service account `member`, `developer`, and both API-key roles:
+
+```bash
+meshagent iam grant \
+  --project-id "$PROJECT_ID" \
+  --resource-type project \
+  --resource-id "$PROJECT_ID" \
+  --subject-type service_account \
+  --subject-id "$SERVICE_ACCOUNT_ID" \
+  --role member \
+  --role developer \
+  --role api_key_creator \
+  --role api_key_manager
+```
+
+`iam grant` replaces the subject's direct roles on that resource. Include any other existing direct roles you want to retain in the same command.
+
+These permissions apply to the whole project. A service account with both roles can create an API key for **any other service account in that project** and use that key to act as the target account. Grant these roles only to callers trusted with that authority.
+
 ## Rotate or remove keys
 
 List the keys for a service account in the active project:
