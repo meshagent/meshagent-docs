@@ -74,6 +74,10 @@ the site is rebound to another resource. The visitor ID is not itself a credenti
 
 Project roles apply at the project level. The user who creates a project becomes its `owner` and automatically inherits `admin` access. Admins inherit `user_profile_editor` along with the other administrative project permissions. `developer` inherits a focused operational subset and does not include `user_profile_editor`. Direct, narrower roles can also be granted independently.
 
+Project IAM policy operations require the caller's effective project `admin` role. Managing project groups and their membership requires `group_manager`, which admins inherit. These checks apply to service-account API keys as well as users; service-account OAuth tokens also require the `admin` scope. Default service accounts have neither administrative role and cannot assign themselves project roles or add themselves to privileged groups. An authorized administrator must delegate these permissions. Treat `group_manager` as privileged access: it permits changing membership in groups that may carry project admin or API-key roles.
+
+Policy operations on a `service_account` resource require the caller's effective project `service_account_manager` role and, for OAuth credentials, the `developer` scope. This prevents default service accounts from assigning themselves `run_service_as` on another account. A delegated policy manager can grant run-as access to any service account in the project, including an administrator, so this role also carries sensitive delegation authority.
+
 | Role | Controls | What it allows |
 | --- | --- | --- |
 | `owner` | Project ownership | Owns the project and implicitly has project admin access. |
