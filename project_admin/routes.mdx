@@ -124,7 +124,13 @@ This exposes `websites/docs/logo.svg` as `/logo.svg`. With `index: true`, reques
 
 When a requested object does not exist, `notFound` names a fallback file relative to the same `targetContent.subpath`. In the example, a missing object serves `websites/docs/errors/404.html` with status `404`. A leading `/` is accepted but still resolves beneath `websites/docs`; it never changes the storage root. If the fallback file is also missing, the normal not-found response is returned.
 
-Content routes support `GET`, `HEAD`, and CORS preflight `OPTIONS` requests. CORS rules use the familiar object-storage controls for allowed origins, methods, and headers, exposed response headers, preflight cache age, and credentials. Credentialed CORS rules must list explicit origins rather than `*`.
+Content routes support `GET`, `HEAD`, and CORS preflight `OPTIONS` requests. CORS rules use the familiar object-storage controls for allowed origins, methods, and headers, exposed response headers, preflight cache age, and credentials. Credentialed content CORS rules must list explicit origins rather than `*`.
+
+The `allowedOrigins` lists in all of a route's `targetContent.cors` rules also allow those origins to call `POST /.well-known/meshagent/authorize` for the route's room or managed agent. Origins match exactly, including scheme and port; `*` allows every origin. No CORS rules means the authorization endpoint retains its same-origin default. Existing configuration stays in `targetContent.cors`; no separate authorization origin setting is required.
+
+Authorization supports `POST` and preflight `OPTIONS`, independently of content `allowedMethods`. It always uses credentialed CORS and echoes the allowed requesting origin, including when a content rule uses `*` or `allowCredentials: false`. Preflight accepts `Content-Type` and the `allowedHeaders` from matching content rules. Everyone permissions and managed-agent participant thread isolation still apply.
+
+Allowed cross-origin authorization over HTTPS sets the anonymous session cookie with `SameSite=None; Secure`. Browser third-party cookie policies may still prevent session persistence across unrelated sites. Keep the authorization and connection paths outside CDN caching.
 
 Web serving requires MeshAgent's built-in GCS or local-filesystem room storage provider. Other room storage implementations are rejected with `unsupported room storage type: X for web serving` rather than being accessed through a running room.
 

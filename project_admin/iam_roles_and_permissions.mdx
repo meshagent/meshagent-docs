@@ -37,8 +37,13 @@ callers. They do not create project membership. Managed agents must use
 `thread_isolation: participant` for anonymous connections; global thread sharing
 cannot provide private visitor conversations.
 
-On a website bound to a room or agent, send a same-origin POST to
-`/.well-known/meshagent/authorize`. The response includes a short-lived `jwt`,
+On a website bound to a room or agent, send a POST to
+`/.well-known/meshagent/authorize`. Requests are same-origin by default. To allow
+cross-origin callers, include their exact origins (or `*` for all origins) in the
+route's existing `paths[].targetContent.cors[].allowedOrigins` lists. The
+endpoint uses the combined origin lists across content paths; no separate
+authorization origin setting is needed. Content `allowedMethods` do not restrict
+the authorization POST. The response includes a short-lived `jwt`,
 `expires_in`, and `connect_path` for the room or agent WebSocket. The server sets
 an HttpOnly browser cookie to retain the anonymous identity across visits. Keep
 the cookie when renewing credentials. Clearing it creates a new identity.
