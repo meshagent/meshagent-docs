@@ -1,9 +1,9 @@
 ---
-title: Desktop Apps
-description: Download the production MeshAgent Studio and Powerboards desktop apps.
+title: Downloads
+description: Download MeshAgent Studio, Powerboards, and the Enterprise Codex CLI.
 ---
 
-MeshAgent Studio and Powerboards are available as desktop apps for macOS and Windows. Use these links to install the production versions.
+Download the production MeshAgent Studio and Powerboards desktop apps for macOS and Windows, or the Enterprise Codex CLI for macOS, Windows, and Linux.
 
 ## MeshAgent Studio
 
@@ -18,6 +18,79 @@ MeshAgent Studio and Powerboards are available as desktop apps for macOS and Win
 | --- | --- |
 | macOS | [Download Powerboards for macOS](https://storage.googleapis.com/meshagent-desktop-builds/powerboards/mac/Powerboards.dmg) |
 | Windows | [Download Powerboards for Windows](https://storage.googleapis.com/meshagent-desktop-builds/powerboards/windows/powerboards.appinstaller) |
+
+## Enterprise Codex
+
+Enterprise Codex is MeshAgent's distribution of the open-source OpenAI Codex CLI. It is maintained by MeshAgent and is not an official OpenAI distribution.
+
+MeshAgent hosts official releases in its `meshagent-enterprise-codex-builds` Google Cloud Storage bucket. Homebrew and WinGet download packages from this bucket.
+
+### Install with Homebrew on macOS or Linux
+
+```bash
+brew tap meshagent/homebrew-meshagent
+brew trust --formula meshagent/homebrew-meshagent/enterprise-codex
+brew install enterprise-codex
+codex --version
+```
+
+Homebrew selects the package for your operating system and architecture and installs the `codex` command.
+
+### Install with WinGet
+
+Once Enterprise Codex is available in the public WinGet catalog, open PowerShell and run:
+
+```powershell
+winget install --id MeshAgent.EnterpriseCodex --exact --source winget --scope user
+```
+
+WinGet installs the latest version available in the catalog and selects x64 or ARM64 for your machine. Open a new PowerShell window to verify the installation and launch Enterprise Codex:
+
+```powershell
+codex --version
+codex
+```
+
+If WinGet cannot find the package, use the [local manifest instructions](#install-with-winget-using-local-manifests) below. New releases become available in the catalog after Microsoft approves their submission.
+
+### Install with WinGet using local manifests
+
+Install Enterprise Codex from MeshAgent's official manifests in the public `meshagent-enterprise-codex-builds` bucket. The manifest download is updated with each successfully tested Windows release. This method works before the package is available in the public WinGet catalog. You need Windows, PowerShell, and WinGet; check that `winget --version` succeeds before continuing.
+
+1. Open PowerShell **as administrator** and enable local manifests once:
+
+   ```powershell
+   winget settings --enable LocalManifestFiles
+   ```
+
+   Close that window. Use a regular PowerShell window for the remaining commands. See Microsoft's [local manifest documentation](https://learn.microsoft.com/en-us/windows/package-manager/winget/install#local-install) for details.
+
+2. [Download the latest WinGet manifests](https://storage.googleapis.com/meshagent-enterprise-codex-builds/winget-manifests.zip). Extract the ZIP into an `enterprise-codex-winget` folder inside your user account's `Downloads` folder. That folder should contain the three `.yaml` files directly, without an extra nested folder. Use a fresh folder so it contains only the files from this download.
+
+3. In a regular PowerShell window, validate the folder containing the manifests:
+
+   ```powershell
+   winget validate --manifest "$HOME\Downloads\enterprise-codex-winget"
+   if ($LASTEXITCODE -ne 0) { throw "WinGet manifest validation failed." }
+   ```
+
+4. After validation succeeds, install for your Windows user:
+
+   ```powershell
+   winget install --manifest "$HOME\Downloads\enterprise-codex-winget" --scope user --location "$env:LOCALAPPDATA\Programs\EnterpriseCodex"
+   if ($LASTEXITCODE -ne 0) { throw "WinGet installation failed." }
+   ```
+
+   WinGet selects x64 or ARM64 for your machine, downloads the matching ZIP, verifies its checksum, and installs the CLI, Code Mode host, and Windows sandbox helpers together.
+
+5. Verify the installation and launch Enterprise Codex:
+
+   ```powershell
+   & "$env:LOCALAPPDATA\Programs\EnterpriseCodex\codex.exe" --version
+   & "$env:LOCALAPPDATA\Programs\EnterpriseCodex\codex.exe"
+   ```
+
+   The full path selects Enterprise Codex even if another `codex` command is already on your `PATH`.
 
 ## Related
 
