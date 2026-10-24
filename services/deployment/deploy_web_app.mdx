@@ -76,7 +76,7 @@ This server listens on the port from `PORT`, or `8080` when `PORT` is not set. T
 Add a Dockerfile:
 
 ```dockerfile Dockerfile
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 
 WORKDIR /app
 COPY package*.json ./
@@ -94,7 +94,7 @@ A Dockerfile is the build recipe for the app. It tells Docker and MeshAgent whic
 
 The Dockerfile above does the following:
 
-- `FROM node:22-alpine` starts from a small Linux image with Node.js installed.
+- `FROM node:22.23.4-alpine` starts from a small Linux image with Node.js installed.
 - `WORKDIR /app` sets the working directory inside the image.
 - `COPY package*.json ./` copies `package.json` and `package-lock.json`.
 - `RUN npm ci --omit=dev` installs production dependencies from the lockfile.
@@ -305,7 +305,7 @@ The file is created locally because the app is running on your machine. The loca
 Update the Dockerfile so the container writes app data to `/data`:
 
 ```dockerfile Dockerfile
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 
 WORKDIR /app
 COPY package*.json ./
@@ -523,14 +523,14 @@ A Docker image is built in layers. A normal Dockerfile can leave build tools, so
 A multistage Dockerfile separates the build environment from the runtime environment. The first stage installs dependencies and prepares the app. The final stage copies only the files needed to run the server:
 
 ```dockerfile Dockerfile
-FROM node:22-alpine AS build
+FROM node:22.23.4-alpine AS build
 
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY server.js ./
 
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 
 WORKDIR /app
 COPY --from=build /src/package.json /src/package-lock.json ./
@@ -564,7 +564,7 @@ npx ncc build server.js --target es2022 --out dist
 Update the Dockerfile to run the bundled output:
 
 ```dockerfile Dockerfile
-FROM node:22-alpine AS build
+FROM node:22.23.4-alpine AS build
 
 WORKDIR /src
 COPY package.json package-lock.json ./
@@ -572,7 +572,7 @@ RUN npm ci
 COPY server.js ./
 RUN npx ncc build server.js --target es2022 --out dist
 
-FROM node:22-alpine
+FROM node:22.23.4-alpine
 
 WORKDIR /app
 COPY --from=build /src/dist/index.js ./index.js
@@ -595,7 +595,7 @@ The previous Dockerfile still ships a full Node base image as part of your app i
 `scratch` is Docker's empty base image. It contains only the files you copy into it. On its own, a `scratch` image cannot run Node, so add `LABEL meshagent.runtime=node` to tell `meshagent deploy` that this artifact should run on MeshAgent's Node runtime:
 
 ```dockerfile Dockerfile
-FROM node:22-alpine AS build
+FROM node:22.23.4-alpine AS build
 
 WORKDIR /src
 COPY package.json package-lock.json ./
