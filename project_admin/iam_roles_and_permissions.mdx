@@ -79,6 +79,14 @@ the site is rebound to another resource. The visitor ID is not itself a credenti
 
 Project roles apply at the project level. The user who creates a project becomes its `owner` and automatically inherits `admin` access. Admins inherit `user_profile_editor` along with the other administrative project permissions. `developer` inherits a focused operational subset and does not include `user_profile_editor`. Direct, narrower roles can also be granted independently.
 
+Project role guards enforce the requested effective role for both users and service accounts. A valid service-account credential alone does not authorize project operations: the caller needs the applicable creator, inventory, manager, member, billing, or other role, directly or through inheritance. OAuth credentials must also satisfy the endpoint's scope requirement; native API keys do not carry OAuth scopes. Roles are checked on each request, including when the API-key identity is cached, so revoking a role removes the corresponding access.
+
+This includes API-key listing and revocation (`api_key_inventory` and `api_key_manager`), service-account creation and management, custom-domain creation, and project feed inventory. Service-account feed listings require `feed_inventory` even when `view` is omitted or set to `my`. Default service-account grants are unchanged, but operations outside those grants now require explicit delegation.
+
+Project IAM policy operations require the caller's effective project `admin` role. Managing project groups and their membership requires `group_manager`, which admins inherit. These checks apply to service-account API keys as well as users; service-account OAuth tokens also require the `admin` scope. Default service accounts have neither administrative role and cannot assign themselves project roles or add themselves to privileged groups. An authorized administrator must delegate these permissions. Treat `group_manager` as privileged access: it permits changing membership in groups that may carry project admin or API-key roles.
+
+Policy operations on a `service_account` resource require the caller's effective project `service_account_manager` role and, for OAuth credentials, the `developer` scope. This prevents default service accounts from assigning themselves `run_service_as` on another account. A delegated policy manager can grant run-as access to any service account in the project, including an administrator, so this role also carries sensitive delegation authority.
+
 | Role | Controls | What it allows |
 | --- | --- | --- |
 | `owner` | Project ownership | Owns the project and implicitly has project admin access. |
@@ -103,9 +111,9 @@ Project roles apply at the project level. The user who creates a project becomes
 | `oauth_client_creator` | OAuth client creation | Create project OAuth clients. |
 | `oauth_client_inventory` | OAuth client inventory | List and inspect project OAuth clients. |
 | `oauth_client_manager` | OAuth client management | Manage project OAuth clients. |
-| `api_key_creator` | API key creation | Create API keys. |
+| `api_key_creator` | API key creation | Together with `api_key_manager`, create API keys for any service account in the project. |
 | `api_key_inventory` | API key inventory | List and inspect API keys. |
-| `api_key_manager` | API key management | Manage API keys. |
+| `api_key_manager` | API key management | Manage API keys; also required with `api_key_creator` to create them. |
 | `service_creator` | Service creation | Create deployed services. |
 | `service_inventory` | Service inventory | List and inspect deployed services. |
 | `service_manager` | Service management | Manage deployed services. |
