@@ -98,37 +98,49 @@ External OAuth registrations live under the project or a room:
 
 ## Login branding
 
-In Studio, open **Account management**, select your project, then open **OAuth Clients**
-and create or edit a client. Set **Login logo URL** to an absolute HTTP(S) image URL
-and choose **Login appearance**: **Light**, **Dark**,
-or **Auto (system)**. Leave the logo empty to use MeshAgent's logo. Auto follows the
-browser's color preference. These settings also apply to the OAuth consent screen.
+In Studio, open **Account management**, select your project, then open **Login Branding**.
+Project administrators can enable branding and set a **Company name**, an absolute
+HTTP(S) **Logo image URL**, and **Light** or **Dark** appearance. Branding is disabled
+by default. The image replaces the MeshAgent logo in the existing 64 × 64 area;
+leave the URL blank to keep the default logo.
 
-The same settings are available through the CLI:
+When enabled, these settings apply to room IAP login screens for registered room
+domains in this project. They also apply to OAuth login and consent screens **only
+when the OAuth client's registered project scope is exactly `project/{project_id}`
+for its owning project**. Other permission and room/agent scopes may be present.
+Branding does **not** apply to clients with `project/*`, multiple project scopes,
+a different project's scope, or no project restriction. Requesting a narrower scope
+at login does not enable branding for an unrestricted client. These clients keep
+the default MeshAgent logo and system appearance, with their application name.
 
-```bash
-meshagent oauth-client update CLIENT_ID --logo-url https://example.com/logo.svg --theme dark
-meshagent oauth-client update CLIENT_ID --clear-logo --theme auto
-meshagent oauth-client get CLIENT_ID
-```
+The settings are stored in the `login-branding` project settings document:
+`PUT /accounts/projects/{project_id}/settings/login-branding` with
+`enabled`, `company_name`, `logo_url` (HTTP(S) URL or null), and `theme` (`light` or
+`dark`). The same endpoint supports GET and DELETE. Deleting the document disables
+branding. Legacy OAuth client `logo_url` and `theme` metadata no longer controls
+login appearance; configure the project's Login Branding settings instead.
 
-For API clients, these optional settings live alongside `name` in the OAuth client's
-`metadata` object: `logo_url` and `theme` (`light`, `dark`, or `auto`). Preserve other
-metadata entries when updating the object. Remove `logo_url` to restore the default
-logo; omitted `theme` defaults to `auto`.
+## Email login
 
-## Email and password login
-
-Deployment administrators can enable email/password login alongside Google and
-Microsoft in the MeshAgent Helm chart:
+Deployment administrators can enable email/password and magic-link login alongside
+Google and Microsoft in the MeshAgent Helm chart:
 
 ```yaml
 meshagent:
   router:
     emailPasswordLoginEnabled: true
+    magicLinkLoginEnabled: true
 ```
 
-It is disabled by default. Enable the email provider in the deployment's Supabase
+Both options are disabled by default and can be enabled independently.
+`magicLinkLoginEnabled` adds **Email me a sign-in link**, including when password
+login is disabled. Users follow the one-time link to sign in without a password;
+they can also enter a code if the email template includes one. Supabase controls
+whether new users may sign up through this flow. Configure the Supabase Magic Link
+email template with `{{ .ConfirmationURL }}` for links and optionally `{{ .Token }}`
+for codes.
+
+Enable the email provider in the deployment's Supabase
 Auth configuration as well, with email confirmation required. For self-hosted
 Supabase, set `GOTRUE_MAILER_AUTOCONFIRM=false` (the local k3s default). New accounts
 must confirm their email before they can sign in or complete OAuth authorization.
@@ -151,5 +163,6 @@ with `RUN_MESHAGENT_CLOUD_SMOKE=1`, `MESHAGENT_API_URL`, `MESHAGENT_PROJECT_ID`,
 `SUPABASE_URL`, and the Supabase service-role `SUPABASE_KEY`. It creates and removes
 a temporary `tmp-<random>@timu.com` user and OAuth client. Confirmation uses an
 admin-generated code, and recovery uses an admin-generated link, so delivered
-email is not required. The test also checks forced light/dark themes, automatic
-theme changes, custom branding on consent, and the OAuth token exchange.
+email is not required. The test also checks that unrestricted clients retain default branding, automatic
+theme changes, and the OAuth token exchange. Project branding eligibility and
+settings persistence have separate router, cloud, and account-settings widget tests.
