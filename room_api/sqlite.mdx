@@ -5,6 +5,8 @@ description: "Room SQLite databases, atomic SQL batches, and configurable replic
 
 Use `room.sqlite.database("app", namespace=["team"])` to bind a database and namespace. Create the database with `await db.create_database()` before using it.
 
+SQL runs within the selected database. Connections reject `ATTACH`, including in-memory databases and filesystem URIs. `VACUUM` and `VACUUM INTO` are also unavailable because SQLite implements them using an attachment. Use the [SQLite recovery APIs](/room_api/sqlite-recovery) to download snapshots and restore databases. Normal transactions, temporary tables, and `PRAGMA optimize` remain available.
+
 ## Atomic SQL batches
 
 `execute_sql_batch` sends multiple parameterized commands in one request and executes them in one transaction. Each command contains exactly one SQL statement and its own positional or named parameters.
