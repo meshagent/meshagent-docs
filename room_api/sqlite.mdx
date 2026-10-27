@@ -5,6 +5,16 @@ description: "Room SQLite databases, atomic SQL batches, and configurable replic
 
 Use `room.sqlite.database("app", namespace=["team"])` to bind a database and namespace. Create the database with `await db.create_database()` before using it.
 
+## Table permissions
+
+SQL execution checks every table SQLite resolves, including sources in subqueries, views, triggers, and `INSERT ... SELECT`. The same checks apply to raw SQL, atomic batches, Arrow insertion, and structured search, count, update, and delete filters. A database `execute` grant does not override table read, write, or alter grants. A failed batch authorization rolls back earlier commands and publishes no query handles.
+
+Write-only grants permit ordinary updates and deletes with predicates on the table being changed. Reading other tables, SELECT subqueries, and `RETURNING` require read permission. Creating a table may populate its initial Arrow data; `create_if_not_exists` requires write permission to add data to an existing table.
+
+Raw SQL that mixes DDL with SELECT, including `CREATE TABLE ... AS SELECT` and some complex ALTER operations, also requires explicit reads of the SQLite schema tables used by that statement. The structured schema methods handle SQLite's internal schema maintenance separately. Temporary tables, virtual-table creation, extension loading, and unrecognized authorization actions are rejected. Raw PRAGMA access is restricted to supported read-only operations; table metadata requires read permission on its target, and table-valued PRAGMAs also require permission on their virtual table. Use the settings API for supported configuration changes.
+
+Native builds must compile bundled SQLite with `SQLITE_OMIT_XFER_OPT`. Cargo configuration supplies this flag when building from the repository root or the `rust` workspace. Custom packaging must preserve it: SQL operations fail closed when the linked SQLite library lacks this protection. This disables a bulk-copy optimization that otherwise skips source-table authorization; ordinary `INSERT ... SELECT` remains supported.
+
 ## Atomic SQL batches
 
 `execute_sql_batch` sends multiple parameterized commands in one request and executes them in one transaction. Each command contains exactly one SQL statement and its own positional or named parameters.
