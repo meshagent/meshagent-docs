@@ -94,6 +94,8 @@ Codex-backed process agents use Codex app-server's native runtime, not MeshAgent
 
 That means Codex app-server owns coding-agent behavior such as command execution, file changes, plans, sandboxing, approvals, and any MCP tools configured for Codex itself. MeshAgent receives those Codex events and records them in the process thread. MeshAgent also surfaces Codex diff updates as `codex` tool events in the turn stream so Studio can show code changes as part of the work.
 
+The process backend has no interactive command or file-change approval handler. If Codex asks for approval, MeshAgent declines the operation and lets the turn continue. Codex's configured approval and sandbox policies still apply; operations those policies permit without a prompt continue normally. Direct users of the synchronous Python app-server client can supply an explicit `approval_handler` to make their own authorization decisions.
+
 Use the standard LLM backend when the agent needs MeshAgent tool flags such as `--require-toolkit`, `--tool-search`, `--web-search`, `--storage`, `--mcp`, `--shell`, or `--advanced-shell`. Those flags add tools to LLM turns. Custom MeshAgent room toolkits are not exposed to Codex turns through `--tool-search` or `--require-toolkit`.
 
 ## Where to go next
