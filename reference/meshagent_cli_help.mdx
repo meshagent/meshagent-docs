@@ -5356,12 +5356,14 @@ $ meshagent room dataset [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
+* `connection`: Manage room-owned external storage connections.
 * `branch`: Manage dataset branches in a room namespace.
 * `table`: List dataset tables in a room.
 * `inspect`: Inspect a table schema in a room dataset.
 * `install`: Install required tables from a...
 * `create`: Create a room dataset table with optional...
 * `import`: Import a local Arrow, CSV, TSV, Parquet,...
+* `register`: Register an existing external Lance dataset.
 * `drop`: Drop a room dataset table.
 * `add-columns`: Add columns to a room dataset table.
 * `drop-columns`: Drop columns from a room dataset table.
@@ -5378,6 +5380,95 @@ $ meshagent room dataset [OPTIONS] COMMAND [ARGS]...
 * `index`: List indexes on a room dataset table.
 * `index-create`: Create an index on a room dataset table.
 * `index-drop`: Drop an index from a room dataset table.
+
+#### `meshagent room dataset connection`
+
+Manage room-owned external storage connections.
+
+**Usage**:
+
+```console
+$ meshagent room dataset connection [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `list`: List room external storage connections...
+* `create`: Create external storage from a local JSON...
+* `update`: Update external storage from a local JSON...
+* `delete`: Remove a room connection without deleting...
+
+##### `meshagent room dataset connection list`
+
+List room external storage connections without credentials.
+
+**Usage**:
+
+```console
+$ meshagent room dataset connection list [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id <str>`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room <str>`: Room name  [default: (dynamic)]
+* `--help`: Show this message and exit.
+
+##### `meshagent room dataset connection create`
+
+Create external storage from a local JSON file containing name, config, and credentials.
+
+**Usage**:
+
+```console
+$ meshagent room dataset connection create [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id <str>`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room <str>`: Room name  [default: (dynamic)]
+* `--file <str>`: Local connection JSON file  [required]
+* `--help`: Show this message and exit.
+
+##### `meshagent room dataset connection update`
+
+Update external storage from a local JSON file; omitted credentials are preserved.
+
+**Usage**:
+
+```console
+$ meshagent room dataset connection update [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id <str>`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room <str>`: Room name  [default: (dynamic)]
+* `--connection-id <str>`: [required]
+* `--file <str>`: Local connection JSON file  [required]
+* `--help`: Show this message and exit.
+
+##### `meshagent room dataset connection delete`
+
+Remove a room connection without deleting external data.
+
+**Usage**:
+
+```console
+$ meshagent room dataset connection delete [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id <str>`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room <str>`: Room name  [default: (dynamic)]
+* `--connection-id <str>`: [required]
+* `--help`: Show this message and exit.
 
 #### `meshagent room dataset branch`
 
@@ -5576,6 +5667,27 @@ $ meshagent room dataset import [OPTIONS]
 * `--batch-size INTEGER`: Rows per imported batch for Parquet, JSON, and Excel  [default: 8192]
 * `-n, --namespace TEXT`: Namespace path segments (repeatable). Example: -n prod -n analytics
 * `--branch TEXT`: Dataset branch name (defaults to main)
+* `--help`: Show this message and exit.
+
+#### `meshagent room dataset register`
+
+Register an existing external Lance dataset as a read-only table.
+
+**Usage**:
+
+```console
+$ meshagent room dataset register [OPTIONS]
+```
+
+**Options**:
+
+* `--project-id <str>`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--room <str>`: Room name  [default: (dynamic)]
+* `-t, --table <str>`: Catalog table name  [required]
+* `--connection-id <str>`: Room storage connection ID  [required]
+* `--path <str>`: Dataset path relative to the connection prefix  [required]
+* `-n, --namespace <str>`: Namespace path segments (repeatable). Example: -n prod -n analytics
+* `--branch <str>`: Dataset branch name (defaults to main)
 * `--help`: Show this message and exit.
 
 #### `meshagent room dataset drop`

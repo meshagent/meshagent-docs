@@ -29,6 +29,112 @@ Each room dataset contains named tables. You can create tables from a schema or 
 
 > Typed values: MeshAgent also supports `json`, `uuid`, `list`, and `struct` dataset types. In the typed SDKs, use the wrapper classes for those values, such as `DatasetJson`, `DatasetStruct`, `DatasetUuid` / `UuidValue`, and `DatasetExpression` where the client requires them.
 
+## External Lance datasets
+
+A room can register an existing Lance dataset stored in GCS, Amazon S3, or Azure
+Blob Storage. Registration adds a table name to the room catalog; the data stays
+in the external storage account.
+
+In Studio, open the room's **Storage connections…** menu next to **Volumes…**.
+Room admins can create a connection by choosing a provider, entering the bucket
+or container, an optional prefix, and the provider's credentials. When editing,
+credentials are kept unless **Replace credentials** is checked; saved values are
+never displayed.
+
+In a connected room, choose **Register dataset** on a connection. Enter a catalog
+name and a dataset path relative to the connection prefix, with an optional
+namespace and catalog branch. Registration checks access to the Lance dataset.
+Open **Datasets…** and refresh to browse the registered table.
+
+Connections can also be created using the management API. For
+example, with an authenticated Python API client named `api`:
+
+```python Python
+from meshagent.api.storage_connections import (
+    CreateStorageConnection,
+    GCSStorageConfig,
+    GCSStorageCredentials,
+)
+
+connection = await api.create_room_storage_connection(
+    project_id=project_id,
+    room="myroom",
+    connection=CreateStorageConnection(
+        name="analytics",
+        config=GCSStorageConfig(bucket="company-analytics", prefix="datasets"),
+        credentials=GCSStorageCredentials(service_account_json=service_account_json),
+    ),
+)
+
+await room.datasets.register_table(
+    name="events",
+    connection_id=str(connection.id),
+    path="events.lance",
+    namespace=["analytics"],
+)
+```
+
+Here `service_account_json` is the credential document supplied by the room
+administrator. The backend stores credentials in Vault; public connection
+responses and catalog entries do not contain them. The connection belongs to
+the room and does not depend on the creating user's identity at query time.
+
+| Provider | Configuration | Credentials |
+| --- | --- | --- |
+| GCS | `provider: "gcs"`, `bucket`, optional `prefix` | `provider: "gcs"`, `service_account_json` |
+| S3 | `provider: "s3"`, `bucket`, `region`, optional `prefix` | `provider: "s3"`, `access_key_id`, `secret_access_key`, optional `session_token` |
+| Azure | `provider: "azure"`, `account`, `container`, optional `prefix` | `provider: "azure"`, exactly one of `account_key` or `sas_token` |
+
+Connection management uses
+`/accounts/projects/{project_id}/rooms/{room_name}/storage-connections`:
+`GET` lists connections and `POST` creates one. `PUT` and `DELETE` on
+`/{connection_id}` update or remove a connection. Create/update bodies contain
+`name`, `config`, and `credentials`; update can omit credentials to preserve the
+existing value. A connection's provider cannot be changed. Managing connections
+requires room administrator access; querying registered tables uses the normal
+dataset grants. Registering a table requires its `alter` permission.
+
+TypeScript registration uses the same connection ID:
+
+```typescript TypeScript
+await room.datasets.registerTable({
+  name: "events",
+  connectionId: connection.id,
+  path: "events.lance",
+  namespace: ["analytics"],
+});
+```
+
+The dataset path is relative to the connection's bucket/container and prefix.
+Registration validates that the room can open the dataset. The room server
+resolves credentials again for subsequent external dataset opens; existing
+queries retain their already-open handles. Rotate credentials by updating the
+connection. Supply replacements before temporary S3 credentials or Azure SAS
+tokens expire.
+
+External datasets are read-only: inserts, updates, deletes, schema changes,
+index creation, optimization, and restore are rejected. Search, inspection,
+and SQL reads use the existing dataset APIs. Renaming changes the catalog alias.
+Dropping a table only unregisters it. Creating a room catalog branch copies the
+external reference and does not create a branch in the source dataset; reads
+continue to use the source's main branch, with an optional source version.
+Deleting a connection makes remaining registrations unavailable on subsequent
+opens. None of these operations deletes external dataset files.
+
+The CLI exposes the same workflow. `connection.json` contains the `name`,
+`config`, and `credentials` object described above:
+
+```bash bash
+meshagent room dataset connection create --room myroom --file connection.json
+meshagent room dataset connection list --room myroom
+meshagent room dataset register --room myroom --table events \
+  --connection-id CONNECTION_ID --path events.lance
+```
+
+Use `connection update --connection-id CONNECTION_ID --file connection.json`
+to rotate credentials, and `connection delete --connection-id CONNECTION_ID`
+to remove access. Both commands also take `--room`.
+
 ## Permissions and grants
 
 The Datasets API is controlled by the `dataset` grant on the participant token.
