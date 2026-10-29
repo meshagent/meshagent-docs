@@ -37,7 +37,8 @@ in the external storage account.
 
 In Studio, open the room's **Storage connections…** menu next to **Volumes…**.
 Room admins can create a connection by choosing a provider, entering the bucket
-or container, an optional prefix, and the provider's credentials. When editing,
+or container, an optional prefix, and the provider's credentials. For public
+datasets, select **Public access (anonymous)** instead; no credentials are stored. When editing,
 credentials are kept unless **Replace credentials** is checked; saved values are
 never displayed.
 
@@ -45,6 +46,26 @@ In a connected room, choose **Register dataset** on a connection. Enter a catalo
 name and a dataset path relative to the connection prefix, with an optional
 namespace and catalog branch. Registration checks access to the Lance dataset.
 Open **Datasets…** and refresh to browse the registered table.
+
+For public storage, set `"anonymous": true` in the connection's `config` and
+omit `credentials`. This explicitly disables request signing instead of using
+ambient cloud credentials. The bucket/container must permit anonymous reads and
+any listing operations required by Lance. For example:
+
+```json
+{
+  "name": "public-datasets",
+  "config": {
+    "provider": "s3",
+    "bucket": "public-bucket",
+    "region": "us-east-1",
+    "anonymous": true
+  }
+}
+```
+
+Changing an authenticated connection to anonymous deletes its saved secret.
+Changing it back requires new credentials.
 
 Connections can also be created using the management API. For
 example, with an authenticated Python API client named `api`:
