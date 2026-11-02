@@ -7,6 +7,12 @@ Scheduled tasks are project-level triggers that either enqueue work into room qu
 
 A scheduled task uses a `ScheduledTaskSpec` file. The spec chooses exactly one target: `queue` or `container`. The room is selected when the task is created, not inside the spec.
 
+## Test a container in Studio
+
+Studio's container test uses the selected service-token identity, role, and API permissions. Test credentials are scoped to the selected room and expire after one hour. An omitted API scope uses the service's role defaults; an explicit scope is preserved, subject to the issuer's existing file-access restrictions. Your account must have permission to create participant tokens. If issuance fails, the test stops and displays the error.
+
+Stopping a test deletes its container but does not revoke an already issued stateless token; that token remains valid until its expiry. No service token is issued when the container environment has no token entries.
+
 ## Create a scheduled task
 
 ```bash
