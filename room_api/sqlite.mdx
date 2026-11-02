@@ -15,6 +15,8 @@ Raw SQL that mixes DDL with SELECT, including `CREATE TABLE ... AS SELECT` and s
 
 Native builds must compile bundled SQLite with `SQLITE_OMIT_XFER_OPT`. Cargo configuration supplies this flag when building from the repository root or the `rust` workspace. Custom packaging must preserve it: SQL operations fail closed when the linked SQLite library lacks this protection. This disables a bulk-copy optimization that otherwise skips source-table authorization; ordinary `INSERT ... SELECT` remains supported.
 
+SQL runs within the selected database. Connections reject `ATTACH`, including in-memory databases and filesystem URIs. `VACUUM` and `VACUUM INTO` are also unavailable because SQLite implements them using an attachment. Use the [SQLite recovery APIs](/room_api/sqlite-recovery) to download snapshots and restore databases. Normal transactions and `PRAGMA optimize` remain available.
+
 ## Atomic SQL batches
 
 `execute_sql_batch` sends multiple parameterized commands in one request and executes them in one transaction. Each command contains exactly one SQL statement and its own positional or named parameters.
