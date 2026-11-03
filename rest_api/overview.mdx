@@ -19,6 +19,22 @@ The REST API can be used for:
 
 For room-specific operations such as working with agents, datasets, or queues use the [Room APIs](../room_api/overview).
 
+For persistent room and managed-agent files over HTTP, see the [Files REST API and S3 compatibility](./files) reference.
+
+## Conditional file uploads
+
+The Files API supports safe replacement when multiple clients edit the same file. Read the current ETag with `stat()`, then pass it to `upload()` as `if_match` in Python or `ifMatch` in TypeScript and Dart. The Rust Files client provides `upload_if_match()` and `upload_stream_if_match()`. The HTTP equivalent is `PUT` with an `If-Match` header. A stale ETag returns HTTP `412 Precondition Failed`; reload, merge changes, and retry with the new ETag. Use `overwrite=false` to create a file only if its path is absent (equivalent to `If-None-Match: *`).
+
+```python
+files = client.files.for_room(project_id=project_id, room_name="myroom")
+etag = (await files.stat("workbook.bin")).etag
+if etag is None:
+    raise RuntimeError("File has no ETag")
+await files.upload("workbook.bin", updated_bytes, if_match=etag)
+```
+
+The ETag must be present for a conditional replacement. Already open readers may retain their existing view of the file.
+
 ## Getting started
 
 To call the MeshAgent REST API, authenticate with a project API key. The simplest path is:

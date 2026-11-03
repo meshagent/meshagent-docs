@@ -1,0 +1,72 @@
+---
+title: Files REST API and S3 compatibility
+---
+
+The Files API reads and writes persistent files for rooms and managed agents without starting a room runtime. It has a native REST interface and a limited S3-compatible interface on the files domain. The domain is returned as `domains.files` by `GET /config`; use that value as `FILES_BASE_URL` below. A bearer token must have the required file action for the target path. The Python, TypeScript, Dart, and Rust SDK Files clients discover the domain and send the token for you.
+
+This API is separate from the connected [Room Storage API](../room_api/storage). A room Files target has the same persistent files but uses HTTP requests directly, including when no room runtime is active.
+
+## Native REST paths
+
+Room files use `${FILES_BASE_URL}/{project_id}/rooms/{room_name}/{path}`. Managed-agent files use `${FILES_BASE_URL}/{project_id}/agents/{agent_name}/{path}`. Paths are relative to the target's files root. URL-encode each path component; retain `/` between components.
+
+| Request | Purpose | Notes |
+| --- | --- | --- |
+| `GET {file}` | Download bytes | Supports byte ranges and HTTP read conditions. |
+| `HEAD {file}` | Read metadata | Returns `ETag`, `Last-Modified`, `Content-Length`, and `Content-Type` when available. |
+| `PUT {file}` | Upload bytes | Replaces by default. `?overwrite=false` creates only when absent. |
+| `DELETE {file}` | Delete a file | `?recursive=true` permits deleting a directory tree when authorized. |
+| `GET {target-root}?list&prefix={path}&limit={n}` | List entries | `limit` is 1–1000. Pass the returned `continuation_token` to get the next page. |
+| `GET {file}?permissions` | Inspect effective file actions | Returns actions for the path and actions that apply recursively. |
+| `POST {path}?action=mkdir` | Create a directory | Send `{}` as JSON. |
+| `POST {destination}?action=copy` or `action=move` | Copy or move | Send `{"source":{"target":{"project_id":"...","kind":"room","name":"..."},"path":"source.txt"},"overwrite":false}`. |
+| `POST /v1/presign` | Create a signed URL | Send a target, exact path, `GET`, `HEAD`, `PUT`, or `DELETE` method, and `expires_in` (1–604800 seconds). Requires the `presign` action and the requested file action. |
+
+`{target-root}` is the room or agent URL ending at its name, with no file path. `GET` and `HEAD` expose ETags for concurrency control. For a conditional replacement, send the last observed ETag in `If-Match` on `PUT`. A stale ETag returns `412 Precondition Failed`; reread, merge, and retry. `If-None-Match: *` on `PUT` creates only when absent and returns `412` if the file exists. `?overwrite=false` has the same create-only behavior but returns a conflict response when the path exists. Other `If-None-Match` values and `If-Unmodified-Since` on `PUT` are unsupported. Conditional `DELETE`, copy, and move are unsupported. See [conditional uploads](./overview#conditional-file-uploads) for SDK examples.
+
+```bash
+curl -I -H "Authorization: Bearer $TOKEN" \
+  "$FILES_BASE_URL/$PROJECT_ID/rooms/$ROOM_NAME/workbook.bin"
+
+curl -X PUT -H "Authorization: Bearer $TOKEN" \
+  -H "If-Match: $ETAG" -H "Content-Type: application/octet-stream" \
+  --data-binary @workbook.bin \
+  "$FILES_BASE_URL/$PROJECT_ID/rooms/$ROOM_NAME/workbook.bin"
+```
+
+## S3-compatible interface
+
+The same files domain accepts AWS Signature Version 4 requests using short-lived Files credentials issued for a room or managed-agent target. `POST /v1/credentials` accepts `{"target":{"project_id":"...","kind":"room","name":"..."},"policy":null,"expires_in":3600}` with bearer authentication and returns an access key ID, secret access key, effective policy, and expiry. Credentials remain scoped to their target and grants. The S3 adapter uses that target's name as the bucket name; the project and target kind remain part of the signed request path. Use the native Files SDK or a presigned URL if you do not need an S3 client.
+
+For a room, configure an S3 client's endpoint as `${FILES_BASE_URL}/{project_id}/rooms`, use path-style addressing, and set its bucket to `{room_name}`. For an agent, use `${FILES_BASE_URL}/{project_id}/agents` and the agent name as the bucket. For example, after obtaining a Files credential:
+
+```python
+from botocore.config import Config
+from botocore.session import get_session
+
+s3 = get_session().create_client(
+    "s3",
+    endpoint_url=f"{files_base_url}/{project_id}/rooms",
+    region_name="us-east-1",
+    aws_access_key_id=credential["access_key_id"],
+    aws_secret_access_key=credential["secret_access_key"],
+    config=Config(
+        s3={"addressing_style": "path"},
+        request_checksum_calculation="when_required",
+        response_checksum_validation="when_required",
+    ),
+)
+s3.put_object(Bucket=room_name, Key="reports/latest.csv", Body=b"example")
+```
+
+The supported S3 operations are `HeadBucket`, `ListObjectsV2`, `GetObject`, `HeadObject`, `PutObject`, `DeleteObject`, `DeleteObjects`, same-target `CopyObject`, and multipart create, upload part, list parts, complete, and abort. `PutObject`, `CopyObject`, and multipart completion support destination `If-Match` and `If-None-Match: *` conditions. `CopyObject` also supports ETag-based `x-amz-copy-source-if-match` and `x-amz-copy-source-if-none-match`. The source condition is checked against the version read for the copy, and the destination condition is enforced when the copy is published. Multipart completion accepts verified per-part checksum fields and full-object checksum headers. This is an operation subset, not a complete AWS S3 implementation.
+
+The adapter returns S3 `NotImplemented` for these requests:
+
+- Object version IDs on get, head, and delete, and part-number reads on get and head. Files ETags and backend versions do not provide an S3 object-version history.
+- ACLs, object locks, tagging, and server-side encryption controls on `PutObject`; multipart initiation also rejects a requested storage class and several other optional controls.
+- Date-based copy-source conditions, non-`*` destination `If-None-Match`, and copy metadata or tagging directives. A copy that names another bucket or a source version is rejected with `AccessDenied` instead.
+- Non-`/` delimiters or `FetchOwner=true` in `ListObjectsV2`.
+- Selected multipart options, including ACLs, tagging, storage class, encryption controls, expected bucket owner, requester-pays, initiation-time conditions, and composite completion checksums. Completion can verify full-object checksum headers against the selected parts and compare per-part checksum fields with the verified checksums stored at part upload.
+
+If an S3 SDK sends one of these optional fields automatically, configure it to omit the field or use the native REST API for that operation. The S3 adapter may also reject a request for missing file permissions or an invalid signature; those are distinct from unsupported features.
