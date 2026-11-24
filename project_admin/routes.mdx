@@ -59,7 +59,7 @@ meshagent route create -f route.yaml
 meshagent route update my-app.meshagent.app -f route.yaml
 ```
 
-Managed agent routes use an agent backend and expose the agent websocket on the route domain:
+Managed Agent routes use an agent backend and expose the agent WebSocket on the route domain.
 
 ```yaml
 kind: Route
@@ -71,6 +71,32 @@ domain: my-agent.meshagent.app
 backend:
   agent:
     name: my-agent
+```
+
+## Protect a Managed Agent site with IAP
+
+Publish a site from the Managed Agent's file storage and require users to sign in with MeshAgent. The site is available to signed-in users who have access to the Managed Agent.
+
+```console
+meshagent route create \
+  --domain my-agent.meshagent.app \
+  --agent my-agent \
+  --content-path website \
+  --index \
+  --iap
+```
+
+In a RouteSpec, set `targetContent.iap: true` on each path you want to protect. Use `meshagent route update my-agent.meshagent.app --iap` to enable IAP on an existing single-path file route.
+
+After sign-in, the browser sends the session cookie when the site connects to `/.well-known/meshagent/agent/connect` on the same origin. With the TypeScript Agent SDK, construct the chat client without a token or token provider.
+
+```ts
+import { WebSocketChatClient } from "@meshagent/meshagent-agents";
+
+const url = new URL("/.well-known/meshagent/agent/connect", window.location.origin);
+url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+const chat = new WebSocketChatClient({ url });
+await chat.start();
 ```
 
 ## Serve room content directly
