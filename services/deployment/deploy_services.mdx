@@ -10,13 +10,14 @@ Write a service manifest when you want to review, customize, validate, deploy, u
 
 Use [`meshagent service`](../../reference/meshagent_cli_help#meshagent-service) with service manifests. Use [Deploy a built in Agent](./deploy_builtin_agent) when you want to deploy a process-backed agent from CLI flags instead.
 
-In MeshAgent, you can deploy fixed or templated services project-wide or to specific rooms, either as MeshAgent-managed `container` services or as `external` services that MeshAgent routes to; for more detail, see [Intro to Services](../intro).
+In MeshAgent, you can deploy services project-wide or to specific rooms. A service can run a container, connect to an external service, or publish a toolkit. See [Intro to Services](../intro) for more on containers and external services.
 
-The examples below show three common cases:
+The examples below show four common cases.
 
 - a `Service` with a `container`
 - a `ServiceTemplate` with a `container`
 - a `Service` with an `external` runtime
+- a `Service` with a Python `toolkit`
 
 ### Example 1: `Service` with `container`
 
@@ -82,6 +83,83 @@ meshagent service create --file mcp-service.yaml --room myroom
 If you need installer-provided values such as a URL, label, or OAuth settings, you can use `external` inside a `ServiceTemplate` too.
 
 For a longer walkthrough, see [Connect to an External MCP Server](./external_mcp_service).
+
+### Example 4. `Service` with a Python `toolkit`
+
+The service's `metadata.name` is the toolkit name. Each tool has its own name, input schema, and source. Tools with `type: python` run in the same Monty sandbox as [managed-agent Python tools](../../agents/tools/managed_python_tools).
+
+```yaml
+version: v1
+kind: Service
+metadata:
+  name: room-helpers
+  description: Helpers for this room
+toolkit:
+  tools:
+    - type: python
+      name: echo
+      description: Return the supplied message
+      input_schema:
+        type: object
+        properties:
+          message: {type: string}
+        required: [message]
+        additionalProperties: false
+      source: |
+        async def echo(args):
+            return args["message"]
+```
+
+```bash
+meshagent service create --file toolkit.yaml --room myroom
+meshagent room agents list-toolkits --room myroom --http
+meshagent room agents invoke-tool --room myroom --toolkit room-helpers --tool echo --arguments '{"message":"hello"}' --http
+```
+
+You can also select **New Service** and then **New Toolkit** in Studio to open a service YAML draft. For HTTP requests and secret-backed settings, use the managed-agent Python tool conventions under `toolkit.connections`, `toolkit.environment`, and `toolkit.run_as`.
+
+### Use room data in a Python tool
+
+Monty provides a `meshagent` client in room toolkit functions. Use `datasets.for_room()`, `files.for_room()`, and `sqlite.for_room()` with the project ID and room name of the invocation. The clients use the REST endpoints with the caller's permissions. A denied operation raises `PermissionError`.
+
+```python
+import pyarrow as pa
+
+
+async def export_scores(args):
+    scope = {"project_id": args["project_id"], "room_name": args["room_name"]}
+    datasets = meshagent.datasets.for_room(**scope)
+    sqlite = meshagent.sqlite.for_room(**scope).database("analytics")
+    files = meshagent.files.for_room(**scope)
+
+    scores = await sqlite.sql(query="SELECT name, score FROM scores")
+    assert isinstance(scores, pa.Table)
+    await datasets.insert(table="scores", records=scores)
+    await files.upload("exports/scores.txt", str(scores.to_pylist()).encode("utf-8"))
+    return {"rows": scores.num_rows}
+```
+
+The Monty `pyarrow` module supports Arrow tables, record batches, schemas, arrays, and scalars backed by Rust. Use `async for` to consume query and file streams incrementally. Keep Arrow results in Arrow when passing them between clients. Convert results to Python values before returning them from a tool.
+
+Follow [Test with the CLI](./room_toolkits#test-with-the-cli) for a runnable toolkit spec that exercises all three clients and shows how to inspect the service logs, traces, and metrics.
+
+Each toolkit invocation produces a trace span. Outbound HTTP requests made by the script produce child spans with request timings. Metrics record invocation counts, execution latency, and outbound HTTP latency. Output from `print()` and calls such as `logging.getLogger("room-helpers").info("Looking up a record")` is sent to OpenTelemetry with the invocation's trace and span IDs.
+
+## View service telemetry
+
+Open a service's options menu in Studio and select **View Telemetry** to inspect recent logs, traces, and metrics. The CLI commands use the deployment ID from `meshagent service list`.
+
+```sh
+meshagent service logs SERVICE_ID --room myroom
+meshagent service traces SERVICE_ID --room myroom
+meshagent service metrics SERVICE_ID --room myroom
+```
+
+Omit `--room` for a project-wide service. Use `--attrs` to show telemetry attributes or `--output json` to get the original records. Recorded telemetry is available even when the room is stopped.
+
+The REST API serves `logs`, `traces`, and `metrics` from `GET /accounts/projects/{project_id}/services/{service_id}/telemetry/{signal}`. For a room deployment, use `GET /accounts/projects/{project_id}/rooms/{room_name}/services/{service_id}/telemetry/{signal}`.
+
+Container services receive their deployment ID as the OpenTelemetry resource attribute `meshagent.service.id`. Telemetry an instrumented container sends to MeshAgent appears alongside service lifecycle spans. Use `meshagent room container log --room ROOM --id CONTAINER_ID` to read raw stdout and stderr from a container.
 
 ## Manage deployed services
 

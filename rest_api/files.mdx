@@ -2,9 +2,11 @@
 title: Files REST API and S3 compatibility
 ---
 
-The Files API reads and writes persistent files for rooms and managed agents without starting a room runtime. It has a native REST interface and a limited S3-compatible interface on the files domain. The domain is returned as `domains.files` by `GET /config`; use that value as `FILES_BASE_URL` below. A bearer token must have the required file action for the target path. The Python, TypeScript, Dart, and Rust SDK Files clients discover the domain and send the token for you.
+The Files API reads and writes persistent files for rooms and managed agents without starting a room runtime. It has a native REST interface and a limited S3-compatible interface on the files domain. Discover the domain from `domains.files` in `GET /config` and use it as `FILES_BASE_URL` below. Send an OAuth access token or project API key as a bearer token. The credential must have the required file action for the target path. The Python, TypeScript, Dart, .NET, and Rust SDK Files clients discover the domain and send the credential for you.
 
 This API is separate from the connected [Room Storage API](../room_api/storage). A room Files target has the same persistent files but uses HTTP requests directly, including when no room runtime is active.
+
+In Python, `api.files.for_room(project_id=..., room_name=...)` follows the same room-scoping pattern as [Datasets and SQLite](./room_data). [Monty room toolkits](../services/deployment/room_toolkits) can use this client with the caller's file grants for the room.
 
 ## Native REST paths
 

@@ -1,0 +1,139 @@
+---
+title: Datasets and SQLite REST API
+description: Read and write room datasets and SQLite databases over HTTP with Arrow IPC streaming.
+---
+
+Use these endpoints to query and manage room datasets and SQLite databases through the MeshAgent API base URL. The router forwards each request to the room that owns the data. The room provides the compute for these operations, and the HTTP client can call them without joining the room or opening a Room Protocol connection. The [Files REST API](./files) serves persistent files through its own domain.
+
+## Authenticate and scope a request
+
+Send `Authorization: Bearer <token>`. Use an OAuth access token with `rooms:connect` for the target room, a project API key, or a room participant token. OAuth and API key requests use the principal's effective room permissions. Participant token requests use the token's room and API grants. In each case, the caller needs the dataset or SQLite permissions for the requested operation.
+
+The paths below are relative to `/projects/{project_id}/rooms/{room_name}`. URL-encode each path segment. To select a namespace, send one `namespace` query parameter per segment, in order. For example, `?namespace=team&namespace=reports` selects `["team", "reports"]`. Omit the parameter for the root namespace. For dataset operations that accept them, use `branch` and `version` to select a catalog branch and table version. Send these selectors in the URL.
+
+## Query over HTTP
+
+Dataset SQL runs against the dataset catalog, with an optional `tables` array of table references and `params_arrow` containing base64-encoded Arrow IPC SQL parameters. SQLite SQL targets a single database and accepts an optional `params` array for positional parameters or object for named parameters.
+
+```bash
+ROOM_URL="$MESHAGENT_API_URL/projects/$PROJECT_ID/rooms/$ROOM_NAME"
+
+curl --fail-with-body --no-buffer \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/vnd.apache.arrow.stream" \
+  --data '{"query":"SELECT 42 AS value"}' \
+  "$ROOM_URL/datasets?action=query" \
+  --output datasets.arrow
+
+curl --fail-with-body --no-buffer \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/vnd.apache.arrow.stream" \
+  --data '{"query":"SELECT ? AS value","params":[42]}' \
+  "$ROOM_URL/sqlite/app/query?namespace=team&namespace=reports" \
+  --output sqlite.arrow
+```
+
+The SQLite example uses an existing database named `app` in the selected namespace. Direct queries and table searches return `application/vnd.apache.arrow.stream`. Read Arrow IPC record batches as they arrive. The response can stream without a `Content-Length` header. Table inspection uses the same media type and returns an Arrow schema.
+
+In Python, the SDK uses the API client's bearer credential by default. Pass `participant_token` to either `for_room()` factory to use a room participant token for that client.
+
+```python
+from contextlib import aclosing
+
+from meshagent.api import Meshagent
+
+
+async def stream_room_data(project_id: str, room_name: str):
+    async with Meshagent() as api:
+        scope = {"project_id": project_id, "room_name": room_name}
+        datasets = api.datasets.for_room(**scope)
+        sqlite = api.sqlite.for_room(**scope).database("app", namespace=["team", "reports"])
+        files = api.files.for_room(**scope)
+
+        async with aclosing(datasets.sql_stream(query="SELECT 42 AS value")) as rows:
+            async for batch in rows:
+                print(batch.to_pylist())
+
+        async with aclosing(sqlite.sql_stream(query="SELECT ? AS value", params=[42])) as rows:
+            async for batch in rows:
+                print(batch.to_pylist())
+
+        return await files.list_page(limit=10)
+```
+
+TypeScript and Dart use `api.datasets.forRoom(...)` and `api.sqlite.forRoom(...)`. .NET uses `api.Datasets.ForRoom(...)` and `api.Sqlite.ForRoom(...)`. In Rust, import `meshagent::RoomDataClients` and use `api.datasets(authorization)?.for_room(...)` or `api.sqlite(authorization)?.for_room(...)`. Pass the full authorization header value in Rust.
+
+## Dataset routes
+
+Each dataset is a table. The collection root also handles catalog queries and branches.
+
+| Request | Operation |
+| --- | --- |
+| `GET /datasets` | List tables in a namespace and optional branch. |
+| `GET /datasets/{table}` | Read an Arrow schema. |
+| `PUT /datasets/{table}` | Create a table from a streamed upload. |
+| `DELETE /datasets/{table}` | Drop a table. Set `ignore_missing=true` to tolerate a missing table. |
+| `POST /datasets/{table}/rename` | Rename a table with `new_name` in the JSON body. |
+| `PUT /datasets/{table}/columns` | Add columns with an Arrow schema or JSON column expressions. |
+| `POST /datasets/{table}/drop-columns` | Drop columns. |
+| `PATCH /datasets/{table}/columns/{column}` | Update column metadata. |
+| `POST /datasets/{table}/insert` and `POST /datasets/{table}/merge` | Insert or merge rows. Merges specify the key with `on`. |
+| `PATCH /datasets/{table}/rows` and `POST /datasets/{table}/delete-rows` | Update or delete matching rows. |
+| `POST /datasets/{table}/count` and `POST /datasets/{table}/search` | Count matching rows or stream search results. |
+| `POST /datasets/{table}/watch` | Stream snapshot batches, readiness, and changes. |
+| `GET /datasets/{table}/versions` and `POST /datasets/{table}/restore?version={version}` | List table versions or restore a version. |
+| `GET /datasets/{table}/indexes`, `POST /datasets/{table}/indexes`, and `DELETE /datasets/{table}/indexes/{index}` | List, create, and drop indexes. |
+| `POST /datasets/{table}/stats` and `POST /datasets/{table}/optimize` | Get table statistics or optimize a table. |
+| `POST /datasets/{table}/register`, `POST /datasets/{table}/import`, and `POST /datasets/{table}/export` | Register external Lance data or transfer a table through room storage. |
+| `GET /datasets?action=list-branches`, `POST /datasets?action=create-branch`, and `DELETE /datasets?action=delete-branch&branch={branch}` | Manage catalog branches. Supply the branch name as `branch` in the create request body. |
+| `POST /datasets?action=query` | Stream the result of a catalog SQL query. |
+| `POST /datasets?action=execute-statement` | Execute a SQL statement and return the affected row count. |
+| `POST /datasets?action=open-query` and `POST /datasets?action=execute` | Open a query handle, or execute SQL and return a query handle or statement result. |
+
+Use a JSON object for operation arguments such as `{"columns":["obsolete"]}`. See [Datasets](../room_api/datasets) for the SDK operations, including Lance storage connections, versioning, and search.
+
+## SQLite routes
+
+The collection contains databases. Table routes sit under the database's `tables` path.
+
+| Request | Operation |
+| --- | --- |
+| `GET /sqlite` | List databases in a namespace. |
+| `GET /sqlite/{database}`, `PUT /sqlite/{database}`, and `DELETE /sqlite/{database}` | Inspect, create, or drop a database. Send a JSON object when creating it, such as `{"mode":"create"}`. |
+| `GET /sqlite/{database}/settings`, `PATCH /sqlite/{database}/settings`, and `POST /sqlite/{database}/flush` | Read or change replication settings and flush pending writes. |
+| `GET /sqlite/{database}/tables` | List tables. |
+| `GET /sqlite/{database}/tables/{table}`, `PUT /sqlite/{database}/tables/{table}`, and `DELETE /sqlite/{database}/tables/{table}` | Inspect the Arrow schema, create a table from a streamed upload, or drop the table. |
+| `POST /sqlite/{database}/tables/{table}/rename`, `PUT /sqlite/{database}/tables/{table}/columns`, and `POST /sqlite/{database}/tables/{table}/drop-columns` | Rename a table and add or drop columns. |
+| `POST /sqlite/{database}/tables/{table}/insert`, `PATCH /sqlite/{database}/tables/{table}/rows`, and `POST /sqlite/{database}/tables/{table}/delete-rows` | Insert, update, or delete rows. |
+| `POST /sqlite/{database}/tables/{table}/count` and `POST /sqlite/{database}/tables/{table}/search` | Count matching rows or stream search results. |
+| `POST /sqlite/{database}/query` | Stream SQL query rows. |
+| `POST /sqlite/{database}/execute` | Execute a SQL statement and return the affected row count. |
+| `POST /sqlite/{database}/batch` | Execute a JSON `commands` array atomically. Each command has its own `query` and optional `params`. |
+| `POST /sqlite/{database}?action=open-query` and `POST /sqlite/{database}?action=execute` | Open a query handle, or execute SQL and return a query handle or statement result. |
+| `GET /sqlite/{database}/backup` and `PUT /sqlite/{database}/restore` | Stream a SQLite backup or restore it into a new database. |
+
+See [SQLite](../room_api/sqlite) for SQL batch behavior and replication settings, and [SQLite recovery](../room_api/sqlite-recovery) for backup and restore.
+
+## Query handles
+
+A row-returning `open-query` or `execute` response includes `MeshAgent-Query-Id` and an Arrow IPC schema in the body. A SQLite batch returns JSON; each query entry has a `query_id` and `schema_base64`, and each statement entry has `rows_affected`. Use the same credential that opened a handle to read or close it.
+
+| Request on `/datasets` or `/sqlite` | Operation |
+| --- | --- |
+| `GET ?action=read-query&query_id={query_id}` | Read the result as Arrow IPC. |
+| `DELETE ?action=close-query&query_id={query_id}` | Release the handle. |
+| `POST ?action=cancel-query&query_id={query_id}` | Request cancellation and inspect the returned status. SQLite prepared results are already materialized and report `not_cancellable`. |
+
+Use the direct query route to stream rows in one request. Close handles in a `finally` block when using the handle-based routes.
+
+## Stream writes, watches, and transfers
+
+Table creation and insert routes accept an Arrow IPC request with `Content-Type: application/vnd.apache.arrow.stream`. The multipart alternative uses `multipart/form-data` with a JSON `options` part first, such as `{"format":"arrow","mode":"create"}` for a create request. A create request can supply an Arrow IPC `schema` part, followed by Arrow IPC `batch` parts. Dataset creation also accepts `"format":"rows"` with JSON `rows` parts. Use an SDK client to build multipart uploads and stream batches through the request body.
+
+Dataset watches return `multipart/mixed`. Arrow parts carry metadata in the `MeshAgent-Frame` header. JSON parts report readiness or an error. Close the response when you finish watching.
+
+SQLite backups return `multipart/mixed` with SQLite file chunks and a final JSON frame containing the byte count and SHA-256 checksum. A restore uploads `multipart/form-data` with `data` chunks of at most 256 KiB and a final JSON `digest` containing `kind: "complete"`, `size`, and `sha256`. The SDK verifies the checksum and restore acknowledgement. Consume the full backup stream before using the backup.
+
+Room data errors generally include a JSON `error` object with `code` and `message`. Authentication and routing errors can come directly from the router. Once a stream has started, an interrupted response can surface as a read error or, for multipart responses, as a terminal JSON error part.

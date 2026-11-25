@@ -1,0 +1,77 @@
+---
+title: Room toolkits
+description: Deploy a Python toolkit and test its REST data clients with the MeshAgent CLI.
+---
+
+import RoomToolkit from "/snippets/examples/cli/room-toolkit/toolkit.mdx"
+
+A room toolkit publishes named tools through a `Service` spec. Each Python tool runs in Monty and receives a JSON object. Set `metadata.name` to choose the public toolkit name, and put each function under `toolkit.tools` with `type: python`, an input schema, and its Python source. The function name matches the tool name unless you set `entrypoint`.
+
+Room and project service deployments are available through the [Room Toolkits REST API](../../rest_api/room_toolkits). The HTTP endpoint can invoke a deployed toolkit while the room is stopped. Calls to Datasets and SQLite use room compute and may start the room. Files use persistent storage directly. See the [Datasets and SQLite REST API](../../rest_api/room_data) and the [Files REST API](../../rest_api/files).
+
+## Use the room clients in a tool
+
+Monty provides `meshagent.datasets`, `meshagent.sqlite`, and `meshagent.files`. Call `for_room(project_id=..., room_name=...)` with the invocation's room. The clients use the caller's grants for that room, and the executor handles the credentials. A denied client operation raises `PermissionError`. Use `toolkit.connections`, `toolkit.environment`, and `toolkit.run_as` for [configured HTTP requests and secrets](../../agents/tools/managed_python_tools).
+
+Use `import pyarrow as pa` for Rust-backed Arrow tables, record batches, schemas, arrays, and scalars. Dataset and SQLite results can go directly into writes, and `async for` reads streamed results batch by batch. Convert Arrow objects to JSON-compatible values for the tool's final result. Files support streaming uploads and downloads. Whole-file `download()` and byte-buffer uploads have a 1 MiB limit in Monty.
+
+`context.caller` identifies the authenticated caller. `context.on_behalf_of` identifies the verified delegated principal when supplied. Each principal has an `id`, a `type` of `user`, `service_account`, or `agent`, and optional `name` and `participant_id`. Either principal field can be `None`.
+
+## Test with the CLI
+
+Use a test room and sign in with a CLI identity that can deploy services, invoke tools, and create, read, and delete test data. Save this spec as `toolkit.yaml`. The probe queries SQLite, copies the Arrow table to a dataset, streams the dataset rows, and round-trips a small file. It uses the supplied run ID to isolate its data and cleans up the resources it creates.
+
+<RoomToolkit />
+
+Set your project and test room, then validate and deploy the spec.
+
+```bash
+PROJECT_ID="your-project-id"
+ROOM_NAME="toolkit-test"
+
+meshagent rooms create "$ROOM_NAME" --project-id "$PROJECT_ID" --if-not-exists
+meshagent service validate --file toolkit.yaml
+meshagent service create --file toolkit.yaml --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+```
+
+Discover the tool and invoke it over HTTP. The CLI obtains the room credential from your signed-in session.
+
+```bash
+meshagent room agents list-toolkits --project-id "$PROJECT_ID" --room "$ROOM_NAME" --http
+
+RUN_ID="$(date +%s)"
+ARGS="$(printf '{"project_id":"%s","room_name":"%s","run_id":"%s"}' "$PROJECT_ID" "$ROOM_NAME" "$RUN_ID")"
+
+meshagent room agents invoke-tool --project-id "$PROJECT_ID" --room "$ROOM_NAME" \
+  --toolkit room-data-probe --tool probe --arguments "$ARGS" --http
+```
+
+The tool should return `{"value":42,"rows":[{"value":42}]}`. For a Room Protocol test, repeat the invocation with a fresh run ID and omit `--http`. The CLI then joins the room and calls the registered toolkit.
+
+To test a source change, get the deployment ID for `room-data-probe`, validate the revised spec, and update the service.
+
+```bash
+meshagent service list --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+SERVICE_ID="your-service-deployment-id"
+meshagent service validate --file toolkit.yaml
+meshagent service update --id "$SERVICE_ID" --file toolkit.yaml \
+  --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+```
+
+## Inspect the test run
+
+Use the service deployment ID from `meshagent service list` to inspect telemetry for either transport.
+
+```bash
+meshagent service logs "$SERVICE_ID" --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+meshagent service traces "$SERVICE_ID" --project-id "$PROJECT_ID" --room "$ROOM_NAME" --attrs
+meshagent service metrics "$SERVICE_ID" --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+```
+
+The probe writes a `Round-trip complete` log. The trace contains a toolkit invocation span and child spans for the REST calls. For a permission failure, check the caller's tool and data grants. In Studio, open the toolkit service's options menu and choose **View Telemetry** to see the same signals. These commands use the service deployment ID without a session ID. See [Observability](../../observability/overview).
+
+When finished, remove the test toolkit deployment.
+
+```bash
+meshagent service delete "$SERVICE_ID" --project-id "$PROJECT_ID" --room "$ROOM_NAME"
+```

@@ -1,0 +1,70 @@
+```yaml Yaml
+version: v1
+kind: Service
+metadata:
+  name: room-data-probe
+  description: Verify room data access from a Monty toolkit
+toolkit:
+  tools:
+    - type: python
+      name: probe
+      description: Round-trip a value through SQLite, Datasets, and Files
+      input_schema:
+        type: object
+        properties:
+          project_id:
+            type: string
+          room_name:
+            type: string
+          run_id:
+            type: string
+            pattern: "^[A-Za-z0-9_-]+$"
+        required: [project_id, room_name, run_id]
+        additionalProperties: false
+      source: |
+        import logging
+        import pyarrow as pa
+
+        async def probe(args):
+            scope = {"project_id": args["project_id"], "room_name": args["room_name"]}
+            run_id = args["run_id"]
+            namespace = ["toolkit-probe", run_id]
+            datasets = meshagent.datasets.for_room(**scope)
+            sqlite = meshagent.sqlite.for_room(**scope)
+            files = meshagent.files.for_room(**scope)
+            database = sqlite.database("probe", namespace=namespace)
+
+            await database.create_database()
+            try:
+                table = await database.sql(query="SELECT ? AS value", params=[42])
+                assert isinstance(table, pa.Table)
+                await datasets.create_table_from_data(
+                    name="probe", data=table, namespace=namespace
+                )
+                try:
+                    rows = []
+                    stream = datasets.sql_stream(
+                        query="SELECT value FROM probe", namespace=namespace
+                    )
+                    try:
+                        async for batch in stream:
+                            rows.extend(batch.to_pylist())
+                    finally:
+                        await stream.aclose()
+
+                    path = "toolkit-probe-" + run_id + ".txt"
+                    await files.upload(path, str(rows[0]["value"]).encode(), overwrite=False)
+                    try:
+                        value = (await files.download(path)).decode()
+                    finally:
+                        await files.delete(path)
+                finally:
+                    await datasets.drop_table(name="probe", namespace=namespace)
+            finally:
+                await database.drop_database()
+
+            logging.getLogger("room-data-probe").info("Round-trip complete")
+            return {"value": int(value), "rows": rows}
+
+```
+
