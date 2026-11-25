@@ -168,6 +168,8 @@ In practice:
 - table grants control `read`, `write`, and `alter` access per table
 - if no table list is supplied, access is broad across the room dataset
 
+Room storage transfers also require a `storage` grant: `import_storage` requires read access to the source path, and `export_storage` requires write access to the destination path. These checks apply in addition to the table permissions and use the same path rules and exclusions as the Storage API. Local storage paths must use the exact stored spelling; descendant symbolic links cannot be used as file aliases.
+
 See [API Scopes](../rest_api/api_scopes) and [Service YAML](../services/deployment/deploy_services).
 
 ## API reference
@@ -925,7 +927,7 @@ await room.Datasets.Merge(
   - **table**: The target table name.
   - **text**: An optional search string (if using full-text indexes).
   - **vector**: An optional numeric array for vector-based similarity queries.
-  - **where**: SQL `WHERE` clause string or an object representing key-value equals conditions.
+  - **where**: SQL `WHERE` clause string or an object representing key-value equals conditions. Object values are encoded as SQL literals. Object keys (including dotted field paths) and raw SQL strings must come from trusted application code. TypeScript and Dart reject unsupported filter value types, including lists, binary values and `DatasetExpression`; use a trusted SQL string for expressions.
   - **offset**: Optional offset for pagination in Python and Dart.
   - **limit**: Maximum number of matching records to return.
   - **select**: An array of column names to be returned.

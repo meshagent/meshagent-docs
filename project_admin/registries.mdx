@@ -86,6 +86,14 @@ The build can run from your local files or inside a room, but the published imag
 
 If the repository does not exist yet, create it with `meshagent registry create` first.
 
+## Repository token scope
+
+A token issued for a repository grants only the requested pull or push actions on that exact repository. It does not grant access to sibling repositories, nested repositories, or other projects. Users with access to several repositories can request a token for each one.
+
+The automatic credential used by `meshagent build` is scoped to its output repository. If a build pulls a private base image from another repository, it needs a credential explicitly authorized for that source. Adding several credentials for the same registry is insufficient when the runtime selects only the first matching credential. Public base images and images from the selected output repository keep their existing behavior.
+
+After deploying this scope restriction, previously issued repository tokens retain their original grants until expiration, at most one hour after issuance. Request a new token to use the narrower scope.
+
 ## Related docs
 
 - [Build and Deploy Images](../services/containers/meshagent_image)
