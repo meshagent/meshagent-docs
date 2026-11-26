@@ -17,6 +17,25 @@ Use `import pyarrow as pa` for Rust-backed Arrow tables, record batches, schemas
 
 `context.caller` identifies the authenticated caller. `context.on_behalf_of` identifies the verified delegated principal when supplied. Each principal has an `id`, a `type` of `user`, `service_account`, or `agent`, and optional `name` and `participant_id`. Either principal field can be `None`.
 
+## Send email from a tool
+
+Use `meshagent.mailboxes.for_project(project_id=...).mailbox(address).send(...)` with the toolkit's project. Set `toolkit.run_as.email` to the sending service account, include `mailboxes:send` in `toolkit.run_as.scopes`, and grant that account **Sender** access to the mailbox. The toolkit can send while the room is stopped. A denied send raises `PermissionError`.
+
+```python
+async def notify(args):
+    mailbox = meshagent.mailboxes.for_project(
+        project_id=args["project_id"]
+    ).mailbox("alerts@mail.meshagent.com")
+    receipt = await mailbox.send(
+        to=[args["recipient"]],
+        subject="Report ready",
+        text="Your report is ready to view.",
+    )
+    return {"submission_id": receipt.submission_id}
+```
+
+The same call and receipt fields work with the Python SDK. Each send appears as an HTTP child span on the toolkit invocation. See the [Mailbox REST API](../../rest_api/mailboxes) for the full message format.
+
 ## Test with the CLI
 
 Use a test room and sign in with a CLI identity that can deploy services, invoke tools, and create, read, and delete test data. Save this spec as `toolkit.yaml`. The probe queries SQLite, copies the Arrow table to a dataset, streams the dataset rows, and round-trips a small file. It uses the supplied run ID to isolate its data and cleans up the resources it creates.

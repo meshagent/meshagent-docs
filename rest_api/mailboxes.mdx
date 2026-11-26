@@ -1,0 +1,61 @@
+---
+title: Mailboxes REST API
+description: Send email from a project mailbox with a SendGrid-style JSON request.
+---
+
+## Send a message
+
+```http
+POST /accounts/projects/{project_id}/mailboxes/{address}/send
+Authorization: Bearer TOKEN
+Content-Type: application/json
+```
+
+URL-encode the mailbox address. The credential needs project access and an **Owner** or **Sender** grant on the mailbox. OAuth credentials also need the `mailboxes:send` scope. A mailbox can send with or without an inbound route.
+
+```json
+{
+  "personalizations": [
+    {
+      "to": [{"email": "recipient@example.net", "name": "Recipient"}],
+      "bcc": [{"email": "audit@example.net"}]
+    }
+  ],
+  "subject": "Service status",
+  "content": [
+    {"type": "text/plain", "value": "All checks passed."},
+    {"type": "text/html", "value": "<p>All checks passed.</p>"}
+  ],
+  "reply_to": {"email": "support@example.net"}
+}
+```
+
+Each personalization produces a message with its own recipients. It can include `cc`, `bcc`, and an override for `subject`. When supplied, `from.email` must match the mailbox address. Use `from.name` to set a display name.
+
+Attachments use base64 `content` and a `filename`, with optional MIME `type`, `disposition`, and `content_id`. The `headers` object accepts `In-Reply-To` and `References`. Requests can include up to 100 recipients and 10 MiB of decoded attachments. The JSON body limit is 16 MiB, and the total encoded message limit is 32 MiB.
+
+## Response
+
+The API returns `202 Accepted` after the relay accepts at least one recipient. Results are ordered by personalization. Use message IDs to find provider events when [mailbox delivery tracking](../project_admin/mailboxes) is enabled.
+
+```json
+{
+  "submission_id": "a4b643aa-5775-4d9a-b6e3-b97352af9370",
+  "messages": [
+    {
+      "message_id": "<report@example.net>",
+      "accepted_recipients": 2,
+      "rejected_recipients": 0
+    }
+  ]
+}
+```
+
+| Status | Meaning |
+| --- | --- |
+| `400` | The message is invalid, or its From address differs from the mailbox. |
+| `401` | The bearer credential is missing or invalid. |
+| `403` | The credential lacks the required scope or mailbox permission. |
+| `404` | The mailbox does not exist in the project. |
+| `413` | The submission exceeds a size limit. |
+| `502` | The relay rejected the submission or could not be reached. |

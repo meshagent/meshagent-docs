@@ -2915,6 +2915,7 @@ $ meshagent mailbox [OPTIONS] COMMAND [ARGS]...
 
 * `create`: Create a mailbox attached to the project.
 * `update`: Update a mailbox routing configuration.
+* `send`: Send email from a project mailbox.
 * `get`: Get mailbox details.
 * `deliveries`: List outbound deliveries for a mailbox,...
 * `delivery`: Get the current status and SMTP details...
@@ -2937,8 +2938,8 @@ $ meshagent mailbox create [OPTIONS]
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-a, --address TEXT`: Mailbox email address (unique per project)  [required]
 * `--room TEXT`: Room name
-* `-q, --queue TEXT`: Queue name to deliver inbound messages to  [required]
-* `--public`: Queue name to deliver inbound messages to
+* `-q, --queue TEXT`: Queue name to deliver inbound messages to
+* `--public`: Allow incoming mail from outside the room
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
 * `--help`: Show this message and exit.
 
@@ -2961,8 +2962,33 @@ $ meshagent mailbox update [OPTIONS] ADDRESS
 * `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
 * `-r, --room TEXT`: Room name to route inbound mail into
 * `-q, --queue TEXT`: Queue name to deliver inbound messages to
-* `--public`: Queue name to deliver inbound messages to
+* `--public`: Allow incoming mail from outside the room
 * `-n, --annotations TEXT`: annotations in json format &#123;&quot;name&quot;:&quot;value&quot;&#125;
+* `--clear-inbound-route`: Remove inbound routing.
+* `--help`: Show this message and exit.
+
+### `meshagent mailbox send`
+
+Send email from a project mailbox.
+
+**Usage**:
+
+```console
+$ meshagent mailbox send [OPTIONS] ADDRESS
+```
+
+**Arguments**:
+
+* `ADDRESS`: Mailbox to send from  [required]
+
+**Options**:
+
+* `--project-id TEXT`: A MeshAgent project id. If empty, the activated project will be used.  [default: (dynamic)]
+* `--to TEXT`: Recipient, repeatable
+* `--subject TEXT`
+* `--text TEXT`
+* `--html TEXT`
+* `--request-file FILE`
 * `--help`: Show this message and exit.
 
 ### `meshagent mailbox get`
